@@ -70,19 +70,6 @@ play:
   # A given square is drawn as its piece, in the shape it was given.
   shape: seg
   straight: true
-  tally:
-    kind: fleet
-    size:
-      letter: f
-      kw: fleet
-      name: Fleet size
-      doc: The length of the longest piece.
-      max: 3
-      default: 2
-    counts:
-      kw: fleet-data
-      name: Fleet configuration
-      doc: How many pieces of each length, the shortest first.
   boards: [5x5f2]
   hintMarks:
     ring: the squares the step decides.
@@ -98,8 +85,24 @@ deal:
   # A piece square of any shape is the ID's alone: the deal gives a shape.
   withhold: { seg: [3] }
   hide: seg
-  hideFlag:
-    kind: n
+  hideFlag: { kind: n, when: stripClues }
+settings:
+  fleet:
+    kind: tally
+    letter: f
+    size:
+      kw: fleet
+      name: Fleet size
+      doc: The length of the longest piece.
+      max: 3
+      default: 2
+    counts:
+      kw: fleet-data
+      name: Fleet configuration
+      doc: How many pieces of each length, the shortest first.
+  stripClues:
+    kind: flag
+    after: tier
     letter: S
     kw: strip-clues
     name: Remove numbers

@@ -216,20 +216,25 @@ research tools all read through it; the app never does.
   A hand-written game's saves may break when it is moved onto a
   description: the owner approved that for the whole initiative
   (2026-11-22), so a later change states the break and does not ask.
-  `play.modifiers` puts a variation in the params by its letter, with the
-  `most` lines a board of each width may have or the `bounds` (as
+  Every setting the params give is one entry of `settings:`, by name, in
+  the order the ID writes them and the Custom dialog lists them: those after
+  the size, the tier, then those marked `after: tier`, and a tally's counts
+  last (`engine/fill/params/`, a module a `kind`). A `flag` with `gives:
+  variation` puts the variation of its name in the params by its letter,
+  with the `most` lines a board of each width may have or the `bounds` (as
   `play.bounds`') a board with it on keeps, where the rule bounds the size
   (Solo's X needs 4 numbers, its Killer holds at most 9; `killing` is the
   fixture), and `sizes.step` holds a side to a multiple. `play.bounds` says
   what the sizes alone cannot: the sides' sum, product, shorter and longer,
   and in `tiers` a tier's own (Range's `w + h` and its strips). A size the
-  rules read that the grid is not measured in is the params' and is named in
-  `play.sizes`: its letter, and one ruleset a value, each with the `least`
-  board it has an answer on (Star Battle's `stars`, `s2`); a preset board
-  gives it after its `WxH` (`8x8s2`). With `letters` in place of `letter`,
-  each ruleset is written as its own bare letter, `""` as nothing
-  (Seismic's Tectonic, `6x6T`). A board sized by its blocks (Solo's) names
-  no such size: `play.blocks` gives the two sizes of its `blocks(a, b)`,
+  rules read that the grid is not measured in is the params' and is a
+  `choice` with `gives: size`: its letter, and one choice a ruleset a value,
+  each with the `least` board it has an answer on (Star Battle's `stars`,
+  `s2`); a preset board gives it after its `WxH` (`8x8s2`). With a `code`
+  on each choice in place of a `letter`, each is written as its code, the
+  default's `""` as nothing (Seismic's Tectonic, `6x6T`). A board sized by
+  its blocks (Solo's) names no such size: a `blocks` setting gives the two
+  sizes of its `blocks(a, b)`,
   the grid `a * b` on a side, as the Custom dialog's columns and rows and
   the ID's `{b}x{a}`, and the variation that replaces the blocks with a
   dealt partition is on exactly where `a` is 1, written `{b}` and the
@@ -354,9 +359,9 @@ research tools all read through it; the app never does.
   longest code read first (`cornering` is the fixture). `deal.firstKind:
   [kind, …]` keeps one clue an element of kinds at one place, the first
   in its order the answer makes there (Mathrax's cascade, where a parity
-  goes only where no sum or difference holds), and `deal.kindLetters`
-  switches kinds off, each by a letter after the tier in a full ID and a
-  check box in Custom, every kind on where no letter is written, the
+  goes only where no sum or difference holds), and a `set` setting's
+  `members` switch kinds off, each by a letter after the tier in a full ID
+  and a check box in Custom, every kind on where no letter is written, the
   board's name saying the shorter of those on and off
   (`engine/fill/deal/first-kind.ts`). `digits` writes a
   kind bounded by a size of at most 9 (Mathrax's givens, to `w`) a digit
@@ -423,7 +428,8 @@ research tools all read through it; the app never does.
   such a region is a clue a part: derived where its `means` solves for `v`
   (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
   kinds a part, in turn and well before `poor` (`engine/fill/deal/one-kind.ts`),
-  `deal.onlyFlag` is a setting after the tier dealing its `kinds` alone,
+  its `alone: { when, kinds }` deals `kinds` alone where the flag `when`
+  is on,
   `id:`'s `blocks` writes the partition as upstream Keen's block structure,
   or with `counts: false` as Solo's, a letter's repeats written out (with
   `after`, a mark after it, and nothing at all on a board that does not
@@ -447,9 +453,10 @@ research tools all read through it; the app never does.
   order while it still finishes at that tier. A draw the lowest tier does not finish with every
   clue is thrown away, since hiding at a higher tier costs more than drawing
   again, until a long run of them (a narrow board Easy seldom finishes):
-  then one is hidden from at the lowest tier that finishes it. `deal.thorough` is the
-  setting that tries every clue at each tier, by its letter in the params;
-  off, from a width of `offFrom` by default, the lowest tier tries none,
+  then one is hidden from at the lowest tier that finishes it. `deal.thorough` names the
+  flag under which the hide tries every clue at each tier (Mosaic's, on
+  below a width of its `onBelow` and written `h0` where off, `written:
+  off`); off, the lowest tier tries none,
   takes no shortest run, and the asked one tries as many as the board's
   shorter side. A last tier named Unreasonable is the search's: its
   deal strips clues while the search proves one answer and the ladder stops
@@ -466,15 +473,14 @@ research tools all read through it; the app never does.
   hides a clue with the others of its orbit under a symmetry, so the clues
   shown keep it: a symmetry by its name (`halfTurn`; the names are
   `engine/generate/symmetry.ts`'s, each by what it keeps, since upstream
-  numbers them differently in each game), or a deal option whose every
-  choice names its `symmetry` (the `turning` fixture's eight, Solo's).
-  `deal.options` are settings of the deal by letter, a
-  number in a range or one of named choices, a choice with the size bounds
-  it binds; a preset board names one after its `WxH` (`7x7s4`), and a label
-  names one only where it is not that board's, or the default. An option
-  with no letter writes each choice's `code` in its place, the default's
-  never (upstream solo.c's `m4`). Options are written after the modifiers'
-  letters. `build:
+  numbers them differently in each game), or a `choice` setting whose every
+  choice names its `symmetry` (the `turning` fixture's eight, Solo's). A
+  setting with no `gives` is the deal's alone and only a full ID writes it:
+  a `number` in a range, or a `choice` of named choices, a choice with the
+  size bounds it binds; a preset board names one after its `WxH`
+  (`7x7s4`), and a label names one only where it is not that board's, or
+  the default. A choice with no letter writes each choice's `code` in its
+  place, the default's never (upstream solo.c's `m4`). `build:
   { value }` lays that value alone, each on a cell that may still hold it
   (a build ladders at the lowest tier until one meets a dead end or builds
   an answer that breaks a rule, and a tier higher after each that does),
@@ -547,12 +553,12 @@ research tools all read through it; the app never does.
   smaller, flipped by a press in the half tile round the grid; `play.wrap`
   carries the cursor over the edge; the `ring` painter circles a kept
   number. A numbered cell's text is its number inside its value's glyph
-  where the glyph's middle is blank (`[3]`). `play.tally` names a clue at
-  the board of a length and its count that the params give (Boats' fleet,
-  `f3` and `,3,2,1`); it is skipped as a derived kind, and drawn beneath
+  where the glyph's middle is blank (`[3]`). A `tally` setting names a clue
+  at the board of a length and its count that the params give, by its name
+  (Boats' fleet, `f3` and `,3,2,1`); it is skipped as a derived kind, and drawn beneath
   the board (`engine/fill/tally-display.ts`). `deal.sample: pieces` lays
-  its pieces as straight runs of a value, none touching. `deal.hideFlag`
-  is a setting after the tier under which `deal.hide` hides its `kind`
+  its pieces as straight runs of a value, none touching. `deal.hideFlag:
+  { kind, when }` names the flag under which `deal.hide` hides `kind`
   too, and a board hiding none of it is drawn again; `deal.withhold` names
   values a kind is never derived as (Boats' shapeless segment). `numbers`'
   `hidden` writes a clue not shown and `closed` a comma after each; a

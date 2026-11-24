@@ -17,7 +17,7 @@ import { type Clues, spaceOf } from "../fill/board.ts";
 import type { DealtFillModule } from "../fill/deal/context.ts";
 import { encodeDesc } from "../fill/desc.ts";
 import { type FillDeal, type FillParams, givenOf } from "../fill/game-id.ts";
-import { variationsOf } from "../fill/params/modifiers.ts";
+import { variationsOf } from "../fill/params/flag.ts";
 import type { AnyGame } from "./enrollment.ts";
 
 /** The most grids one cell is enumerated over: two values on sixteen
@@ -34,8 +34,14 @@ const NOT_THE_ANSWERS = [
   "partitions",
   "latin",
   "unpair",
-  "options",
 ] as const;
+
+/** Whether the deal reads a number or a choice of its own, so a board is
+ * one of many an answer has. */
+const choosesOwn = (deal: FillDeal): boolean =>
+  deal.settings.some(
+    (s) => s.kind === "number" || (s.kind === "choice" && s.gives !== "size"),
+  );
 
 export interface EveryAnswer {
   /** The answers tried. */
@@ -58,7 +64,8 @@ export function everyAnswer(
   const deal = compiled["deal"] as FillDeal | undefined;
   if (deal === undefined || typeof compiled["deriveClues"] !== "function")
     throw new Error(`${cell}: ${game.id} deals no fill board`);
-  const beyond = NOT_THE_ANSWERS.filter((k) => deal[k] !== undefined);
+  const beyond: string[] = NOT_THE_ANSWERS.filter((k) => deal[k] !== undefined);
+  if (choosesOwn(deal)) beyond.push("settings the deal reads");
   if (beyond.length > 0)
     throw new Error(
       `${cell}: ${game.id}'s deal has ${beyond.join(", ")}, so its boards are not one per answer`,

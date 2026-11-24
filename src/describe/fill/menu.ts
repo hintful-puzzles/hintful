@@ -5,19 +5,13 @@
  */
 
 import { CompileError } from "../compile-sorts.ts";
-import {
-  type DescriptionJson,
-  onlyFlagOf,
-  optionsOf,
-  type PlayJson,
-} from "../description.ts";
+import type { DescriptionJson, PlayJson } from "../description.ts";
 import { present } from "./emit.ts";
 import { blocksOf } from "./partitions.ts";
 
-/** A board's `WxH` as its size, each size beyond the grid's it gives after
- * it by its params letter (`8x8s2`, two stars), a size it does not name at
- * its least, and each deal option it names by its letter (`7x7s4`). A letter
- * that is neither's is refused. */
+/** A board's `WxH` as its size, and each setting it names after it by its
+ * letter and number (`8x8s2`, two stars) or by a choice's code (`6x6T`); a
+ * size it does not name at its least. A letter no setting's is refused. */
 export const sizeOf =
   (json: DescriptionJson) =>
   (
@@ -26,10 +20,11 @@ export const sizeOf =
     w: number;
     h: number;
     sizes?: Record<string, number>;
-    options?: Record<string, number>;
+    settings?: Record<string, number>;
     tally?: number;
   } => {
-    const blocks = json.play?.blocks;
+    const named = Object.entries(json.settings ?? {});
+    const blocks = named.find(([, s]) => s.kind === "blocks")?.[1];
     // A board sized by its blocks is written as its ID writes it: `{b}x{a}`
     // of `blocks(a, b)`, or `{b}` and the letter where they are dealt.
     const cut =
@@ -48,7 +43,9 @@ export const sizeOf =
     const m = /^(\d+)x(\d+)((?:[a-z]\d+|[A-Za-z](?!\d))*)$/.exec(written);
     if (m === null) throw new CompileError(`play boards: ${b} is not WxH`);
     const sizes: Record<string, number> = Object.fromEntries(
-      Object.keys(json.play?.sizes ?? {}).map((n) => [n, json.sizes[n]?.min ?? 0]),
+      named
+        .filter(([, s]) => s.gives === "size")
+        .map(([n]) => [n, json.sizes[n]?.min ?? 0]),
     );
     if (cut !== null) {
       const [down, across] = cut;
@@ -58,53 +55,36 @@ export const sizeOf =
       m[1] = String(side);
       m[2] = String(side);
     }
-    const options: Record<string, number> = {};
+    const settings: Record<string, number> = {};
     let tally: number | null = null;
     for (const [, letter, n] of m[3].matchAll(/([A-Za-z])(\d*)/g)) {
-      // A bare letter is a ruleset written by its own (`6x6T`, Tectonic).
+      // A bare letter is a choice written by its code (`6x6T`, Tectonic).
       if (n === "") {
-        const bare = Object.entries(json.play?.sizes ?? {}).find(([, s]) =>
-          s.letters?.includes(letter),
-        );
-        if (bare === undefined)
-          throw new CompileError(`play boards: ${b}: ${letter} is no ruleset's letter`);
-        const [name, s] = bare;
-        sizes[name] = (json.sizes[name]?.min ?? 0) + (s.letters ?? []).indexOf(letter);
+        const coded = named.find(([, s]) => s.choices?.some((c) => c.code === letter));
+        if (coded === undefined)
+          throw new CompileError(`play boards: ${b}: ${letter} is no choice's code`);
+        const [id, s] = coded;
+        const index = (s.choices ?? []).findIndex((c) => c.code === letter);
+        if (s.gives === "size") sizes[id] = (json.sizes[id]?.min ?? 0) + index;
+        else settings[id] = index;
         continue;
       }
-      if (letter === json.play?.tally?.size.letter) {
-        tally = Number(n);
-        continue;
-      }
-      const named = Object.entries(json.play?.sizes ?? {}).find(
-        ([, s]) => s.letter === letter,
-      );
-      const option = Object.entries(optionsOf(json)).find(
-        ([, o]) => o.letter === letter,
-      );
-      if (named !== undefined) sizes[named[0]] = Number(n);
-      else if (option !== undefined) options[option[0]] = Number(n);
-      else
-        throw new CompileError(
-          `play boards: ${b}: ${letter} is no size's letter or option's`,
-        );
+      const found = named.find(([, s]) => s.letter === letter && s.kind !== "blocks");
+      if (found === undefined)
+        throw new CompileError(`play boards: ${b}: ${letter} is no setting's letter`);
+      const [id, s] = found;
+      if (s.kind === "tally") tally = Number(n);
+      else if (s.gives === "size") sizes[id] = Number(n);
+      else settings[id] = Number(n);
     }
     return {
       w: Number(m[1]),
       h: Number(m[2]),
       ...(Object.keys(sizes).length === 0 ? {} : { sizes }),
-      ...(Object.keys(options).length === 0 ? {} : { options }),
+      ...(Object.keys(settings).length === 0 ? {} : { settings }),
       ...present("tally", tally),
     };
   };
-
-/** The Custom field of the deal's setting `key`, where it states one. */
-function dealSettingKw(json: DescriptionJson, key: string): string | null {
-  const f = json.deal?.[key];
-  return typeof f === "object" && f !== null && "kw" in f && typeof f.kw === "string"
-    ? f.kw
-    : null;
-}
 
 /**
  * `menu`, what the preset menu offers beside its grid of `boards`: the
@@ -159,21 +139,27 @@ export function menuOf(
       last: tierOf(last, "boardTiers"),
     })),
     variants: (variants ?? []).map((v) => {
-      // A deal's setting is named by its Custom field, a variation by its name.
-      const settings = Object.entries({
-        only: onlyFlagOf(json)?.kw ?? null,
-        hides: dealSettingKw(json, "hideFlag"),
-      }).filter(([, kw]) => kw !== null && v.with.includes(kw));
-      const variations = v.with.filter(
-        (name) => !settings.some(([, kw]) => kw === name),
-      );
+      // A flag of the deal's is on by its name, and a variation by its own.
+      const flags = v.with.filter((id) => {
+        const s = json.settings?.[id];
+        return s?.kind === "flag" && s.gives === undefined;
+      });
+      const variations = v.with.filter((id) => !flags.includes(id));
       for (const name of variations)
         if (json.variations?.[name] === undefined)
-          throw new CompileError(`play variants: ${name} is no variation or setting`);
+          throw new CompileError(`play variants: ${name} is no variation or flag`);
+      const sized = board(v.board, "variants");
       return {
-        ...board(v.board, "variants"),
+        ...sized,
+        ...(flags.length === 0
+          ? {}
+          : {
+              settings: {
+                ...sized.settings,
+                ...Object.fromEntries(flags.map((id) => [id, 1])),
+              },
+            }),
         variations,
-        ...Object.fromEntries(settings.map(([field]) => [field, true])),
         diff: tierOf(v.tier, "variants"),
       };
     }),

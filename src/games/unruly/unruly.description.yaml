@@ -103,26 +103,6 @@ play:
   # board takes in a section of twelve.
   boardTiers: { 6x6: [Easy, Normal] }
   variants: [{ board: 8x8, with: [unique], tier: Normal }]
-  modifiers:
-    unique:
-      letter: u
-      kw: unique-rows-and-columns
-      name: Unique rows and columns
-      words: unique
-      rule: no two rows may be the same, and no two columns.
-      note: >-
-        There are only so many different rows of a given width, so this limits
-        how tall the grid can be for its width, and the other way round: a grid
-        6 squares wide can be at most 14 high, and one 8 wide at most 34.
-      # OEIS A177790: how many different lines of 2i squares the shape allows,
-      # as far as a 32-bit integer holds. A board 2i wide has at most that
-      # many rows, and the other way round.
-      most:
-        [
-          1, 2, 6, 14, 34, 84, 208, 518, 1296, 3254, 8196, 20700, 52404, 132942,
-          337878, 860142, 2192902, 5598144, 14308378, 36610970, 93770358,
-          240390602, 616787116, 1583765724,
-        ]
   hintMarks:
     ring: >-
       the square to fill. It is drawn empty: the sentence says whether it must
@@ -142,6 +122,28 @@ deal:
   tier: one of the tiers, the board finished at it and not at the tier below
   sample: { build: true }
   hide: given
+settings:
+  unique:
+    kind: flag
+    gives: variation
+    letter: u
+    kw: unique-rows-and-columns
+    name: Unique rows and columns
+    words: unique
+    rule: no two rows may be the same, and no two columns.
+    note: >-
+      There are only so many different rows of a given width, so this limits
+      how tall the grid can be for its width, and the other way round: a grid
+      6 squares wide can be at most 14 high, and one 8 wide at most 34.
+    # OEIS A177790: how many different lines of 2i squares the shape allows,
+    # as far as a 32-bit integer holds. A board 2i wide has at most that
+    # many rows, and the other way round.
+    most:
+      [
+        1, 2, 6, 14, 34, 84, 208, 518, 1296, 3254, 8196, 20700, 52404, 132942,
+        337878, 860142, 2192902, 5598144, 14308378, 36610970, 93770358,
+        240390602, 616787116, 1583765724,
+      ]
 # Upstream's game ID: the givens as dot runs, a block's letter uppercase.
 id:
   - dots: given

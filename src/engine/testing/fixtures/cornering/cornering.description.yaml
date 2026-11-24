@@ -67,11 +67,15 @@ deal:
   hide: [given, sum, difference, same, parity]
   hideFirst: [given]
   firstKind: [sum, difference, same, parity]
-  kindLetters:
-    - { letter: A, kind: sum, kw: sum-clues, name: Sum clues, doc: Allows sum clues to appear., word: sum }
-    - { letter: S, kind: difference, kw: difference-clues, name: Difference clues, doc: Allows difference clues to appear., word: difference }
-    - { letter: E, kind: same, kw: same-clues, name: Same clues, doc: Allows same clues to appear., word: same }
-    - { letter: O, kind: parity, kw: parity-clues, name: Parity clues, doc: Allows E and O clues to appear., word: parity }
+settings:
+  clueTypes:
+    kind: set
+    after: tier
+    members:
+      - { letter: A, kind: sum, kw: sum-clues, name: Sum clues, doc: Allows sum clues to appear., word: sum }
+      - { letter: S, kind: difference, kw: difference-clues, name: Difference clues, doc: Allows difference clues to appear., word: difference }
+      - { letter: E, kind: same, kw: same-clues, name: Same clues, doc: Allows same clues to appear., word: same }
+      - { letter: O, kind: parity, kw: parity-clues, name: Parity clues, doc: Allows E and O clues to appear., word: parity }
 # Upstream Mathrax's: the givens a digit each between runs of squares
 # without one, then a comma and a code a corner, `S0` the same's, `E` and `O`
 # the parities'.

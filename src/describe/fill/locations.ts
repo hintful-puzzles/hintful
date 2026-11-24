@@ -9,7 +9,12 @@
 
 import { EDGE_PAINTERS } from "../../engine/render/pieces/edge.ts";
 import { type ClueKind, CompileError, type Env } from "../compile-sorts.ts";
-import type { Description, DescriptionJson, PlayJson } from "../description.ts";
+import {
+  type Description,
+  type DescriptionJson,
+  type PlayJson,
+  tallyKindOf,
+} from "../description.ts";
 import { isElement, valuesOf } from "./values.ts";
 
 /** The elements a clue may sit at, as the description names them. */
@@ -32,7 +37,7 @@ export function universesOf(
 ): Record<string, string> {
   return Object.fromEntries(
     [...d.clueKinds]
-      .filter(([k]) => k !== json.play?.tally?.kind)
+      .filter(([k]) => k !== tallyKindOf(json))
       .map(([k, c]) => {
         const u = env.regions.has(c.at) ? "parts" : UNIVERSE[c.at];
         if (u === undefined)

@@ -163,47 +163,51 @@ deal:
   hide: [given, sum, difference, equal, product, quotient, parity]
   hideFirst: [given]
   firstKind: [sum, difference, equal, product, quotient, parity]
-  kindLetters:
-    - letter: A
-      kind: sum
-      kw: addition-clues
-      name: Addition clues
-      doc: Allows clues with the addition operation to appear.
-      word: addition
-    - letter: S
-      kind: difference
-      kw: subtraction-clues
-      name: Subtraction clues
-      doc: >-
-        Allows clues with the subtraction operation to appear. Note that clues
-        with a difference of zero are covered by Equality clues instead.
-      word: subtraction
-    - letter: M
-      kind: product
-      kw: multiplication-clues
-      name: Multiplication clues
-      doc: Allows clues with the multiplication operation to appear.
-      word: multiplication
-    - letter: D
-      kind: quotient
-      kw: division-clues
-      name: Division clues
-      doc: >-
-        Allows clues with the division operation to appear. Note that clues
-        with a ratio of one are covered by Equality clues instead.
-      word: division
-    - letter: E
-      kind: equal
-      kw: equality-clues
-      name: Equality clues
-      doc: Allows clues with equality signs to appear.
-      word: equality
-    - letter: O
-      kind: parity
-      kw: even-odd-clues
-      name: Even/odd clues
-      doc: Allows Even clues and Odd clues to appear.
-      word: even-odd
+settings:
+  clueTypes:
+    kind: set
+    after: tier
+    members:
+      - letter: A
+        kind: sum
+        kw: addition-clues
+        name: Addition clues
+        doc: Allows clues with the addition operation to appear.
+        word: addition
+      - letter: S
+        kind: difference
+        kw: subtraction-clues
+        name: Subtraction clues
+        doc: >-
+          Allows clues with the subtraction operation to appear. Note that clues
+          with a difference of zero are covered by Equality clues instead.
+        word: subtraction
+      - letter: M
+        kind: product
+        kw: multiplication-clues
+        name: Multiplication clues
+        doc: Allows clues with the multiplication operation to appear.
+        word: multiplication
+      - letter: D
+        kind: quotient
+        kw: division-clues
+        name: Division clues
+        doc: >-
+          Allows clues with the division operation to appear. Note that clues
+          with a ratio of one are covered by Equality clues instead.
+        word: division
+      - letter: E
+        kind: equal
+        kw: equality-clues
+        name: Equality clues
+        doc: Allows clues with equality signs to appear.
+        word: equality
+      - letter: O
+        kind: parity
+        kw: even-odd-clues
+        name: Even/odd clues
+        doc: Allows Even clues and Odd clues to appear.
+        word: even-odd
 # Upstream's: the givens a digit each between runs of cells without one,
 # then a comma and a code a corner, `S0` the = clue's, `E` and `O` the
 # parities'.

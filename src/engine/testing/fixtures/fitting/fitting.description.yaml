@@ -42,13 +42,6 @@ play:
   signs: { sum: "+" }
   boards: [4x4, 5x5, 6x6]
   variants: [{ board: 5x5, with: [X], tier: Easy }]
-  modifiers:
-    X:
-      letter: x
-      kw: diagonals
-      name: Diagonals
-      words: X
-      rule: each of the two diagonals holds every number once too.
   hintMarks:
     ring: the square the step decides.
     strike: the notes the step crosses out.
@@ -66,6 +59,15 @@ deal:
     - { partition: cage, pairs: 0.75, most: 3 }
   sample: { search: true }
   hide: given
+settings:
+  X:
+    kind: flag
+    gives: variation
+    letter: x
+    kw: diagonals
+    name: Diagonals
+    words: X
+    rule: each of the two diagonals holds every number once too.
 id:
   - { blocks: box, counts: false }
   - { blocks: cage, before: ",", counts: false }

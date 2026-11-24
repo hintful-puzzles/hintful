@@ -4,7 +4,7 @@
  * dealt board finishes at its tier and not below. On the `sizing` fixture, an
  * answer is laid a line at a time, as many in each as the params' size says.
  * On `fleet`, a piece at a time as a tally says, a value no deal gives and a
- * flag that hides more; on `walling`, walls laid first at an option's share
+ * flag that hides more; on `walling`, walls laid first at a setting's share
  * and symmetry, each left where its number is hidden; on `mirroring`, a hide
  * symmetric under a half turn, one less thorough, and a kind no deal deals;
  * on `climbing`, draws mended until no rule breaks and climbing toward the
@@ -223,7 +223,13 @@ describe("an answer laid a piece at a time", () => {
   it("hides the flag's kind too where the flag is on, and only there", () => {
     const sp = paramSpaceOf(fleet, { w: 5, h: 5 });
     const shown = (hides: boolean, seed: string): number => {
-      const p = { w: 5, h: 5, diff: 0, tally: [2, 1], hides };
+      const p = {
+        w: 5,
+        h: 5,
+        diff: 0,
+        tally: [2, 1],
+        settings: { stripClues: hides ? 1 : 0 },
+      };
       const { desc, aux } = dealFill(fleet, fleet.deal, p, randomNew(seed));
       const clues = descValue(
         decodeDesc<fleet.Dealt>(fleet.deal, sp, fleet.clueMax, desc),
@@ -241,12 +247,12 @@ describe("an answer laid a piece at a time", () => {
   });
 });
 
-describe("walls laid first, at the share and the symmetry the options give", () => {
+describe("walls laid first, at the share and the symmetry the settings give", () => {
   const W = 6;
   const sp = paramSpaceOf(walling, { w: W, h: W });
-  /** A board dealt with `options`, its clues as read back and its answer. */
-  const dealt = (options: Record<string, number>, seed: string) => {
-    const p = { w: W, h: W, diff: 0, options };
+  /** A board dealt with `settings`, its clues as read back and its answer. */
+  const dealt = (settings: Record<string, number>, seed: string) => {
+    const p = { w: W, h: W, diff: 0, settings };
     const { desc, aux } = dealFill(walling, walling.deal, p, randomNew(seed));
     const clues = descValue(
       decodeDesc<walling.Dealt>(walling.deal, sp, walling.clueMax, desc),
@@ -291,7 +297,7 @@ describe("a hide that keeps its clues symmetric, and may go less far", () => {
    * checked to finish on its answer. */
   const dealt = (w: number, thorough: boolean, seed: string) => {
     const sp = paramSpaceOf(mirroring, { w, h: w });
-    const p = { w, h: w, diff: 0, thorough };
+    const p = { w, h: w, diff: 0, settings: { aggressive: thorough ? 1 : 0 } };
     const { desc, aux } = dealFill(mirroring, mirroring.deal, p, randomNew(seed));
     const clues = descValue(
       decodeDesc<mirroring.Dealt>(mirroring.deal, sp, mirroring.clueMax, desc),

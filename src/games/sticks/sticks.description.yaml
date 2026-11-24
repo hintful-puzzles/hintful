@@ -169,36 +169,6 @@ deal:
   length: a number on each line, at a random square of it, or as many hidden as the board stays at its tier
   joins: a number on each block, or as many hidden as the board stays at its tier
   tier: one of the tiers
-  options:
-    blocks:
-      letter: b
-      kw: percentage-of-black-squares
-      name: "%age of blocks"
-      min: 5
-      max: 100
-      default: 20
-      words: "{n}% blocks"
-      doc: Rough percentage of blocks in the grid, from 5 to 100.
-    symmetry:
-      letter: s
-      kw: symmetry
-      name: Symmetry
-      default: 2
-      doc: >-
-        The pattern the blocks follow. <em>None</em> places them freely.
-        <em>2-way mirror</em> makes the bottom half a mirror image of the top
-        half, and <em>2-way rotational</em> makes the grid look the same
-        turned upside down. <em>4-way mirror</em> mirrors top to bottom and
-        left to right, and <em>4-way rotational</em> makes the grid look the
-        same after a quarter turn, which needs a square grid.
-      choices:
-        - { name: None, words: no symmetry, symmetry: none }
-        - { name: 2-way mirror, symmetry: mirrorTopBottom }
-        - { name: 2-way rotational, symmetry: halfTurn }
-        - { name: 4-way mirror, symmetry: mirrorBothWays }
-        - name: 4-way rotational
-          symmetry: quarterTurn
-          bounds: { square: true }
   # The blocks first, at the share and the symmetry the params give
   # (upstream's set_blacks), then a line at random in every other square.
   sample:
@@ -213,6 +183,38 @@ deal:
   # strip is: from Easy boards a 7x7 took up to 1.6 s, and from every number
   # 0.4 s (2026-11-22).
   stripFrom: everyClue
+settings:
+  blocks:
+    kind: number
+    letter: b
+    kw: percentage-of-black-squares
+    name: "%age of blocks"
+    min: 5
+    max: 100
+    default: 20
+    words: "{n}% blocks"
+    doc: Rough percentage of blocks in the grid, from 5 to 100.
+  symmetry:
+    kind: choice
+    letter: s
+    kw: symmetry
+    name: Symmetry
+    default: 2
+    doc: >-
+      The pattern the blocks follow. <em>None</em> places them freely.
+      <em>2-way mirror</em> makes the bottom half a mirror image of the top
+      half, and <em>2-way rotational</em> makes the grid look the same
+      turned upside down. <em>4-way mirror</em> mirrors top to bottom and
+      left to right, and <em>4-way rotational</em> makes the grid look the
+      same after a quarter turn, which needs a square grid.
+    choices:
+      - { name: None, words: no symmetry, symmetry: none }
+      - { name: 2-way mirror, symmetry: mirrorTopBottom }
+      - { name: 2-way rotational, symmetry: halfTurn }
+      - { name: 4-way mirror, symmetry: mirrorBothWays }
+      - name: 4-way rotational
+        symmetry: quarterTurn
+        bounds: { square: true }
 # Upstream's game ID: `B` a block, with its number straight after, a number
 # on a line after `_` where the square before was written, and a letter a
 # run of squares with none.

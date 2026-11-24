@@ -11,6 +11,7 @@ import { type Clues, type FillBoard, listOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
 import { type ClueMax, partKindsOf } from "../game-id.ts";
 import { gapKindsOf } from "../gaps.ts";
+import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
@@ -97,11 +98,11 @@ export function fillSetup<C extends Clues<C>>(
     value: number;
     piece: { painter: Painter; slot: readonly number[] };
   } | null => {
-    const t = module.deal?.tally;
-    if (t === undefined) return null;
+    const t = module.deal === undefined ? null : tallyIn(module.deal);
+    if (t === null) return null;
     const run = [...pal.byValue.entries()].find(([, p]) => p.painter.runs === true);
     if (run === undefined) throw new Error("play: a tally, and no piece that runs");
-    return { kind: t.kind as keyof C, count: t.count, value: run[0], piece: run[1] };
+    return { kind: t.id as keyof C, count: t.count, value: run[0], piece: run[1] };
   })();
   /** The counts of a board's tally, the pieces of each length. */
   const tallyCounts = (

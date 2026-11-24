@@ -53,7 +53,7 @@ export function oneKindEach<C extends Clues<C>>(
   if (one === undefined) return derived;
   if (module.suits === undefined) throw new Error("deal: oneKind with no suits");
   const suits = module.suits;
-  const kinds = only && deal.onlyFlag !== undefined ? deal.onlyFlag.kinds : one.kinds;
+  const kinds = only && one.alone !== undefined ? one.alone.kinds : one.kinds;
   const parts = (derived[one.partition as keyof C] as Partition).parts.length;
   const lists = kinds.map((k) => derived[k as keyof C] as ClueList);
   /** How well kind `n` suits part `r`, 0 where the answer derives none. */

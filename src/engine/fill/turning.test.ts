@@ -1,8 +1,8 @@
 /**
  * A symmetric hide by the orbits of a symmetry the player chooses, on the
  * `turning` fixture: the givens a deal leaves keep each of Solo's eight
- * symmetries, and the option is written as upstream solo.c writes it, after
- * the modifiers' letters, the default unwritten.
+ * symmetries, and the setting is written as upstream solo.c writes it, after
+ * the variations' letters, the default unwritten.
  */
 
 import { describe, expect, it } from "vitest";
@@ -14,13 +14,13 @@ import { fillGame } from "./game.ts";
 import type { FillParams } from "./game-id.ts";
 
 const game = fillGame("turning", turning);
-const choices = turning.deal.options?.["symmetry"]?.choices ?? [];
+const choices = turning.deal.settings.find((s) => s.id === "symmetry")?.choices ?? [];
 
 const params = (w: number, symmetry: number, x = false): FillParams => ({
   w,
   h: w,
   diff: 0,
-  options: { symmetry },
+  settings: { symmetry },
   ...(x ? { variations: ["X"] } : {}),
 });
 
@@ -121,8 +121,8 @@ describe("a symmetry written as upstream solo.c writes it", () => {
       expect(game.decodeParams(game.encodeParams(params(6, i, true), true))).toEqual(
         params(6, i, true),
       );
-    expect(game.decodeParams("6r2de").options).toEqual({ symmetry: 1 });
-    expect(game.decodeParams("6").options).toEqual({ symmetry: 1 });
-    expect(game.decodeParams("6md4").options).toEqual({ symmetry: 6 });
+    expect(game.decodeParams("6r2de").settings).toEqual({ symmetry: 1 });
+    expect(game.decodeParams("6").settings).toEqual({ symmetry: 1 });
+    expect(game.decodeParams("6md4").settings).toEqual({ symmetry: 6 });
   });
 });

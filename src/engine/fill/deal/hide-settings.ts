@@ -8,7 +8,7 @@ import type { Symmetry } from "../../generate/symmetry.ts";
 import type { Clues } from "../board.ts";
 import type { FillDeal, FillParams } from "../game-id.ts";
 import { within } from "../params/bounds.ts";
-import { symmetricOf } from "../params/options.ts";
+import { isOn, symmetricOf } from "../params/settings.ts";
 
 export interface HideSettings<C> {
   /** The kinds hidden, in the deal's order. */
@@ -53,7 +53,7 @@ export const hiddenKinds = (deal: FillDeal, p: FillParams): readonly string[] =>
         ? [deal.hide]
         : deal.hide
   ).filter((k) => p.diff >= (deal.hideFrom?.[k] ?? 0));
-  return deal.hideFlag !== undefined && p.hides === true
+  return deal.hideFlag !== undefined && isOn(deal, p, deal.hideFlag.when)
     ? [...kinds, deal.hideFlag.kind]
     : kinds;
 };

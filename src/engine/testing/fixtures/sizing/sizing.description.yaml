@@ -32,17 +32,6 @@ play:
   primary: 1
   secondary: 2
   blank: 2
-  sizes:
-    n:
-      letter: n
-      # Two a line, none side by side, leave a 3x3's middle line one square.
-      rulesets:
-        - name: One a line
-          rule: One in each.
-          least: 1
-        - name: Two a line
-          rule: Two in each.
-          least: 4
   # No board below 3x3, and a Normal one from 4x4.
   bounds:
     area: { min: 9 }
@@ -59,6 +48,19 @@ deal:
   tier: one of the tiers, the board finished at it and not at the tier below
   sample: { lines: { value: 1, count: n, apart: adj4 }, rest: 2 }
   hide: given
+settings:
+  n:
+    kind: choice
+    gives: size
+    letter: n
+    # Two a line, none side by side, leave a 3x3's middle line one square.
+    choices:
+      - name: One a line
+        rule: One in each.
+        least: 1
+      - name: Two a line
+        rule: Two in each.
+        least: 4
 id:
   - dots: given
     cases: [2, 1]

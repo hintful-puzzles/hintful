@@ -132,59 +132,6 @@ deal:
   wall: on each wall that shows no number
   number: on each wall, then as many hidden as the board stays at its tier, each leaving its wall
   tier: one of the tiers
-  options:
-    walls:
-      letter: b
-      kw: percentage-of-black-squares
-      name: "%age of walls"
-      min: 5
-      max: 100
-      default: 20
-      words: "{n}% walls"
-      doc: >-
-        Roughly what share of the grid is walls, from 5 to 100. If no good
-        puzzle turns up with that many, the generator adds more, 5% at a time,
-        up to 90%, and then starts again.
-    symmetry:
-      letter: s
-      kw: symmetry
-      name: Symmetry
-      default: 2
-      doc: >-
-        How the walls are arranged: <em>None</em>, <em>2-way mirror</em> (the
-        bottom half reflects the top), <em>2-way rotational</em> (the same
-        after a half turn), <em>4-way mirror</em> (reflected both left to right
-        and top to bottom) or <em>4-way rotational</em> (the same after a
-        quarter turn). Only the walls follow the symmetry; the numbers in them
-        need not.
-      # A 3x3 has no Unreasonable board with symmetry, and none of Normal
-      # with 4-way symmetry, as a 2x3 has none mirrored both ways; the other
-      # boards of nine squares and more are longer. A 4x4 has no Unreasonable
-      # board mirrored both ways (none in 400,000 searched, 2026-11-02) and
-      # 3x4 and 3x5 have, so no bound refuses it: its deal gives up.
-      choices:
-        - { name: None, words: no symmetry, symmetry: none }
-        - name: 2-way mirror
-          symmetry: mirrorTopBottom
-          bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
-        - name: 2-way rotational
-          symmetry: halfTurn
-          bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
-        - name: 4-way mirror
-          symmetry: mirrorBothWays
-          bounds:
-            longer: { min: 3 }
-            tiers:
-              Normal: { longer: { min: 4 } }
-              Unreasonable: { longer: { min: 4 } }
-        - name: 4-way rotational
-          symmetry: quarterTurn
-          bounds:
-            square: true
-            longer: { min: 3 }
-            tiers:
-              Normal: { longer: { min: 4 } }
-              Unreasonable: { longer: { min: 4 } }
   # The walls first, at the share and the symmetry the params give (upstream's
   # set_blacks), then a bulb on a random open square and what the ladder
   # decides from it, until every square is decided.
@@ -205,6 +152,61 @@ deal:
   # CPU time, against 4.8 s from every number and 5.1 s hand-written
   # (2026-11-23).
   stripFrom: everyClue
+settings:
+  walls:
+    kind: number
+    letter: b
+    kw: percentage-of-black-squares
+    name: "%age of walls"
+    min: 5
+    max: 100
+    default: 20
+    words: "{n}% walls"
+    doc: >-
+      Roughly what share of the grid is walls, from 5 to 100. If no good
+      puzzle turns up with that many, the generator adds more, 5% at a time,
+      up to 90%, and then starts again.
+  symmetry:
+    kind: choice
+    letter: s
+    kw: symmetry
+    name: Symmetry
+    default: 2
+    doc: >-
+      How the walls are arranged: <em>None</em>, <em>2-way mirror</em> (the
+      bottom half reflects the top), <em>2-way rotational</em> (the same
+      after a half turn), <em>4-way mirror</em> (reflected both left to right
+      and top to bottom) or <em>4-way rotational</em> (the same after a
+      quarter turn). Only the walls follow the symmetry; the numbers in them
+      need not.
+    # A 3x3 has no Unreasonable board with symmetry, and none of Normal
+    # with 4-way symmetry, as a 2x3 has none mirrored both ways; the other
+    # boards of nine squares and more are longer. A 4x4 has no Unreasonable
+    # board mirrored both ways (none in 400,000 searched, 2026-11-02) and
+    # 3x4 and 3x5 have, so no bound refuses it: its deal gives up.
+    choices:
+      - { name: None, words: no symmetry, symmetry: none }
+      - name: 2-way mirror
+        symmetry: mirrorTopBottom
+        bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
+      - name: 2-way rotational
+        symmetry: halfTurn
+        bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
+      - name: 4-way mirror
+        symmetry: mirrorBothWays
+        bounds:
+          longer: { min: 3 }
+          tiers:
+            Normal: { longer: { min: 4 } }
+            Unreasonable: { longer: { min: 4 } }
+      - name: 4-way rotational
+        symmetry: quarterTurn
+        bounds:
+          square: true
+          longer: { min: 3 }
+          tiers:
+            Normal: { longer: { min: 4 } }
+            Unreasonable: { longer: { min: 4 } }
 # Upstream's game ID: a digit a numbered wall, `B` a wall with none, and a
 # letter a run of squares.
 id:

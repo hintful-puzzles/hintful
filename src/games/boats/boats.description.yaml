@@ -256,23 +256,6 @@ play:
   shape: seg
   # The clues count rows and columns.
   straight: true
-  # The fleet: its longest boat's length after the grid's, each length's
-  # count at the end.
-  tally:
-    kind: fleet
-    size:
-      letter: f
-      kw: fleet
-      name: Fleet size
-      doc: The length of the longest boat.
-      max: 9
-      default: 4
-    counts:
-      kw: fleet-data
-      name: Fleet configuration
-      doc: How many boats of each length, the shortest first.
-    # A fleet of one boat has only Easy boards.
-    single: Easy
   boards: [6x6f3, 7x9, 10x10]
   default: 10x10
   hintMarks:
@@ -295,8 +278,28 @@ deal:
   # shape.
   withhold: { seg: [3] }
   hide: seg
-  hideFlag:
-    kind: n
+  hideFlag: { kind: n, when: stripClues }
+settings:
+  # The fleet: its longest boat's length after the grid's, each length's
+  # count at the end.
+  fleet:
+    kind: tally
+    letter: f
+    size:
+      kw: fleet
+      name: Fleet size
+      doc: The length of the longest boat.
+      max: 9
+      default: 4
+    counts:
+      kw: fleet-data
+      name: Fleet configuration
+      doc: How many boats of each length, the shortest first.
+    # A fleet of one boat has only Easy boards.
+    single: Easy
+  stripClues:
+    kind: flag
+    after: tier
     letter: S
     kw: strip-clues
     name: Remove numbers

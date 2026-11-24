@@ -38,13 +38,6 @@ play:
   defaultTier: Normal
   boardTiers: { 4x4: [Easy, Easy] }
   variants: [{ board: 6x6, with: [unique], tier: Normal }]
-  modifiers:
-    unique:
-      letter: u
-      kw: unique-rows-and-columns
-      name: Unique rows and columns
-      words: unique
-      rule: no two rows may be the same, and no two columns.
   hintMarks:
     ring: the square to fill.
     outline: the squares the step reasons from.
@@ -55,6 +48,15 @@ deal:
   tier: one of the tiers, the board finished at it and not at the tier below
   sample: { build: true }
   hide: given
+settings:
+  unique:
+    kind: flag
+    gives: variation
+    letter: u
+    kw: unique-rows-and-columns
+    name: Unique rows and columns
+    words: unique
+    rule: no two rows may be the same, and no two columns.
 # Upstream Unruly's ID grammar: the givens as dot runs, a block's letter
 # uppercase.
 id:

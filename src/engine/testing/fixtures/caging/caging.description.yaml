@@ -63,8 +63,11 @@ deal:
     kinds: [product, sum]
     poor:
       sum: "|cells(at)| = 2 and (v <= 4 or v >= 2 * w - 2)"
-  onlyFlag:
-    kinds: [product]
+    alone: { when: productsOnly, kinds: [product] }
+settings:
+  productsOnly:
+    kind: flag
+    after: tier
     letter: m
     kw: products-only
     name: Products only

@@ -19,13 +19,12 @@ import {
   type DescriptionJson,
   firstKindJsonOf,
   type OneKindJson,
-  type OnlyFlagJson,
   oneKindOf,
-  onlyFlagOf,
 } from "../description.ts";
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
 import { answerEnv, param, tierIndex } from "./emit.ts";
+import { dealFlag, type SettingOut } from "./settings.ts";
 
 /** `deal.latin`: a kind on every cell the deal numbers as a Latin square
  * and renumbers under `under` (`engine/fill/deal/latin-numbers.ts`), never derived
@@ -79,18 +78,18 @@ export function oneKindDeal(
   json: DescriptionJson,
   d: Description,
   partition: string | null,
+  settings: readonly SettingOut[],
 ): {
   json: OneKindJson;
-  deal: { kinds: readonly string[]; partition: string };
-  only: (Omit<OnlyFlagJson, "kinds"> & { kinds: readonly string[] }) | null;
+  deal: {
+    kinds: readonly string[];
+    partition: string;
+    alone?: { kinds: readonly string[]; when: string };
+  };
 } | null {
   const one = oneKindOf(json);
-  const only = onlyFlagOf(json);
-  if (one === null) {
-    if (only !== null)
-      throw new CompileError("deal onlyFlag: a setting of oneKind, and none");
-    return null;
-  }
+  if (one === null) return null;
+  const { alone } = one;
   if (partition === null)
     throw new CompileError(
       "deal oneKind: kinds at the parts of a partition the deal divides",
@@ -109,13 +108,23 @@ export function oneKindDeal(
   for (const k of [...Object.keys(one.poor ?? {}), ...Object.keys(one.never ?? {})])
     if (!one.kinds.includes(k))
       throw new CompileError(`deal oneKind: ${k} is none of its kinds`);
-  for (const k of only?.kinds ?? [])
+  for (const k of alone?.kinds ?? [])
     if (!one.kinds.includes(k))
-      throw new CompileError(`deal onlyFlag: ${k} is none of oneKind's kinds`);
+      throw new CompileError(`deal oneKind alone: ${k} is none of its kinds`);
   return {
     json: one,
-    deal: { kinds: one.kinds, partition },
-    only,
+    deal: {
+      kinds: one.kinds,
+      partition,
+      ...(alone === undefined
+        ? {}
+        : {
+            alone: {
+              kinds: alone.kinds,
+              when: dealFlag(settings, alone.when, "deal oneKind alone"),
+            },
+          }),
+    },
   };
 }
 

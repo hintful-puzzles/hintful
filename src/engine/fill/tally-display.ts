@@ -1,5 +1,5 @@
 /**
- * The tally's display beneath the board (`play.tally`): one drawn piece for
+ * The tally's display beneath the board (a `tally` setting): one drawn piece for
  * each piece the tally counts, struck through once that many are found.
  * Upstream's boats.c `boats_draw_fleet`, its layout and its strike.
  */

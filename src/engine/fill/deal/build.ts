@@ -10,7 +10,7 @@ import type { GridSpace } from "../../solve/describe-runtime.ts";
 import { ladderTechniques, runLadder } from "../../solve/ladder-runtime.ts";
 import { type Clues, capsOf, marksOf, newBoard } from "../board.ts";
 import { type FillDeal, type FillParams, givenOf } from "../game-id.ts";
-import { variationsOf } from "../params/modifiers.ts";
+import { variationsOf } from "../params/flag.ts";
 import type { BuiltSample } from "../sample.ts";
 import { withLatin } from "./clue-steps.ts";
 import type { DealContext, DealtFillModule } from "./context.ts";

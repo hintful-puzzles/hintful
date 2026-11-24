@@ -19,55 +19,16 @@ import type { GridSpace, Partition } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
 import type { IdSegment } from "./desc.ts";
 import type { FillGrow } from "./grow.ts";
-import {
-  blocksItems,
-  blocksRefusal,
-  blocksSegment,
-  type FillBlocks,
-} from "./params/blocks.ts";
 import { beyond, type FillBounds, type SizeBounds } from "./params/bounds.ts";
-import {
-  type FillHideFlag,
-  type FillOnlyFlag,
-  flagItem,
-  flagSegment,
-} from "./params/flags.ts";
-import {
-  type FillKindLetter,
-  kindItems,
-  kindLettersRefusal,
-  kindLettersSegment,
-} from "./params/kind-letters.ts";
-import {
-  type FillModifier,
-  modifierItems,
-  modifierRefusal,
-  modifierSegments,
-} from "./params/modifiers.ts";
-import {
-  type FillOption,
-  optionItem,
-  optionRefusal,
-  optionSegment,
-} from "./params/options.ts";
+import { leastWords } from "./params/choice.ts";
+import type { PresetSettings, SettingContext } from "./params/setting.ts";
 import {
   type FillSetting,
-  leastWords,
-  settingItem,
+  kindOf,
   settingRefusal,
-  settingSegment,
-  sizesOf,
+  sizeChoices,
 } from "./params/settings.ts";
-import {
-  type FillTally,
-  piecesOf,
-  tallyClue,
-  tallyCountsSegment,
-  tallyItems,
-  tallyRefusal,
-  tallySizeSegment,
-} from "./params/tally.ts";
-import { type FillThorough, thoroughItem, thoroughSegment } from "./params/thorough.ts";
+import { piecesOf, tallyClue, tallyIn } from "./params/tally.ts";
 import { tierAliasSegment, tierFlagSegment } from "./params/tiers.ts";
 import { type Sample, samplePieces } from "./sample.ts";
 
@@ -116,9 +77,8 @@ export interface FillDeal {
   /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
    * every cell outside it holds, which the desc does not write. */
   readonly hexagon?: { readonly outside: string };
-  readonly settings?: readonly FillSetting[];
-  /** The settings only the deal reads, by name. */
-  readonly options?: Readonly<Record<string, FillOption>>;
+  /** The settings the params give, in their order (`params/settings.ts`). */
+  readonly settings: readonly FillSetting[];
   readonly sample: Sample | null;
   /** The clue kind the deal hides while the board still finishes, or the
    * kinds it hides in one random order. */
@@ -156,32 +116,29 @@ export interface FillDeal {
    * which a cell is renumbered to repeat a number of its row or column
    * (`latin-numbers.ts`). */
   readonly latin?: { readonly kind: string; readonly under: number };
-  /** The symmetry the clues it leaves keep, or the option that chooses it:
+  /** The symmetry the clues it leaves keep, or the setting that chooses it:
    * the clues at the squares of one orbit are hidden together. */
   readonly symmetric?: Symmetry | { readonly option: string };
-  readonly thorough?: FillThorough;
-  /** The board kind the params give as a count of pieces of each length. */
-  readonly tally?: FillTally;
-  /** The setting under which the deal hides a kind beside `hide`'s, off by
-   * default. */
-  readonly hideFlag?: FillHideFlag;
+  /** The flag under which the hide tries every clue, and as many as the
+   * board's shorter side where it is off; absent, it tries every one. */
+  readonly thorough?: string;
+  /** A kind the deal hides beside `hide`'s where the flag `when` is on. */
+  readonly hideFlag?: { readonly kind: string; readonly when: string };
   /** How it grows a dealt partition round the answer. */
   readonly grow?: FillGrow;
   /** How it divides each dealt partition it divides, apart from the answer
    * and in this order (`divide.ts`). */
   readonly divide?: readonly FillDivide[];
   /** The kinds at the divided partition's parts dealt one a part. */
-  readonly oneKind?: { readonly kinds: readonly string[]; readonly partition: string };
-  /** The setting under which `oneKind` deals some of its kinds alone. */
-  readonly onlyFlag?: FillOnlyFlag;
+  readonly oneKind?: {
+    readonly kinds: readonly string[];
+    readonly partition: string;
+    /** Some of `kinds` it deals alone where the flag `when` is on. */
+    readonly alone?: { readonly kinds: readonly string[]; readonly when: string };
+  };
   /** Kinds at one place of which an element holds one clue: the first in
    * this order the answer makes there. */
   readonly firstKind?: readonly string[];
-  /** Kinds the player switches on and off, each by its letter after the
-   * tier, in this order; every one on where none is written. */
-  readonly kindLetters?: readonly FillKindLetter[];
-  /** Where the board is sized by its blocks (`play.blocks`). */
-  readonly blocks?: FillBlocks;
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, ClueUniverse>>;
@@ -231,31 +188,23 @@ export interface FillParams {
   w: number;
   h: number;
   diff: number;
-  /** The variations on, by name, in the modifiers' order; absent where none
+  /** The variations on, by name, in the settings' order; absent where none
    * is, as on every board of a game with none. */
   variations?: readonly string[];
-  /** Whether the deal hides thoroughly, in a game whose deal has the
-   * setting; absent in any other. */
-  thorough?: boolean;
-  /** The sizes beyond the grid's, by name, in a game whose params give any
-   * (`FillDeal.settings`); absent in any other. */
+  /** The sizes beyond the grid's, by name, in a game whose params give any;
+   * absent in any other. */
   sizes?: Readonly<Record<string, number>>;
-  /** The deal's options, by name, in a game whose deal has any
-   * (`FillDeal.options`); absent in any other. */
-  options?: Readonly<Record<string, number>>;
+  /** The settings only the deal reads, by id (`params/setting.ts`), in a game
+   * that has any; absent in any other. */
+  settings?: Readonly<Record<string, number>>;
   /** The tally's count of each length from 1, in a game whose params give
-   * one (`FillDeal.tally`); absent in any other. */
+   * one; absent in any other. */
   tally?: readonly number[];
-  /** Whether the deal hides, in a game whose deal has the setting
-   * (`FillDeal.hideFlag`); absent in any other. */
-  hides?: boolean;
-  /** Whether the deal deals some kinds alone, in a game whose deal has the
-   * setting (`FillDeal.onlyFlag`); absent in any other. */
-  only?: boolean;
-  /** The kinds of `FillDeal.kindLetters` on, in the letters' order, in a
-   * game whose deal has them; absent in any other. */
-  kinds?: readonly string[];
 }
+
+/** The sizes beyond the grid's that `p` gives. */
+export const sizesOf = (p: FillParams): Readonly<Record<string, number>> =>
+  p.sizes ?? {};
 
 /** The clues the params give a board of `p`: its sizes beyond the grid's,
  * and its tally. */
@@ -264,10 +213,10 @@ export const givenOf = (
   p: FillParams,
 ): Readonly<
   Record<string, number | Readonly<Record<string, number | readonly number[]>>>
-> =>
-  deal.tally === undefined
-    ? sizesOf(p)
-    : { ...sizesOf(p), [deal.tally.kind]: tallyClue(deal.tally, p) };
+> => {
+  const t = tallyIn(deal);
+  return t === null ? sizesOf(p) : { ...sizesOf(p), [t.id]: tallyClue(t, p) };
+};
 
 /** Each clue kind's largest value at an element (`clueMax`); a partition has
  * none. A kind at a partition's parts reads the part's cells off `cl`, the
@@ -276,25 +225,35 @@ export type ClueMax<C> = {
   readonly [K in keyof C]?: (sp: GridSpace, at: number, cl: C) => number;
 };
 
+/** Each setting of `deal` set on `p`, a preset board's params, as `board`
+ * names it or at its default. */
+export function startSettings(
+  deal: FillDeal,
+  p: FillParams,
+  board: PresetSettings,
+): FillParams {
+  const out = { ...p };
+  for (const s of deal.settings) kindOf(s).start(s, out, board);
+  return out;
+}
+
 /**
- * The params' custom form and codec: the size within the description's
- * `sizes`, each modifier by its letter, and the tier by its letter, which
- * only a full ID carries; and what the form's bounds cannot say, a size off
- * its step or past a modifier's `most`. Each setting is a module of
- * `params/`; the order of each list below is the dialog's, and the codec's is
- * the params' grammar.
+ * The params' custom form and codec: the grid's size, or its blocks; the
+ * settings written after it; the tier by its letter, which only a full ID
+ * carries; the settings written after the tier; and what the form's bounds
+ * cannot say, a size off its step or past the bounds. Each kind of setting
+ * is a module of `params/`, and the settings' order is the params' grammar
+ * and the dialog's.
  */
 export function fillParams(
   deal: FillDeal,
   tiers: readonly string[],
   defaults: () => FillParams,
-  modifiers: Readonly<Record<string, FillModifier>> = {},
   bounds: FillBounds = { all: {}, tiers: [] },
-  /** The value of option `name` a board of `p`'s size is dealt with unless
-   * it says otherwise: a preset's own, else the option's default. A board's
-   * name says an option only where it differs. */
-  usual: (p: FillParams, name: string) => number = (_p, name) =>
-    deal.options?.[name]?.default ?? 0,
+  usual: SettingContext["usual"] = (_p, id) => {
+    const s = deal.settings.find((x) => x.id === id);
+    return s !== undefined && "default" in s ? s.default : 0;
+  },
 ): {
   paramConfig: ParamConfigItem<FillParams>[];
   encodeParams(p: FillParams, full: boolean): string;
@@ -303,17 +262,22 @@ export function fillParams(
 } {
   const w = deal.sizes["w"];
   const step = w?.step;
-  const settings = deal.settings ?? [];
-  const options = Object.entries(deal.options ?? {});
+  const cx: SettingContext = { deal, tiers, usual };
+  const blocks = deal.settings.find((s) => s.kind === "blocks") ?? null;
+  const placed = (after: "size" | "tier") =>
+    deal.settings.filter(
+      (s) => s.kind !== "blocks" && (s.after === "tier") === (after === "tier"),
+    );
   const sizeBounds =
     w === undefined
       ? {}
       : { bounds: { min: w.min, ...(w.max === undefined ? {} : { max: w.max }) } };
-  const least = leastWords(settings);
-  const { blocks, tally, hideFlag, onlyFlag, thorough } = deal;
+  const least = leastWords(sizeChoices(deal));
+  const itemsOf = (after: "size" | "tier") =>
+    placed(after).flatMap((s) => kindOf(s).items(s, cx));
   const paramConfig: ParamConfigItem<FillParams>[] = [
-    ...(blocks !== undefined
-      ? blocksItems(blocks)
+    ...(blocks !== null
+      ? kindOf(blocks).items(blocks, cx)
       : deal.square === true
         ? [
             {
@@ -336,50 +300,45 @@ export function fillParams(
             doc: `Size of the grid in squares.${step === 2 ? " Both must be even." : ""}${least}`,
             ...sizeBounds,
           })),
-    ...settings.map(settingItem),
-    ...(tally === undefined ? [] : tallyItems(tally)),
-    ...options.map(([name, o]) => optionItem(deal, name, o, usual)),
+    ...itemsOf("size"),
     difficultyItem(tiers, "diff"),
-    ...(hideFlag === undefined ? [] : [flagItem(hideFlag, "hides")]),
-    ...(onlyFlag === undefined ? [] : [flagItem(onlyFlag, "only")]),
-    ...kindItems(deal),
-    ...modifierItems(modifiers),
-    ...(thorough === undefined ? [] : [thoroughItem(thorough)]),
+    ...itemsOf("tier"),
   ];
   const unused = (after: "size" | "tier") =>
     Object.entries(deal.unusedLetters ?? {})
       .filter(([, at]) => at === after)
       .map(([letter]) => unusedLetter<FillParams>(letter));
+  const segmentsOf = deal.settings.map((s) => ({
+    s,
+    ...kindOf(s).segments(s, paramConfig, cx),
+  }));
+  const here = (after: "size" | "tier") =>
+    segmentsOf
+      .filter(
+        ({ s }) => s.kind !== "blocks" && (s.after === "tier") === (after === "tier"),
+      )
+      .flatMap((x) => x.here);
   return {
     paramConfig,
     ...paramsCodec(defaults, [
-      blocks !== undefined
-        ? blocksSegment(blocks)
-        : deal.square === true
-          ? size(paramConfig, "grid-size")
-          : dims(paramConfig),
+      ...(blocks !== null
+        ? segmentsOf.filter(({ s }) => s === blocks).flatMap((x) => x.here)
+        : [deal.square === true ? size(paramConfig, "grid-size") : dims(paramConfig)]),
       ...unused("size"),
-      ...settings.map((s) => settingSegment(paramConfig, s)),
-      ...(tally === undefined ? [] : [tallySizeSegment(tally)]),
-      ...modifierSegments(paramConfig, modifiers),
-      // After the modifiers' letters, as upstream solo.c writes its
-      // symmetry after `x` and `k`.
-      ...options.map(([name, o]) => optionSegment(deal, paramConfig, name, o)),
-      ...(thorough === undefined ? [] : [thoroughSegment(paramConfig, thorough)]),
+      ...here("size"),
       ...(deal.tierFlag === undefined ? [] : [tierFlagSegment(deal.tierFlag)]),
       ...(deal.tierAliases === undefined ? [] : [tierAliasSegment(deal.tierAliases)]),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
       ...unused("tier"),
-      ...(hideFlag === undefined ? [] : [flagSegment(paramConfig, hideFlag)]),
-      ...(onlyFlag === undefined ? [] : [flagSegment(paramConfig, onlyFlag)]),
-      ...(deal.kindLetters === undefined ? [] : [kindLettersSegment(deal.kindLetters)]),
-      ...(tally === undefined ? [] : [tallyCountsSegment(tally)]),
+      ...here("tier"),
+      ...segmentsOf.flatMap((x) => (x.last === undefined ? [] : [x.last])),
     ]),
     validateParams(p, full) {
-      // Each refusal is returned as the call, so the refusal scan reads its
-      // sentences.
-      if (tally !== undefined && tallyRefusal(tally, tiers, p, full) !== null)
-        return tallyRefusal(tally, tiers, p, full);
+      // Returned as the call, so the refusal scan reads its sentences; the
+      // second call is made only on a refusal.
+      for (const s of deal.settings)
+        if (settingRefusal(s, p, full, cx) !== null)
+          return settingRefusal(s, p, full, cx);
       // The pieces fit where they can be laid on the board, taken upright.
       const { sample } = deal;
       if (
@@ -393,20 +352,9 @@ export function fillParams(
           null,
         ) === null
       )
-        return `The ${tally?.kind ?? "pieces"} does not fit into the grid.`;
-      for (const s of settings)
-        if (settingRefusal(s, p, deal.square === true) !== null)
-          return settingRefusal(s, p, deal.square === true);
-      if (blocks !== undefined && blocksRefusal(blocks, p) !== null)
-        return blocksRefusal(blocks, p);
+        return `The ${tallyIn(deal)?.id ?? "pieces"} does not fit into the grid.`;
       const outside = beyond(bounds.all, p);
       if (outside !== null) return `${outside}.`;
-      if (full && deal.kindLetters !== undefined && kindLettersRefusal(p) !== null)
-        return kindLettersRefusal(p);
-      if (full)
-        for (const [name, o] of options)
-          if (optionRefusal(deal, tiers, p, name, o) !== null)
-            return optionRefusal(deal, tiers, p, name, o);
       // A tier's own bounds hold of the board a deal makes, which only a full
       // ID's tier names.
       if (full)
@@ -417,7 +365,7 @@ export function fillParams(
         return step === 2
           ? "Width and height must both be even."
           : `Width and height must both be multiples of ${step}.`;
-      return modifierRefusal(modifiers, p);
+      return null;
     },
   };
 }

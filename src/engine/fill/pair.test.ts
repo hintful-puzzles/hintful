@@ -137,13 +137,12 @@ describe("a fill game of two alike pieces", () => {
     expect(encodeDesc(pairing.deal, spaceOf(pairing, b), dealt)).toBe(desc);
   });
 
-  it("writes a modifier by its letter, and no variation where none is on", () => {
+  it("writes a variation's flag by its letter, and no variation where none is on", () => {
     const defaults = (): FillParams => ({ w: 8, h: 8, diff: 0 });
     const { encodeParams, decodeParams } = fillParams(
       pairing.deal,
       pairing.tiers,
       defaults,
-      pairing.modifiers,
     );
     const unique = { w: 8, h: 8, diff: 1, variations: ["unique"] };
     expect(encodeParams(unique, true)).toBe("8x8udn");

@@ -124,7 +124,9 @@ function checkWalkSteps(
   const sizes = Object.keys(json.sizes ?? {}).filter((s) => s !== "w" && s !== "h");
   // A variation the player switches on is a flag by its name: Solo's X adds
   // the diagonals to how far a placed value reaches.
-  const flags = Object.keys(json.play?.modifiers ?? {});
+  const flags = Object.entries(json.settings ?? {})
+    .filter(([, s]) => s.gives === "variation")
+    .map(([id]) => id);
   for (const [id, supplied] of Object.entries(WALK_STEPS)) {
     const step = d.steps.find((s) => s.id === id);
     if (step === undefined)

@@ -103,41 +103,6 @@ freedom: { kind: fill }
 play:
   numbers: {}
   hintNotes: implicit
-  modifiers:
-    X:
-      letter: x
-      kw: x
-      name: '"X" (require every number in each main diagonal)'
-      words: X
-      rule: the two long diagonals must also hold every number once.
-      note: The grid needs at least 4 numbers.
-      bounds: { longer: { min: 4 } }
-    Killer:
-      letter: k
-      kw: killer
-      name: Killer (digit sums)
-      words: Killer
-      rule: instead of given numbers, cages are labeled with the sum of their numbers, which may not repeat within a cage.
-      note: Killer grids hold at most 9 numbers, and at least 3.
-      # A 2 Jigsaw has no Killer board: none in 4,850,000 drawn by upstream's
-      # generator (measured 2026-10-06).
-      bounds: { longer: { min: 3, max: 9 } }
-  blocks:
-    letter: j
-    columns:
-      kw: columns-of-sub-blocks
-      name: Columns of sub-blocks
-      doc: >-
-        How many blocks the grid has across and down. Their product is the
-        width and height of the grid, and the largest number in it: 3 and 3
-        make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid
-        of blocks 3 wide and 2 high. The grid can hold at most 31 numbers.
-    rows:
-      kw: rows-of-sub-blocks
-      name: Rows of sub-blocks
-    rulesets:
-      Standard: The blocks are rectangles.
-      Jigsaw: The blocks are irregular shapes.
   # The 6x6 board at its first three tiers and the 9x9 at all six, then
   # one board for each of X and Killer; the 9x9 Jigsaw at all six.
   boards: [2x3, 3x3, 9j]
@@ -186,29 +151,70 @@ deal:
   hide: given
   hideWhole: { given: { with: Killer } }
   symmetric: symmetry
-  options:
-    symmetry:
-      kw: symmetry
-      name: Symmetry
-      default: 1
+# Upstream solo.c's order: the blocks, `x`, `k`, the symmetry's code, the tier.
+settings:
+  blocks:
+    kind: blocks
+    letter: j
+    columns:
+      kw: columns-of-sub-blocks
+      name: Columns of sub-blocks
       doc: >-
-        The symmetry of the pattern of given numbers: None, 2-way rotation,
-        4-way rotation, 2-way mirror, 2-way diagonal mirror, 4-way mirror,
-        4-way diagonal mirror or 8-way mirror. A rotation keeps the pattern
-        the same when the grid is turned a half (2-way) or a quarter (4-way)
-        turn; a mirror keeps it the same when reflected across the middle
-        line, or the diagonal for a diagonal mirror, and the 4- and 8-way
-        ones combine several of these. Killer puzzles have no given numbers,
-        so it makes no difference there.
-      choices:
-        - { name: None, words: no symmetry, code: a, symmetry: none }
-        - { name: 2-way rotation, code: r2, symmetry: halfTurn }
-        - { name: 4-way rotation, code: r4, symmetry: quarterTurn }
-        - { name: 2-way mirror, code: m2, symmetry: mirrorLeftRight }
-        - { name: 2-way diagonal mirror, code: md2, symmetry: mirrorDiagonal }
-        - { name: 4-way mirror, code: m4, symmetry: mirrorBothWays }
-        - { name: 4-way diagonal mirror, code: md4, symmetry: mirrorBothDiagonals }
-        - { name: 8-way mirror, code: m8, symmetry: mirrorEightWays }
+        How many blocks the grid has across and down. Their product is the
+        width and height of the grid, and the largest number in it: 3 and 3
+        make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid
+        of blocks 3 wide and 2 high. The grid can hold at most 31 numbers.
+    rows:
+      kw: rows-of-sub-blocks
+      name: Rows of sub-blocks
+    rulesets:
+      Standard: The blocks are rectangles.
+      Jigsaw: The blocks are irregular shapes.
+  X:
+    kind: flag
+    gives: variation
+    letter: x
+    kw: x
+    name: '"X" (require every number in each main diagonal)'
+    words: X
+    rule: the two long diagonals must also hold every number once.
+    note: The grid needs at least 4 numbers.
+    bounds: { longer: { min: 4 } }
+  Killer:
+    kind: flag
+    gives: variation
+    letter: k
+    kw: killer
+    name: Killer (digit sums)
+    words: Killer
+    rule: instead of given numbers, cages are labeled with the sum of their numbers, which may not repeat within a cage.
+    note: Killer grids hold at most 9 numbers, and at least 3.
+    # A 2 Jigsaw has no Killer board: none in 4,850,000 drawn by upstream's
+    # generator (measured 2026-10-06).
+    bounds: { longer: { min: 3, max: 9 } }
+  symmetry:
+    kind: choice
+    kw: symmetry
+    name: Symmetry
+    default: 1
+    doc: >-
+      The symmetry of the pattern of given numbers: None, 2-way rotation,
+      4-way rotation, 2-way mirror, 2-way diagonal mirror, 4-way mirror,
+      4-way diagonal mirror or 8-way mirror. A rotation keeps the pattern
+      the same when the grid is turned a half (2-way) or a quarter (4-way)
+      turn; a mirror keeps it the same when reflected across the middle
+      line, or the diagonal for a diagonal mirror, and the 4- and 8-way
+      ones combine several of these. Killer puzzles have no given numbers,
+      so it makes no difference there.
+    choices:
+      - { name: None, words: no symmetry, code: a, symmetry: none }
+      - { name: 2-way rotation, code: r2, symmetry: halfTurn }
+      - { name: 4-way rotation, code: r4, symmetry: quarterTurn }
+      - { name: 2-way mirror, code: m2, symmetry: mirrorLeftRight }
+      - { name: 2-way diagonal mirror, code: md2, symmetry: mirrorDiagonal }
+      - { name: 4-way mirror, code: m4, symmetry: mirrorBothWays }
+      - { name: 4-way diagonal mirror, code: md4, symmetry: mirrorBothDiagonals }
+      - { name: 8-way mirror, code: m8, symmetry: mirrorEightWays }
 # Upstream's: the givens, then a Jigsaw board's blocks, then a Killer
 # board's cages and each cage's sum at its first cell, each behind a comma.
 id:

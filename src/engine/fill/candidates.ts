@@ -85,6 +85,7 @@ import {
 } from "./board.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { numeral } from "./numbers.ts";
+import { variationFlags } from "./params/settings.ts";
 import { slotPoint } from "./slots.ts";
 import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
 
@@ -134,8 +135,6 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   readonly STEPS?: StepTable<Readonly<Record<string, UntypedStep>>>;
   /** The dealt partitions whose parts hold no value twice. */
   readonly distinctParts?: readonly string[];
-  /** The variations the player switches on, by name. */
-  readonly modifiers?: Readonly<Record<string, unknown>>;
 }
 
 /** A step of the description's whose terms and marks are not known here. */
@@ -585,7 +584,10 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     );
     // Each variation the player switches on, a flag by its name.
     const flags = Object.fromEntries(
-      Object.keys(module.modifiers ?? {}).map((v) => [v, board.variations.includes(v)]),
+      (module.deal === undefined ? [] : variationFlags(module.deal)).map((s) => [
+        s.id,
+        board.variations.includes(s.id),
+      ]),
     );
     const said = (ring: readonly Point[], terms: object) => ({
       ring,

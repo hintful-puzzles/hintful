@@ -5,6 +5,7 @@
 
 import type { Caps } from "../../solve/ladder-runtime.ts";
 import { type Clues, capsOf } from "../board.ts";
+import { isOn } from "../params/settings.ts";
 import type { DealContext } from "./context.ts";
 import { hidesAny } from "./keeping.ts";
 
@@ -42,7 +43,11 @@ export function refusalOf<C extends Clues<C>>(
       return "fill: another scale's tier below its top finishes the board";
     // A board the hide flag asked to hide a kind hides one of it (upstream
     // boats.c refused a stripped board that showed every number).
-    if (deal.hideFlag !== undefined && p.hides === true && !hidesAny(clues, deal, sp))
+    if (
+      deal.hideFlag !== undefined &&
+      isOn(deal, p, deal.hideFlag.when) &&
+      !hidesAny(clues, deal, sp)
+    )
       return "fill: the board hides none of the flag's kind";
     return null;
   };

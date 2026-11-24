@@ -34,13 +34,6 @@ play:
   numbers: {}
   boards: [4x4]
   variants: [{ board: 4x4, with: [X], tier: Easy }]
-  modifiers:
-    X:
-      letter: x
-      kw: diagonals
-      name: Diagonals
-      words: X
-      rule: each of the two diagonals holds every number once too.
   hintMarks:
     ring: the square the step decides.
     strike: the notes the step crosses out.
@@ -54,6 +47,15 @@ deal:
   divide: { partition: area, sizes: [[4]] }
   sample: { search: true }
   hide: given
+settings:
+  X:
+    kind: flag
+    gives: variation
+    letter: x
+    kw: diagonals
+    name: Diagonals
+    words: X
+    rule: each of the two diagonals holds every number once too.
 id:
   - walls: area
   - { digits: given, before: "," }

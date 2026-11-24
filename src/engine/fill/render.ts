@@ -20,7 +20,7 @@ import type { FillMistake } from "./answer.ts";
 import { type Clues, type FillBoard, spaceOf } from "./board.ts";
 import type { FillMove } from "./notes.ts";
 import { topValue } from "./numbers.ts";
-import { tallyOf } from "./params/tally.ts";
+import { tallyIn, tallyOf } from "./params/tally.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
@@ -203,10 +203,10 @@ export function fillRender<C extends Clues<C>>(
     gap: metrics.gapOf,
     // A hexagon's rows reach half a tile past its width.
     computeSize: (p, size) => {
-      const t = module.deal?.tally;
+      const t = module.deal === undefined ? null : tallyIn(module.deal);
       return metrics.canvasOf(
         p,
-        t === undefined ? null : tallyOf(t, p),
+        t === null ? null : tallyOf(t, p),
         metrics.tileOf(size),
       );
     },

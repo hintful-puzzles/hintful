@@ -21,6 +21,7 @@ import {
   dividesOf,
   growOf,
   sampleOf,
+  tallyKindOf,
 } from "../description.ts";
 import type { Binder, Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
@@ -228,7 +229,7 @@ export function derivedClues(
     growing === undefined ? dividesOf(json).map((x) => x.partition) : [growing];
   /** The partitions as the clues read them off the deal's. */
   const grownClues = `const cl = { ${grown.map((r) => `${r}: grown[${JSON.stringify(r)}]`).join(", ")} } as unknown as Dealt;`;
-  // A size the grid is not measured in is the params' (`play.sizes`).
+  // A size the grid is not measured in is the params' (a `settings` choice that gives a size).
   if (dealtPartitions(env).some((r) => !grown.includes(r)) || env.relations.size > 0)
     throw new CompileError(
       `${json.game}: a sampled deal derives clues and deals a partition, and this board deals more`,
@@ -245,7 +246,7 @@ export function derivedClues(
   const outside = json.space.grid?.hexagon?.outside;
   const latinKind = latinOf(json, d)?.kind;
   const never = [...neverOf(json, d), ...(latinKind === undefined ? [] : [latinKind])];
-  const tally = json.play?.tally?.kind;
+  const tally = tallyKindOf(json) ?? undefined;
   /** Whether a kind sits at the dealt partition's parts, whose cells its
    * meaning reads off the partition. */
   const atParts = (c: { at: string }): boolean => grown.includes(c.at);

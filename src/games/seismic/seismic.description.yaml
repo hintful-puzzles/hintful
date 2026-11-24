@@ -75,14 +75,6 @@ play:
   # both tiers: the tail of a deal, not its median, sets the largest.
   boards: [4x4, 4x4T, 6x6, 6x6T, 6x8, 6x8T, 7x9, 7x9T]
   default: 6x6
-  sizes:
-    mode:
-      letters: ["", T]
-      rulesets:
-        - name: Seismic
-          rule: Two equal numbers N in the same row or column must have at least N spaces between them.
-        - name: Tectonic
-          rule: Two equal numbers cannot be horizontally, vertically or diagonally adjacent.
   hintMarks:
     ring: the cell the step fills in, with the number to enter there or the marks to write.
     strike: the pencil marks the step crosses out.
@@ -104,6 +96,17 @@ deal:
   divide: { partition: area, by: mode, sizes: [[2, 3, 3, 4, 4, 5], [5]] }
   sample: { search: true }
   hide: given
+settings:
+  mode:
+    kind: choice
+    gives: size
+    choices:
+      - name: Seismic
+        code: ""
+        rule: Two equal numbers N in the same row or column must have at least N spaces between them.
+      - name: Tectonic
+        code: T
+        rule: Two equal numbers cannot be horizontally, vertically or diagonally adjacent.
 id:
   - walls: area
   # Upstream writes the givens after the comma even where there are none.

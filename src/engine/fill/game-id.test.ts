@@ -4,7 +4,7 @@
  * dialog's game mode with the narrowest board each has an answer on, and the
  * bounds the board and a tier keep beyond the sizes'. On the `fleet` fixture,
  * a tally of pieces the params give, and the flag that hides more clues; on
- * `walling`, options only the deal reads; on `mirroring`, a hide the player
+ * `walling`, settings only the deal reads; on `mirroring`, a hide the player
  * may make less thorough.
  */
 
@@ -16,8 +16,8 @@ import * as walling from "../../generated/engine/testing/fixtures/walling/wallin
 import { paramSpaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import type { FillParams } from "./game-id.ts";
-import { tallyClue } from "./params/tally.ts";
-import { withThorough } from "./params/thorough.ts";
+import { isOn } from "./params/settings.ts";
+import { tallyClue, tallyIn } from "./params/tally.ts";
 
 const game = fillGame("sizing", sizing);
 const fleetGame = fillGame("fleet", fleet);
@@ -131,7 +131,9 @@ describe("a tally of pieces the params give", () => {
   });
 
   it("is the board clue the rules read: each length and its count", () => {
-    expect(tallyClue(fleet.deal.tally, p([0, 1]))).toEqual({
+    const tally = tallyIn(fleet.deal);
+    if (tally === null) throw new Error("no tally");
+    expect(tallyClue(tally, p([0, 1]))).toEqual({
       n: 2,
       length: [1, 2],
       boats: [0, 1],
@@ -153,25 +155,33 @@ describe("a tally of pieces the params give", () => {
 
 describe("a flag that hides more clues", () => {
   it("is written by its letter after the tier, and is the Custom dialog's", () => {
-    const p: FillParams = { w: 5, h: 5, diff: 0, tally: [2, 1], hides: true };
+    const p: FillParams = {
+      w: 5,
+      h: 5,
+      diff: 0,
+      tally: [2, 1],
+      settings: { stripClues: 1 },
+    };
     expect(fleetGame.encodeParams(p, true)).toBe("5x5f2deS,2,1");
     expect(fleetGame.decodeParams("5x5f2deS,2,1")).toEqual(p);
-    expect(fleetGame.decodeParams("5x5f2de,2,1").hides).toBe(false);
+    expect(isOn(fleet.deal, fleetGame.decodeParams("5x5f2de,2,1"), "stripClues")).toBe(
+      false,
+    );
     const flag = fleetGame.paramConfig.find((i) => i.name === "Remove numbers");
     if (flag === undefined || flag.type !== "boolean") throw new Error("no flag");
     expect(flag.get(p)).toBe(true);
     flag.set(p, false);
-    expect(p.hides).toBe(false);
+    expect(isOn(fleet.deal, p, "stripClues")).toBe(false);
   });
 });
 
-describe("options only the deal reads", () => {
+describe("settings only the deal reads", () => {
   const wallingGame = fillGame("walling", walling);
   const p = (w: number, h: number, walls: number, symmetry: number): FillParams => ({
     w,
     h,
     diff: 0,
-    options: { walls, symmetry },
+    settings: { walls, symmetry },
   });
 
   it("are written by their letters in a full ID alone, their defaults where absent", () => {
@@ -189,7 +199,7 @@ describe("options only the deal reads", () => {
       throw new Error("no options");
     share.set(q, "45");
     symmetry.set(q, 3);
-    expect(q.options).toEqual({ walls: 45, symmetry: 3 });
+    expect(q.settings).toEqual({ walls: 45, symmetry: 3 });
     expect(symmetry.choices).toEqual([
       "None",
       "2-way mirror",
@@ -210,24 +220,27 @@ describe("options only the deal reads", () => {
 
 describe("a hide the player may make less thorough", () => {
   const mirroringGame = fillGame("mirroring", mirroring);
-  const p = (w: number, thorough: boolean): FillParams => ({
+  const p = (w: number, on: boolean): FillParams => ({
     w,
     h: w,
     diff: 0,
-    thorough,
+    settings: { aggressive: on ? 1 : 0 },
   });
+  const on = (q: FillParams) => isOn(mirroring.deal, q, "aggressive");
 
-  it("is written by its letter in a full ID where off, and read back", () => {
+  it("is written by its letter in a full ID where off, and read back, absent as on", () => {
     expect(mirroringGame.encodeParams(p(5, false), true)).toBe("5x5h0de");
     expect(mirroringGame.encodeParams(p(5, true), true)).toBe("5x5de");
     expect(mirroringGame.encodeParams(p(5, false), false)).toBe("5x5");
-    expect(mirroringGame.decodeParams("5x5h0").thorough).toBe(false);
-    expect(mirroringGame.decodeParams("8x8h1").thorough).toBe(true);
+    expect(on(mirroringGame.decodeParams("5x5h0"))).toBe(false);
+    expect(on(mirroringGame.decodeParams("8x8h1"))).toBe(true);
+    expect(on(mirroringGame.decodeParams("8x8"))).toBe(true);
   });
 
-  it("is on by default narrower than its offFrom, and its label says where it is not", () => {
-    expect(withThorough(mirroring.deal, p(6, false)).thorough).toBe(true);
-    expect(withThorough(mirroring.deal, p(7, true)).thorough).toBe(false);
+  it("is on by default narrower than its onBelow, and its label says where it is not", () => {
+    const unset = (w: number): FillParams => ({ w, h: w, diff: 0 });
+    expect(on(unset(6))).toBe(true);
+    expect(on(unset(7))).toBe(false);
     const field = mirroringGame.paramConfig.find(
       (i) => i.name === "Aggressive generation",
     );

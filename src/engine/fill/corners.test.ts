@@ -26,13 +26,22 @@ import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { firstKindEach } from "./deal/first-kind.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import { givenOf } from "./game-id.ts";
+import { type FillParams, givenOf } from "./game-id.ts";
+import { kindsOn } from "./params/set.ts";
 
 const game = fillGame("cornering", cornering);
 type Board = FillBoard<cornering.Dealt>;
 
 const params = (w: number, diff = 0) => ({ w, h: w, diff });
 const board = (w: number, desc: string): Board => game.newState(params(w), desc);
+/** A 5x5 board that deals `kinds` alone, as Custom's boxes set it. */
+const withKinds = (kinds: readonly string[], diff = NORMAL): FillParams => {
+  const p: FillParams = { ...params(5, diff), settings: {} };
+  for (const c of game.paramConfig ?? [])
+    if (c.type === "boolean" && c.kw.endsWith("-clues"))
+      c.set(p, kinds.includes(c.kw.slice(0, -"-clues".length)));
+  return p;
+};
 const NORMAL = 1;
 
 // The answer 1234/3412/4321/2143 makes a sum of 5 at corner 0, a difference
@@ -115,7 +124,7 @@ describe("one clue a corner, of the kinds switched on", () => {
   /** Each corner's kinds the deal keeps of what answer `g` makes, on a
    * board with `kinds` on. */
   const kept = (g: Uint8Array, kinds?: string[]) => {
-    const p = kinds === undefined ? params(5) : { ...params(5), kinds };
+    const p = kinds === undefined ? params(5) : withKinds(kinds, 0);
     const all = cornering.deriveClues(g, sp5, {}, givenOf(cornering.deal, p));
     const out = firstKindEach(cornering.deal, p, all);
     const at = new Map<number, string[]>();
@@ -147,11 +156,14 @@ describe("one clue a corner, of the kinds switched on", () => {
 
   it("writes the kinds on by their letters after the tier, and nothing for all", () => {
     expect(game.encodeParams(params(5, NORMAL), true)).toBe("5dn");
-    const some = { ...params(5, NORMAL), kinds: ["sum", "parity"] };
+    const some = withKinds(["sum", "parity"]);
     expect(game.encodeParams(some, true)).toBe("5dnAO");
     expect(game.encodeParams(some, false)).toBe("5");
-    expect(game.decodeParams("5dnAO").kinds).toEqual(["sum", "parity"]);
-    expect(game.decodeParams("5dn").kinds).toEqual([
+    expect(kindsOn(cornering.deal, game.decodeParams("5dnAO"))).toEqual([
+      "sum",
+      "parity",
+    ]);
+    expect(kindsOn(cornering.deal, game.decodeParams("5dn"))).toEqual([
       "sum",
       "difference",
       "same",
@@ -162,12 +174,11 @@ describe("one clue a corner, of the kinds switched on", () => {
   });
 
   it("names the shorter of the kinds on and off, and refuses none on", () => {
-    const named = (kinds: string[]) =>
-      describeParams(game, { ...params(5, NORMAL), kinds });
+    const named = (kinds: string[]) => describeParams(game, withKinds(kinds));
     expect(named(["sum", "difference", "same", "parity"])).toBe("5x5 Normal");
     expect(named(["sum"])).toBe("5x5 Normal, only sum");
     expect(named(["sum", "difference", "same"])).toBe("5x5 Normal, no parity");
-    expect(game.validateParams?.({ ...params(5, NORMAL), kinds: [] }, true)).toBe(
+    expect(game.validateParams?.(withKinds([]), true)).toBe(
       "At least one clue type must be enabled.",
     );
     const box = game.paramConfig?.find((c) => c.kw === "parity-clues");

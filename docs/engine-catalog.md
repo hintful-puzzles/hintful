@@ -791,7 +791,7 @@ more than one puzzle, each ruleset a `name` and its `rule`.
 help, and `rulesetsMarkdown` is what a page's `{{rulesets}}` becomes. A
 ruleset's `only` is what it offers of the other fields (`only.ts`).
 Exemplar: `path/state.ts`; a born game states its rulesets in
-`play.sizes` (Seismic's).
+`settings:`, a choice that `gives: size` (Seismic's).
 
 ### `only.ts` — what one setting leaves of the others
 

@@ -132,10 +132,16 @@ deal:
     scatter: { value: 1, share: 0.5, each: true }
     rest: 2
   hide: count
-  # Upstream recommends it off from about 30x30, and its presets turn it off
-  # at 50x50.
-  thorough:
+  thorough: aggressive
+settings:
+  aggressive:
+    kind: flag
     letter: h
+    # Upstream writes it `h0` where it is off, and reads it on where absent.
+    written: off
+    # Upstream recommends it off from about 30x30, and its presets turn it
+    # off at 50x50.
+    onBelow: 50
     kw: aggressive-generation
     name: Aggressive generation
     doc: >-
@@ -145,7 +151,7 @@ deal:
       difficulty without it, so fewer numbers are shown, which usually makes
       the puzzle harder; when off, it tries only a few. On, a large puzzle
       takes much longer to find.
-    offFrom: 50
+    words: { on: slower generation, off: faster generation }
 # Upstream's game ID: a digit a shown number, a letter a run of hidden ones.
 id:
   - digits: count

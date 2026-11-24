@@ -4,11 +4,11 @@ import { parseConfigInt } from "../../game-id/params.ts";
 import type { ParamsSegment } from "../../game-id/params-codec.ts";
 import { type Ruleset, rulesetItem } from "../../game-id/ruleset.ts";
 import type { FillParams } from "../game-id.ts";
-import { variationsOf } from "./modifiers.ts";
-import { sizesOf } from "./settings.ts";
+import { variationsOf } from "./flag.ts";
+import type { SettingBase, SettingKind } from "./setting.ts";
 
 /**
- * A board sized by its blocks (`play.blocks`): the params give how many
+ * A board sized by its blocks, written in place of the grid's size: the params give how many
  * blocks it has across, `across`, each that many squares tall, and down,
  * `down`, each that many wide, the grid `across * down` on a side; a board of
  * blocks one square wide deals its blocks instead, the variation `dealtBy`
@@ -16,7 +16,8 @@ import { sizesOf } from "./settings.ts";
  * `{across}` and `letter` where the blocks are dealt, and a bare number read
  * as that many both ways, as upstream solo.c reads it.
  */
-export interface FillBlocks {
+export interface BlocksSetting extends SettingBase {
+  readonly kind: "blocks";
   readonly across: string;
   readonly down: string;
   readonly letter: string;
@@ -35,15 +36,15 @@ export interface FillBlocks {
 }
 
 /** The blocks across and down board `p` has. */
-const blocksOn = (b: FillBlocks, p: FillParams): [number, number] => {
-  const s = sizesOf(p);
+const blocksOn = (b: BlocksSetting, p: FillParams): [number, number] => {
+  const s = p.sizes ?? {};
   return [s[b.across] ?? b.bounds.across.min, s[b.down] ?? b.bounds.down.min];
 };
 
 /** Sets `p` to `across` blocks by `down`: the sizes, the grid, and the
  * variation that deals the blocks, on where they are one square wide. */
-export function setBlocks(
-  b: FillBlocks,
+function setBlocks(
+  b: BlocksSetting,
   p: FillParams,
   across: number,
   down: number,
@@ -67,7 +68,7 @@ function squarest(order: number): [number, number] {
 /** The Custom dialog's fields of a board sized by its blocks: across, down,
  * and the ruleset, last, since choosing it folds the two (the midend sets
  * fields in order). */
-export function blocksItems(b: FillBlocks): ParamConfigItem<FillParams>[] {
+function blocksItems(b: BlocksSetting): ParamConfigItem<FillParams>[] {
   return [
     {
       kw: b.columns.kw,
@@ -110,7 +111,7 @@ export function blocksItems(b: FillBlocks): ParamConfigItem<FillParams>[] {
  * letter where they are dealt. Read as upstream solo.c reads them: a bare
  * number is that many both ways, and the letter after `{a}x{d}` makes a
  * board of dealt blocks of the order `a * d`. */
-export function blocksSegment(b: FillBlocks): ParamsSegment<FillParams> {
+function blocksSegment(b: BlocksSetting): ParamsSegment<FillParams> {
   return {
     encode: (p) => {
       const [a, d] = blocksOn(b, p);
@@ -139,7 +140,7 @@ export function blocksSegment(b: FillBlocks): ParamsSegment<FillParams> {
 }
 
 /** Why board `p`'s blocks cannot be, or `null`. */
-export function blocksRefusal(b: FillBlocks, p: FillParams): string | null {
+export function blocksRefusal(b: BlocksSetting, p: FillParams): string | null {
   const [a, d] = blocksOn(b, p);
   const { across, down } = b.bounds;
   if (a < across.min || a > across.max)
@@ -148,3 +149,13 @@ export function blocksRefusal(b: FillBlocks, p: FillParams): string | null {
     return `${b.rows.name} must be between ${down.min} and ${down.max}.`;
   return null;
 }
+
+/** The blocks stand in the grid's place: the params' first segment and the
+ * dialog's first fields. */
+export const blocks: SettingKind<BlocksSetting> = {
+  items: (b) => blocksItems(b),
+  segments: (b) => ({ here: [blocksSegment(b)] }),
+  start(b, p, board) {
+    setBlocks(b, p, board.sizes?.[b.across] ?? p.w, board.sizes?.[b.down] ?? 1);
+  },
+};

@@ -4,7 +4,7 @@
  * the deal.
  */
 
-import { SET_BLACKS_SYMM, type Symmetry } from "../../engine/generate/symmetry.ts";
+import { SET_BLACKS_SYMM } from "../../engine/generate/symmetry.ts";
 import { CompileError } from "../compile-sorts.ts";
 import {
   type Description,
@@ -12,7 +12,7 @@ import {
   type SampleJson,
   sampleOf,
 } from "../description.ts";
-import type { FillSettingJson } from "./params.ts";
+import { type SettingOut, sizeSettings } from "./settings.ts";
 
 /** The value a sample lays, 0 where it lays no one value: it builds the
  * answer, draws a Latin square, or searches one. */
@@ -33,12 +33,15 @@ export function checkSample(
   json: DescriptionJson,
   d: Description,
   sample: SampleJson | null,
-  settings: readonly FillSettingJson[],
+  settings: readonly SettingOut[],
   hides: boolean,
 ): void {
   if (sample !== null && "lines" in sample) {
     const { count } = sample.lines;
-    if (typeof count === "string" && !settings.some((s) => s.size === count))
+    if (
+      typeof count === "string" &&
+      !sizeSettings(settings).some((s) => s.id === count)
+    )
       throw new CompileError(`deal sample: ${count} is no size the params give`);
   }
   const unpair = json.deal?.["unpair"];
@@ -78,14 +81,20 @@ export function checkSample(
  * symmetry is no option of the symmetries first cells keep. */
 export function checkFirst(
   sample: SampleJson | null,
-  options: Readonly<Record<string, { choices?: readonly { symmetry?: Symmetry }[] }>>,
+  settings: readonly SettingOut[],
   hides: boolean,
 ): void {
   if (sample === null || !("first" in sample) || sample.first === undefined) return;
   const { share, symmetry } = sample.first;
-  if (options[share] === undefined || options[share].choices !== undefined)
-    throw new CompileError(`deal sample first: ${share} is no number the options give`);
-  const kept = options[symmetry]?.choices?.map((c) => c.symmetry);
+  if (!settings.some((s) => s.id === share && s.kind === "number"))
+    throw new CompileError(
+      `deal sample first: ${share} is no number the settings give`,
+    );
+  const chosen = settings.find((s) => s.id === symmetry);
+  const kept =
+    chosen?.kind === "choice" && chosen.gives === undefined
+      ? chosen.choices.map((c) => c.symmetry)
+      : undefined;
   if (
     kept === undefined ||
     kept.some((s) => s === undefined || SET_BLACKS_SYMM[s] === undefined)

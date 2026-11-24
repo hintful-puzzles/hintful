@@ -1,10 +1,8 @@
 /**
  * The letters a fill game's params are written by (`engine/fill/params/`),
- * each held by one field: `d` by the tier, then each field's in the order
- * the compiler meets them, the modifiers, thorough, the sizes beyond the
- * grid's, the deal's options, the tier flag, the only flag, the kind
- * letters, the blocks, the tally and the hide flag. One compile holds one
- * registry, so a field cannot take a letter another already holds.
+ * each held by one field: `d` by the tier, then each setting's in the
+ * settings' order, then the tier flag's. One compile holds one registry, so
+ * a field cannot take a letter another already holds.
  */
 
 import { CompileError } from "../compile-sorts.ts";

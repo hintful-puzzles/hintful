@@ -94,7 +94,7 @@ preset:10x10 Tricky, size 4  full=10x10f4dt,4,3,2,1  brief=10x10f4,4,3,2,1
 preset:10x10 Hard, size 4  full=10x10f4dh,4,3,2,1  brief=10x10f4,4,3,2,1
 bump:w  full=11x10f4de,4,3,2,1  brief=11x10f4,4,3,2,1
 bump:h  full=10x11f4de,4,3,2,1  brief=10x11f4,4,3,2,1
-flip:hides  full=10x10f4deS,4,3,2,1  brief=10x10f4,4,3,2,1"
+bump:settings.stripClues  full=10x10f4deS,4,3,2,1  brief=10x10f4,4,3,2,1"
 `;
 
 exports[`encoded params are byte-stable > bricks 1`] = `
@@ -310,8 +310,8 @@ preset:12x16 Normal  full=12x16b20s2d1  brief=12x16
 preset:12x16 Unreasonable  full=12x16b20s2d2  brief=12x16
 bump:w  full=8x7b20s4d0  brief=8x7
 bump:h  full=7x8b20s4d0  brief=7x8
-bump:options.walls  full=7x7b21s4d0  brief=7x7
-bump:options.symmetry  full=7x7b20s5d0  brief=7x7"
+bump:settings.walls  full=7x7b21s4d0  brief=7x7
+bump:settings.symmetry  full=7x7b20s5d0  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > loopy 1`] = `
@@ -380,7 +380,8 @@ preset:7x7 Normal  full=7dn  brief=7
 preset:8x8 Normal  full=8dn  brief=8
 preset:9x9 Normal  full=9dn  brief=9
 bump:w  full=6de  brief=6
-bump:h  full=5de  brief=5"
+bump:h  full=5de  brief=5
+bump:settings.clueTypes  full=5de  brief=5"
 `;
 
 exports[`encoded params are byte-stable > mines 1`] = `
@@ -412,7 +413,7 @@ preset:20x25 Unreasonable  full=20x25du  brief=20x25
 preset:50x50 Easy  full=50x50h0de  brief=50x50
 bump:w  full=9x10de  brief=9x10
 bump:h  full=8x11de  brief=8x11
-flip:thorough  full=8x10h0de  brief=8x10"
+bump:settings.aggressive  full=8x10h0de  brief=8x10"
 `;
 
 exports[`encoded params are byte-stable > net 1`] = `
@@ -784,9 +785,9 @@ preset:Jigsaw/Jigsaw: 9x9 Extreme  full=9jde  brief=9j
 preset:Jigsaw/Jigsaw: 9x9 Unreasonable  full=9jdu  brief=9j
 bump:w  full=3x3dt  brief=3x3
 bump:h  full=3x3dt  brief=3x3
-bump:options.symmetry  full=3x3r4dt  brief=3x3
 bump:sizes.across  full=4x3dt  brief=4x3
-bump:sizes.down  full=3x4dt  brief=3x4"
+bump:sizes.down  full=3x4dt  brief=3x4
+bump:settings.symmetry  full=3x3r4dt  brief=3x3"
 `;
 
 exports[`encoded params are byte-stable > spokes 1`] = `
@@ -836,8 +837,8 @@ preset:8x10 Easy  full=8x10b20s2de  brief=8x10
 preset:8x10 Unreasonable  full=8x10b20s2du  brief=8x10
 bump:w  full=8x7b20s2de  brief=8x7
 bump:h  full=7x8b20s2de  brief=7x8
-bump:options.blocks  full=7x7b21s2de  brief=7x7
-bump:options.symmetry  full=7x7b20s3de  brief=7x7"
+bump:settings.blocks  full=7x7b21s2de  brief=7x7
+bump:settings.symmetry  full=7x7b20s3de  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > subsets 1`] = `

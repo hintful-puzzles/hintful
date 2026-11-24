@@ -1,7 +1,7 @@
 /*
  * A deal is as symmetric as its description says: the clues a symmetric hide
  * leaves (`deal.symmetric`, Range's numbers under a half turn), and the cells
- * a sample lays first at an option's symmetry (`deal.sample.first.symmetry`,
+ * a sample lays first at a setting's symmetry (`deal.sample.first.symmetry`,
  * Light Up's and Sticks' walls). For every born game whose compiled deal
  * declares either, each board dealt at its presets, and at each symmetry its
  * option offers on the first preset, has every such cell's partners too.
@@ -17,10 +17,10 @@ interface DealShape {
   readonly hide?: string;
   readonly symmetric?: "halfTurn";
   readonly sample?: { readonly first?: { value: number; symmetry: string } };
-  readonly options?: Readonly<Record<string, { default: number }>>;
+  readonly settings?: readonly { readonly id: string; readonly default?: number }[];
 }
 
-type Params = { w: number; h: number; options?: Readonly<Record<string, number>> };
+type Params = { w: number; h: number; settings?: Readonly<Record<string, number>> };
 
 const symmetric = BORN_GAMES.flatMap((born) => {
   const deal = born.compiled["deal"] as DealShape | undefined;
@@ -45,7 +45,7 @@ describe("a deal is as symmetric as its description says", () => {
     if (first !== null) {
       const top = presets[0];
       for (let symm = 0; symm < 5; symm++) {
-        const p = { ...top, options: { ...top.options, [first.symmetry]: symm } };
+        const p = { ...top, settings: { ...top.settings, [first.symmetry]: symm } };
         if (paramsError(game, p, true) === null) boards.push(p);
       }
     }
@@ -64,7 +64,9 @@ describe("a deal is as symmetric as its description says", () => {
         }
         if (first !== null) {
           const symm =
-            p.options?.[first.symmetry] ?? deal.options?.[first.symmetry]?.default ?? 0;
+            p.settings?.[first.symmetry] ??
+            deal.settings?.find((s) => s.id === first.symmetry)?.default ??
+            0;
           const values = state.values;
           for (let c = 0; c < values.length; c++) {
             if (values[c] !== first.value) continue;

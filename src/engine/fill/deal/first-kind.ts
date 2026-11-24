@@ -1,6 +1,6 @@
 /**
- * Which kinds of clue a board deals: those the params switch on
- * (`deal.kindLetters`, Mathrax's `A S M D E O`), and of `deal.firstKind`'s
+ * Which kinds of clue a board deals: those a `set` setting switches on
+ * (Mathrax's `A S M D E O`), and of `deal.firstKind`'s
  * one clue an element, the first kind in its order that the answer makes
  * there (upstream mathrax.c's cascade, where four squares that are all odd
  * and add in pairs to 6 are a sum and never Odd).
@@ -9,7 +9,7 @@
 import { type ClueList, clueList } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
 import type { FillDeal, FillParams } from "../game-id.ts";
-import { kindsOn } from "../params/kind-letters.ts";
+import { kindsOn } from "../params/set.ts";
 
 /**
  * `derived` with no clue of a kind board `p` switches off, and of
@@ -20,11 +20,13 @@ export function firstKindEach<C extends Clues<C>>(
   p: FillParams,
   derived: C,
 ): C {
-  const letters = deal.kindLetters ?? [];
+  const members = deal.settings.flatMap((s) =>
+    s.kind === "set" ? s.members.map((m) => m.kind) : [],
+  );
   const order = deal.firstKind ?? [];
-  if (letters.length === 0 && order.length === 0) return derived;
-  const on = new Set(kindsOn(deal, p));
-  const off = new Set(letters.map((l) => l.kind).filter((k) => !on.has(k)));
+  if (members.length === 0 && order.length === 0) return derived;
+  const on = new Set(kindsOn(deal, p) ?? members);
+  const off = new Set(members.filter((k) => !on.has(k)));
   const out: Record<string, unknown> = { ...derived };
   const list = (k: string) => derived[k as keyof C] as ClueList;
   /** The elements an earlier kind of `order` holds. */

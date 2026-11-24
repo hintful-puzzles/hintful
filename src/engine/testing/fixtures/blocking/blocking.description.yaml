@@ -37,26 +37,7 @@ variations:
 freedom: { kind: fill }
 play:
   numbers: {}
-  modifiers:
-    X:
-      letter: x
-      kw: diagonals
-      name: Diagonals
-      words: X
-      rule: each of the two diagonals holds every number once too.
   boards: [2x2, 2x3, 5j]
-  blocks:
-    letter: j
-    columns:
-      kw: columns-of-sub-blocks
-      name: Columns of sub-blocks
-      doc: How many blocks the grid has across and down.
-    rows:
-      kw: rows-of-sub-blocks
-      name: Rows of sub-blocks
-    rulesets:
-      Standard: The blocks are rectangles.
-      Jigsaw: The blocks are irregular shapes.
   bounds: { longer: { max: 6 } }
   hintMarks:
     ring: the square the step decides.
@@ -71,6 +52,28 @@ deal:
   divide: { partition: box, equal: w }
   sample: { search: true }
   hide: given
+settings:
+  blocks:
+    kind: blocks
+    letter: j
+    columns:
+      kw: columns-of-sub-blocks
+      name: Columns of sub-blocks
+      doc: How many blocks the grid has across and down.
+    rows:
+      kw: rows-of-sub-blocks
+      name: Rows of sub-blocks
+    rulesets:
+      Standard: The blocks are rectangles.
+      Jigsaw: The blocks are irregular shapes.
+  X:
+    kind: flag
+    gives: variation
+    letter: x
+    kw: diagonals
+    name: Diagonals
+    words: X
+    rule: each of the two diagonals holds every number once too.
 id:
   - { blocks: box, after: ",", counts: false }
   - digits: given

@@ -3,11 +3,22 @@
   "$id": "description.schema.json",
   "title": "A puzzle game's description, or a library of techniques",
   "description": "What `src/describe/load.ts` validates every `*.description.yaml` against. Every string marked a formula is in the formula syntax of docs/descriptions.md § \"The formula syntax\", and the compiler parses each. Every string marked prose is markdown.",
-  "if": { "type": "object", "required": ["library"] },
-  "then": { "$ref": "#/$defs/library" },
-  "else": { "$ref": "#/$defs/game" },
+  "if": {
+    "type": "object",
+    "required": ["library"]
+  },
+  "then": {
+    "$ref": "#/$defs/library"
+  },
+  "else": {
+    "$ref": "#/$defs/game"
+  },
   "$defs": {
-    "formula": { "type": "string", "minLength": 1, "description": "A formula." },
+    "formula": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A formula."
+    },
     "divide": {
       "type": "object",
       "description": "One partition `deal.divide` divides: by `pairs` and `most`, by `sizes`, or into `equal` parts.",
@@ -16,24 +27,40 @@
           "required": ["partition", "pairs", "most"],
           "additionalProperties": false,
           "properties": {
-            "partition": { "type": "string" },
-            "pairs": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
-            "most": { "type": "integer", "minimum": 2 }
+            "partition": {
+              "type": "string"
+            },
+            "pairs": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "most": {
+              "type": "integer",
+              "minimum": 2
+            }
           }
         },
         {
           "required": ["partition", "sizes"],
           "additionalProperties": false,
           "properties": {
-            "partition": { "type": "string" },
-            "by": { "type": "string" },
+            "partition": {
+              "type": "string"
+            },
+            "by": {
+              "type": "string"
+            },
             "sizes": {
               "type": "array",
               "minItems": 1,
               "items": {
                 "type": "array",
                 "minItems": 1,
-                "items": { "type": "integer", "minimum": 1 }
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
               }
             }
           }
@@ -42,11 +69,19 @@
           "required": ["partition", "equal"],
           "additionalProperties": false,
           "properties": {
-            "partition": { "type": "string" },
+            "partition": {
+              "type": "string"
+            },
             "equal": {
               "oneOf": [
-                { "type": "integer", "minimum": 1 },
-                { "type": "string", "minLength": 1 }
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "string",
+                  "minLength": 1
+                }
               ]
             }
           }
@@ -59,24 +94,48 @@
       "required": ["value", "share", "symmetry"],
       "additionalProperties": false,
       "properties": {
-        "value": { "type": "integer", "minimum": 1 },
-        "share": { "type": "string" },
-        "symmetry": { "type": "string" },
+        "value": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "share": {
+          "type": "string"
+        },
+        "symmetry": {
+          "type": "string"
+        },
         "ramp": {
           "type": "object",
           "description": "After each `every` draws the share goes up `step`, and past `top` starts over from the params' own: a layout few boards of the tier come from is left behind (upstream lightup.c's ramp of walls).",
           "required": ["every", "step", "top"],
           "additionalProperties": false,
           "properties": {
-            "every": { "type": "integer", "minimum": 1 },
-            "step": { "type": "integer", "minimum": 1 },
-            "top": { "type": "integer", "minimum": 1 }
+            "every": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "step": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "top": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         }
       }
     },
     "countOrFormula": {
-      "oneOf": [{ "type": "integer", "minimum": 1 }, { "$ref": "#/$defs/formula" }]
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "$ref": "#/$defs/formula"
+        }
+      ]
     },
     "symmetry": {
       "description": "A symmetry a pattern keeps (`engine/generate/symmetry.ts`): the board turned a half or a quarter, or reflected left to right, top to bottom, in its main diagonal, both ways, in both diagonals, or all eight ways.",
@@ -97,32 +156,50 @@
       "minProperties": 1,
       "additionalProperties": false,
       "properties": {
-        "min": { "type": "integer", "minimum": 1 },
-        "max": { "type": "integer", "minimum": 1 }
+        "min": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "saidMark": {
       "description": "A set of elements, or where the step marks elements of several sorts in one role, a set of each by its sort's name (`{ face: \"{f}\", cell: \"{c}\" }`), or `{ supplied: elements }` where only the game's code can find them.",
       "oneOf": [
-        { "$ref": "#/$defs/formula" },
+        {
+          "$ref": "#/$defs/formula"
+        },
         {
           "type": "object",
           "minProperties": 1,
-          "not": { "required": ["supplied"] },
-          "additionalProperties": { "$ref": "#/$defs/formula" }
+          "not": {
+            "required": ["supplied"]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/formula"
+          }
         },
         {
           "type": "object",
           "additionalProperties": false,
           "required": ["supplied"],
-          "properties": { "supplied": { "const": "elements" } }
+          "properties": {
+            "supplied": {
+              "const": "elements"
+            }
+          }
         }
       ]
     },
     "saidTerm": {
       "description": "A formula over the binding, or a term only the game's code can know, by its kind: the game's hook for the technique returns it (`SuppliedById` in the compiled module), and a wording's `when` cannot read it. `words` is a list of words said as they are: `{term}` as a list, `{either term}` as alternatives, `{term: one | several}` by how many. `several` is the engine's: whether the step decides more than one element, over all its legs.",
       "oneOf": [
-        { "$ref": "#/$defs/formula" },
+        {
+          "$ref": "#/$defs/formula"
+        },
         {
           "type": "object",
           "additionalProperties": false,
@@ -138,21 +215,37 @@
     "saidTerms": {
       "type": "object",
       "description": "Named values the step's sentence reads, by name.",
-      "additionalProperties": { "$ref": "#/$defs/saidTerm" }
+      "additionalProperties": {
+        "$ref": "#/$defs/saidTerm"
+      }
     },
     "saidMarks": {
       "type": "object",
       "description": "The elements a step marks, by the role they are marked in. The firing's own facts are ringed without being said; evidence is the outline's set less them.",
       "additionalProperties": false,
       "properties": {
-        "outline": { "$ref": "#/$defs/saidMark" },
-        "stripes": { "$ref": "#/$defs/saidMark" },
-        "strike": { "$ref": "#/$defs/saidMark" },
-        "strand": { "$ref": "#/$defs/saidMark" },
-        "reads": { "$ref": "#/$defs/saidMark" }
+        "outline": {
+          "$ref": "#/$defs/saidMark"
+        },
+        "stripes": {
+          "$ref": "#/$defs/saidMark"
+        },
+        "strike": {
+          "$ref": "#/$defs/saidMark"
+        },
+        "strand": {
+          "$ref": "#/$defs/saidMark"
+        },
+        "reads": {
+          "$ref": "#/$defs/saidMark"
+        }
       }
     },
-    "prose": { "type": "string", "minLength": 1, "description": "Markdown." },
+    "prose": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Markdown."
+    },
     "clause": {
       "type": "string",
       "minLength": 1,
@@ -166,16 +259,36 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "when": { "$ref": "#/$defs/formula" },
-          "aim": { "$ref": "#/$defs/clause" },
-          "answers": { "$ref": "#/$defs/clause" },
-          "look": { "$ref": "#/$defs/clause" },
-          "follows": { "$ref": "#/$defs/clause" },
-          "move": { "$ref": "#/$defs/clause" },
-          "effect": { "$ref": "#/$defs/clause" },
-          "again": { "$ref": "#/$defs/clause" },
-          "later": { "$ref": "#/$defs/clause" },
-          "long": { "$ref": "#/$defs/long" }
+          "when": {
+            "$ref": "#/$defs/formula"
+          },
+          "aim": {
+            "$ref": "#/$defs/clause"
+          },
+          "answers": {
+            "$ref": "#/$defs/clause"
+          },
+          "look": {
+            "$ref": "#/$defs/clause"
+          },
+          "follows": {
+            "$ref": "#/$defs/clause"
+          },
+          "move": {
+            "$ref": "#/$defs/clause"
+          },
+          "effect": {
+            "$ref": "#/$defs/clause"
+          },
+          "again": {
+            "$ref": "#/$defs/clause"
+          },
+          "later": {
+            "$ref": "#/$defs/clause"
+          },
+          "long": {
+            "$ref": "#/$defs/long"
+          }
         }
       }
     },
@@ -187,8 +300,16 @@
     "rung": {
       "description": "The game's hint rungs a firing of this is recorded under, among its hintRungs: one, or several where one firing records under more than one (an Unequal sign's two ends).",
       "oneOf": [
-        { "type": "string" },
-        { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2
+        }
       ]
     },
     "from": {
@@ -237,9 +358,15 @@
               "type": "boolean",
               "description": "Report, with the firing, the elements whose marks its `for ... where` and `premise` read (`reads.cells`, `reads.edges`), for the engine to find what the firing rests on. Read on a hint's path only."
             },
-            "look": { "$ref": "#/$defs/clause" },
-            "follows": { "$ref": "#/$defs/clause" },
-            "move": { "$ref": "#/$defs/clause" },
+            "look": {
+              "$ref": "#/$defs/clause"
+            },
+            "follows": {
+              "$ref": "#/$defs/clause"
+            },
+            "move": {
+              "$ref": "#/$defs/clause"
+            },
             "again": {
               "$ref": "#/$defs/clause",
               "description": "A later leg of a journey (`shown: legs`): said after its move in place of `look` and `follows`, the reasoning the first leg gave as this square adds to it."
@@ -248,8 +375,12 @@
               "$ref": "#/$defs/clause",
               "description": "What a later leg says as its move, in place of `move`, where it differs; said with the `again` relation."
             },
-            "terms": { "$ref": "#/$defs/saidTerms" },
-            "marks": { "$ref": "#/$defs/saidMarks" },
+            "terms": {
+              "$ref": "#/$defs/saidTerms"
+            },
+            "marks": {
+              "$ref": "#/$defs/saidMarks"
+            },
             "fact": {
               "type": "object",
               "description": "What a square the firing decides has of its own, read where the conclusion's `place` or `strike` makes it, in the conclusion's scope (a `forall` binder is live, and a `with` may be written): the step for that square takes these in place of the firing's, and a step for the firing takes the union of its squares' marks.",
@@ -257,33 +388,61 @@
               "properties": {
                 "terms": {
                   "type": "object",
-                  "additionalProperties": { "$ref": "#/$defs/formula" }
+                  "additionalProperties": {
+                    "$ref": "#/$defs/formula"
+                  }
                 },
                 "marks": {
                   "type": "object",
                   "additionalProperties": false,
                   "properties": {
-                    "outline": { "$ref": "#/$defs/formula" },
-                    "stripes": { "$ref": "#/$defs/formula" },
-                    "strike": { "$ref": "#/$defs/formula" },
-                    "strand": { "$ref": "#/$defs/formula" },
-                    "reads": { "$ref": "#/$defs/formula" }
+                    "outline": {
+                      "$ref": "#/$defs/formula"
+                    },
+                    "stripes": {
+                      "$ref": "#/$defs/formula"
+                    },
+                    "strike": {
+                      "$ref": "#/$defs/formula"
+                    },
+                    "strand": {
+                      "$ref": "#/$defs/formula"
+                    },
+                    "reads": {
+                      "$ref": "#/$defs/formula"
+                    }
                   }
                 },
-                "look": { "$ref": "#/$defs/clause" },
-                "follows": { "$ref": "#/$defs/clause" },
-                "move": { "$ref": "#/$defs/clause" },
-                "again": { "$ref": "#/$defs/clause" },
-                "later": { "$ref": "#/$defs/clause" },
-                "long": { "$ref": "#/$defs/long" },
+                "look": {
+                  "$ref": "#/$defs/clause"
+                },
+                "follows": {
+                  "$ref": "#/$defs/clause"
+                },
+                "move": {
+                  "$ref": "#/$defs/clause"
+                },
+                "again": {
+                  "$ref": "#/$defs/clause"
+                },
+                "later": {
+                  "$ref": "#/$defs/clause"
+                },
+                "long": {
+                  "$ref": "#/$defs/long"
+                },
                 "wordings": {
                   "$ref": "#/$defs/wordings",
                   "description": "Where a square's step reads differently by what holds where its fact is made, each `when` read in the conclusion's scope."
                 }
               }
             },
-            "wordings": { "$ref": "#/$defs/wordings" },
-            "long": { "$ref": "#/$defs/long" },
+            "wordings": {
+              "$ref": "#/$defs/wordings"
+            },
+            "long": {
+              "$ref": "#/$defs/long"
+            },
             "arms": {
               "type": "object",
               "description": "Where a step reads differently by what holds of the binding: each arm is a name and a condition, tried in order, the first true one winning, and adds its own `terms` and `marks` to the shared ones above. The step's kind is `<id>.<arm>`.",
@@ -292,15 +451,33 @@
                 "additionalProperties": false,
                 "required": ["when"],
                 "properties": {
-                  "when": { "$ref": "#/$defs/formula" },
-                  "look": { "$ref": "#/$defs/clause" },
-                  "follows": { "$ref": "#/$defs/clause" },
-                  "move": { "$ref": "#/$defs/clause" },
-                  "later": { "$ref": "#/$defs/clause" },
-                  "wordings": { "$ref": "#/$defs/wordings" },
-                  "long": { "$ref": "#/$defs/long" },
-                  "terms": { "$ref": "#/$defs/saidTerms" },
-                  "marks": { "$ref": "#/$defs/saidMarks" }
+                  "when": {
+                    "$ref": "#/$defs/formula"
+                  },
+                  "look": {
+                    "$ref": "#/$defs/clause"
+                  },
+                  "follows": {
+                    "$ref": "#/$defs/clause"
+                  },
+                  "move": {
+                    "$ref": "#/$defs/clause"
+                  },
+                  "later": {
+                    "$ref": "#/$defs/clause"
+                  },
+                  "wordings": {
+                    "$ref": "#/$defs/wordings"
+                  },
+                  "long": {
+                    "$ref": "#/$defs/long"
+                  },
+                  "terms": {
+                    "$ref": "#/$defs/saidTerms"
+                  },
+                  "marks": {
+                    "$ref": "#/$defs/saidMarks"
+                  }
                 }
               }
             }
@@ -316,14 +493,22 @@
           "$ref": "#/$defs/statement",
           "required": ["id", "tier"],
           "properties": {
-            "id": { "type": "string" },
+            "id": {
+              "type": "string"
+            },
             "tier": {
               "type": "string",
               "description": "One of `tiers`, or of one of `scales`."
             },
-            "from": { "$ref": "#/$defs/from" },
-            "until": { "$ref": "#/$defs/until" },
-            "rung": { "$ref": "#/$defs/rung" }
+            "from": {
+              "$ref": "#/$defs/from"
+            },
+            "until": {
+              "$ref": "#/$defs/until"
+            },
+            "rung": {
+              "$ref": "#/$defs/rung"
+            }
           },
           "unevaluatedProperties": false
         },
@@ -338,10 +523,18 @@
               "pattern": "^[a-z]+\\.[A-Za-z]+$",
               "description": "`<library>.<technique>`, as the library states it."
             },
-            "tier": { "type": "string" },
-            "from": { "$ref": "#/$defs/from" },
-            "until": { "$ref": "#/$defs/until" },
-            "rung": { "$ref": "#/$defs/rung" }
+            "tier": {
+              "type": "string"
+            },
+            "from": {
+              "$ref": "#/$defs/from"
+            },
+            "until": {
+              "$ref": "#/$defs/until"
+            },
+            "rung": {
+              "$ref": "#/$defs/rung"
+            }
           }
         },
         {
@@ -350,20 +543,40 @@
           "required": ["kind", "as", "tier"],
           "additionalProperties": false,
           "properties": {
-            "kind": { "type": "string", "pattern": "^[a-z]+\\.[A-Za-z]+$" },
+            "kind": {
+              "type": "string",
+              "pattern": "^[a-z]+\\.[A-Za-z]+$"
+            },
             "as": {
               "type": "string",
               "description": "The technique's id in this game."
             },
-            "with": { "type": "object" },
+            "with": {
+              "type": "object"
+            },
             "says": {
-              "anyOf": [{ "type": "object" }, { "const": false }],
+              "anyOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "const": false
+                }
+              ],
               "description": "The game's own words, laid over what the kind brings; the technique it expands into is checked against the statement's `says`. `false` places the kind without words, for a game whose hint narrates the firing itself."
             },
-            "tier": { "type": "string" },
-            "from": { "$ref": "#/$defs/from" },
-            "until": { "$ref": "#/$defs/until" },
-            "rung": { "$ref": "#/$defs/rung" }
+            "tier": {
+              "type": "string"
+            },
+            "from": {
+              "$ref": "#/$defs/from"
+            },
+            "until": {
+              "$ref": "#/$defs/until"
+            },
+            "rung": {
+              "$ref": "#/$defs/rung"
+            }
           }
         }
       ]
@@ -374,8 +587,13 @@
       "required": ["library", "techniques"],
       "additionalProperties": false,
       "properties": {
-        "library": { "type": "string", "pattern": "^[a-z]+$" },
-        "steps": { "$ref": "#/$defs/game/properties/steps" },
+        "library": {
+          "type": "string",
+          "pattern": "^[a-z]+$"
+        },
+        "steps": {
+          "$ref": "#/$defs/game/properties/steps"
+        },
         "techniques": {
           "type": "object",
           "additionalProperties": {
@@ -395,8 +613,12 @@
           "required": ["w", "h"],
           "additionalProperties": false,
           "properties": {
-            "w": { "$ref": "#/$defs/formula" },
-            "h": { "$ref": "#/$defs/formula" },
+            "w": {
+              "$ref": "#/$defs/formula"
+            },
+            "h": {
+              "$ref": "#/$defs/formula"
+            },
             "hexagon": {
               "type": "object",
               "required": ["outside"],
@@ -438,12 +660,16 @@
         "regions": {
           "type": "object",
           "description": "Named partitions of the cells: `dealt`, from the board, or a library partition such as `blocks(rw, rh)`.",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "relations": {
           "type": "object",
           "description": "A planning game's relations the board deals, each a set of cells for each cell, read `name(c)`.",
-          "additionalProperties": { "const": "dealt" }
+          "additionalProperties": {
+            "const": "dealt"
+          }
         },
         "tiling": {
           "enum": [true, "square"],
@@ -465,14 +691,23 @@
             "required": ["of", "to"],
             "additionalProperties": false,
             "properties": {
-              "of": { "type": "array", "items": { "enum": ["cell", "face", "num"] } },
-              "to": { "enum": ["cell", "face"] }
+              "of": {
+                "type": "array",
+                "items": {
+                  "enum": ["cell", "face", "num"]
+                }
+              },
+              "to": {
+                "enum": ["cell", "face"]
+              }
             }
           }
         },
         "units": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "The named sets of lines and regions in which no value repeats: `units`, `units_of(c)` and `peers(c)` read them."
         }
       }
@@ -480,22 +715,32 @@
     "define": {
       "type": "object",
       "description": "Named terms and predicates, `name(params)` to a formula.",
-      "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\([A-Za-z_, ]*\\))?$" },
-      "additionalProperties": { "$ref": "#/$defs/formula" }
+      "propertyNames": {
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\([A-Za-z_, ]*\\))?$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/formula"
+      }
     },
     "shape": {
       "type": "array",
-      "items": { "$ref": "#/$defs/formula" },
+      "items": {
+        "$ref": "#/$defs/formula"
+      },
       "description": "The answer's shape."
     },
     "rules": {
       "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/formula" },
+      "additionalProperties": {
+        "$ref": "#/$defs/formula"
+      },
       "description": "Goal predicates, by name."
     },
     "implied": {
       "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/formula" },
+      "additionalProperties": {
+        "$ref": "#/$defs/formula"
+      },
       "description": "Statements the rules imply, by name, said so a breach shows on a board still being filled: read by the live error check alone."
     },
     "clues": {
@@ -504,7 +749,14 @@
       "additionalProperties": {
         "type": "object",
         "required": ["at", "means"],
-        "oneOf": [{ "required": ["value"] }, { "required": ["fields"] }],
+        "oneOf": [
+          {
+            "required": ["value"]
+          },
+          {
+            "required": ["fields"]
+          }
+        ],
         "additionalProperties": false,
         "properties": {
           "at": {
@@ -519,7 +771,9 @@
             "const": true,
             "description": "The clue at an element is a list of numbers, each one of `value`, in order: a line's run lengths. `clue(kind, x)` is the list, and its meaning reads it as `v`."
           },
-          "value": { "$ref": "#/$defs/formula" },
+          "value": {
+            "$ref": "#/$defs/formula"
+          },
           "fields": {
             "type": "object",
             "description": "A whole-board clue's parts, each read as a function of the clue, and of an element where it has an `at`: one a cell is `peg(k, s)`.",
@@ -529,16 +783,22 @@
               "required": ["value"],
               "additionalProperties": false,
               "properties": {
-                "at": { "type": "string" },
+                "at": {
+                  "type": "string"
+                },
                 "list": {
                   "const": true,
                   "description": "The field of a clue is a list of numbers, each one of `value`, in order: a number's digits. Read whole as `f(k)`, its length `|f(k)|`, and a member `nth(f(k), i)`, counted from 0."
                 },
-                "value": { "$ref": "#/$defs/formula" }
+                "value": {
+                  "$ref": "#/$defs/formula"
+                }
               }
             }
           },
-          "means": { "$ref": "#/$defs/formula" },
+          "means": {
+            "$ref": "#/$defs/formula"
+          },
           "complete": {
             "type": "boolean",
             "description": "Every place carries one, so an absent clue is a fact."
@@ -546,7 +806,12 @@
         }
       }
     },
-    "techniques": { "type": "array", "items": { "$ref": "#/$defs/technique" } },
+    "techniques": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/technique"
+      }
+    },
     "layer": {
       "type": "object",
       "required": ["domain"],
@@ -589,14 +854,22 @@
       "items": {
         "type": "object",
         "minProperties": 1,
-        "properties": { "for": { "$ref": "#/$defs/formula" } },
-        "additionalProperties": { "$ref": "#/$defs/formula" }
+        "properties": {
+          "for": {
+            "$ref": "#/$defs/formula"
+          }
+        },
+        "additionalProperties": {
+          "$ref": "#/$defs/formula"
+        }
       }
     },
     "deadEnds": {
       "type": "object",
       "description": "Claims by id, each a formula over the position true only where no line of moves finishes: `Game.hasNoSolution`. Each is checked sound on small boards.",
-      "additionalProperties": { "$ref": "#/$defs/formula" }
+      "additionalProperties": {
+        "$ref": "#/$defs/formula"
+      }
     },
     "help": {
       "type": "object",
@@ -604,8 +877,14 @@
       "required": ["rules", "controls"],
       "additionalProperties": false,
       "properties": {
-        "rules": { "$ref": "#/$defs/prose", "description": "How to play, unheaded." },
-        "controls": { "$ref": "#/$defs/prose", "description": "Under `## Controls`." },
+        "rules": {
+          "$ref": "#/$defs/prose",
+          "description": "How to play, unheaded."
+        },
+        "controls": {
+          "$ref": "#/$defs/prose",
+          "description": "Under `## Controls`."
+        },
         "sections": {
           "type": "array",
           "description": "The game's own sections, each under its heading.",
@@ -614,8 +893,13 @@
             "required": ["heading", "body"],
             "additionalProperties": false,
             "properties": {
-              "heading": { "type": "string", "minLength": 1 },
-              "body": { "$ref": "#/$defs/prose" }
+              "heading": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "$ref": "#/$defs/prose"
+              }
             }
           }
         },
@@ -632,8 +916,12 @@
           "description": "Under `## <Name> parameters`, either side of the list generated from `paramConfig`.",
           "additionalProperties": false,
           "properties": {
-            "before": { "$ref": "#/$defs/prose" },
-            "after": { "$ref": "#/$defs/prose" }
+            "before": {
+              "$ref": "#/$defs/prose"
+            },
+            "after": {
+              "$ref": "#/$defs/prose"
+            }
           }
         }
       }
@@ -642,11 +930,27 @@
       "type": "object",
       "description": "A game's description: its help page, its formal rules, or both. The formal rules come whole.",
       "required": ["game"],
-      "anyOf": [{ "required": ["help"] }, { "required": ["space"] }],
-      "if": { "required": ["space"] },
+      "anyOf": [
+        {
+          "required": ["help"]
+        },
+        {
+          "required": ["space"]
+        }
+      ],
+      "if": {
+        "required": ["space"]
+      },
       "then": {
         "description": "A game's rules state an answer, or a planning game's position and its moves.",
-        "oneOf": [{ "required": ["answer"] }, { "required": ["position"] }]
+        "oneOf": [
+          {
+            "required": ["answer"]
+          },
+          {
+            "required": ["position"]
+          }
+        ]
       },
       "dependentRequired": {
         "space": ["produces", "sizes", "freedom"],
@@ -661,7 +965,9 @@
           "pattern": "^[a-z]+$",
           "description": "The id, as the app's registry has it, or a family's other game."
         },
-        "help": { "$ref": "#/$defs/help" },
+        "help": {
+          "$ref": "#/$defs/help"
+        },
         "produces": {
           "type": "string",
           "description": "What the player produces: latin, shading, lines, ... The technique check's `inherit` reads it for the games whose techniques a candidate may share. Not the catalog's family, which is what a player browses by and is the game's `catalog.ts`'s, as is its name."
@@ -674,8 +980,12 @@
             "required": ["min"],
             "additionalProperties": false,
             "properties": {
-              "min": { "type": "integer" },
-              "max": { "type": "integer" },
+              "min": {
+                "type": "integer"
+              },
+              "max": {
+                "type": "integer"
+              },
               "step": {
                 "type": "integer",
                 "minimum": 2,
@@ -686,14 +996,22 @@
         },
         "space": {
           "allOf": [
-            { "$ref": "#/$defs/space" },
+            {
+              "$ref": "#/$defs/space"
+            },
             {
               "type": "object",
               "required": ["units"],
               "oneOf": [
-                { "required": ["grid"] },
-                { "required": ["cells"] },
-                { "required": ["tiling"] }
+                {
+                  "required": ["grid"]
+                },
+                {
+                  "required": ["cells"]
+                },
+                {
+                  "required": ["tiling"]
+                }
               ]
             }
           ]
@@ -712,7 +1030,9 @@
                   "enum": ["cell", "edge"],
                   "description": "What holds a value: a cell, or the edge between two cells side by side (Separate's walls), where the space has its edges."
                 },
-                "domain": { "$ref": "#/$defs/formula" },
+                "domain": {
+                  "$ref": "#/$defs/formula"
+                },
                 "wide": {
                   "type": "boolean",
                   "description": "Whether a value may run past 31, the most a mask of 32 bits holds: Ascent's number on a square, up to the board's square count. A cell's candidates are then read by membership, a count, the least and a binder, never as a set, and the domain is `range(a, b)` or `{d in range(a, b) where P}`."
@@ -727,8 +1047,12 @@
                   "required": ["value", "times"],
                   "additionalProperties": false,
                   "properties": {
-                    "value": { "$ref": "#/$defs/formula" },
-                    "times": { "$ref": "#/$defs/formula" }
+                    "value": {
+                      "$ref": "#/$defs/formula"
+                    },
+                    "times": {
+                      "$ref": "#/$defs/formula"
+                    }
                   }
                 }
               }
@@ -737,7 +1061,9 @@
         },
         "given": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "The answer functions the board may give values of: givens, not clues."
         },
         "marks": {
@@ -748,8 +1074,12 @@
             "required": ["sort", "notation"],
             "additionalProperties": false,
             "properties": {
-              "sort": { "type": "string" },
-              "notation": { "type": "string" },
+              "sort": {
+                "type": "string"
+              },
+              "notation": {
+                "type": "string"
+              },
               "of": {
                 "$ref": "#/$defs/formula",
                 "description": "For a mark on the edges, on a tiling's angles, or on the cells of an answer that is not on the cells, a technique reads: the number of the answer it narrows, read of the element `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`. On the answer's own elements, `value(at)`: the values each may still hold, which the violation check reads as the element's domain (Bridges' line)."
@@ -765,7 +1095,9 @@
             }
           }
         },
-        "define": { "$ref": "#/$defs/define" },
+        "define": {
+          "$ref": "#/$defs/define"
+        },
         "breaks": {
           "type": "object",
           "description": "How a rule is seen broken, `name(params)` to its clause: `when`, a formula the techniques read as a definition; `look`, the words naming what broke, which a technique's `{broke}` says where this break is the one its witness holds; and `terms`, formulas over the parameters those words read, read on the marks the break was found on (under a supposition where it was read under one).",
@@ -777,24 +1109,42 @@
             "additionalProperties": false,
             "required": ["when", "look"],
             "properties": {
-              "when": { "$ref": "#/$defs/formula" },
+              "when": {
+                "$ref": "#/$defs/formula"
+              },
               "terms": {
                 "type": "object",
-                "additionalProperties": { "$ref": "#/$defs/formula" }
+                "additionalProperties": {
+                  "$ref": "#/$defs/formula"
+                }
               },
-              "look": { "type": "string", "minLength": 1 }
+              "look": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         },
         "views": {
           "type": "array",
-          "items": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
           "description": "A planning game's definitions the game reads beside its rules, each of cells, its last parameter the cell: the compiled module's `views` gives the cells each holds of, for values of the others."
         },
-        "shape": { "$ref": "#/$defs/shape" },
-        "rules": { "$ref": "#/$defs/rules" },
-        "implied": { "$ref": "#/$defs/implied" },
-        "clues": { "$ref": "#/$defs/clues" },
+        "shape": {
+          "$ref": "#/$defs/shape"
+        },
+        "rules": {
+          "$ref": "#/$defs/rules"
+        },
+        "implied": {
+          "$ref": "#/$defs/implied"
+        },
+        "clues": {
+          "$ref": "#/$defs/clues"
+        },
         "freedom": {
           "type": "object",
           "required": ["kind"],
@@ -810,7 +1160,9 @@
           "type": "object",
           "description": "A planning game's position: its layers, each a value a cell, by name, read in a formula as a function of a cell.",
           "minProperties": 1,
-          "additionalProperties": { "$ref": "#/$defs/layer" }
+          "additionalProperties": {
+            "$ref": "#/$defs/layer"
+          }
         },
         "moves": {
           "type": "object",
@@ -829,37 +1181,53 @@
                 "$ref": "#/$defs/formula",
                 "description": "Its guard, over the position; absent is true."
               },
-              "set": { "$ref": "#/$defs/assignments" }
+              "set": {
+                "$ref": "#/$defs/assignments"
+              }
             }
           }
         },
         "finish": {
           "type": "array",
-          "items": { "$ref": "#/$defs/formula" },
+          "items": {
+            "$ref": "#/$defs/formula"
+          },
           "minItems": 1,
           "description": "Formulas over the position, all true of a finished one."
         },
         "lose": {
           "type": "array",
-          "items": { "$ref": "#/$defs/formula" },
+          "items": {
+            "$ref": "#/$defs/formula"
+          },
           "description": "Formulas over the position, any true of a lost one."
         },
-        "deadEnds": { "$ref": "#/$defs/deadEnds" },
+        "deadEnds": {
+          "$ref": "#/$defs/deadEnds"
+        },
         "play": {
           "type": "object",
           "description": "How the player fills the board, for a fill game the engine plays (`engine/fill/play.ts`): each value they place, the two buttons' values, the drag, and the link drawn as the one cell mark.",
           "oneOf": [
             {
               "required": ["values", "primary", "secondary"],
-              "not": { "required": ["numbers"] }
+              "not": {
+                "required": ["numbers"]
+              }
             },
             {
               "required": ["numbers"],
               "not": {
                 "anyOf": [
-                  { "required": ["values"] },
-                  { "required": ["primary"] },
-                  { "required": ["secondary"] }
+                  {
+                    "required": ["values"]
+                  },
+                  {
+                    "required": ["primary"]
+                  },
+                  {
+                    "required": ["secondary"]
+                  }
                 ]
               }
             }
@@ -884,50 +1252,78 @@
             "gaps": {
               "type": "object",
               "description": "The clue kinds at edges, each drawn in a gap between its two cells by the painter named (`engine/render/pieces/edge.ts`): a board with any is drawn with a half-tile gap between every two cells.",
-              "additionalProperties": { "type": "string" }
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "done": {
               "type": "object",
               "description": "The clue kinds the player may mark done, each with what one is called (\"sign\"), which the help page's sentence on the mark says (`engine/fill/done.ts`): a press on such a clue, with either button, grays it, a drag on grays those that looked the same, and Shift or Ctrl with an arrow marks the one beside the selected square. Each is a kind drawn in a gap (`gaps`), on a board of `numbers`.",
-              "additionalProperties": { "type": "string" }
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "values": {
               "type": "object",
               "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",
-              "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+              "propertyNames": {
+                "pattern": "^[1-9][0-9]*$"
+              },
               "additionalProperties": {
                 "type": "object",
                 "required": ["does", "key", "glyph", "paint"],
                 "additionalProperties": false,
                 "properties": {
-                  "does": { "type": "string" },
+                  "does": {
+                    "type": "string"
+                  },
                   "key": {
                     "description": "The key that places the value, a capital letter or a digit, or a list of them.",
                     "oneOf": [
-                      { "type": "string", "pattern": "^[A-Z0-9]$" },
+                      {
+                        "type": "string",
+                        "pattern": "^[A-Z0-9]$"
+                      },
                       {
                         "type": "array",
                         "minItems": 1,
-                        "items": { "type": "string", "pattern": "^[A-Z0-9]$" }
+                        "items": {
+                          "type": "string",
+                          "pattern": "^[A-Z0-9]$"
+                        }
                       }
                     ]
                   },
-                  "glyph": { "type": "string", "minLength": 3, "maxLength": 3 },
-                  "paint": { "type": "string" }
+                  "glyph": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "paint": {
+                    "type": "string"
+                  }
                 }
               }
             },
             "given": {
               "type": "object",
               "description": "The values only the deal places, a fixed cell's: their glyph and painter.",
-              "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+              "propertyNames": {
+                "pattern": "^[1-9][0-9]*$"
+              },
               "additionalProperties": {
                 "type": "object",
                 "required": ["glyph", "paint"],
                 "additionalProperties": false,
                 "properties": {
-                  "glyph": { "type": "string", "minLength": 3, "maxLength": 3 },
-                  "paint": { "type": "string" }
+                  "glyph": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 3
+                  },
+                  "paint": {
+                    "type": "string"
+                  }
                 }
               }
             },
@@ -965,14 +1361,20 @@
               "required": ["when"],
               "additionalProperties": false,
               "properties": {
-                "when": { "$ref": "#/$defs/formula" },
+                "when": {
+                  "$ref": "#/$defs/formula"
+                },
                 "pref": {
                   "type": "object",
                   "required": ["kw", "name"],
                   "additionalProperties": false,
                   "properties": {
-                    "kw": { "type": "string" },
-                    "name": { "type": "string" }
+                    "kw": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -983,14 +1385,20 @@
               "required": ["value", "pref"],
               "additionalProperties": false,
               "properties": {
-                "value": { "type": "integer" },
+                "value": {
+                  "type": "integer"
+                },
                 "pref": {
                   "type": "object",
                   "required": ["kw", "name"],
                   "additionalProperties": false,
                   "properties": {
-                    "kw": { "type": "string" },
-                    "name": { "type": "string" }
+                    "kw": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -998,42 +1406,6 @@
             "wrap": {
               "const": true,
               "description": "An arrow at the grid's edge carries the cursor to the other edge (upstream's Singles)."
-            },
-            "tally": {
-              "type": "object",
-              "description": "A board clue of two fields, a length and the count of pieces of it, that the params give: the size by its letter after the grid's (`f3`), the counts after a comma at the end (`,3,2,1`), one of the longest and one more of each shorter by default (upstream's Boats fleet).",
-              "required": ["kind", "size", "counts"],
-              "additionalProperties": false,
-              "properties": {
-                "kind": { "type": "string" },
-                "size": {
-                  "type": "object",
-                  "required": ["letter", "kw", "name", "doc", "max", "default"],
-                  "additionalProperties": false,
-                  "properties": {
-                    "letter": { "type": "string" },
-                    "kw": { "type": "string" },
-                    "name": { "type": "string" },
-                    "doc": { "type": "string" },
-                    "max": { "type": "integer" },
-                    "default": { "type": "integer" }
-                  }
-                },
-                "counts": {
-                  "type": "object",
-                  "required": ["kw", "name", "doc"],
-                  "additionalProperties": false,
-                  "properties": {
-                    "kw": { "type": "string" },
-                    "name": { "type": "string" },
-                    "doc": { "type": "string" }
-                  }
-                },
-                "single": {
-                  "type": "string",
-                  "description": "The one tier a tally of one piece is dealt at."
-                }
-              }
             },
             "click": {
               "enum": ["toggle", "cycle"],
@@ -1066,100 +1438,53 @@
                 "type": "array",
                 "minItems": 2,
                 "maxItems": 2,
-                "items": { "type": "string" }
-              }
-            },
-            "blocks": {
-              "type": "object",
-              "description": "A board sized by its blocks (Solo's): the partition among the units is `blocks(a, b)` of two sizes, the grid `a * b` on a side, and a variation that replaces the partition with a dealt one is on exactly where `a` is 1. The params give `b` and `a` as the Custom fields `columns` and `rows`, written `{b}x{a}`, or `{b}` then `letter` where the blocks are dealt, a bare number read as both (upstream solo.c's `3x3`, `9j`, `3`). `rulesets` gives the rule of the puzzle with blocks and of the variation, by name, the game mode in the Custom dialog and the help's `{{rulesets}}`. A preset board is written as the ID writes it (`2x3`, `9j`).",
-              "required": ["letter", "columns", "rows", "rulesets"],
-              "additionalProperties": false,
-              "properties": {
-                "letter": { "type": "string", "pattern": "^[a-z]$" },
-                "columns": {
-                  "type": "object",
-                  "required": ["kw", "name", "doc"],
-                  "additionalProperties": false,
-                  "properties": {
-                    "kw": { "type": "string" },
-                    "name": { "type": "string" },
-                    "doc": { "type": "string" }
-                  }
-                },
-                "rows": {
-                  "type": "object",
-                  "required": ["kw", "name"],
-                  "additionalProperties": false,
-                  "properties": {
-                    "kw": { "type": "string" },
-                    "name": { "type": "string" }
-                  }
-                },
-                "rulesets": {
-                  "type": "object",
-                  "minProperties": 2,
-                  "maxProperties": 2,
-                  "additionalProperties": { "type": "string" }
-                }
-              }
-            },
-            "sizes": {
-              "type": "object",
-              "description": "Each size beyond the grid's that the rules read, which the params give, by its name in `sizes`: its letter in the params, written before the number itself, or its `letters`, one written bare for each value, `\"\"` for the one written as nothing (Seismic's Tectonic `T`); and its rulesets, one for each value from the size's `min`, each with the narrowest board it has an answer on (`least`). The Custom dialog offers them as its game mode, and the help's `{{rulesets}}` lists them (Star Battle's stars).",
-              "additionalProperties": {
-                "type": "object",
-                "required": ["rulesets"],
-                "oneOf": [{ "required": ["letter"] }, { "required": ["letters"] }],
-                "additionalProperties": false,
-                "properties": {
-                  "letter": { "type": "string", "pattern": "^[a-z]$" },
-                  "letters": {
-                    "type": "array",
-                    "minItems": 2,
-                    "uniqueItems": true,
-                    "items": { "type": "string", "pattern": "^[A-Za-z]?$" }
-                  },
-                  "rulesets": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "type": "object",
-                      "required": ["name", "rule"],
-                      "additionalProperties": false,
-                      "properties": {
-                        "name": { "type": "string" },
-                        "rule": { "type": "string" },
-                        "least": { "type": "integer", "minimum": 1 }
-                      }
-                    }
-                  }
+                "items": {
+                  "type": "string"
                 }
               }
             },
             "plain": {
               "type": "array",
               "description": "The clue kinds written as a number on their cell that are drawn plain: a number whose meaning reads no block of cells (Range's, which sees along its row and column), so it has no block to outline, never turns faint, and is not counted in the status bar.",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "bounds": {
               "type": "object",
               "description": "What the size alone cannot say of a board: bounds on its two sides together, `sum` (w + h), `area` (w × h), `shorter` and `longer`; and in `tiers`, by a tier's name, further bounds on a board of that tier. A board outside them is refused, a tier's as having no such tier.",
               "additionalProperties": false,
               "properties": {
-                "sum": { "$ref": "#/$defs/sizeBound" },
-                "area": { "$ref": "#/$defs/sizeBound" },
-                "shorter": { "$ref": "#/$defs/sizeBound" },
-                "longer": { "$ref": "#/$defs/sizeBound" },
+                "sum": {
+                  "$ref": "#/$defs/sizeBound"
+                },
+                "area": {
+                  "$ref": "#/$defs/sizeBound"
+                },
+                "shorter": {
+                  "$ref": "#/$defs/sizeBound"
+                },
+                "longer": {
+                  "$ref": "#/$defs/sizeBound"
+                },
                 "tiers": {
                   "type": "object",
                   "additionalProperties": {
                     "type": "object",
                     "additionalProperties": false,
                     "properties": {
-                      "sum": { "$ref": "#/$defs/sizeBound" },
-                      "area": { "$ref": "#/$defs/sizeBound" },
-                      "shorter": { "$ref": "#/$defs/sizeBound" },
-                      "longer": { "$ref": "#/$defs/sizeBound" }
+                      "sum": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "area": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "shorter": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "longer": {
+                        "$ref": "#/$defs/sizeBound"
+                      }
                     }
                   }
                 }
@@ -1177,38 +1502,14 @@
                     "type": "string",
                     "pattern": "^[1-9][0-9]*(x[1-9][0-9]*|[a-z](?![0-9]))([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
                   },
-                  "with": { "type": "array", "items": { "type": "string" } },
-                  "tier": { "type": "string" }
-                }
-              }
-            },
-            "modifiers": {
-              "type": "object",
-              "description": "Each variation the player may switch on, by its name: its letter in the params, its Custom field (`kw`, `name`), its words in a board's name and the rule the help lists (`engine/game-id/modifier.ts`), and where the rule bounds the size, `most` (a board 2i squares across has at most `most[i]` lines the other way) or `bounds`, as `play.bounds` states them (Solo's X needs 4 numbers, and its Killer holds at most 9).",
-              "additionalProperties": {
-                "type": "object",
-                "required": ["letter", "kw", "name", "words", "rule"],
-                "additionalProperties": false,
-                "properties": {
-                  "letter": { "type": "string", "pattern": "^[a-z]$" },
-                  "kw": { "type": "string" },
-                  "name": { "type": "string" },
-                  "words": { "type": "string" },
-                  "rule": { "type": "string" },
-                  "note": { "type": "string" },
-                  "most": {
+                  "with": {
                     "type": "array",
-                    "items": { "type": "integer", "minimum": 0 }
-                  },
-                  "bounds": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "properties": {
-                      "sum": { "$ref": "#/$defs/sizeBound" },
-                      "area": { "$ref": "#/$defs/sizeBound" },
-                      "shorter": { "$ref": "#/$defs/sizeBound" },
-                      "longer": { "$ref": "#/$defs/sizeBound" }
+                    "items": {
+                      "type": "string"
                     }
+                  },
+                  "tier": {
+                    "type": "string"
                   }
                 }
               }
@@ -1221,23 +1522,33 @@
               "type": "array",
               "description": "The techniques that read a link the board shows at a glance, by id: the hint runs them once on the drawn links before each step, so it never asks for one of those, and asks for a deeper link only where it lets a later technique fire (`engine/hint/glance.ts`). Needs `links`.",
               "minItems": 1,
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "askBefore": {
               "type": "array",
               "description": "The techniques, by id, before which the hint asks for a deeper link where one lets a technique above them fire. It asks once more after the last technique, for any, and there for a link that lets nothing fire where no link does. Needs `glance`.",
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "signs": {
               "type": "object",
               "description": "The sign drawn after the number of each clue kind at a dealt partition's part or at a corner, by kind (Keen's `+` and `×`): a part's clue is drawn at the part's first square, its number and its sign, above the notes, and a corner's on a disc where its four squares meet. A kind of one value is drawn as its sign alone (Mathrax's `=`), and a list is a word a value, from the kind's least (Mathrax's parity, `[E, O]`).",
               "additionalProperties": {
                 "oneOf": [
-                  { "type": "string", "minLength": 1 },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
                   {
                     "type": "array",
                     "minItems": 2,
-                    "items": { "type": "string", "minLength": 1 }
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
                   }
                 ]
               }
@@ -1247,7 +1558,9 @@
               "description": "Fixed text in the margin, which is not a clue: `start`, before each row and column, a formula of `i`, the line's index along its axis from 0 (Kakurasu's weights, `i + 1`).",
               "additionalProperties": false,
               "properties": {
-                "start": { "$ref": "#/$defs/formula" }
+                "start": {
+                  "$ref": "#/$defs/formula"
+                }
               }
             },
             "boards": {
@@ -1264,10 +1577,18 @@
               "description": "What each mark of the hint means in this game (`Game.hint.marks`), which the help's `{{hint-marks}}` lists. A game born from its description (`catalog:`) states the roles its steps draw.",
               "additionalProperties": false,
               "properties": {
-                "ring": { "type": "string" },
-                "outline": { "type": "string" },
-                "stripes": { "type": "string" },
-                "strike": { "type": "string" }
+                "ring": {
+                  "type": "string"
+                },
+                "outline": {
+                  "type": "string"
+                },
+                "stripes": {
+                  "type": "string"
+                },
+                "strike": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -1278,10 +1599,21 @@
           "required": ["name", "description", "objective", "collection", "family"],
           "additionalProperties": false,
           "properties": {
-            "name": { "type": "string" },
-            "aliases": { "type": "array", "items": { "type": "string" } },
-            "description": { "type": "string" },
-            "objective": { "type": "string" },
+            "name": {
+              "type": "string"
+            },
+            "aliases": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": {
+              "type": "string"
+            },
+            "objective": {
+              "type": "string"
+            },
             "collection": {
               "type": "string",
               "description": "Typed by `PuzzleData`, which the generated entry is: the typecheck refuses one that is not."
@@ -1290,7 +1622,16 @@
               "type": "string",
               "description": "Typed by `PuzzleData`, which the generated entry is: the typecheck refuses one that is not."
             },
-            "similar": { "type": "string" }
+            "similar": {
+              "type": "string"
+            }
+          }
+        },
+        "settings": {
+          "type": "object",
+          "description": "The settings the params give, by name, in the params' order and the Custom dialog's: those written after the size, the tier, then those written after it (`after: tier`).",
+          "additionalProperties": {
+            "$ref": "#/$defs/setting"
           }
         },
         "id": {
@@ -1303,14 +1644,22 @@
                 "type": "object",
                 "required": ["runs"],
                 "additionalProperties": false,
-                "properties": { "runs": { "type": "string" } }
+                "properties": {
+                  "runs": {
+                    "type": "string"
+                  }
+                }
               },
               {
                 "type": "object",
                 "required": ["walls"],
                 "additionalProperties": false,
                 "description": "A dealt partition as the walls between its parts (`engine/game-id/wall-runs.ts`): every border between two cells side by side, those inside the rows first, a number a run of walls and a letter a run of gaps then a wall.",
-                "properties": { "walls": { "type": "string" } }
+                "properties": {
+                  "walls": {
+                    "type": "string"
+                  }
+                }
               },
               {
                 "type": "object",
@@ -1318,8 +1667,12 @@
                 "additionalProperties": false,
                 "description": "A list kind at lines, each line's list in turn, its numbers between `.` and the lines between `/`, an empty list written as nothing (upstream's Pattern). With `order: columns`, the columns come first.",
                 "properties": {
-                  "lists": { "type": "string" },
-                  "order": { "const": "columns" }
+                  "lists": {
+                    "type": "string"
+                  },
+                  "order": {
+                    "const": "columns"
+                  }
                 }
               },
               {
@@ -1328,7 +1681,9 @@
                 "additionalProperties": false,
                 "description": "A clue kind on every cell, each one character of the desc alphabet (`engine/game-id/desc-alphabet.ts`: `0`–`9`, `a`–`z`, `A`–`Z`), in reading order (upstream's Singles).",
                 "properties": {
-                  "cells": { "type": "string" }
+                  "cells": {
+                    "type": "string"
+                  }
                 }
               },
               {
@@ -1337,13 +1692,21 @@
                 "additionalProperties": false,
                 "description": "A clue kind of two values at cells as upstream's dot runs (`engine/game-id/dot-runs.ts`): a letter a clue, its offset the run of cells before it and its case its value, `cases` the values written lowercase and uppercase. It ends the desc. With `before`, it follows that mark and is written only where a clue is dealt (Pattern's `,`).",
                 "properties": {
-                  "dots": { "type": "string" },
-                  "before": { "type": "string", "minLength": 1, "maxLength": 1 },
+                  "dots": {
+                    "type": "string"
+                  },
+                  "before": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1
+                  },
                   "cases": {
                     "type": "array",
                     "minItems": 2,
                     "maxItems": 2,
-                    "items": { "type": "integer" }
+                    "items": {
+                      "type": "integer"
+                    }
                   }
                 }
               },
@@ -1353,8 +1716,14 @@
                 "additionalProperties": false,
                 "description": "A clue kind at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too. With `apart`, a clue is a whole number and `apart` comes between two with no run between them (Range's `_`). `letters` names, by a capital letter, a one-valued kind at cells written in the same stream (Light Up's `B`, a wall with no number).",
                 "properties": {
-                  "digits": { "type": "string" },
-                  "apart": { "type": "string", "minLength": 1, "maxLength": 1 },
+                  "digits": {
+                    "type": "string"
+                  },
+                  "apart": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1
+                  },
                   "before": {
                     "type": "string",
                     "minLength": 1,
@@ -1366,20 +1735,32 @@
                   },
                   "letters": {
                     "type": "object",
-                    "propertyNames": { "pattern": "^[A-Z]$" },
-                    "additionalProperties": { "type": "string" }
+                    "propertyNames": {
+                      "pattern": "^[A-Z]$"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   },
                   "after": {
                     "description": "By letter, the clue kind whose number may follow the letter, on the letter's cell.",
                     "type": "object",
-                    "propertyNames": { "pattern": "^[A-Z]$" },
-                    "additionalProperties": { "type": "string" }
+                    "propertyNames": {
+                      "pattern": "^[A-Z]$"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   },
                   "also": {
                     "description": "By number, a one-valued clue kind at a cell written as that number, past the segment's own kind's largest (Bricks' unknown number, `7`).",
                     "type": "object",
-                    "propertyNames": { "pattern": "^[0-9]+$" },
-                    "additionalProperties": { "type": "string" }
+                    "propertyNames": {
+                      "pattern": "^[0-9]+$"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -1388,15 +1769,21 @@
                 "required": ["numbers"],
                 "additionalProperties": false,
                 "properties": {
-                  "numbers": { "type": "string" },
-                  "before": { "type": "string" },
+                  "numbers": {
+                    "type": "string"
+                  },
+                  "before": {
+                    "type": "string"
+                  },
                   "between": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 1,
                     "description": "What stands between two elements, where not a comma (Towers' `/`)."
                   },
-                  "order": { "enum": ["columns"] },
+                  "order": {
+                    "enum": ["columns"]
+                  },
                   "hidden": {
                     "type": "string",
                     "minLength": 1,
@@ -1414,11 +1801,17 @@
                 "additionalProperties": false,
                 "description": "A clue kind at cells, each clue a capital letter standing for one of its values, between runs of 1 to 26 cells without one written `a`-`z`; a last run is left off (upstream's Boats).",
                 "properties": {
-                  "glyphs": { "type": "string" },
+                  "glyphs": {
+                    "type": "string"
+                  },
                   "values": {
                     "type": "object",
-                    "propertyNames": { "pattern": "^[A-Z]$" },
-                    "additionalProperties": { "type": "integer" }
+                    "propertyNames": {
+                      "pattern": "^[A-Z]$"
+                    },
+                    "additionalProperties": {
+                      "type": "integer"
+                    }
                   }
                 }
               },
@@ -1428,8 +1821,12 @@
                 "additionalProperties": false,
                 "description": "A record a cell, each closed by a comma: the cell's clue of `records` as a number, 0 for none, then a letter `U`, `R`, `D` or `L` for each side whose clue of `sides`, a clue at an edge whose value is one of its ends, has this cell as its value (upstream's Unequal). Where `sides` is instead valued 0 or 1 and complete, the letter is written from both ends of each edge whose clue is 1 (upstream's Adjacent).",
                 "properties": {
-                  "records": { "type": "string" },
-                  "sides": { "type": "string" }
+                  "records": {
+                    "type": "string"
+                  },
+                  "sides": {
+                    "type": "string"
+                  }
                 }
               },
               {
@@ -1438,10 +1835,22 @@
                 "additionalProperties": false,
                 "description": "A dealt partition as upstream's block structure (`engine/game-id/block-structure.ts`, upstream Keen's and Solo's): the borders between two cells side by side, those inside the rows in reading order and then those between them column by column, as runs of borders inside a part, each a letter `a`-`y` for 1 to 25 before a border between parts, `_` for none and `z` for 25 with none after, and a letter repeated three times or more written once and then the count (Keen's), or with `counts: false` written out (Solo's). With `before`, it follows that mark, and with `after`, that mark follows it. A partition a variation deals (Solo's Jigsaw blocks and Killer cages) is written, with its marks, only on a board that deals it.",
                 "properties": {
-                  "blocks": { "type": "string" },
-                  "before": { "type": "string", "minLength": 1, "maxLength": 1 },
-                  "after": { "type": "string", "minLength": 1, "maxLength": 1 },
-                  "counts": { "const": false }
+                  "blocks": {
+                    "type": "string"
+                  },
+                  "before": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1
+                  },
+                  "after": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1
+                  },
+                  "counts": {
+                    "const": false
+                  }
                 }
               },
               {
@@ -1450,13 +1859,23 @@
                 "additionalProperties": false,
                 "description": "A clue a part of the dealt partition `parts`, in the order of the parts' first cells: the letter of its kind, by `letters`, then its number (upstream Keen's). With `before`, it follows that mark.",
                 "properties": {
-                  "parts": { "type": "string" },
-                  "before": { "type": "string", "minLength": 1, "maxLength": 1 },
+                  "parts": {
+                    "type": "string"
+                  },
+                  "before": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1
+                  },
                   "letters": {
                     "type": "object",
-                    "propertyNames": { "pattern": "^[a-z]$" },
+                    "propertyNames": {
+                      "pattern": "^[a-z]$"
+                    },
                     "minProperties": 1,
-                    "additionalProperties": { "type": "string" }
+                    "additionalProperties": {
+                      "type": "string"
+                    }
                   }
                 }
               },
@@ -1468,14 +1887,20 @@
                 "properties": {
                   "codes": {
                     "type": "object",
-                    "propertyNames": { "pattern": "^[A-Z][A-Z0-9]*$" },
+                    "propertyNames": {
+                      "pattern": "^[A-Z][A-Z0-9]*$"
+                    },
                     "minProperties": 1,
                     "additionalProperties": {
                       "type": "string",
                       "pattern": "^[A-Za-z]+( [0-9]+)?$"
                     }
                   },
-                  "before": { "type": "string", "minLength": 1, "maxLength": 1 }
+                  "before": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1
+                  }
                 }
               }
             ]
@@ -1491,25 +1916,40 @@
           "required": ["letter", "tier"],
           "additionalProperties": false,
           "properties": {
-            "letter": { "type": "string", "pattern": "^[a-z]$" },
-            "tier": { "type": "string" }
+            "letter": {
+              "type": "string",
+              "pattern": "^[a-z]$"
+            },
+            "tier": {
+              "type": "string"
+            }
           }
         },
         "unusedLetters": {
           "type": "object",
           "description": "Bare letters older game IDs write for a setting this game has no field for, each after the size or after the tier (Adjacent's `a` after the size, from when upstream dealt it as a mode of Unequal): read, changing nothing, and never written.",
-          "propertyNames": { "pattern": "^[a-z]$" },
-          "additionalProperties": { "enum": ["size", "tier"] }
+          "propertyNames": {
+            "pattern": "^[a-z]$"
+          },
+          "additionalProperties": {
+            "enum": ["size", "tier"]
+          }
         },
         "tierAliases": {
           "type": "object",
           "description": "Retired tier letters older game IDs write after `d`, each read as the tier it names and never written (Bricks' `t`, upstream's Tricky, which dealt only Normal boards).",
-          "propertyNames": { "pattern": "^[a-z]$" },
-          "additionalProperties": { "type": "string" }
+          "propertyNames": {
+            "pattern": "^[a-z]$"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "deal": {
           "type": "object",
-          "additionalProperties": { "type": "string" },
+          "additionalProperties": {
+            "type": "string"
+          },
           "description": "What the generator chooses, in words; `sample` where the deal samples an answer and derives the clues from each kind's `means`, and `hide` where it then hides a kind's clues.",
           "properties": {
             "withhold": {
@@ -1517,30 +1957,36 @@
               "description": "By clue kind at cells, values no deal derives, which only a game ID writes: a value that holds wherever a more telling one does (Boats' segment of unknown shape).",
               "additionalProperties": {
                 "type": "array",
-                "items": { "type": "integer" },
+                "items": {
+                  "type": "integer"
+                },
                 "minItems": 1
               }
             },
             "hideFlag": {
               "type": "object",
-              "required": ["kind", "letter", "kw", "name", "doc", "words"],
+              "required": ["kind", "when"],
               "additionalProperties": false,
-              "description": "A setting the player may turn on, written after the tier by its letter in a full ID, under which the deal hides `kind` too, in one random order with `hide`'s (Boats' `S`, Remove numbers).",
+              "description": "A clue kind the deal also hides, in one random order with `hide`'s, where the flag `when` of the settings is on (Boats' `S`, Remove numbers).",
               "properties": {
-                "kind": { "type": "string" },
-                "letter": { "type": "string", "pattern": "^[A-Z]$" },
-                "kw": { "type": "string" },
-                "name": { "type": "string" },
-                "doc": { "type": "string" },
-                "words": { "type": "string" }
+                "kind": {
+                  "type": "string"
+                },
+                "when": {
+                  "type": "string"
+                }
               }
             },
             "never": {
               "oneOf": [
-                { "type": "string" },
+                {
+                  "type": "string"
+                },
                 {
                   "type": "array",
-                  "items": { "type": "string" },
+                  "items": {
+                    "type": "string"
+                  },
                   "minItems": 2,
                   "uniqueItems": true
                 }
@@ -1553,8 +1999,12 @@
               "additionalProperties": false,
               "description": "A clue kind at every cell dealt as a Latin square's numbers, never derived from the answer; each cell holding the value `under` is then numbered again to repeat a number of its row or column, one single in both where there is one (upstream's singles.c `best_black_col`). With no `hide`.",
               "properties": {
-                "kind": { "type": "string" },
-                "under": { "type": "integer" }
+                "kind": {
+                  "type": "string"
+                },
+                "under": {
+                  "type": "integer"
+                }
               }
             },
             "unpair": {
@@ -1563,10 +2013,14 @@
             },
             "hide": {
               "oneOf": [
-                { "type": "string" },
+                {
+                  "type": "string"
+                },
                 {
                   "type": "array",
-                  "items": { "type": "string" },
+                  "items": {
+                    "type": "string"
+                  },
                   "minItems": 2,
                   "uniqueItems": true
                 }
@@ -1575,19 +2029,25 @@
             },
             "hideFirst": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "minItems": 1,
               "uniqueItems": true,
               "description": "Kinds of `hide` whose clues are each tried, at each tier, before any of the rest, each side in one random order (upstream towers.c's and mathrax.c's givens, then their clues)."
             },
             "hideBy": {
               "type": "object",
-              "additionalProperties": { "$ref": "#/$defs/formula" },
+              "additionalProperties": {
+                "$ref": "#/$defs/formula"
+              },
               "description": "By kind of `hide`, a number, a formula of `at` read on the clues as dealt: a clue with a higher one is hidden first, so the board keeps those with the lowest; alike, in a random order. Under `hideFirst`, within each side (Adjacent's givens, those with fewest bars beside them kept, as upstream unequal.c's `gg_best_clue` adds a given where its cell has fewest clues)."
             },
             "hideFrom": {
               "type": "object",
-              "additionalProperties": { "type": "string" },
+              "additionalProperties": {
+                "type": "string"
+              },
               "description": "By kind of `hide`, the tier from which the deal hides it: a board below that tier shows every clue of the kind (Towers' clues at Easy)."
             },
             "hideWhole": {
@@ -1597,93 +2057,46 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "below": { "type": "string" },
-                  "with": { "type": "string" },
-                  "sum": { "$ref": "#/$defs/sizeBound" },
-                  "area": { "$ref": "#/$defs/sizeBound" },
-                  "shorter": { "$ref": "#/$defs/sizeBound" },
-                  "longer": { "$ref": "#/$defs/sizeBound" }
+                  "below": {
+                    "type": "string"
+                  },
+                  "with": {
+                    "type": "string"
+                  },
+                  "sum": {
+                    "$ref": "#/$defs/sizeBound"
+                  },
+                  "area": {
+                    "$ref": "#/$defs/sizeBound"
+                  },
+                  "shorter": {
+                    "$ref": "#/$defs/sizeBound"
+                  },
+                  "longer": {
+                    "$ref": "#/$defs/sizeBound"
+                  }
                 }
               }
             },
             "oneIn": {
               "type": "object",
-              "additionalProperties": { "type": "string" },
-              "description": "By clue kind at cells, a formula of `at` giving the cells it is the one clue of: the deal shows one in each such group, at a random member, valued as its meaning holds with it the only clue of its kind (Sticks' number, one on each line). Its meaning may then read its own kind's clues."
-            },
-            "options": {
-              "type": "object",
-              "description": "Settings the params give that only the deal reads, by name, each written in a full game ID as its letter and a number: a number from `min` to `max`, or with `choices` the index of one, each choice with its `bounds` on the board's size, of which `square` asks a square board, and its `words` in a board's name. With no letter, each choice has a `code` the ID writes in its place. An option whose every choice names the `symmetry` it keeps chooses one for `symmetric` or a `first` sample. Neither is offered on the preset menu but as a board names it after its `WxH` (`7x7s4`).",
               "additionalProperties": {
-                "type": "object",
-                "required": ["kw", "name", "default", "doc"],
-                "additionalProperties": false,
-                "properties": {
-                  "letter": { "type": "string", "pattern": "^[a-z]$" },
-                  "kw": { "type": "string" },
-                  "name": { "type": "string" },
-                  "default": { "type": "integer", "minimum": 0 },
-                  "doc": { "type": "string" },
-                  "min": { "type": "integer", "minimum": 0 },
-                  "max": { "type": "integer", "minimum": 0 },
-                  "words": {
-                    "type": "string",
-                    "description": "A number's words in a board's name where it is not the default, `{n}` the number."
-                  },
-                  "choices": {
-                    "type": "array",
-                    "minItems": 2,
-                    "items": {
-                      "type": "object",
-                      "required": ["name"],
-                      "additionalProperties": false,
-                      "properties": {
-                        "name": { "type": "string" },
-                        "words": { "type": "string" },
-                        "symmetry": { "$ref": "#/$defs/symmetry" },
-                        "code": {
-                          "type": "string",
-                          "pattern": "^[a-z][a-z0-9]*$",
-                          "description": "What a full game ID writes for the choice, in an option with no `letter`; the default's is read and never written (upstream solo.c's `m4`)."
-                        },
-                        "bounds": {
-                          "type": "object",
-                          "additionalProperties": false,
-                          "properties": {
-                            "square": { "const": true },
-                            "sum": { "$ref": "#/$defs/sizeBound" },
-                            "area": { "$ref": "#/$defs/sizeBound" },
-                            "shorter": { "$ref": "#/$defs/sizeBound" },
-                            "longer": { "$ref": "#/$defs/sizeBound" },
-                            "tiers": {
-                              "type": "object",
-                              "additionalProperties": {
-                                "type": "object",
-                                "additionalProperties": false,
-                                "properties": {
-                                  "sum": { "$ref": "#/$defs/sizeBound" },
-                                  "area": { "$ref": "#/$defs/sizeBound" },
-                                  "shorter": { "$ref": "#/$defs/sizeBound" },
-                                  "longer": { "$ref": "#/$defs/sizeBound" }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+                "type": "string"
+              },
+              "description": "By clue kind at cells, a formula of `at` giving the cells it is the one clue of: the deal shows one in each such group, at a random member, valued as its meaning holds with it the only clue of its kind (Sticks' number, one on each line). Its meaning may then read its own kind's clues."
             },
             "divide": {
               "description": "A dealt partition divided at random, apart from the answer, or a list of them divided in turn. With `pairs` and `most`, into small parts (upstream keen.c): each square in a random order joined, at odds `pairs`, to its first neighbor in that order still alone; then each square left alone joined to its first neighboring part of fewer than `most` squares, the draw thrown away where one is left alone still. With `sizes`, one part at a time grown to a size drawn from a list (`engine/generate/divide.ts`'s `growToSize`), a part with no room left ending short: the first list, or with `by` a size the params give, one list a value of it from its least. With `equal`, the board tiled by connected parts of that many squares each (upstream divvy.c, Solo's jigsaw blocks): a number, a size the params give, or `w`, the board's width.",
               "oneOf": [
-                { "$ref": "#/$defs/divide" },
+                {
+                  "$ref": "#/$defs/divide"
+                },
                 {
                   "type": "array",
                   "minItems": 2,
-                  "items": { "$ref": "#/$defs/divide" }
+                  "items": {
+                    "$ref": "#/$defs/divide"
+                  }
                 }
               ]
             },
@@ -1695,7 +2108,9 @@
               "properties": {
                 "kinds": {
                   "type": "array",
-                  "items": { "type": "string" },
+                  "items": {
+                    "type": "string"
+                  },
                   "minItems": 1,
                   "uniqueItems": true
                 },
@@ -1703,14 +2118,20 @@
                   "type": "object",
                   "additionalProperties": {
                     "oneOf": [
-                      { "$ref": "#/$defs/formula" },
+                      {
+                        "$ref": "#/$defs/formula"
+                      },
                       {
                         "type": "object",
                         "required": ["when", "from"],
                         "additionalProperties": false,
                         "properties": {
-                          "when": { "$ref": "#/$defs/formula" },
-                          "from": { "type": "string" }
+                          "when": {
+                            "$ref": "#/$defs/formula"
+                          },
+                          "from": {
+                            "type": "string"
+                          }
                         }
                       }
                     ]
@@ -1718,53 +2139,39 @@
                 },
                 "never": {
                   "type": "object",
-                  "additionalProperties": { "$ref": "#/$defs/formula" }
+                  "additionalProperties": {
+                    "$ref": "#/$defs/formula"
+                  }
+                },
+                "alone": {
+                  "type": "object",
+                  "required": ["when", "kinds"],
+                  "additionalProperties": false,
+                  "description": "Some of `kinds` dealt alone where the flag `when` of the settings is on (Keen's multiplication only).",
+                  "properties": {
+                    "when": {
+                      "type": "string"
+                    },
+                    "kinds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "uniqueItems": true
+                    }
+                  }
                 }
               }
             },
             "firstKind": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "minItems": 2,
               "uniqueItems": true,
               "description": "Clue kinds at one place of which an element holds one clue: the first in this order the answer makes there, of those on (upstream mathrax.c's cascade)."
-            },
-            "kindLetters": {
-              "type": "array",
-              "minItems": 1,
-              "description": "Clue kinds the player switches on and off, each by its letter after the tier in a full ID, in this order, and a check box in Custom; every kind on where no letter is written, and a board's name saying which are on or off, whichever list is shorter (Mathrax's `A S M D E O`).",
-              "items": {
-                "type": "object",
-                "required": ["letter", "kind", "kw", "name", "doc", "word"],
-                "additionalProperties": false,
-                "properties": {
-                  "letter": { "type": "string", "pattern": "^[a-zA-Z]$" },
-                  "kind": { "type": "string" },
-                  "kw": { "type": "string" },
-                  "name": { "type": "string" },
-                  "doc": { "type": "string" },
-                  "word": { "type": "string" }
-                }
-              }
-            },
-            "onlyFlag": {
-              "type": "object",
-              "required": ["kinds", "letter", "kw", "name", "doc", "words"],
-              "additionalProperties": false,
-              "description": "A setting the player may turn on, written after the tier by its letter in a full ID, under which `oneKind` deals `kinds` alone (Keen's `m`, multiplication only).",
-              "properties": {
-                "kinds": {
-                  "type": "array",
-                  "items": { "type": "string" },
-                  "minItems": 1,
-                  "uniqueItems": true
-                },
-                "letter": { "type": "string", "pattern": "^[a-zA-Z]$" },
-                "kw": { "type": "string" },
-                "name": { "type": "string" },
-                "doc": { "type": "string" },
-                "words": { "type": "string" }
-              }
             },
             "grow": {
               "type": "object",
@@ -1772,9 +2179,15 @@
               "required": ["partition", "holds", "smallest"],
               "additionalProperties": false,
               "properties": {
-                "partition": { "type": "string" },
-                "holds": { "$ref": "#/$defs/countOrFormula" },
-                "smallest": { "$ref": "#/$defs/countOrFormula" },
+                "partition": {
+                  "type": "string"
+                },
+                "holds": {
+                  "$ref": "#/$defs/countOrFormula"
+                },
+                "smallest": {
+                  "$ref": "#/$defs/countOrFormula"
+                },
                 "parts": {
                   "$ref": "#/$defs/countOrFormula",
                   "description": "How many parts a board has, where the rules fix it: a desc with another count is refused."
@@ -1786,9 +2199,15 @@
                   "properties": {
                     "oneIn": {
                       "type": "array",
-                      "items": { "type": "integer", "minimum": 1 }
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
                     },
-                    "atMostOneIn": { "type": "integer", "minimum": 1 }
+                    "atMostOneIn": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
                   }
                 }
               }
@@ -1802,17 +2221,8 @@
               "description": "The clues `hide` leaves keep a symmetry: a symmetry by its name, or a deal option whose choices name them. A clue a square of whose orbit has none goes first, and each other with the clues of its orbit still shown."
             },
             "thorough": {
-              "type": "object",
-              "description": "A setting the player may turn off, written in the params as its letter and 1 or 0: on, the hide tries every clue; off, as many as the board's shorter side, which deals a large board sooner. It is on by default on a board narrower than `offFrom` squares.",
-              "required": ["letter", "kw", "name", "doc", "offFrom"],
-              "additionalProperties": false,
-              "properties": {
-                "letter": { "type": "string", "pattern": "^[a-z]$" },
-                "kw": { "type": "string" },
-                "name": { "type": "string" },
-                "doc": { "type": "string" },
-                "offFrom": { "type": "integer", "minimum": 1 }
-              }
+              "type": "string",
+              "description": "The flag of the settings under which the hide tries every clue, and as many as the board's shorter side where it is off, which deals a large board sooner."
             },
             "sample": {
               "oneOf": [
@@ -1824,13 +2234,18 @@
                   "properties": {
                     "build": {
                       "oneOf": [
-                        { "const": true },
+                        {
+                          "const": true
+                        },
                         {
                           "type": "object",
                           "required": ["value"],
                           "additionalProperties": false,
                           "properties": {
-                            "value": { "type": "integer", "minimum": 1 },
+                            "value": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
                             "order": {
                               "enum": ["upward"],
                               "description": "The cells taken in turn, and not at random: the rows from the bottom, each from the left (Bricks' wall, laid on what is below it)."
@@ -1851,7 +2266,9 @@
                         }
                       ]
                     },
-                    "first": { "$ref": "#/$defs/firstCells" }
+                    "first": {
+                      "$ref": "#/$defs/firstCells"
+                    }
                   }
                 },
                 {
@@ -1865,8 +2282,14 @@
                       "required": ["value", "rest"],
                       "additionalProperties": false,
                       "properties": {
-                        "value": { "type": "integer", "minimum": 1 },
-                        "rest": { "type": "integer", "minimum": 1 }
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "rest": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
                       }
                     }
                   }
@@ -1877,7 +2300,9 @@
                   "required": ["latin"],
                   "additionalProperties": false,
                   "properties": {
-                    "latin": { "const": true }
+                    "latin": {
+                      "const": true
+                    }
                   }
                 },
                 {
@@ -1886,12 +2311,14 @@
                   "required": ["search"],
                   "additionalProperties": false,
                   "properties": {
-                    "search": { "const": true }
+                    "search": {
+                      "const": true
+                    }
                   }
                 },
                 {
                   "type": "object",
-                  "description": "The answer as `play.tally`'s pieces (upstream's boats.c `boats_generate_fleet`): each a straight run of `value` as long as its length, the longest first, at a random place in a random stretch of a row or column holding no piece, none touching another even at a corner; `rest` on every other cell.",
+                  "description": "The answer as the `tally` setting's pieces (upstream's boats.c `boats_generate_fleet`): each a straight run of `value` as long as its length, the longest first, at a random place in a random stretch of a row or column holding no piece, none touching another even at a corner; `rest` on every other cell.",
                   "required": ["pieces"],
                   "additionalProperties": false,
                   "properties": {
@@ -1900,8 +2327,14 @@
                       "required": ["value", "rest"],
                       "additionalProperties": false,
                       "properties": {
-                        "value": { "type": "integer", "minimum": 1 },
-                        "rest": { "type": "integer", "minimum": 1 }
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "rest": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
                       }
                     }
                   }
@@ -1916,9 +2349,17 @@
                       "type": "object",
                       "required": ["value"],
                       "additionalProperties": false,
-                      "properties": { "value": { "type": "integer", "minimum": 1 } }
+                      "properties": {
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      }
                     },
-                    "rest": { "type": "integer", "minimum": 1 }
+                    "rest": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
                   }
                 },
                 {
@@ -1932,17 +2373,30 @@
                       "required": ["value", "count", "apart"],
                       "additionalProperties": false,
                       "properties": {
-                        "value": { "type": "integer", "minimum": 1 },
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
                         "count": {
                           "oneOf": [
-                            { "type": "integer", "minimum": 1 },
-                            { "type": "string" }
+                            {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            {
+                              "type": "string"
+                            }
                           ]
                         },
-                        "apart": { "enum": ["adj4", "adj8"] }
+                        "apart": {
+                          "enum": ["adj4", "adj8"]
+                        }
                       }
                     },
-                    "rest": { "type": "integer", "minimum": 1 }
+                    "rest": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
                   }
                 },
                 {
@@ -1956,13 +2410,18 @@
                       "required": ["value", "share"],
                       "additionalProperties": false,
                       "properties": {
-                        "value": { "type": "integer", "minimum": 1 },
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
                         "share": {
                           "type": "number",
                           "exclusiveMinimum": 0,
                           "maximum": 1
                         },
-                        "apart": { "enum": ["adj4", "adj8"] },
+                        "apart": {
+                          "enum": ["adj4", "adj8"]
+                        },
                         "each": {
                           "const": true,
                           "description": "Each cell takes the value at `share`'s chance, so how many do varies from answer to answer; with no `apart` and no `partner`."
@@ -1982,11 +2441,19 @@
                       "required": ["value", "along"],
                       "additionalProperties": false,
                       "properties": {
-                        "value": { "type": "integer", "minimum": 1 },
-                        "along": { "enum": ["adj4", "adj8"] }
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "along": {
+                          "enum": ["adj4", "adj8"]
+                        }
                       }
                     },
-                    "rest": { "type": "integer", "minimum": 1 },
+                    "rest": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
                     "mend": {
                       "const": true,
                       "description": "Where a rule breaks at a cell of the sample, its clues derived from it, the first such cell takes the other of `scatter`'s value and `rest`, until none breaks (upstream's clusters.c). With `each`."
@@ -2036,16 +2503,22 @@
         "names": {
           "type": "object",
           "description": "What a player calls each technique, keyed by its id or by a rung it is recorded under (a library's technique by its rung): Check & save names the deduction a move followed from by it. Every technique on the ladder needs one; a short noun phrase, lowercase, that reads after \"follows from\".",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "phrases": {
           "type": "object",
           "description": "Clause source a step's or a technique's clause says by name, `{name}`, written once: the loader puts it in place before the clause is checked, so a phrase holds what a clause may and names the terms of the clause that says it. A phrase may say another; a term named like a phrase is refused.",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "tiers": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "The ladder, lowest first; the last is the search where the game has one."
         },
         "rulesOut": {
@@ -2065,7 +2538,9 @@
             "techniques": {
               "type": "array",
               "minItems": 1,
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Ids of the game's own techniques, or `<id>.<arm>` for the firings of one of a technique's `says.arms`: how a technique that also places is named for the arm that only rules out (Tents' `lineCount.countMet`)."
             }
           }
@@ -2073,9 +2548,16 @@
         "scales": {
           "type": "object",
           "description": "Grading scales besides `tiers`, each graded and capped on its own, by name: each its tiers, lowest first. A technique on one names one of its tiers.",
-          "additionalProperties": { "type": "array", "items": { "type": "string" } }
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         },
-        "techniques": { "$ref": "#/$defs/techniques" },
+        "techniques": {
+          "$ref": "#/$defs/techniques"
+        },
         "steps": {
           "type": "object",
           "description": "Kinds of hint step the game's own planner emits, which no technique's firing is: a note placed, a move chosen. Each declares what its sentence reads, the terms and marks the planner supplies, and its clauses, which the compiler checks as a technique's are. The planner names the kind and the wording is the first whose `when` holds.",
@@ -2086,8 +2568,16 @@
             "properties": {
               "ring": {
                 "oneOf": [
-                  { "type": "string" },
-                  { "type": "array", "items": { "type": "string" }, "minItems": 2 }
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 2
+                  }
                 ],
                 "description": "The sort of the elements the step decides, which `{ring}` marks; or the sorts, where it decides elements of several (Numgame's two numbers and sign), each named by a reference (`{ring sign: …}`)."
               },
@@ -2096,8 +2586,16 @@
                 "description": "Named values the planner supplies: `number`, said by the game's value words; `flag`, which an `{if flag: yes | no}` and a wording's `when` read; `unit`, a row, column, block or diagonal, said as its name by `{term}`; `word`, a word the planner makes, said as it is by `{term}` (Wordguess's guess); `values`, several numbers `{term}` says as a list by the game's value words, and whose count form `{term: one | several}` reads how many; a list of words, one of which the planner supplies and `{term}` says as it is (Netslide's tile shapes); or `{ clause: [steps] }`, the move of one of the steps named, which the planner names with what that step is told by and `{term}` says in place, its references with it (Slant's reasons a pair can't both slant one way); or `{ clauses: [steps] }`, several such moves `{term}` says as a list, \"a, b and c\" (Ascent's numbers a square must be near).",
                 "additionalProperties": {
                   "oneOf": [
-                    { "enum": ["number", "flag", "unit", "word", "values"] },
-                    { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+                    {
+                      "enum": ["number", "flag", "unit", "word", "values"]
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 2
+                    },
                     {
                       "type": "object",
                       "additionalProperties": false,
@@ -2105,7 +2603,9 @@
                       "properties": {
                         "clause": {
                           "type": "array",
-                          "items": { "type": "string" },
+                          "items": {
+                            "type": "string"
+                          },
                           "minItems": 1
                         }
                       }
@@ -2117,7 +2617,9 @@
                       "properties": {
                         "clauses": {
                           "type": "array",
-                          "items": { "type": "string" },
+                          "items": {
+                            "type": "string"
+                          },
                           "minItems": 1
                         }
                       }
@@ -2130,10 +2632,30 @@
                 "description": "The sorts of the elements the planner marks in each role, which a reference names (`{outline cell: ...}`); a mark's size is read in a `when` as `|outlineCell|`. `strike` marks the notes a step rules out (Wordguess's letters).",
                 "additionalProperties": false,
                 "properties": {
-                  "outline": { "type": "array", "items": { "type": "string" } },
-                  "stripes": { "type": "array", "items": { "type": "string" } },
-                  "strand": { "type": "array", "items": { "type": "string" } },
-                  "strike": { "type": "array", "items": { "type": "string" } }
+                  "outline": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "stripes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "strand": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "strike": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
                 }
               },
               "aim": {
@@ -2144,9 +2666,15 @@
                 "$ref": "#/$defs/clause",
                 "description": "How the move answers a danger the `look` names, said before it: \"L. One way to avoid it: M.\" (Same Game's)."
               },
-              "look": { "$ref": "#/$defs/clause" },
-              "follows": { "$ref": "#/$defs/clause" },
-              "move": { "$ref": "#/$defs/clause" },
+              "look": {
+                "$ref": "#/$defs/clause"
+              },
+              "follows": {
+                "$ref": "#/$defs/clause"
+              },
+              "move": {
+                "$ref": "#/$defs/clause"
+              },
               "effect": {
                 "$ref": "#/$defs/clause",
                 "description": "What the move does, where no rule forces it: said after the move as an `effect` relation (Slide's \"that makes room for the outlined block\")."
@@ -2155,9 +2683,15 @@
                 "$ref": "#/$defs/clause",
                 "description": "A later leg's reasoning, said after its move where the planner says the step is one (`later`): an `again` relation (ABCD's \"the same striped row\")."
               },
-              "later": { "$ref": "#/$defs/clause" },
-              "wordings": { "$ref": "#/$defs/wordings" },
-              "long": { "$ref": "#/$defs/long" }
+              "later": {
+                "$ref": "#/$defs/clause"
+              },
+              "wordings": {
+                "$ref": "#/$defs/wordings"
+              },
+              "long": {
+                "$ref": "#/$defs/long"
+              }
             }
           }
         },
@@ -2178,30 +2712,55 @@
                     "additionalProperties": false,
                     "description": "Partitions of new names, units after the description's, and the diagonals.",
                     "properties": {
-                      "diagonals": { "const": true },
+                      "diagonals": {
+                        "const": true
+                      },
                       "regions": {
                         "type": "object",
-                        "additionalProperties": { "type": "string" }
+                        "additionalProperties": {
+                          "type": "string"
+                        }
                       },
-                      "units": { "type": "array", "items": { "type": "string" } }
+                      "units": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
                     }
                   },
-                  "define": { "$ref": "#/$defs/define" },
-                  "rules": { "$ref": "#/$defs/rules" },
-                  "clues": { "$ref": "#/$defs/clues" },
-                  "shape": { "$ref": "#/$defs/shape" },
-                  "techniques": { "$ref": "#/$defs/techniques" },
+                  "define": {
+                    "$ref": "#/$defs/define"
+                  },
+                  "rules": {
+                    "$ref": "#/$defs/rules"
+                  },
+                  "clues": {
+                    "$ref": "#/$defs/clues"
+                  },
+                  "shape": {
+                    "$ref": "#/$defs/shape"
+                  },
+                  "techniques": {
+                    "$ref": "#/$defs/techniques"
+                  },
                   "position": {
                     "type": "object",
                     "description": "A planning game's layers of new names, each all zeros on a board without the variation.",
-                    "additionalProperties": { "$ref": "#/$defs/layer" }
+                    "additionalProperties": {
+                      "$ref": "#/$defs/layer"
+                    }
                   },
                   "finish": {
                     "type": "array",
-                    "items": { "$ref": "#/$defs/formula" },
+                    "items": {
+                      "$ref": "#/$defs/formula"
+                    },
                     "description": "A planning game's finish formulas, true of a finished position where the variation is on."
                   },
-                  "deadEnds": { "$ref": "#/$defs/deadEnds" },
+                  "deadEnds": {
+                    "$ref": "#/$defs/deadEnds"
+                  },
                   "moves": {
                     "type": "object",
                     "description": "Assignments added to a planning game's moves, by the move's name, made where the variation is on.",
@@ -2209,7 +2768,11 @@
                       "type": "object",
                       "required": ["set"],
                       "additionalProperties": false,
-                      "properties": { "set": { "$ref": "#/$defs/assignments" } }
+                      "properties": {
+                        "set": {
+                          "$ref": "#/$defs/assignments"
+                        }
+                      }
                     }
                   }
                 }
@@ -2218,7 +2781,9 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "space": { "$ref": "#/$defs/space" },
+                  "space": {
+                    "$ref": "#/$defs/space"
+                  },
                   "clues": {
                     "$ref": "#/$defs/clues",
                     "description": "Clue kinds of the same names, each replaced whole: Rect's Patches widens its number to a question mark."
@@ -2226,7 +2791,9 @@
                   "position": {
                     "type": "object",
                     "description": "A planning game's layers of the same names, replaced.",
-                    "additionalProperties": { "$ref": "#/$defs/layer" }
+                    "additionalProperties": {
+                      "$ref": "#/$defs/layer"
+                    }
                   }
                 }
               }
@@ -2234,6 +2801,407 @@
           }
         }
       }
+    },
+    "setting": {
+      "type": "object",
+      "description": "A setting the params give (`engine/fill/params/`), by its `kind`. It `gives` a variation of its name (a flag) or a size of its name (a choice, each a ruleset), written in a brief ID; without, only the deal reads it, by its name, and only a full ID writes it. Its Custom field is `kw`, `name` and `doc`, and `words` what a board's name says of it where it is not the usual.",
+      "required": ["kind"],
+      "oneOf": [
+        {
+          "required": ["letter", "kw", "name"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "flag"
+            },
+            "gives": {
+              "const": "variation"
+            },
+            "after": {
+              "const": "tier",
+              "description": "Written after the tier, where not after the size."
+            },
+            "letter": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]$"
+            },
+            "kw": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "doc": {
+              "type": "string"
+            },
+            "words": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "required": ["on", "off"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "on": {
+                      "type": "string"
+                    },
+                    "off": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ],
+              "description": "Said where it is on; or, where its default goes by the board's size (`onBelow`), said where it is on or off against it."
+            },
+            "written": {
+              "const": "off",
+              "description": "Written where it is off, as its letter and 0, absent read as on (Mosaic's `h0`)."
+            },
+            "onBelow": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "On by default on a board narrower than this."
+            },
+            "rule": {
+              "type": "string"
+            },
+            "note": {
+              "type": "string"
+            },
+            "most": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "bounds": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sum": {
+                  "$ref": "#/$defs/sizeBound"
+                },
+                "area": {
+                  "$ref": "#/$defs/sizeBound"
+                },
+                "shorter": {
+                  "$ref": "#/$defs/sizeBound"
+                },
+                "longer": {
+                  "$ref": "#/$defs/sizeBound"
+                }
+              }
+            }
+          }
+        },
+        {
+          "required": ["letter", "kw", "name", "doc", "min", "max", "default"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "number"
+            },
+            "after": {
+              "const": "tier",
+              "description": "Written after the tier, where not after the size."
+            },
+            "letter": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]$"
+            },
+            "kw": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "doc": {
+              "type": "string"
+            },
+            "min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "default": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "words": {
+              "type": "string",
+              "description": "`{n}` the number."
+            }
+          }
+        },
+        {
+          "required": ["choices"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "choice"
+            },
+            "gives": {
+              "const": "size"
+            },
+            "after": {
+              "const": "tier",
+              "description": "Written after the tier, where not after the size."
+            },
+            "letter": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]$"
+            },
+            "kw": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "doc": {
+              "type": "string"
+            },
+            "default": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "choices": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "words": {
+                    "type": "string"
+                  },
+                  "symmetry": {
+                    "$ref": "#/$defs/symmetry"
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9]*$",
+                    "description": "What the params write for the choice, in a setting with no `letter`; `\"\"`, the default's alone, is written as nothing, and the default is never written (upstream solo.c's `m4`, Seismic's `T`)."
+                  },
+                  "bounds": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "square": {
+                        "const": true
+                      },
+                      "sum": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "area": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "shorter": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "longer": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "tiers": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "sum": {
+                              "$ref": "#/$defs/sizeBound"
+                            },
+                            "area": {
+                              "$ref": "#/$defs/sizeBound"
+                            },
+                            "shorter": {
+                              "$ref": "#/$defs/sizeBound"
+                            },
+                            "longer": {
+                              "$ref": "#/$defs/sizeBound"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "rule": {
+                    "type": "string",
+                    "description": "A size's ruleset's rule."
+                  },
+                  "least": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "The narrowest board a size's ruleset has an answer on."
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "required": ["members"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "after": {
+              "const": "tier",
+              "description": "Written after the tier, where not after the size."
+            },
+            "members": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Each a clue kind the deal deals where it is on, by its letter in a full ID, in this order, and a check box in Custom; every one on where no letter is written, and a board's name saying which are on or off, whichever list is shorter (Mathrax's `A S M D E O`).",
+              "items": {
+                "type": "object",
+                "required": ["letter", "kind", "kw", "name", "doc", "word"],
+                "additionalProperties": false,
+                "properties": {
+                  "letter": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z]$"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "kw": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "doc": {
+                    "type": "string"
+                  },
+                  "word": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "required": ["letter", "size", "counts"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "tally"
+            },
+            "after": {
+              "const": "tier",
+              "description": "Written after the tier, where not after the size."
+            },
+            "letter": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]$"
+            },
+            "size": {
+              "type": "object",
+              "required": ["kw", "name", "doc", "max", "default"],
+              "additionalProperties": false,
+              "properties": {
+                "kw": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "doc": {
+                  "type": "string"
+                },
+                "max": {
+                  "type": "integer"
+                },
+                "default": {
+                  "type": "integer"
+                }
+              }
+            },
+            "counts": {
+              "type": "object",
+              "required": ["kw", "name", "doc"],
+              "additionalProperties": false,
+              "properties": {
+                "kw": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "doc": {
+                  "type": "string"
+                }
+              }
+            },
+            "single": {
+              "type": "string",
+              "description": "The one tier a tally of one piece is dealt at."
+            }
+          }
+        },
+        {
+          "required": ["letter", "columns", "rows", "rulesets"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "blocks"
+            },
+            "letter": {
+              "type": "string",
+              "pattern": "^[a-z]$"
+            },
+            "columns": {
+              "type": "object",
+              "required": ["kw", "name", "doc"],
+              "additionalProperties": false,
+              "properties": {
+                "kw": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "doc": {
+                  "type": "string"
+                }
+              }
+            },
+            "rows": {
+              "type": "object",
+              "required": ["kw", "name"],
+              "additionalProperties": false,
+              "properties": {
+                "kw": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            "rulesets": {
+              "type": "object",
+              "minProperties": 2,
+              "maxProperties": 2,
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

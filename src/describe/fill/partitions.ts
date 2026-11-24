@@ -11,11 +11,14 @@ import type {
   DivideJson,
   GrowJson,
   SampleJson,
+  SettingJson,
 } from "../description.ts";
 import { parse } from "../expr.ts";
 import { answerEnv, param } from "./emit.ts";
-import type { FillSettingJson } from "./params.ts";
 import { sampledValue } from "./sample.ts";
+
+/** The sizes the settings give (`settings.ts`' `sizeSettings`). */
+type SizeSettings = readonly { id: string; from: number; values: number }[];
 
 /** The partitions the board deals, by name: a partition among the units
  * the board deals (Solo's jigsaw blocks) first, then the rest. */
@@ -63,7 +66,7 @@ export function checkPartitions(
  * of it; one into equal parts names a number, `w` or a size. */
 function divideDeal(
   divide: DivideJson,
-  settings: readonly FillSettingJson[],
+  settings: SizeSettings,
   json: DescriptionJson,
 ):
   | Exclude<DivideJson, { sizes: number[][] }>
@@ -81,19 +84,19 @@ function divideDeal(
       throw new CompileError("deal divide: several lists of sizes, and no by");
     return { partition, sizes };
   }
-  const s = settings.find((x) => x.size === by);
+  const s = settings.find((x) => x.id === by);
   if (s === undefined)
     throw new CompileError(`deal divide: ${by} is no size the params give`);
-  if (sizes.length !== s.rulesets.length)
+  if (sizes.length !== s.values)
     throw new CompileError(`deal divide: not one list of sizes a value of ${by}`);
-  return { partition, sizes, by: { size: by, min: s.min } };
+  return { partition, sizes, by: { size: by, min: s.from } };
 }
 
 /** A divide as the deal reads it: a partition a variation deals is divided
  * only where it is on. */
 export function divideOn(
   x: DivideJson,
-  settings: readonly FillSettingJson[],
+  settings: SizeSettings,
   json: DescriptionJson,
 ): ReturnType<typeof divideDeal> & { variation?: string } {
   const by = dealtBy(json, x.partition);
@@ -203,21 +206,26 @@ export function blocksOf(
 }
 
 /**
- * `play.blocks` as the deal reads it (`FillBlocks`), or `null` where the
- * description has none: the blocks must be `blocks(a, b)` of two sizes, the
- * grid `a * b` on a side, and a variation must deal them, which is on where
- * `a`, the blocks' width, is 1; `rulesets` names that variation and one
- * other puzzle.
+ * A `blocks` setting as the deal reads it (`BlocksSetting`): the blocks must
+ * be `blocks(a, b)` of two sizes, the grid `a * b` on a side, and a
+ * variation must deal them, which is on where `a`, the blocks' width, is 1;
+ * `rulesets` names that variation and one other puzzle.
  */
-export function fillBlocksOf(json: DescriptionJson, env: Env): FillBlocksJson | null {
-  const given = json.play?.blocks;
-  if (given === undefined) return null;
+export function fillBlocksOf(
+  json: DescriptionJson,
+  env: Env,
+  id: string,
+  given: SettingJson,
+): FillBlocksJson {
+  const { letter, columns, rows } = given;
+  if (letter === undefined || columns === undefined || rows === undefined)
+    throw new CompileError(`settings ${id}: blocks have a letter, columns and rows`);
   const cut = blocksOf(json, env.boxes);
   const dealtBy = boxesDealtBy(json, env);
   const [down, across] = cut ?? [];
   if (typeof down !== "string" || typeof across !== "string" || dealtBy === null)
     throw new CompileError(
-      "play blocks: the blocks are blocks(a, b) of two sizes, and a variation deals them",
+      `settings ${id}: the blocks are blocks(a, b) of two sizes, and a variation deals them`,
     );
   const side = (f?: string) => (f ?? "").replace(/\s+/g, "");
   const grid = json.space.grid;
@@ -225,26 +233,27 @@ export function fillBlocksOf(json: DescriptionJson, env: Env): FillBlocksJson | 
     side(grid?.w) !== side(grid?.h) ||
     ![`${across}*${down}`, `${down}*${across}`].includes(side(grid?.w))
   )
-    throw new CompileError(`play blocks: the grid is ${across} * ${down} on a side`);
+    throw new CompileError(`settings ${id}: the grid is ${across} * ${down} on a side`);
   const [a, d] = [json.sizes[across], json.sizes[down]];
   if (a?.max === undefined || d?.max === undefined || d.min !== 1)
     throw new CompileError(
-      `play blocks: ${across} and ${down} have a max, and ${down} goes down to 1`,
+      `settings ${id}: ${across} and ${down} have a max, and ${down} goes down to 1`,
     );
-  const names = Object.keys(given.rulesets);
+  const rulesets = given.rulesets ?? {};
+  const names = Object.keys(rulesets);
   const cutName = names.find((n) => n !== dealtBy);
   if (cutName === undefined || !names.includes(dealtBy))
-    throw new CompileError(`play blocks: rulesets name ${dealtBy} and one other`);
+    throw new CompileError(`settings ${id}: rulesets name ${dealtBy} and one other`);
   return {
     across,
     down,
-    letter: given.letter,
+    letter,
     dealtBy,
-    columns: given.columns,
-    rows: given.rows,
+    columns,
+    rows,
     rulesets: [
-      { name: cutName, rule: given.rulesets[cutName] ?? "" },
-      { name: dealtBy, rule: given.rulesets[dealtBy] ?? "" },
+      { name: cutName, rule: rulesets[cutName] ?? "" },
+      { name: dealtBy, rule: rulesets[dealtBy] ?? "" },
     ],
     bounds: {
       across: { min: a.min, max: a.max },

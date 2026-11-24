@@ -9,7 +9,8 @@ import { drawRejected } from "../../contract/deal-census.ts";
 import type { RandomState } from "../../random/index.ts";
 import { clueList, type GridSpace } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
-import type { FillDeal } from "../game-id.ts";
+import type { FillDeal, FillParams } from "../game-id.ts";
+import { isOn } from "../params/settings.ts";
 import type { DealContext } from "./context.ts";
 import { firstKindEach } from "./first-kind.ts";
 import { latinNumbers } from "./latin-numbers.ts";
@@ -30,6 +31,12 @@ type ClueStep = <C extends Clues<C>>(
   cx: DealContext<C>,
   at: DrawAt,
 ) => C | null;
+
+/** Whether board `p` deals the one-a-part kinds' `alone` set alone. */
+const aloneOn = (deal: FillDeal, p: FillParams): boolean => {
+  const alone = deal.oneKind?.alone;
+  return alone !== undefined && isOn(deal, p, alone.when);
+};
 
 /** The clues with the deal's Latin kind numbered round answer `g`, where it
  * has one. A build numbers its blank board's so as well (`build.ts`). */
@@ -53,6 +60,6 @@ export const CLUE_STEPS: readonly ClueStep[] = [
   (clues, cx, { g }) => withLatin(clues, cx.deal, cx.sp, g, cx.rs),
   (clues, cx) => firstKindEach(cx.deal, cx.p, clues),
   (clues, cx, { on, tier }) =>
-    oneKindEach(cx.module, cx.deal, on, clues, tier, cx.p.only === true, cx.rs) ??
+    oneKindEach(cx.module, cx.deal, on, clues, tier, aloneOn(cx.deal, cx.p), cx.rs) ??
     drawRejected("fill: a part suits none of the kinds"),
 ];

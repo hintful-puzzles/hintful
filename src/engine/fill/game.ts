@@ -55,8 +55,11 @@ import {
   type FillDeal,
   type FillParams,
   fillParams,
+  givenOf,
   partitionOfKind,
   partKindsOf,
+  sizesOf,
+  startSettings,
 } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import {
@@ -69,13 +72,9 @@ import {
 } from "./hint.ts";
 import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
 import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
-import { setBlocks } from "./params/blocks.ts";
 import type { FillBounds } from "./params/bounds.ts";
-import type { FillModifier } from "./params/modifiers.ts";
-import { variationsOf } from "./params/modifiers.ts";
-import { sizesOf } from "./params/settings.ts";
-import { tallyClue, tallyDefault } from "./params/tally.ts";
-import { withThorough } from "./params/thorough.ts";
+import { variationsOf } from "./params/flag.ts";
+import type { PresetSettings } from "./params/setting.ts";
 import {
   type FillInput,
   type FillPlay,
@@ -112,14 +111,9 @@ export interface BornModule<C>
     })[];
     readonly variants: readonly (Board & {
       readonly variations: readonly string[];
-      /** The deal's settings the board turns on (`FillDeal.onlyFlag`,
-       * `FillDeal.hideFlag`). */
-      readonly only?: boolean;
-      readonly hides?: boolean;
       readonly diff: number;
     })[];
   };
-  readonly modifiers?: Readonly<Record<string, FillModifier>>;
   /** What the sizes alone cannot say of a board (`play.bounds`). */
   readonly bounds?: FillBounds;
   readonly hintMarks: Readonly<Partial<Record<MarkRole, string>>>;
@@ -127,14 +121,9 @@ export interface BornModule<C>
 
 type Size = { readonly w: number; readonly h: number };
 
-/** A preset board: its size, and the sizes beyond the grid's it gives, by
- * name, where the params have any, and the deal's options it names. */
-type Board = Size & {
-  readonly sizes?: Readonly<Record<string, number>>;
-  readonly options?: Readonly<Record<string, number>>;
-  /** The tally's size, its counts the size's default. */
-  readonly tally?: number;
-};
+/** A preset board: its size, and the settings it names (`PresetSettings`),
+ * the tally by its size, its counts the size's default. */
+type Board = Size & PresetSettings;
 
 /** Whether params `p` are those of the board `b`. */
 const isBoard = (p: FillParams, b: Board): boolean =>
@@ -160,55 +149,21 @@ export function fillGame<C extends Clues<C> & object>(
 ): FillGame<C> {
   const { play, deal, boards } = module;
   const byDefault = module.menu?.default ?? boards[0];
-  // A board gives each size beyond the grid's, its least where it names none,
-  // and each option, its default where it names none.
-  /** `p` with a board's blocks, where the board is sized by them: dealt
-   * where they are one square wide. */
-  const blocked = (p: FillParams, sizes: Board["sizes"]): FillParams => {
-    const b = deal.blocks;
-    if (b === undefined) return p;
-    const out = { ...p };
-    setBlocks(b, out, sizes?.[b.across] ?? p.w, sizes?.[b.down] ?? 1);
-    return out;
-  };
+  // A board gives each setting as it names it, else at its default.
   const sized = (
-    { w, h, sizes, options, tally }: Board,
+    board: Board,
     diff = 0,
     variations: readonly string[] = [],
   ): FillParams =>
-    blocked(
-      withThorough(deal, {
-        w,
-        h,
+    startSettings(
+      deal,
+      {
+        w: board.w,
+        h: board.h,
         diff,
         ...(variations.length === 0 ? {} : { variations }),
-        ...(deal.tally === undefined
-          ? {}
-          : { tally: tallyDefault(tally ?? deal.tally.size.default) }),
-        ...(deal.hideFlag === undefined ? {} : { hides: false }),
-        ...(deal.onlyFlag === undefined ? {} : { only: false }),
-        ...(deal.kindLetters === undefined
-          ? {}
-          : { kinds: deal.kindLetters.map((l) => l.kind) }),
-        ...(deal.settings === undefined
-          ? {}
-          : {
-              sizes: Object.fromEntries(
-                deal.settings.map((s) => [s.size, sizes?.[s.size] ?? s.min]),
-              ),
-            }),
-        ...(deal.options === undefined
-          ? {}
-          : {
-              options: Object.fromEntries(
-                Object.entries(deal.options).map(([n, o]) => [
-                  n,
-                  options?.[n] ?? o.default,
-                ]),
-              ),
-            }),
-      }),
-      sizes,
+      },
+      board,
     );
   // The default board is dealt at the first tier the menu offers it at,
   // unless the description names another, so a menu that starts a board above
@@ -222,12 +177,11 @@ export function fillGame<C extends Clues<C> & object>(
     deal,
     module.tiers,
     defaultParams,
-    module.modifiers,
     module.bounds,
-    // A preset's option where the board is one, else the option's default.
-    (p, name) =>
-      boards.find((b) => isBoard(p, b))?.options?.[name] ??
-      deal.options?.[name]?.default ??
+    // A preset's setting where the board is one, else the setting's default.
+    (p, id) =>
+      boards.find((b) => isBoard(p, b))?.settings?.[id] ??
+      sized({ w: p.w, h: p.h }).settings?.[id] ??
       0,
   );
   const boardTiers = module.menu?.tiers ?? [];
@@ -245,11 +199,9 @@ export function fillGame<C extends Clues<C> & object>(
     ...(variants.length === 0
       ? {}
       : {
-          variants: variants.map(({ variations, diff, only, hides, ...board }) => ({
-            ...sized(board, diff, variations),
-            ...(only === true ? { only } : {}),
-            ...(hides === true ? { hides } : {}),
-          })),
+          variants: variants.map(({ variations, diff, ...board }) =>
+            sized(board, diff, variations),
+          ),
         }),
   };
   /** A boolean preference on the Ui, by its field. */
@@ -363,13 +315,11 @@ export function fillGame<C extends Clues<C> & object>(
     const clues = descValue(
       decodeDesc<C>(deal, sp, module.clueMax, desc, grown, variationsOf(p)),
     );
-    const tally =
-      deal.tally === undefined ? {} : { [deal.tally.kind]: tallyClue(deal.tally, p) };
     return newBoard<C>(
       module,
       size.w,
       size.h,
-      { ...clues, ...sizes, ...tally },
+      { ...clues, ...givenOf(deal, p) },
       variationsOf(p),
     );
   };

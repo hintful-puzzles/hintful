@@ -133,7 +133,7 @@ play:
     4x4: [Easy, Easy]
     5x5: [Easy, Easy]
     9x9: [Normal, Normal]
-  variants: [{ board: 6x6, with: [multiplication-only], tier: Normal }]
+  variants: [{ board: 6x6, with: [multiplicationOnly], tier: Normal }]
   # Measured 2026-10-05: none in 50,000 boards built at each tier above
   # Normal, with every operation and with multiplication alone.
   bounds:
@@ -176,8 +176,11 @@ deal:
     never:
       difference: "v = w - 1"
       quotient: "2 * v > w"
-  onlyFlag:
-    kinds: [product]
+    alone: { when: multiplicationOnly, kinds: [product] }
+settings:
+  multiplicationOnly:
+    kind: flag
+    after: tier
     letter: m
     kw: multiplication-only
     name: Multiplication only

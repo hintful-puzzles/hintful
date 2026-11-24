@@ -116,6 +116,9 @@ export interface DescriptionJson {
   play?: PlayJson;
   /** A game born from its description: its catalog entry. */
   catalog?: CatalogJson;
+  /** The settings the params give, by name, in the params' order and the
+   * Custom dialog's. */
+  settings?: Record<string, SettingJson>;
   /** A fill game's game ID: the codec's segments in order
    * (`engine/fill/segments/`). */
   id?: IdSegment[];
@@ -187,21 +190,6 @@ export interface PlayJson {
   hides?: { value: number; pref: { kw: string; name: string } };
   /** Whether the cursor carries over the grid's edge. */
   wrap?: true;
-  /** A board kind of two fields the params give: a count of pieces of each
-   * length (`engine/fill/params/tally.ts`, `FillTally`). */
-  tally?: {
-    kind: string;
-    size: {
-      letter: string;
-      kw: string;
-      name: string;
-      doc: string;
-      max: number;
-      default: number;
-    };
-    counts: { kw: string; name: string; doc: string };
-    single?: string;
-  };
   click?: "toggle" | "cycle";
   /** The clue kind at a cell that the cell is dealt holding. */
   dealt?: string;
@@ -219,23 +207,8 @@ export interface PlayJson {
   variants?: { board: string; with: string[]; tier: string }[];
   /** What the sizes alone cannot say of a board, and of a board of a tier. */
   bounds?: SizeBoundsJson & { tiers?: Record<string, SizeBoundsJson> };
-  /** Each size beyond the grid's that the params give, by name: its letter
-   * in the params, and its rulesets, one a value from the size's `min`. */
-  sizes?: Record<string, SizeSettingJson>;
-  /** A board sized by its blocks, the two sizes of `blocks(a, b)`: the
-   * letter its game ID writes where they are dealt, the Custom fields of
-   * the blocks across and down, and the rule of each puzzle, the one with
-   * blocks and the variation that deals them, by name. */
-  blocks?: {
-    letter: string;
-    columns: { kw: string; name: string; doc: string };
-    rows: { kw: string; name: string };
-    rulesets: Record<string, string>;
-  };
   /** The numbers on cells drawn plain: no block, never faint, not counted. */
   plain?: string[];
-  /** Each variation the player may switch on, by its name. */
-  modifiers?: Record<string, ModifierJson>;
   links?: string;
   /** The techniques that read a link the board shows at a glance, run once on
    * the drawn links before each step of the hint. */
@@ -254,35 +227,74 @@ export interface PlayJson {
   hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
 }
 
-/** A size beyond the grid's that the params give: its params letter, written
- * before the number, or its `letters`, one bare a value, `""` written as
- * nothing (Seismic's Tectonic `T`); and a ruleset for each of its values,
- * each with the narrowest board it has an answer on. */
-export type SizeSettingJson = (
-  | { letter: string; letters?: undefined }
-  | { letters: string[]; letter?: undefined }
-) & {
-  rulesets: { name: string; rule: string; least?: number }[];
-};
-
 /** Bounds on a board's two sides together: their sum, their product, the
  * shorter and the longer. */
 export type SizeBoundsJson = Partial<
   Record<"sum" | "area" | "shorter" | "longer", { min?: number; max?: number }>
 >;
 
-/** A variation the player may switch on: its params letter, its Custom
- * field, its words and rule (`engine/game-id/modifier.ts`), and where it
- * bounds the size, the most lines a board 2i across may have the other way. */
-export interface ModifierJson {
-  letter: string;
-  kw: string;
-  name: string;
-  words: string;
-  rule: string;
+/**
+ * A setting the params give (`settings:`), of one `kind`, each a module of
+ * `engine/fill/params/` that says what its fields mean; the schema holds
+ * each kind to its own. It `gives` a variation of its name, a size of its
+ * name, or, without, only the deal reads it, by its name. It is written
+ * after the size, or `after: tier`.
+ */
+export interface SettingJson {
+  kind: "flag" | "number" | "choice" | "set" | "tally" | "blocks";
+  gives?: "variation" | "size";
+  after?: "tier";
+  letter?: string;
+  kw?: string;
+  name?: string;
+  doc?: string;
+  words?: string | { on: string; off: string };
+  /** A flag's quirks: written where it is off, and on by default on a board
+   * narrower than `onBelow`. */
+  written?: "off";
+  onBelow?: number;
+  /** A variation's rule and bounds. */
+  rule?: string;
   note?: string;
   most?: number[];
   bounds?: SizeBoundsJson;
+  min?: number;
+  max?: number;
+  default?: number;
+  choices?: ChoiceJson[];
+  members?: {
+    letter: string;
+    kind: string;
+    kw: string;
+    name: string;
+    doc: string;
+    word: string;
+  }[];
+  /** A tally's two fields, and the tier a tally of one piece is dealt at. */
+  size?: { kw: string; name: string; doc: string; max: number; default: number };
+  counts?: { kw: string; name: string; doc: string };
+  single?: string;
+  /** Blocks' fields, and the rule of each puzzle, by name: the one with
+   * blocks cut and the variation that deals them. */
+  columns?: { kw: string; name: string; doc: string };
+  rows?: { kw: string; name: string };
+  rulesets?: Record<string, string>;
+}
+
+/** The board clue a `tally` setting gives, which the ID does not write, or
+ * `null`. */
+export const tallyKindOf = (json: DescriptionJson): string | null =>
+  Object.entries(json.settings ?? {}).find(([, s]) => s.kind === "tally")?.[0] ?? null;
+
+/** One choice of a setting. */
+export interface ChoiceJson {
+  name: string;
+  words?: string;
+  code?: string;
+  rule?: string;
+  least?: number;
+  bounds?: SizeBoundsJson & { square?: true; tiers?: Record<string, SizeBoundsJson> };
+  symmetry?: Symmetry;
 }
 
 /** A game born from its description: its catalog entry, the engine's
@@ -308,8 +320,7 @@ export interface GridJson {
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
- * ({@link sampleOf}), the setting that makes its hiding thorough
- * ({@link thoroughOf}), and the partition it grows round the answer
+ * ({@link sampleOf}), and the partition it grows round the answer
  * ({@link growOf}). */
 type DealJson = Record<
   string,
@@ -317,55 +328,15 @@ type DealJson = Record<
   | string
   | readonly string[]
   | SampleJson
-  | ThoroughJson
   | GrowJson
-  | Record<string, OptionJson>
   | Record<string, string>
   | Record<string, number[]>
 >;
-
-/** The settings the params give that only the deal reads (`deal.options`),
- * by name. */
-export function optionsOf(json: DescriptionJson): Record<string, OptionJson> {
-  const o = json.deal?.["options"];
-  return typeof o === "object" ? (o as Record<string, OptionJson>) : {};
-}
-
-/** A setting the params give that only the deal reads: a number from `min`
- * to `max`, or with `choices` one of them by its index. */
-export interface OptionJson {
-  /** Absent where every choice has a `code`. */
-  letter?: string;
-  kw: string;
-  name: string;
-  default: number;
-  doc: string;
-  min?: number;
-  max?: number;
-  words?: string;
-  choices?: {
-    name: string;
-    words?: string;
-    bounds?: SizeBoundsJson & {
-      square?: true;
-      tiers?: Record<string, SizeBoundsJson>;
-    };
-    symmetry?: Symmetry;
-    code?: string;
-  }[];
-}
 
 /** How a description's deal samples an answer, or `null` where it does not. */
 export function sampleOf(json: DescriptionJson): SampleJson | null {
   const sample = json.deal?.["sample"];
   return typeof sample === "object" ? (sample as SampleJson) : null;
-}
-
-/** The deal's setting for hiding every clue it can (`deal.thorough`), or
- * `null` where it always does. */
-export function thoroughOf(json: DescriptionJson): ThoroughJson | null {
-  const t = json.deal?.["thorough"];
-  return typeof t === "object" ? (t as ThoroughJson) : null;
 }
 
 /** The partitions the deal divides at random (`deal.divide`), one or a
@@ -397,51 +368,19 @@ export function oneKindOf(json: DescriptionJson): OneKindJson | null {
 /** One clue a part, of one of `kinds`, dealt in turn: each kind to the
  * first part in a random order it suits, a part where its clue is `poor`
  * (from tier `from`, where given) only where it suits none, and never where
- * `never` holds. Each formula reads the part `at` and the clue's value `v`. */
+ * `never` holds; and where the flag `alone.when` is on, `alone.kinds` alone.
+ * Each formula reads the part `at` and the clue's value `v`. */
 export interface OneKindJson {
   kinds: string[];
   poor?: Record<string, string | { when: string; from: string }>;
   never?: Record<string, string>;
-}
-
-/** The setting that deals some kinds alone (`deal.onlyFlag`), or `null`. */
-export function onlyFlagOf(json: DescriptionJson): OnlyFlagJson | null {
-  const g = json.deal?.["onlyFlag"];
-  return typeof g === "object" ? (g as unknown as OnlyFlagJson) : null;
+  alone?: { when: string; kinds: string[] };
 }
 
 /** `deal.firstKind`, where the description has one. */
 export function firstKindJsonOf(json: DescriptionJson): string[] | null {
   const k = json.deal?.["firstKind"];
   return Array.isArray(k) ? (k as unknown as string[]) : null;
-}
-
-/** `deal.kindLetters`, where the description has them. */
-export function kindLettersJsonOf(json: DescriptionJson): KindLetterJson[] | null {
-  const k = json.deal?.["kindLetters"];
-  return Array.isArray(k) ? (k as unknown as KindLetterJson[]) : null;
-}
-
-/** A kind of clue the player may switch off, by its letter after the tier
- * and a check box in Custom (Mathrax's `A S M D E O`). */
-export interface KindLetterJson {
-  letter: string;
-  kind: string;
-  kw: string;
-  name: string;
-  doc: string;
-  word: string;
-}
-
-/** A setting the player may turn on, written after the tier by its letter,
- * under which `deal.oneKind` deals `kinds` alone (Keen's `m`). */
-export interface OnlyFlagJson {
-  kinds: string[];
-  letter: string;
-  kw: string;
-  name: string;
-  doc: string;
-  words: string;
 }
 
 /** The partition the deal grows round its answer (`deal.grow`), or `null`
@@ -465,18 +404,6 @@ export interface GrowJson {
   /** How many parts a board has, where the rules fix it. */
   parts?: number | string;
   closed?: { oneIn: number[]; atMostOneIn: number };
-}
-
-/** A deal setting the player may turn off, by its params letter (`h1`,
- * `h0`): the hide tries every clue where it is on, and as many as the
- * board's shorter side where it is off. It is on by default below
- * `offFrom` squares across. */
-export interface ThoroughJson {
-  letter: string;
-  kw: string;
-  name: string;
-  doc: string;
-  offFrom: number;
 }
 
 /** How a deal samples an answer: built by the ladder (`build`); `dominoes`

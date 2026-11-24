@@ -234,7 +234,7 @@ export const bounds = {"all":{},"tiers":[{"tier":1,"shorter":{"min":2},"longer":
 export const hintMarks = {"ring":"the squares the step decides; the sentence says whether they must be shaded or clear.","outline":"the squares already marked shaded or clear that hold a run in place.","stripes":"the row or column the sentence names, running on through its numbers."} as const;
 
 /** How the engine deals the board and writes its game ID. */
-export const deal = {"sample":{"picture":{"value":1,"rest":2}},"id":[{"lists":"runs","order":"columns"},{"dots":"given","cases":[2,1],"before":","}],"universes":{"runs":"lines","given":"cells"},"tierLetters":"eu","sizes":{"w":{"min":1},"h":{"min":1}},"least":{"runs":1,"given":1}} as const;
+export const deal = {"settings":[],"sample":{"picture":{"value":1,"rest":2}},"id":[{"lists":"runs","order":"columns"},{"dots":"given","cases":[2,1],"before":","}],"universes":{"runs":"lines","given":"cells"},"tierLetters":"eu","sizes":{"w":{"min":1},"h":{"min":1}},"least":{"runs":1,"given":1}} as const;
 
 /** Each clue kind's largest value at an element. */
 export const clueMax = {

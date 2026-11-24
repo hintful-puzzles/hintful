@@ -30,13 +30,6 @@ freedom: { kind: fill }
 play:
   numbers: {}
   boards: [5x5, 6x6]
-  modifiers:
-    X:
-      letter: x
-      kw: diagonals
-      name: Diagonals
-      words: X
-      rule: each of the two diagonals holds every number once too.
   hintMarks:
     ring: the square the step decides.
     strike: the notes the step crosses out.
@@ -49,21 +42,30 @@ deal:
   sample: { search: true }
   hide: given
   symmetric: symmetry
-  options:
-    symmetry:
-      kw: symmetry
-      name: Symmetry
-      default: 1
-      doc: The symmetry the given numbers keep.
-      choices:
-        - { name: None, words: no symmetry, code: a, symmetry: none }
-        - { name: 2-way rotation, code: r2, symmetry: halfTurn }
-        - { name: 4-way rotation, code: r4, symmetry: quarterTurn }
-        - { name: 2-way mirror, code: m2, symmetry: mirrorLeftRight }
-        - { name: 2-way diagonal mirror, code: md2, symmetry: mirrorDiagonal }
-        - { name: 4-way mirror, code: m4, symmetry: mirrorBothWays }
-        - { name: 4-way diagonal mirror, code: md4, symmetry: mirrorBothDiagonals }
-        - { name: 8-way mirror, code: m8, symmetry: mirrorEightWays }
+settings:
+  X:
+    kind: flag
+    gives: variation
+    letter: x
+    kw: diagonals
+    name: Diagonals
+    words: X
+    rule: each of the two diagonals holds every number once too.
+  symmetry:
+    kind: choice
+    kw: symmetry
+    name: Symmetry
+    default: 1
+    doc: The symmetry the given numbers keep.
+    choices:
+      - { name: None, words: no symmetry, code: a, symmetry: none }
+      - { name: 2-way rotation, code: r2, symmetry: halfTurn }
+      - { name: 4-way rotation, code: r4, symmetry: quarterTurn }
+      - { name: 2-way mirror, code: m2, symmetry: mirrorLeftRight }
+      - { name: 2-way diagonal mirror, code: md2, symmetry: mirrorDiagonal }
+      - { name: 4-way mirror, code: m4, symmetry: mirrorBothWays }
+      - { name: 4-way diagonal mirror, code: md4, symmetry: mirrorBothDiagonals }
+      - { name: 8-way mirror, code: m8, symmetry: mirrorEightWays }
 id:
   - digits: given
     apart: _

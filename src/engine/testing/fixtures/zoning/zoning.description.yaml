@@ -33,16 +33,6 @@ freedom: { kind: fill }
 play:
   numbers: {}
   boards: [4x4, 5x5, 5x5D]
-  # The second ruleset is written as its bare letter, the first as nothing
-  # (Seismic's Tectonic `T`).
-  sizes:
-    mode:
-      letters: ["", D]
-      rulesets:
-        - name: Sides
-          rule: Two equal numbers may not be side by side.
-        - name: Corners
-          rule: Two equal numbers may not touch, even at a corner.
   hintMarks:
     ring: the square the step decides.
     outline: the squares the step reasons from.
@@ -56,6 +46,19 @@ deal:
   divide: { partition: area, by: mode, sizes: [[2, 3, 4, 4], [4, 5]] }
   sample: { search: true }
   hide: given
+settings:
+  # The second ruleset is written as its bare code, the first as nothing
+  # (Seismic's Tectonic `T`).
+  mode:
+    kind: choice
+    gives: size
+    choices:
+      - name: Sides
+        code: ""
+        rule: Two equal numbers may not be side by side.
+      - name: Corners
+        code: D
+        rule: Two equal numbers may not touch, even at a corner.
 id:
   - walls: area
   - { digits: given, before: "," }

@@ -81,14 +81,6 @@ define:
 freedom: { kind: fill }
 play:
   numbers: {}
-  modifiers:
-    Killer:
-      letter: k
-      kw: killer
-      name: Killer
-      words: Killer
-      rule: cages show their sums in place of given numbers.
-      bounds: { longer: { max: 5 } }
   boards: [4x4, 5x5]
   variants: [{ board: 4x4, with: [Killer], tier: Easy }]
   hintMarks:
@@ -105,6 +97,16 @@ deal:
   divide: { partition: cage, pairs: 0.75, most: 3 }
   hide: given
   hideWhole: { given: { with: Killer } }
+settings:
+  Killer:
+    kind: flag
+    gives: variation
+    letter: k
+    kw: killer
+    name: Killer
+    words: Killer
+    rule: cages show their sums in place of given numbers.
+    bounds: { longer: { max: 5 } }
 # As upstream solo.c writes a Killer board: the givens, then the cages, then
 # each cage's sum at its first square, behind commas.
 id:

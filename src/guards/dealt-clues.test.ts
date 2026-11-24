@@ -28,7 +28,7 @@ const BOARDS = 2;
 
 interface DealShape {
   readonly withhold?: Readonly<Record<string, readonly number[]>>;
-  readonly hideFlag?: { readonly kind: string };
+  readonly hideFlag?: { readonly kind: string; readonly when: string };
 }
 
 const declaring = BORN_GAMES.flatMap((born) => {
@@ -40,7 +40,7 @@ const declaring = BORN_GAMES.flatMap((born) => {
     : [{ born, deal, universes: universes ?? {} }];
 });
 
-type Params = { hides?: boolean };
+type Params = { settings?: Readonly<Record<string, number>> };
 
 describe("a deal's clues are as its description says", () => {
   it("reads a real population", () => {
@@ -52,9 +52,10 @@ describe("a deal's clues are as its description says", () => {
     const module = born.compiled as unknown as FillModule<Clues<object>>;
     const boards: Params[] = leafPresets(game).flatMap(({ params }) => {
       const p = params as Params;
-      if (deal.hideFlag === undefined) return [p];
-      return [false, true]
-        .map((hides) => ({ ...p, hides }))
+      const flag = deal.hideFlag;
+      if (flag === undefined) return [p];
+      return [0, 1]
+        .map((on) => ({ ...p, settings: { ...p.settings, [flag.when]: on } }))
         .filter((q) => paramsError(game, q, true) === null);
     });
     it(`${born.id}: on ${boards.length} params, ${BOARDS} boards each`, () => {
@@ -86,7 +87,7 @@ describe("a deal's clues are as its description says", () => {
             universe
           ].length;
           const shown = list(flag.kind).at.length;
-          if (p.hides === true) {
+          if (p.settings?.[flag.when] === 1) {
             flagged++;
             if (shown >= places) wrong.push(`${id}: hides no ${flag.kind}`);
           } else if (shown !== places)

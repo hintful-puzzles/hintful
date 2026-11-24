@@ -13,10 +13,10 @@ import {
   paramSpaceOf,
   solveBoard,
 } from "../board.ts";
-import { type FillDeal, type FillParams, givenOf } from "../game-id.ts";
+import { type FillDeal, type FillParams, givenOf, sizesOf } from "../game-id.ts";
 import type { GrowSizes } from "../grow.ts";
-import { variationsOf } from "../params/modifiers.ts";
-import { sizesOf } from "../params/settings.ts";
+import { variationsOf } from "../params/flag.ts";
+import { isOn } from "../params/settings.ts";
 import type { SearchedFillModule } from "../search.ts";
 import { type HideSettings, hideSettingsOf } from "./hide-settings.ts";
 import type { OneKindModule } from "./one-kind.ts";
@@ -118,7 +118,7 @@ export function dealContext<C extends Clues<C>>(
   return {
     ...base,
     sizes: sizesOf(p),
-    thorough: p.thorough ?? true,
+    thorough: deal.thorough === undefined || isOn(deal, p, deal.thorough),
     hide: hideSettingsOf<C>(deal, p, base.variations),
     spent: { moves: 0 },
     layouts: 0,

@@ -45,7 +45,12 @@ const game = fillGame("caging", caging);
 type Board = FillBoard<caging.Dealt>;
 
 const sameColor = (a: Color, b: Color): boolean => a.every((v, i) => v === b[i]);
-const params = (w: number, diff = 0, only = false) => ({ w, h: w, diff, only });
+const params = (w: number, diff = 0, only = false) => ({
+  w,
+  h: w,
+  diff,
+  settings: { productsOnly: only ? 1 : 0 },
+});
 const board = (w: number, desc: string): Board => game.newState(params(w), desc);
 /** The tier whose boards need a cage's clue read by the ways to fill it. */
 const NORMAL = 1;
@@ -337,8 +342,8 @@ describe("a deal", () => {
   it("deals products alone under the flag, and writes the flag after the tier", () => {
     const p = params(4, 0, true);
     expect(game.encodeParams(p, true)).toBe("4dem");
-    expect(game.decodeParams("4dem")).toMatchObject({ only: true });
-    expect(game.decodeParams("4de")).toMatchObject({ only: false });
+    expect(game.decodeParams("4dem")).toMatchObject({ settings: { productsOnly: 1 } });
+    expect(game.decodeParams("4de")).toMatchObject({ settings: { productsOnly: 0 } });
     const { desc } = game.newDesc(p, randomNew("only"));
     expect(board(4, desc).dealt.sum.at).toHaveLength(0);
   });

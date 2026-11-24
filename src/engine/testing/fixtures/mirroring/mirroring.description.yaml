@@ -57,12 +57,17 @@ deal:
   symmetric: halfTurn
   given: none; only a game ID gives a square
   never: given
-  thorough:
+  thorough: aggressive
+settings:
+  aggressive:
+    kind: flag
     letter: h
+    written: off
+    onBelow: 7
     kw: aggressive-generation
     name: Aggressive generation
     doc: Try hiding each number, not only those the solver never read.
-    offFrom: 7
+    words: { on: slower generation, off: faster generation }
 # Each square's number, then any given square after a comma.
 id:
   - numbers: number

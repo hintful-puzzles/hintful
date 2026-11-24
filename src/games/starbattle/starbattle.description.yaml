@@ -111,21 +111,6 @@ play:
   blank: 2
   # A click goes round empty, the button's mark and the other one.
   click: cycle
-  sizes:
-    stars:
-      letter: s
-      # Two rows side by side hold twice the stars, none touching, so four
-      # times the stars is the narrowest board each has an answer on.
-      rulesets:
-        - name: One star
-          rule: One in each, the puzzle also known as <em>Queens</em>.
-          least: 4
-        - name: Two stars
-          rule: Two in each, the puzzle also known as <em>Two Not Touch</em>.
-          least: 8
-        - name: Three stars
-          rule: Three in each.
-          least: 12
   boards: [5x5, 6x6, 8x8, 8x8s2, 9x9s2, 10x10s2, 12x12s3]
   # Measured 2026-10-15, the 95th of 100 deals: a Tricky board of two stars
   # takes half a second at 9x9 and a second at 10x10, but 9 at 8x8, where a
@@ -157,6 +142,23 @@ deal:
     smallest: "2 * stars"
     # One region a row: any other number cannot each hold a row's stars.
     parts: w
+settings:
+  stars:
+    kind: choice
+    gives: size
+    letter: s
+    # Two rows side by side hold twice the stars, none touching, so four
+    # times the stars is the narrowest board each has an answer on.
+    choices:
+      - name: One star
+        rule: One in each, the puzzle also known as <em>Queens</em>.
+        least: 4
+      - name: Two stars
+        rule: Two in each, the puzzle also known as <em>Two Not Touch</em>.
+        least: 8
+      - name: Three stars
+        rule: Three in each.
+        least: 12
 # The regions as the walls between them.
 id:
   - walls: region

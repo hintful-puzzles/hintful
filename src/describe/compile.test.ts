@@ -1109,8 +1109,8 @@ describe("what the fill board reads of a description", () => {
     const fleet = sources.get(source);
     if (fleet === undefined || !isFormal(fleet)) throw new Error("no fleet");
     type Json = {
-      play: { tally: { size: { letter: string } }; boards: string[] };
-      deal: { hideFlag: { letter: string } };
+      play: { boards: string[] };
+      settings: { fleet: { letter: string }; stripClues: { letter: string } };
     };
     const compileFleet = (edit: (j: Json) => void) => () => {
       const j = structuredClone(fleet) as unknown as Json;
@@ -1126,15 +1126,15 @@ describe("what the fill board reads of a description", () => {
     expect(compileFleet(() => {})()).toContain('"hideFlag"');
     expect(
       compileFleet((j) => {
-        j.deal.hideFlag.letter = "f";
+        j.settings.stripClues.letter = "f";
       }),
-    ).toThrow(/deal hideFlag: the letter f is taken/);
+    ).toThrow(/settings stripClues: the letter f is taken/);
     expect(
       compileFleet((j) => {
-        j.play.tally.size.letter = "d";
+        j.settings.fleet.letter = "d";
         j.play.boards = ["5x5d2"];
       }),
-    ).toThrow(/play tally: the letter d is taken/);
+    ).toThrow(/settings fleet: the letter d is taken/);
   });
 
   it("refuses a precedence of one kind or across places, and a letter taken or a kind not switchable", () => {
@@ -1142,7 +1142,11 @@ describe("what the fill board reads of a description", () => {
     const cornering = sources.get(source);
     if (cornering === undefined || !isFormal(cornering))
       throw new Error("no cornering");
-    type Json = { deal: Record<string, unknown> };
+    type Letter = { letter: string; kind: string };
+    type Json = {
+      deal: Record<string, unknown>;
+      settings: { clueTypes: { members: Letter[] } };
+    };
     const compileCornering = (edit: (j: Json) => void) => () => {
       const j = structuredClone(cornering) as unknown as Json;
       edit(j);
@@ -1165,26 +1169,30 @@ describe("what the fill board reads of a description", () => {
         j.deal["firstKind"] = ["sum", "nothing"];
       }),
     ).toThrow(/deal firstKind: no clue kind nothing/);
-    type Letter = { letter: string; kind: string };
     const letters = (edit: (l: Letter[]) => void) =>
       compileCornering((j) => {
-        edit(j.deal["kindLetters"] as Letter[]);
+        edit(j.settings.clueTypes.members);
       });
     expect(
       letters((l) => {
         l[0].letter = "d";
       }),
-    ).toThrow(/deal kindLetters: the letter d is taken/);
+    ).toThrow(/settings clueTypes: the letter d is taken/);
     expect(
       letters((l) => {
         l[0].kind = "given";
       }),
-    ).toThrow(/deal kindLetters: given is dealt whatever the params/);
+    ).toThrow(/settings clueTypes: given is dealt whatever the params/);
     expect(
       letters((l) => {
         l[1].letter = "A";
       }),
-    ).toThrow(/deal kindLetters: a letter named twice/);
+    ).toThrow(/settings clueTypes: the letter A is taken/);
+    expect(
+      letters((l) => {
+        l[1].kind = "sum";
+      }),
+    ).toThrow(/settings clueTypes: a kind named twice/);
   });
 
   it("refuses a walk's step under a rung its technique does not give", () => {
@@ -1364,6 +1372,7 @@ describe("a clue at a dealt partition's part", () => {
   type Json = {
     play: { signs: Record<string, string> };
     deal: Record<string, unknown>;
+    settings: { productsOnly: { letter: string } };
     id: Record<string, unknown>[];
   };
   const compileCaging = (over: (json: Json) => unknown): string => {
@@ -1426,9 +1435,9 @@ describe("a clue at a dealt partition's part", () => {
     ).toThrow(/sum sits at a part, and is none of its kinds/);
     expect(() =>
       compileCaging((j) => {
-        (j.deal["onlyFlag"] as { letter: string }).letter = "d";
+        j.settings.productsOnly.letter = "d";
         return j;
       }),
-    ).toThrow(/deal onlyFlag: the letter d is taken/);
+    ).toThrow(/settings productsOnly: the letter d is taken/);
   });
 });

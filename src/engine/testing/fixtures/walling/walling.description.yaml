@@ -62,36 +62,38 @@ deal:
   number: on each wall, then as many hidden as the board still finishes, each leaving its wall
   given: every square's piece, then as many hidden as the board still finishes
   tier: the one tier
-  options:
-    walls:
-      letter: b
-      kw: percentage-of-walls
-      name: "%age of walls"
-      min: 5
-      max: 100
-      default: 20
-      words: "{n}% walls"
-      doc: Roughly what share of the grid is walls.
-    symmetry:
-      letter: s
-      kw: symmetry
-      name: Symmetry
-      default: 2
-      doc: How the walls are arranged.
-      choices:
-        - { name: None, words: no symmetry, symmetry: none }
-        - { name: 2-way mirror, symmetry: mirrorTopBottom }
-        - { name: 2-way rotational, symmetry: halfTurn }
-        - { name: 4-way mirror, symmetry: mirrorBothWays }
-        - name: 4-way rotational
-          symmetry: quarterTurn
-          bounds: { square: true }
   sample:
     first: { value: 3, share: walls, symmetry: symmetry }
     # Each square alone, so a draw with two side by side is drawn again.
     scatter: { value: 1, share: 0.15, each: true }
     rest: 2
   hide: [number, given]
+settings:
+  walls:
+    kind: number
+    letter: b
+    kw: percentage-of-walls
+    name: "%age of walls"
+    min: 5
+    max: 100
+    default: 20
+    words: "{n}% walls"
+    doc: Roughly what share of the grid is walls.
+  symmetry:
+    kind: choice
+    letter: s
+    kw: symmetry
+    name: Symmetry
+    default: 2
+    doc: How the walls are arranged.
+    choices:
+      - { name: None, words: no symmetry, symmetry: none }
+      - { name: 2-way mirror, symmetry: mirrorTopBottom }
+      - { name: 2-way rotational, symmetry: halfTurn }
+      - { name: 4-way mirror, symmetry: mirrorBothWays }
+      - name: 4-way rotational
+        symmetry: quarterTurn
+        bounds: { square: true }
 id:
   - digits: number
     letters: { B: wall }

@@ -1,6 +1,6 @@
 ## Next
 
-2.1, the settings concept (design.md § "One `settings:` key"). Open: none.
+3.1, one codec (design.md § "One codec"). Open: none.
 
 ## 1. Design
 
@@ -11,9 +11,9 @@
 
 ## 2. Settings
 
-- [ ] 2.1 The `settings` concept in the schema, types and compiler.
-- [ ] 2.2 Each born game's description moved to it; upstream IDs still
-      read (`writesBack` and `ids` cases).
+- [x] 2.1 The `settings` concept in the schema, types and compiler; a
+      kind's refusal named, so the refusal scan reads it.
+- [x] 2.2 Each born game and fixture moved to it; IDs byte-stable.
 
 ## 3. One codec
 
@@ -28,8 +28,17 @@
 
 ## 5. Close
 
-- [ ] 5.1 `docs/descriptions.md` describes settings and the codec once.
+- [ ] 5.1 `docs/descriptions.md` describes settings and the codec once
+      (2.1 renamed its keys in place; 5.1 gathers them in one paragraph).
+      The delta spec MODIFIES each main-spec requirement that names an
+      old key: `play.modifiers`, `play.sizes`, `play.blocks`, `play.tally`,
+      `deal.options`, `deal.kindLetters`, `offFrom`
+      (`git grep -nE` them in `openspec/specs/`).
 - [ ] 5.2 `npm run test:hint-sweeps`; the app run on each born game whose
       Custom dialog changed, the differences a player sees listed here.
+      Measured at 2.1 (2026-11-24, every field, default, preset and label of
+      the ten games with settings, against HEAD): only the reorders of
+      design.md § "Dialog reorder" — Mosaic, Solo and Unruly. The app run
+      on those three is still owed.
 - [ ] 5.3 Archive, and take the next change from
       `describe-the-whole-catalog` § "0. The refactor first".
