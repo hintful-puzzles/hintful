@@ -1,6 +1,6 @@
 ## Next
 
-3.1, one codec (design.md § "One codec"). Open: none.
+3.2, the desc segment kinds folded (design.md § "One codec"). Open: none.
 
 ## 1. Design
 
@@ -17,8 +17,8 @@
 
 ## 3. One codec
 
-- [ ] 3.1 The fill ID codec and `params-codec.ts` become one; Solo's
-      symmetry expressible.
+- [x] 3.1 `params-codec.ts`' header: a setting kind's shape is its own
+      segment beside the factories (Solo's symmetry, Boats' fleet).
 - [ ] 3.2 The one-user segment kinds folded per 1.2.
 
 ## 4. Keys and fixtures
