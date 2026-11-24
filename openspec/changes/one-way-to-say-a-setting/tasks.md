@@ -1,7 +1,7 @@
 ## Next
 
-4.2, fixtures renamed for their concepts: `fleet` (Boats), `killing`
-(Solo), `washing` (Light Up) and any other named for a game. Open: none.
+5.1, `docs/descriptions.md` gathered and the delta MODIFYING each main-spec
+requirement that names an old key. Open: none.
 
 ## 1. Design
 
@@ -27,7 +27,8 @@
 ## 4. Keys and fixtures
 
 - [x] 4.1 The one-user keys renamed or folded per 1.2; the hides one key.
-- [ ] 4.2 Fixtures renamed for their concepts.
+- [x] 4.2 Fixtures renamed for their concepts: `fleet` is `tallying`,
+      `killing` is `dividing`; `washing` is `play.wash`'s, a concept key.
 
 ## 5. Close
 

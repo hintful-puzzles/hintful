@@ -223,7 +223,7 @@ research tools all read through it; the app never does.
   variation` puts the variation of its name in the params by its letter,
   with the `most` lines a board of each width may have or the `bounds` (as
   `play.bounds`') a board with it on keeps, where the rule bounds the size
-  (Solo's X needs 4 numbers, its Killer holds at most 9; `killing` is the
+  (Solo's X needs 4 numbers, its Killer holds at most 9; `dividing` is the
   fixture), and `sizes.step` holds a side to a multiple. `play.bounds` says
   what the sizes alone cannot: the sides' sum, product, shorter and longer,
   and in `tiers` a tier's own (Range's `w + h` and its strips). A size the
@@ -440,7 +440,7 @@ research tools all read through it; the app never does.
   every square's notes below that line (`caging` is the fixture). A
   partition a variation adds (`add: { space: { regions: { cage: dealt } }
   }`, Solo's Killer) is divided, written, read and drawn, and its parts'
-  clues derived, only on a board with it on (`killing` is the fixture), and
+  clues derived, only on a board with it on (`dividing` is the fixture), and
   a technique it adds is a rung of the hint only there. The live errors,
   the answer check and the text format read the board's own space: its
   variations' units and its blocks, cut or dealt, the text walling the
@@ -518,7 +518,7 @@ research tools all read through it; the app never does.
   with `with: Variation` on a board with it on, each where given, the
   answer drawn again until the board finishes without it (Towers' Easy
   boards up to 5x5, which show no given, as upstream's; Solo's Killer
-  boards, `killing` the fixture); and `when: flag` hides it only where the
+  boards, `dividing` the fixture); and `when: flag` hides it only where the
   flag is on, a board hiding none of it then drawn again (Boats' numbers
   under Remove numbers). `stripFrom: everyClue` starts every search-tier
   draw from every clue,

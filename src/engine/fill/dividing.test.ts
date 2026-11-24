@@ -1,13 +1,13 @@
 /**
- * A partition and its clues a modifier adds, on the `killing` fixture
- * (Solo's Killer): its cages divided, written and read only on a board with
- * Killer on, each cage's sum written as a number at its first square and
+ * A partition and its clues a modifier adds, on the `dividing` fixture
+ * (as Solo's Killer adds them): its cages divided, written and read only on
+ * a board with Cages on, each cage's sum written as a number at its first square and
  * drawn as the number alone, the givens hidden whole under it, and the size
  * it bounds; the cages written as upstream solo.c writes them.
  */
 
 import { describe, expect, it } from "vitest";
-import * as killing from "../../generated/engine/testing/fixtures/killing/killing.compiled.ts";
+import * as dividing from "../../generated/engine/testing/fixtures/dividing/dividing.compiled.ts";
 import { DESC_MALFORMED, validateDesc } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
@@ -18,17 +18,17 @@ import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
 import type { FillParams } from "./game-id.ts";
 
-const game = fillGame("killing", killing);
-type Board = FillBoard<killing.Dealt>;
+const game = fillGame("dividing", dividing);
+type Board = FillBoard<dividing.Dealt>;
 
-const params = (w: number, killer: boolean): FillParams => ({
+const params = (w: number, caged: boolean): FillParams => ({
   w,
   h: w,
   diff: 0,
-  ...(killer ? { variations: ["Killer"] } : {}),
+  ...(caged ? { variations: ["Cages"] } : {}),
 });
-const deal = (w: number, killer: boolean, seed: string) => {
-  const p = params(w, killer);
+const deal = (w: number, caged: boolean, seed: string) => {
+  const p = params(w, caged);
   const { desc } = game.newDesc(p, randomNew(seed));
   return { p, desc, b: game.newState(p, desc) as Board };
 };
@@ -42,7 +42,7 @@ describe("a partition a modifier adds", () => {
       expect(b.dealt.given.at.length).toBeGreaterThan(0);
       // The givens alone.
       expect(desc).not.toContain(",");
-      expect(encodeDesc(killing.deal, spaceOf(killing, b), b.dealt)).toBe(desc);
+      expect(encodeDesc(dividing.deal, spaceOf(dividing, b), b.dealt)).toBe(desc);
     }
   });
 
@@ -52,7 +52,7 @@ describe("a partition a modifier adds", () => {
       for (const seed of ["a", "b", "c"]) {
         const { b } = deal(w, true, `${w}${seed}`);
         expect(b.dealt.given.at.length).toBe(0);
-        const g = solveBoard(killing, b, 0).values;
+        const g = solveBoard(dividing, b, 0).values;
         b.dealt.cage.cells.forEach((cs, r) => {
           expect(cs.length).toBeGreaterThanOrEqual(2);
           expect(cs.length).toBeLessThanOrEqual(3);
@@ -76,7 +76,7 @@ describe("a partition a modifier adds", () => {
     // A number a cage, at its first square in reading order.
     const numbers = sums.match(/\d+/g) ?? [];
     expect(numbers.length).toBe(b.dealt.cage.cells.length);
-    expect(encodeDesc(killing.deal, spaceOf(killing, b), b.dealt)).toBe(desc);
+    expect(encodeDesc(dividing.deal, spaceOf(dividing, b), b.dealt)).toBe(desc);
   });
 
   it("reads a sum anywhere in its cage, as upstream does, and refuses a cage with none or two", () => {
@@ -127,7 +127,7 @@ describe("a partition a modifier adds", () => {
     expect(game.validateParams?.(params(6, false), true)).toBeNull();
     expect(game.validateParams?.(params(5, true), true)).toBeNull();
     expect(game.validateParams?.(params(6, true), true)).toBe(
-      "Killer: width and height must both be at most 5.",
+      "Cages: width and height must both be at most 5.",
     );
   });
 

@@ -2,16 +2,16 @@
  * A fill game's params, on the `sizing` fixture: a size beyond the grid's
  * that the params give and the rules read, its rulesets as the Custom
  * dialog's game mode with the narrowest board each has an answer on, and the
- * bounds the board and a tier keep beyond the sizes'. On the `fleet` fixture,
+ * bounds the board and a tier keep beyond the sizes'. On the `tallying` fixture,
  * a tally of pieces the params give, and the flag that hides more clues; on
  * `walling`, settings only the deal reads; on `mirroring`, a hide the player
  * may make less thorough.
  */
 
 import { describe, expect, it } from "vitest";
-import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
+import * as tallying from "../../generated/engine/testing/fixtures/tallying/tallying.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { paramSpaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
@@ -20,7 +20,7 @@ import { isOn } from "./params/settings.ts";
 import { tallyClue, tallyIn } from "./params/tally.ts";
 
 const game = fillGame("sizing", sizing);
-const fleetGame = fillGame("fleet", fleet);
+const tallyingGame = fillGame("tallying", tallying);
 const SHADED = 1;
 const CROSSED = 2;
 
@@ -92,60 +92,60 @@ describe("a tally of pieces the params give", () => {
   const p = (tally: number[], w = 5): FillParams => ({ w, h: w, diff: 0, tally });
 
   it("writes its size by its letter after the grid's and its counts at the end", () => {
-    expect(fleetGame.encodeParams(p([2, 1]), true)).toBe("5x5f2de,2,1");
-    expect(fleetGame.encodeParams(p([3, 0, 1]), false)).toBe("5x5f3,3,0,1");
+    expect(tallyingGame.encodeParams(p([2, 1]), true)).toBe("5x5f2de,2,1");
+    expect(tallyingGame.encodeParams(p([3, 0, 1]), false)).toBe("5x5f3,3,0,1");
   });
 
   it("reads a size's default counts, one more of each shorter, where none are given", () => {
-    expect(fleetGame.decodeParams("5x5f3").tally).toEqual([3, 2, 1]);
-    expect(fleetGame.decodeParams("5x5").tally).toEqual([2, 1]);
+    expect(tallyingGame.decodeParams("5x5f3").tally).toEqual([3, 2, 1]);
+    expect(tallyingGame.decodeParams("5x5").tally).toEqual([2, 1]);
     // Counts the text runs out before are none.
-    expect(fleetGame.decodeParams("5x5f2,1").tally).toEqual([1, 0]);
+    expect(tallyingGame.decodeParams("5x5f2,1").tally).toEqual([1, 0]);
   });
 
   it("is two fields of the Custom dialog, a new size taking its default counts", () => {
     const field = (name: string) => {
-      const f = fleetGame.paramConfig.find((i) => i.name === name);
+      const f = tallyingGame.paramConfig.find((i) => i.name === name);
       if (f === undefined || f.type !== "string") throw new Error(`no ${name}`);
       return f;
     };
     const q = p([2, 1]);
     // The default counts show blank.
-    expect(field("Fleet configuration").get(q)).toBe("");
-    field("Fleet size").set(q, "3");
+    expect(field("Pieces of each length").get(q)).toBe("");
+    field("Longest piece").set(q, "3");
     expect(q.tally).toEqual([3, 2, 1]);
-    field("Fleet configuration").set(q, "0,1,1");
+    field("Pieces of each length").set(q, "0,1,1");
     expect(q.tally).toEqual([0, 1, 1]);
-    expect(field("Fleet configuration").get(q)).toBe("0,1,1");
+    expect(field("Pieces of each length").get(q)).toBe("0,1,1");
   });
 
   it("refuses a size past its bounds or the board's, and a tally of no piece", () => {
-    const no = (q: FillParams) => refusal(q, fleetGame);
-    expect(no(p([4, 3, 2, 1]))).toBe("Fleet size must be between 1 and 3.");
+    const no = (q: FillParams) => refusal(q, tallyingGame);
+    expect(no(p([4, 3, 2, 1]))).toBe("Longest piece must be between 1 and 3.");
     expect(no(p([1, 1, 1], 2))).toBe(
-      "Fleet size must be smaller than the width and height.",
+      "Longest piece must be smaller than the width and height.",
     );
-    expect(no(p([0, 0]))).toBe("The fleet must contain at least 1 piece.");
-    expect(no(p([1, 1, 1], 3))).toBe("The fleet does not fit into the grid.");
+    expect(no(p([0, 0]))).toBe("The tally must contain at least 1 piece.");
+    expect(no(p([1, 1, 1], 3))).toBe("The tally does not fit into the grid.");
     expect(no(p([1, 1, 1]))).toBeNull();
   });
 
   it("is the board clue the rules read: each length and its count", () => {
-    const tally = tallyIn(fleet.deal);
+    const tally = tallyIn(tallying.deal);
     if (tally === null) throw new Error("no tally");
     expect(tallyClue(tally, p([0, 1]))).toEqual({
       n: 2,
       length: [1, 2],
-      boats: [0, 1],
+      copies: [0, 1],
     });
     // A piece of two along the top of a 3x3.
     const g = Uint8Array.from("##.......", (ch) => (ch === "#" ? 1 : 2));
-    const sp = paramSpaceOf(fleet, { w: 3, h: 3 });
-    const holds = (boats: number[]) =>
-      fleet.isAnswer(
+    const sp = paramSpaceOf(tallying, { w: 3, h: 3 });
+    const holds = (copies: number[]) =>
+      tallying.isAnswer(
         g,
         sp,
-        fleet.deriveClues(g, sp, {}, { fleet: { n: 2, length: [1, 2], boats } }),
+        tallying.deriveClues(g, sp, {}, { tally: { n: 2, length: [1, 2], copies } }),
       );
     expect(holds([0, 1])).toBe(true);
     expect(holds([2, 0])).toBe(false);
@@ -162,16 +162,16 @@ describe("a flag that hides more clues", () => {
       tally: [2, 1],
       settings: { stripClues: 1 },
     };
-    expect(fleetGame.encodeParams(p, true)).toBe("5x5f2deS,2,1");
-    expect(fleetGame.decodeParams("5x5f2deS,2,1")).toEqual(p);
-    expect(isOn(fleet.deal, fleetGame.decodeParams("5x5f2de,2,1"), "stripClues")).toBe(
-      false,
-    );
-    const flag = fleetGame.paramConfig.find((i) => i.name === "Remove numbers");
+    expect(tallyingGame.encodeParams(p, true)).toBe("5x5f2deS,2,1");
+    expect(tallyingGame.decodeParams("5x5f2deS,2,1")).toEqual(p);
+    expect(
+      isOn(tallying.deal, tallyingGame.decodeParams("5x5f2de,2,1"), "stripClues"),
+    ).toBe(false);
+    const flag = tallyingGame.paramConfig.find((i) => i.name === "Remove numbers");
     if (flag === undefined || flag.type !== "boolean") throw new Error("no flag");
     expect(flag.get(p)).toBe(true);
     flag.set(p, false);
-    expect(isOn(fleet.deal, p, "stripClues")).toBe(false);
+    expect(isOn(tallying.deal, p, "stripClues")).toBe(false);
   });
 });
 

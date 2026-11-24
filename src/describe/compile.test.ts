@@ -1148,15 +1148,15 @@ describe("what the fill board reads of a description", () => {
   });
 
   it("refuses a params letter any other field holds, the tally's and the hide flag's included", () => {
-    const source = "src/engine/testing/fixtures/fleet/fleet.description.yaml";
-    const fleet = sources.get(source);
-    if (fleet === undefined || !isFormal(fleet)) throw new Error("no fleet");
+    const source = "src/engine/testing/fixtures/tallying/tallying.description.yaml";
+    const tallying = sources.get(source);
+    if (tallying === undefined || !isFormal(tallying)) throw new Error("no tallying");
     type Json = {
       play: { boards: string[] };
-      settings: { fleet: { letter: string }; stripClues: { letter: string } };
+      settings: { tally: { letter: string }; stripClues: { letter: string } };
     };
-    const compileFleet = (edit: (j: Json) => void) => () => {
-      const j = structuredClone(fleet) as unknown as Json;
+    const compileTallying = (edit: (j: Json) => void) => () => {
+      const j = structuredClone(tallying) as unknown as Json;
       edit(j);
       return compileGame(
         j as never,
@@ -1166,18 +1166,18 @@ describe("what the fill board reads of a description", () => {
         "./step-voice.ts",
       );
     };
-    expect(compileFleet(() => {})()).toContain('{"kind":"n","when":"stripClues"}');
+    expect(compileTallying(() => {})()).toContain('{"kind":"n","when":"stripClues"}');
     expect(
-      compileFleet((j) => {
+      compileTallying((j) => {
         j.settings.stripClues.letter = "f";
       }),
     ).toThrow(/settings stripClues: the letter f is taken/);
     expect(
-      compileFleet((j) => {
-        j.settings.fleet.letter = "d";
+      compileTallying((j) => {
+        j.settings.tally.letter = "d";
         j.play.boards = ["5x5d2"];
       }),
-    ).toThrow(/settings fleet: the letter d is taken/);
+    ).toThrow(/settings tally: the letter d is taken/);
   });
 
   it("refuses a precedence of one kind or across places, and a letter taken or a kind not switchable", () => {

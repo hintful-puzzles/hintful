@@ -3,7 +3,7 @@
  * beside each piece and draws again an answer that leaves a line bare, and a
  * dealt board finishes at its tier and not below. On the `sizing` fixture, an
  * answer is laid a line at a time, as many in each as the params' size says.
- * On `fleet`, a piece at a time as a tally says, a value no deal gives and a
+ * On `tallying`, a piece at a time as a tally says, a value no deal gives and a
  * flag that hides more; on `walling`, walls laid first at a setting's share
  * and symmetry, each left where its number is hidden; on `mirroring`, a hide
  * symmetric under a half turn, one less thorough, and a kind no deal deals;
@@ -22,7 +22,6 @@
 
 import { describe, expect, it } from "vitest";
 import * as climbing from "../../generated/engine/testing/fixtures/climbing/climbing.compiled.ts";
-import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as growing from "../../generated/engine/testing/fixtures/growing/growing.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
@@ -30,6 +29,7 @@ import * as numbering from "../../generated/engine/testing/fixtures/numbering/nu
 import * as picturing from "../../generated/engine/testing/fixtures/picturing/picturing.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as stretching from "../../generated/engine/testing/fixtures/stretching/stretching.compiled.ts";
+import * as tallying from "../../generated/engine/testing/fixtures/tallying/tallying.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { newDealCensus, takingCensus } from "../contract/deal-census.ts";
 import { descValue } from "../contract/desc-error.ts";
@@ -182,9 +182,9 @@ describe("an answer laid a piece at a time", () => {
   };
 
   it("lays the tally's pieces, straight, none touching even at a corner", () => {
-    const sp = paramSpaceOf(fleet, { w: 6, h: 6 });
+    const sp = paramSpaceOf(tallying, { w: 6, h: 6 });
     for (const seed of ["pieces-a", "pieces-b", "pieces-c"]) {
-      const g = samplePieces(fleet.deal.sample, 6, 6, [2, 1, 1], randomNew(seed));
+      const g = samplePieces(tallying.deal.sample, 6, 6, [2, 1, 1], randomNew(seed));
       if (g === null) throw new Error(`no room on ${seed}`);
       expect(pieces(g, 6)).toEqual([1, 1, 2, 3]);
       for (const c of sp.cells.filter((c) => g[c] === PIECE))
@@ -194,15 +194,15 @@ describe("an answer laid a piece at a time", () => {
   });
 
   it("never deals the value only an ID writes, though it holds on every piece", () => {
-    const sp = paramSpaceOf(fleet, { w: 6, h: 6 });
-    const g = samplePieces(fleet.deal.sample, 6, 6, [2, 1, 1], null);
+    const sp = paramSpaceOf(tallying, { w: 6, h: 6 });
+    const g = samplePieces(tallying.deal.sample, 6, 6, [2, 1, 1], null);
     if (g === null) throw new Error("no room");
-    const { seg } = fleet.deriveClues(
+    const { seg } = tallying.deriveClues(
       g,
       sp,
       {},
       {
-        fleet: { n: 3, length: [1, 2, 3], boats: [2, 1, 1] },
+        tally: { n: 3, length: [1, 2, 3], copies: [2, 1, 1] },
       },
     );
     // Each piece square is given its shape, a lone one, an end or a middle.
@@ -210,10 +210,10 @@ describe("an answer laid a piece at a time", () => {
     expect(new Set(seg.v)).toEqual(new Set([2, 4, 5, 6]));
     // An ID gives it, and the board reads it.
     const read = descValue(
-      decodeDesc<fleet.Dealt>(
-        fleet.deal,
-        paramSpaceOf(fleet, { w: 2, h: 2 }),
-        fleet.clueMax,
+      decodeDesc<tallying.Dealt>(
+        tallying.deal,
+        paramSpaceOf(tallying, { w: 2, h: 2 }),
+        tallying.clueMax,
         "1,0,1,0,Vc",
       ),
     );
@@ -221,7 +221,7 @@ describe("an answer laid a piece at a time", () => {
   });
 
   it("hides the flag's kind too where the flag is on, and only there", () => {
-    const sp = paramSpaceOf(fleet, { w: 5, h: 5 });
+    const sp = paramSpaceOf(tallying, { w: 5, h: 5 });
     const shown = (hides: boolean, seed: string): number => {
       const p = {
         w: 5,
@@ -230,12 +230,15 @@ describe("an answer laid a piece at a time", () => {
         tally: [2, 1],
         settings: { stripClues: hides ? 1 : 0 },
       };
-      const { desc, aux } = dealFill(fleet, fleet.deal, p, randomNew(seed));
+      const { desc, aux } = dealFill(tallying, tallying.deal, p, randomNew(seed));
       const clues = descValue(
-        decodeDesc<fleet.Dealt>(fleet.deal, sp, fleet.clueMax, desc),
+        decodeDesc<tallying.Dealt>(tallying.deal, sp, tallying.clueMax, desc),
       );
-      const board = newBoard(fleet, 5, 5, { ...clues, ...givenOf(fleet.deal, p) });
-      const solved = solveBoard(fleet, board, 0);
+      const board = newBoard(tallying, 5, 5, {
+        ...clues,
+        ...givenOf(tallying.deal, p),
+      });
+      const solved = solveBoard(tallying, board, 0);
       expect(solved.verdict).toBe("solved");
       expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
       return clues.n.at.length;

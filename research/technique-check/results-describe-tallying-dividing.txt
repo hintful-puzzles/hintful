@@ -1,0 +1,18 @@
+ok  dividing +Cages cageCull                       3  sound    (want sound   )     9 queries    0.1s
+ok  dividing +Cages cageCull (planted)             3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/dividing/dividing.description.yaml#cageCull: recorded sound, proved whole on all 1 boards
+ok  dividing +Cages cageLast                       3  sound    (want sound   )    79 queries    1.2s
+ok  dividing +Cages cageLast (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  src/engine/testing/fixtures/dividing/dividing.description.yaml#cageLast: recorded sound, proved whole on all 1 boards
+ok  dividing +Cages cageSets                       3  sound    (want sound   )    79 queries    1.4s
+ok  dividing +Cages cageSets (planted)             3  unsound  (want unsound )    10 queries    0.2s   at region cage 9
+ok  src/engine/testing/fixtures/dividing/dividing.description.yaml#cageSets: recorded sound, proved whole on all 1 boards
+ok  tallying   corner                         3  sound    (want sound   )     9 queries    0.0s
+ok  tallying   corner (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/tallying/tallying.description.yaml#corner: recorded sound, proved whole on all 1 boards
+ok  tallying   full                           3  sound    (want sound   )     6 queries    0.1s
+ok  tallying   full (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/tallying/tallying.description.yaml#full: recorded sound, proved whole on all 1 boards
+ok  tallying   room                           3  sound    (want sound   )     6 queries    0.1s
+ok  tallying   room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/tallying/tallying.description.yaml#room: recorded sound, proved whole on all 1 boards

@@ -6,7 +6,7 @@
 # tally the params give, a given square's shape, an answer laid a piece at a
 # time, a value only an ID writes and a flag that hides more, on a
 # description that names no game.
-game: fleet
+game: tallying
 produces: shading
 sizes:
   w: { min: 2, max: 9 }
@@ -28,14 +28,14 @@ define:
   boat(c): "rowPart(c) + colPart(c)"
   # A piece's first square, the one at its top or its left.
   head(c): "value(c) = 1 and not ship(step(c, 1)) and not ship(step(c, 3))"
-  total: "sum(k in clues(fleet) of length(k) * boats(k))"
+  total: "sum(k in clues(tally) of length(k) * copies(k))"
   open(L): "{c in cells(L) where not known(c)}"
   need(L): "clue(n, L) - count(c in cells(L) where value(c) = 1)"
   pieces(c): "count(x in adj4(c) where ship(x))"
 shape:
   - "forall a in cells where value(a) = 1: forall b in adj8(a) where b not in adj4(a): value(b) != 1"
-  - "forall c in cells where head(c): exists k in clues(fleet): length(k) = |boat(c)|"
-  - "forall k in clues(fleet), j in clues(fleet) where j != k: length(j) != length(k)"
+  - "forall c in cells where head(c): exists k in clues(tally): length(k) = |boat(c)|"
+  - "forall k in clues(tally), j in clues(tally) where j != k: length(j) != length(k)"
   - "count(c in cells where value(c) = 1) = total"
 clues:
   # A number beside a row or column: how many of its squares hold a piece.
@@ -53,12 +53,12 @@ clues:
       or (v = 4 and pieces(at) = 0) or (v = 5 and pieces(at) = 1)
       or (v = 6 and pieces(at) = 2)))
   # How many pieces of each length.
-  fleet:
+  tally:
     at: board
     fields:
       length: { value: "range(1, max(L in lines of |cells(L)|))" }
-      boats: { value: "range(0, |cells|)" }
-    means: "count(c in cells where head(c) and |boat(c)| = length(k)) = boats(k)"
+      copies: { value: "range(0, |cells|)" }
+    means: "count(c in cells where head(c) and |boat(c)| = length(k)) = copies(k)"
 freedom: { kind: fill }
 play:
   values:
@@ -76,7 +76,7 @@ play:
     outline: the piece square the step reasons from.
     stripes: the line the step is about.
 deal:
-  answer: the fleet, longest piece first, each where it fits, at random
+  answer: the tally's pieces, longest first, each where it fits, at random
   n: every number, or as many hidden as the board still finishes where asked
   seg: each square's shape, as many hidden as the board still finishes
   tier: the one tier
@@ -86,18 +86,18 @@ deal:
   never: { seg: [3] }
   hide: { seg, n: { when: stripClues } }
 settings:
-  fleet:
+  tally:
     kind: tally
     letter: f
     size:
-      kw: fleet
-      name: Fleet size
+      kw: tally-size
+      name: Longest piece
       doc: The length of the longest piece.
       max: 3
       default: 2
     counts:
-      kw: fleet-data
-      name: Fleet configuration
+      kw: tally
+      name: Pieces of each length
       doc: How many pieces of each length, the shortest first.
   stripClues:
     kind: flag

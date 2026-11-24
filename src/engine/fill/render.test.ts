@@ -3,15 +3,15 @@
  * on the canvas, read from a recording. The painters and the labels are drawn
  * on fixtures, and a link, and the clues and errors a board's rules give, on
  * the `linking` one. A wash and a number drawn plain are `washing`'s, and a
- * square given its piece's shape `fleet`'s.
+ * square given its piece's shape `tallying`'s.
  */
 
 import { describe, expect, it } from "vitest";
-import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as joining from "../../generated/engine/testing/fixtures/joining/joining.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
 import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
+import * as tallying from "../../generated/engine/testing/fixtures/tallying/tallying.compiled.ts";
 import * as washing from "../../generated/engine/testing/fixtures/washing/washing.compiled.ts";
 import { YELLOW_WASH } from "../color/colors.ts";
 import { COL_ERROR } from "../color/roles.ts";
@@ -345,7 +345,7 @@ describe("a wash, and a number drawn plain", () => {
 describe("a square given its piece's shape", () => {
   // A piece of two along the top of a 3x3, its left end given: the columns'
   // counts, then the rows', then the end.
-  const game = fillGame("fleet", fleet);
+  const game = fillGame("tallying", tallying);
   const id = "3x3f2de,0,1:1,1,0,2,0,0,Eh";
   const frame = (moves: { set: number[] }[]) =>
     renderScenario({ game, id, moves }).recording.ops;

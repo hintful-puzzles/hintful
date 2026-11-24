@@ -4,11 +4,11 @@
 # the player switches on that divides it into small cages, each showing its
 # sum as a plain number and holding no number twice, and shows no given at
 # all. For the fill engine's tests of a partition and its clues a modifier
-# adds (Solo's Killer): divided, written and read only on a board with the
+# adds (as Solo's Killer does): divided, written and read only on a board with the
 # modifier on, each cage's sum written as a digit at its first square, the
 # givens hidden whole under it, and the size it bounds; on a description
 # that names no game.
-game: killing
+game: dividing
 produces: latin
 sizes:
   w: { min: 3, max: 7 }
@@ -23,7 +23,7 @@ marks:
 shape:
   - "latin(value, units)"
 variations:
-  Killer:
+  Cages:
     add:
       space:
         regions: { cage: dealt }
@@ -82,28 +82,28 @@ freedom: { kind: fill }
 play:
   numbers: {}
   boards: [4x4, 5x5]
-  variants: [{ board: 4x4, with: [Killer], tier: Easy }]
+  variants: [{ board: 4x4, with: [Cages], tier: Easy }]
   hintMarks:
     ring: the square the step decides.
     strike: the notes the step crosses out.
     stripes: the cage or the line the step is about.
 deal:
-  cage: under Killer, the squares in dominoes and then cages of three, at random
+  cage: under Cages, the squares in dominoes and then cages of three, at random
   answer: searched under the cages
   total: a cage's sum
-  given: every square's number, then each hidden while the board still finishes; under Killer, every one
+  given: every square's number, then each hidden while the board still finishes; under Cages, every one
   tier: the one tier
   sample: { search: true }
   divide: { partition: cage, pairs: 0.75, most: 3 }
-  hide: { given: { whole: { with: Killer } } }
+  hide: { given: { whole: { with: Cages } } }
 settings:
-  Killer:
+  Cages:
     kind: flag
     gives: variation
     letter: k
-    kw: killer
-    name: Killer
-    words: Killer
+    kw: cages
+    name: Cages
+    words: Cages
     rule: cages show their sums in place of given numbers.
     bounds: { longer: { max: 5 } }
 # As upstream solo.c writes a Killer board: the givens, then the cages, then
@@ -125,39 +125,39 @@ names:
   cageLast: "a cage's last square"
   cageSets: "the sets that make a cage's sum"
 # The walk's words for how far a placed number reaches: its row and column,
-# and with Killer on its cage.
+# and with Cages on its cage.
 steps:
   clean:
     ring: cell
-    terms: { Killer: flag }
+    terms: { Cages: flag }
     wordings:
-      - when: Killer
+      - when: Cages
         move: "any number already in its square's row, column or cage"
       - move: "any number already in its square's row or column"
   note:
     ring: cell
-    terms: { Killer: flag, vs: values, unruled: flag }
+    terms: { Cages: flag, vs: values, unruled: flag }
     wordings:
       - when: unruled
         look: "No number stands in {ring}'s row or column yet"
         move: "pencil in every one"
-      - when: Killer
+      - when: Cages
         look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row, column or cage"
         move: "pencil {vs: it | them} in"
       - look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row or column"
         move: "pencil {vs: it | them} in"
   cull:
     ring: cell
-    terms: { Killer: flag, n: number }
+    terms: { Cages: flag, n: number }
     wordings:
-      - when: Killer
+      - when: Cages
         move: "row, column or cage"
       - move: "row or column"
   regionsFull:
     ring: cell
-    terms: { Killer: flag, n: number }
+    terms: { Cages: flag, n: number }
     wordings:
-      - when: Killer
+      - when: Cages
         look: "Every other number is already in {ring}'s row, column or cage"
         move: "it can only be {n}"
       - look: "Every other number is already in {ring}'s row or column"
