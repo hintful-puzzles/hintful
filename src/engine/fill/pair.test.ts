@@ -34,9 +34,10 @@ import {
   spaceOf,
 } from "./board.ts";
 import { dealFill } from "./deal.ts";
+import { decodeDesc, encodeDesc } from "./desc.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
-import { decodeDesc, encodeDesc, type FillParams, fillParams } from "./game-id.ts";
+import { type FillParams, fillParams } from "./game-id.ts";
 import { fillInput, newFillUi } from "./play.ts";
 import { fillRender, PLACE_ANIM_TIME } from "./render.ts";
 

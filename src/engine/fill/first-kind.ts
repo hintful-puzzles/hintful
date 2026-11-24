@@ -8,7 +8,8 @@
 
 import { type ClueList, clueList } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
-import { type FillDeal, type FillParams, kindsOn } from "./game-id.ts";
+import type { FillDeal, FillParams } from "./game-id.ts";
+import { kindsOn } from "./params/kind-letters.ts";
 
 /**
  * `derived` with no clue of a kind board `p` switches off, and of

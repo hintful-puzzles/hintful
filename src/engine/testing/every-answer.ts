@@ -15,8 +15,8 @@ import {
 } from "../contract/difficulty.ts";
 import { type Clues, spaceOf } from "../fill/board.ts";
 import type { DealtFillModule } from "../fill/deal.ts";
+import { encodeDesc } from "../fill/desc.ts";
 import {
-  encodeDesc,
   type FillDeal,
   type FillParams,
   givenOf,

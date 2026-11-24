@@ -15,7 +15,9 @@ import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.c
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { paramSpaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
-import { type FillParams, tallyClue, withThorough } from "./game-id.ts";
+import type { FillParams } from "./game-id.ts";
+import { tallyClue } from "./params/tally.ts";
+import { withThorough } from "./params/thorough.ts";
 
 const game = fillGame("sizing", sizing);
 const fleetGame = fillGame("fleet", fleet);

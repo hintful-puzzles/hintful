@@ -2465,7 +2465,7 @@ function withheldOf(json: DescriptionJson, d: Description, kind: string): number
 
 type TallyJson = NonNullable<PlayJson["tally"]>;
 
-/** The module's tally (`engine/fill/game-id.ts`'s `FillTally`). */
+/** The module's tally (`engine/fill/params/tally.ts`'s `FillTally`). */
 interface Tally {
   kind: string;
   index: string;
@@ -2475,7 +2475,7 @@ interface Tally {
   single?: number;
 }
 
-/** The module's hide flag (`engine/fill/game-id.ts`'s `FillHideFlag`). */
+/** The module's hide flag (`engine/fill/params/flags.ts`'s `FillHideFlag`). */
 interface HideFlag {
   kind: string;
   letter: string;

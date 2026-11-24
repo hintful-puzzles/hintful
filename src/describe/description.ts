@@ -186,7 +186,7 @@ export interface PlayJson {
   /** Whether the cursor carries over the grid's edge. */
   wrap?: true;
   /** A board kind of two fields the params give: a count of pieces of each
-   * length (`engine/fill/game-id.ts`, `FillTally`). */
+   * length (`engine/fill/params/tally.ts`, `FillTally`). */
   tally?: {
     kind: string;
     size: {
@@ -295,7 +295,7 @@ export interface CatalogJson {
   similar?: string;
 }
 
-/** A piece of a fill game's game ID (`engine/fill/game-id.ts`): `runs`, the
+/** A piece of a fill game's game ID (`engine/fill/segments/`): `runs`, the
  * cells a clue kind sits at as upstream's run code; `dots`, a two-valued
  * kind's clues as upstream's dot runs; or `numbers`, a clue kind's values in
  * the space's order, or the columns first. */

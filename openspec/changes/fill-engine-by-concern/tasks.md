@@ -1,22 +1,21 @@
 ## Next
 
-1.1, the concepts of the four files. Open: none. Goes before
+2.2, the renderer, by design.md § 4. Open: none. Goes before
 `a-fill-board-of-any-slot` (`describe-the-whole-catalog` § "0. The
 refactor first").
 
 ## 1. Design
 
-- [ ] 1.1 Read the four files and list their concepts: per concept, the
-      functions and branches that are its in each file. Write the list and
-      the registry shapes in design.md, with what each registry's runner
-      keeps (order, shared state) and why.
+- [x] 1.1 The concepts of the four files, and the registry each becomes,
+      with what its runner keeps: design.md.
 
 ## 2. Move, a registry a commit
 
 Each commit moves code without changing it where it can, and every born
 game's cases, render snapshots, ID cases and fingerprints pass unchanged.
 
-- [ ] 2.1 ID segment kinds (`game-id.ts`).
+- [x] 2.1 ID segment kinds (`game-id.ts`): `segments/` and `desc.ts`, and
+      the params' settings, `params/`. game-id.ts 2,231 → 429 lines.
 - [ ] 2.2 Painter layers (`render.ts`); `fillRender` a loop over them.
 - [ ] 2.3 Deal steps (`deal.ts`).
 - [ ] 2.4 The compiler's per-concept parts (`compile-fill.ts`).

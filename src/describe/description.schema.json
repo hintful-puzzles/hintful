@@ -1295,7 +1295,7 @@
         },
         "id": {
           "type": "array",
-          "description": "A fill game's game ID, its segments in order (`engine/fill/game-id.ts`): `runs: <kind>`, the cells a clue kind sits at as upstream's run code (`_`, `a`-`y`, `z`); `numbers: <kind>`, the kind's values, the first after `before` (nothing by default) and each other after a comma, an absent clue written as nothing, in the space's order or with `order: columns` the columns first. Absent, `numbers` of every clue kind in turn, a comma between them.",
+          "description": "A fill game's game ID, its segments in order (`engine/fill/segments/`): `runs: <kind>`, the cells a clue kind sits at as upstream's run code (`_`, `a`-`y`, `z`); `numbers: <kind>`, the kind's values, the first after `before` (nothing by default) and each other after a comma, an absent clue written as nothing, in the space's order or with `order: columns` the columns first. Absent, `numbers` of every clue kind in turn, a comma between them.",
           "minItems": 1,
           "items": {
             "oneOf": [

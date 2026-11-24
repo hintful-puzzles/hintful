@@ -37,27 +37,24 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
 import { dividePartition } from "./divide.ts";
 import { firstKindEach } from "./first-kind.ts";
 import {
   dividesOn,
   elementCount,
-  encodeDesc,
   type FillDeal,
   type FillParams,
   givenOf,
-  optionOf,
-  partitionOf,
-  piecesOf,
   sizesOf,
-  symmetricOf,
-  symmetryOf,
   variationsOf,
-  within,
 } from "./game-id.ts";
 import { type GrowSizes, growPartition } from "./grow.ts";
 import { latinNumbers } from "./latin-numbers.ts";
 import { type OneKindModule, oneKindEach } from "./one-kind.ts";
+import { within } from "./params/bounds.ts";
+import { optionOf, symmetricOf, symmetryOf } from "./params/options.ts";
+import { piecesOf } from "./params/tally.ts";
 import {
   type BuiltSample,
   type FirstCells,
@@ -77,6 +74,7 @@ import {
   searchedPositions,
   searches,
 } from "./search.ts";
+import { partitionOf } from "./segments/segment.ts";
 
 /** The partitions a deal grew round its answer, by name: none where it grows
  * none. */

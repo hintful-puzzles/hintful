@@ -17,8 +17,8 @@ import type { Partition } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc } from "./game-id.ts";
 
 const game = fillGame("fitting", fitting);
 type Board = FillBoard<fitting.Dealt>;

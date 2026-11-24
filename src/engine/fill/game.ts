@@ -47,23 +47,17 @@ import {
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
 import { type DealtFillModule, dealFill } from "./deal.ts";
+import { decodeDesc } from "./desc.ts";
 import type { Edit } from "./edit.ts";
 import {
   type ClueMax,
-  decodeDesc,
-  type FillBounds,
   type FillDeal,
-  type FillModifier,
   type FillParams,
   fillParams,
   partitionOfKind,
   partKindsOf,
-  setBlocks,
   sizesOf,
-  tallyClue,
-  tallyDefault,
   variationsOf,
-  withThorough,
 } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import {
@@ -76,6 +70,11 @@ import {
 } from "./hint.ts";
 import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
 import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
+import { setBlocks } from "./params/blocks.ts";
+import type { FillBounds } from "./params/bounds.ts";
+import type { FillModifier } from "./params/modifiers.ts";
+import { tallyClue, tallyDefault } from "./params/tally.ts";
+import { withThorough } from "./params/thorough.ts";
 import {
   type FillInput,
   type FillPlay,

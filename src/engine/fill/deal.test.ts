@@ -38,7 +38,8 @@ import { clueList } from "../solve/describe-runtime.ts";
 import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, paramSpaceOf, solveBoard } from "./board.ts";
 import { dealFill } from "./deal.ts";
-import { decodeDesc, encodeDesc, givenOf, partitionOf } from "./game-id.ts";
+import { decodeDesc, encodeDesc } from "./desc.ts";
+import { givenOf } from "./game-id.ts";
 import { latinNumbers } from "./latin-numbers.ts";
 import {
   sampleAnswer,
@@ -47,6 +48,7 @@ import {
   samplePicture,
   samplePieces,
 } from "./sample.ts";
+import { partitionOf } from "./segments/segment.ts";
 
 const PIECE = 1;
 const SHADED = 1;

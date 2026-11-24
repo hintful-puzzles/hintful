@@ -20,8 +20,8 @@ import {
 } from "./answer.ts";
 import { newBoard, paramSpaceOf, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
+import { decodeDesc } from "./desc.ts";
 import { applyEdit } from "./edit.ts";
-import { decodeDesc } from "./game-id.ts";
 import { applyMove } from "./notes.ts";
 
 const PIECE = 1;

@@ -15,8 +15,8 @@ import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { randomNew } from "../random/index.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { type CandidateFillHint, candidateFill } from "./candidates.ts";
+import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc } from "./game-id.ts";
 import type { FillHint } from "./hint.ts";
 import type { FillMove } from "./notes.ts";
 

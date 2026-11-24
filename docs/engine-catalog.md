@@ -665,7 +665,7 @@ runs with no counts.
 `encodeBlockStructure(w, h, joined, counts)` writes it from whether two
 cells share a part, and `readBlockStructure(r, dsf, w, h)` joins a `Dsf`
 from it, either form.
-Exemplar: the `blocks` id segment (`engine/fill/game-id.ts`).
+Exemplar: the `blocks` id segment (`engine/fill/segments/blocks.ts`).
 
 ### `dot-runs.ts` — blanks and dots of two kinds
 
@@ -676,14 +676,14 @@ reader takes the `DescReader`, so it sits inside a game's one parse. **It
 is not `run-length.ts`'s grammar**: a letter is a run and a value, and a
 chunk is 25. A grammar that writes every chunk in lowercase, or ends at the
 last dot with no closing letter, is a different one again (Galaxies').
-Exemplar: the `dots` id segment (`engine/fill/game-id.ts`).
+Exemplar: the `dots` id segment (`engine/fill/segments/dots.ts`).
 
 ### `desc-alphabet.ts` — one character per small number
 
 Reach for it when a desc character stands for a number over nine. It is a
 value codec, one character per cell: `n2c(n)` writes digits, then
 lowercase, then capitals, and `c2n(c)` inverts it, with `null` for anything
-else. Exemplar: the `cells` id segment (`engine/fill/game-id.ts`).
+else. Exemplar: the `cells` id segment (`engine/fill/segments/cells.ts`).
 
 - **The order is frozen into shipped game IDs.** No caller reorders it.
 - **A sentinel stays with the game**, handled before delegating.
@@ -1159,8 +1159,11 @@ the ladder reads it with no adapter. `edit.ts` is the one move, and
 `play.ts` is the input the description's `play:` declares, and the engine's
 `FillUi`. `render.ts` draws the board by layers from the painters `play:`
 names, and `marks.ts` holds the hint's mark kinds beside the cells.
-`deal.ts` deals a board from the answer `sample.ts` draws, and
-`game-id.ts` is its params and desc, from the description's `id:`.
+`deal.ts` deals a board from the answer `sample.ts` draws. `desc.ts` is
+its desc, from the description's `id:`: a segment kind is a module of
+`segments/` and a line of `desc.ts`'s registry. `game-id.ts` is its params,
+each setting a module of `params/` that `fillParams` places in the params'
+grammar.
 `hint.ts` is the hint, `describedFiringHint`'s hooks read off the board,
 the walk begun at the lowest tier that finishes the board as dealt; a step
 decides values (`PLACE` facts) and, where the game's mark is a link, marks

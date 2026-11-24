@@ -32,8 +32,8 @@ import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../testing/sweep-probe.ts";
 import { asDealt, type FillBoard, spaceOf } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc } from "./game-id.ts";
 import { type FillMove, isCandidateMove } from "./notes.ts";
 
 const game = fillGame("ordering", ordering);

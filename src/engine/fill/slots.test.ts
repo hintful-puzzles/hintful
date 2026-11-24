@@ -42,8 +42,9 @@ import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../testing/sweep-probe.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
+import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc, type FillDeal } from "./game-id.ts";
+import type { FillDeal } from "./game-id.ts";
 import { slotAt, slotPoint } from "./slots.ts";
 
 const game = fillGame("flanking", flanking);

@@ -126,11 +126,12 @@ import {
   signedText,
 } from "./corners.ts";
 import { isDone } from "./done.ts";
-import { type ClueMax, partKindsOf, tallyOf } from "./game-id.ts";
+import { type ClueMax, partKindsOf } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillMove } from "./notes.ts";
 import { numeral, topValue } from "./numbers.ts";
+import { tallyOf } from "./params/tally.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import type { SearchedFillModule } from "./search.ts";
 import { slotAt, slotClueAt, slotPoint } from "./slots.ts";

@@ -23,9 +23,10 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
 import { firstKindEach } from "./first-kind.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc, givenOf } from "./game-id.ts";
+import { givenOf } from "./game-id.ts";
 
 const game = fillGame("cornering", cornering);
 type Board = FillBoard<cornering.Dealt>;
