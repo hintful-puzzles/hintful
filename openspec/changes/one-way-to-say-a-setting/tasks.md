@@ -1,7 +1,7 @@
 ## Next
 
-5.1, `docs/descriptions.md` gathered and the delta MODIFYING each main-spec
-requirement that names an old key. Open: none.
+5.2, `npm run test:hint-sweeps` and the app run on Mosaic, Solo and
+Unruly's Custom dialogs. Open: none.
 
 ## 1. Design
 
@@ -32,12 +32,8 @@ requirement that names an old key. Open: none.
 
 ## 5. Close
 
-- [ ] 5.1 `docs/descriptions.md` describes settings and the codec once
-      (2.1 renamed its keys in place; 5.1 gathers them in one paragraph).
-      The delta spec MODIFIES each main-spec requirement that names an
-      old key: `play.modifiers`, `play.sizes`, `play.blocks`, `play.tally`,
-      `deal.options`, `deal.kindLetters`, `offFrom`
-      (`git grep -nE` them in `openspec/specs/`).
+- [x] 5.1 `docs/descriptions.md` describes settings and the codec once;
+      the delta MODIFIES each main-spec requirement naming an old key.
 - [ ] 5.2 `npm run test:hint-sweeps`; the app run on each born game whose
       Custom dialog changed, the differences a player sees listed here.
       Measured at 2.1 (2026-11-24, every field, default, preset and label of

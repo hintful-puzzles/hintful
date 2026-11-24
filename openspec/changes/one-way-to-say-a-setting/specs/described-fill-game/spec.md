@@ -182,3 +182,75 @@ name SHALL say the shorter of the kinds on and the kinds off.
 - **THEN** it deals sums and parities alone, its name says "only sum/parity"
   where it says the kinds, and it is written back as `5dnAO`, and as `5dn`
   with every kind on
+
+### Requirement: A born game's deal setting is a param by its letter
+
+A `flag` setting with `written: off` SHALL be written as its letter and
+`0` only where it is off and read as on where it is absent, so an upstream
+ID reads as upstream reads it. A menu board SHALL have it on where it is
+narrower than the setting's `onBelow`. `deal.thorough` MAY name such a flag.
+
+#### Scenario: Mosaic's largest board is dealt quickly
+
+- **WHEN** Mosaic's menu boards are encoded in full
+- **THEN** the 50×50 board carries `h0` and no other board an `h`
+
+### Requirement: A born game's dealt cells and modifiers are its description's
+
+A clue kind `play.dealt` names, meaning `value(at) = v`, SHALL be dealt as
+fixed values in its cells, which no button changes. A `flag` setting with
+`gives: variation` SHALL put the variation of its name in the params by its
+letter, and the params SHALL refuse a board its `most` or `bounds` bound or
+one off `sizes.step`.
+
+#### Scenario: Unruly's unique boards are bounded
+
+- **WHEN** the params of a 6×16 Unruly board with unique rows and columns are
+  checked
+- **THEN** they are refused, and the same board without the rule, and a 6×14
+  one with it, are not
+
+### Requirement: A born game's params may give a size beyond the grid's
+
+A size the rules read that the grid is not measured in SHALL be given by
+the params, as a `choice` setting with `gives: size` declares it: its
+letter, and a ruleset for each choice, which the Custom dialog offers as
+the game mode and the help's `{{rulesets}}` lists. A choice's `least` SHALL
+refuse a narrower board, naming the ruleset. A preset board SHALL give the
+size after its `WxH` by its letter. Every technique and rule that reads the
+size SHALL get it.
+
+#### Scenario: Star Battle's stars
+
+- **WHEN** Star Battle's params `10s2dn` are read, and a 7x7 grid of two
+  stars is checked
+- **THEN** the board is 10x10 with two stars to a row at Normal, and the
+  grid is refused with "Two stars: the grid size must be at least 8."
+
+### Requirement: A born game's deal may take options
+
+A setting with no `gives` is the deal's alone: a `number` in a range, or a
+`choice` of named choices, each with a default, and a choice with the size
+bounds it alone binds, a tier's among them. The Custom dialog SHALL offer
+each and the params SHALL write each after the size. A label SHALL name one
+only where it is not a preset board's own (`7x7s4`), or the default on any
+other board. A `tierFlag` letter MAY stand for a tier.
+
+#### Scenario: Light Up's options
+
+- **WHEN** Light Up's Custom dialog is opened
+- **THEN** it offers the share of walls and the symmetry, and a 3×3 under
+  2-way rotational symmetry at Unreasonable is refused, naming the symmetry
+
+### Requirement: A born game's params may give a tally of pieces
+
+A `tally` setting SHALL name a clue at the board of two fields, a length
+and its count, that the params give: a size by its letter after the grid's
+and the counts after a comma at the end, one of the longest and one more of
+each shorter by default. Params SHALL be refused where the size is not
+smaller than a side, no piece is counted, or the pieces cannot be laid.
+
+#### Scenario: Boats' fleet
+
+- **WHEN** `6x6f3dhS,3,2,1` is decoded and encoded without the tier
+- **THEN** it is `6x6f3,3,2,1`, and `4x4f3de,9,9,9` is refused as not fitting

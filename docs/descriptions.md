@@ -219,8 +219,28 @@ research tools all read through it; the app never does.
   Every setting the params give is one entry of `settings:`, by name, in
   the order the ID writes them and the Custom dialog lists them: those after
   the size, the tier, then those marked `after: tier`, and a tally's counts
-  last (`engine/fill/params/`, a module a `kind`). A `flag` with `gives:
-  variation` puts the variation of its name in the params by its letter,
+  last. Its `kind` is a module of `engine/fill/params/`, and its `gives`
+  what it gates: a variation, the size, or, with no `gives`, the deal
+  alone, which only a full ID writes. A `flag` is written as its letter
+  where on, or with `written: off` as `{letter}0` where off and read as on
+  where absent (Mosaic's `h0`, on below a width of its `onBelow`);
+  `deal.thorough` and a hide's `when` each name one. A `number` is in a
+  range, and a `choice` one of named choices, each with the size bounds it
+  binds; a choice whose every choice names a `symmetry` is the one
+  `deal.symmetric` keeps (the `turning` fixture's eight, Solo's), and one
+  with no letter writes each choice's `code`, the default's never
+  (upstream solo.c's `m4`). A preset board names a deal setting after its
+  `WxH` (`7x7s4`), and a label names one only where it is not that board's,
+  or the default. A `set` is some of its `members`, kinds of clue the deal
+  deals, each a letter after the tier in a full ID and a check box in
+  Custom, every one on where no letter is written, the board's name saying
+  the shorter of those on and off (Mathrax's). A `tally` names a clue at
+  the board of a length and its count, its size by its letter and its
+  counts after a comma at the end (Boats' fleet, `f3` and `,3,2,1`;
+  `tallying` is the fixture): it is skipped as a derived kind, drawn
+  beneath the board (`engine/fill/tally-display.ts`), and `deal.sample:
+  pieces` lays its pieces as straight runs of a value, none touching.
+  A `flag` with `gives: variation` puts the variation of its name in the params by its letter,
   with the `most` lines a board of each width may have or the `bounds` (as
   `play.bounds`') a board with it on keeps, where the rule bounds the size
   (Solo's X needs 4 numbers, its Killer holds at most 9; `dividing` is the
@@ -241,6 +261,13 @@ research tools all read through it; the app never does.
   block's `letter` (`9j`); that partition's `divide`, its desc segment and
   the space's blocks then follow the variation, which the compiler finds
   (the `blocking` fixture). A preset board is written as the ID writes it.
+  `id:` is the desc's grammar, a list of segments that one codec reads and
+  writes (`engine/fill/segments/`, a module a kind): `numbers`, the stream
+  of `digits` and `codes`, `runs`, `records`, `walls`, `blocks`, `parts`,
+  `lists`, `cells` and `dots`, each described below beside the clue or
+  partition it writes. A layout upstream's IDs need is a property of a
+  kind (`apart`, `before`, `lastRun`, `counts: false`), never a kind of its
+  own; a kind is added only for a shape another game could write.
   A size is never named `c` where the answer's domain is `given`: the
   domain reads `c` as its cell. A grid as high as it is wide
   (`grid: { w: w, h: w }`) has one size field and a bare-number ID. `play.dealt` names a
@@ -358,11 +385,8 @@ research tools all read through it; the app never does.
   longest code read first (`cornering` is the fixture). `deal.oneKind:
   { kinds, pick: first }` keeps one clue an element of kinds at one place, the first
   in its order the answer makes there (Mathrax's cascade, where a parity
-  goes only where no sum or difference holds), and a `set` setting's
-  `members` switch kinds off, each by a letter after the tier in a full ID
-  and a check box in Custom, every kind on where no letter is written, the
-  board's name saying the shorter of those on and off
-  (`engine/fill/deal/first-kind.ts`). `digits` writes a
+  goes only where no sum or difference holds), and a `set` setting
+  switches kinds off (`engine/fill/deal/first-kind.ts`). `digits` writes a
   kind bounded by a size of at most 9 (Mathrax's givens, to `w`) a digit
   each. A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's
@@ -454,9 +478,8 @@ research tools all read through it; the app never does.
   clue is thrown away, since hiding at a higher tier costs more than drawing
   again, until a long run of them (a narrow board Easy seldom finishes):
   then one is hidden from at the lowest tier that finishes it. `deal.thorough` names the
-  flag under which the hide tries every clue at each tier (Mosaic's, on
-  below a width of its `onBelow` and written `h0` where off, `written:
-  off`); off, the lowest tier tries none,
+  flag under which the hide tries every clue at each tier (Mosaic's); off,
+  the lowest tier tries none,
   takes no shortest run, and the asked one tries as many as the board's
   shorter side. A last tier named Unreasonable is the search's: its
   deal strips clues while the search proves one answer and the ladder stops
@@ -474,13 +497,7 @@ research tools all read through it; the app never does.
   shown keep it: a symmetry by its name (`halfTurn`; the names are
   `engine/generate/symmetry.ts`'s, each by what it keeps, since upstream
   numbers them differently in each game), or a `choice` setting whose every
-  choice names its `symmetry` (the `turning` fixture's eight, Solo's). A
-  setting with no `gives` is the deal's alone and only a full ID writes it:
-  a `number` in a range, or a `choice` of named choices, a choice with the
-  size bounds it binds; a preset board names one after its `WxH`
-  (`7x7s4`), and a label names one only where it is not that board's, or
-  the default. A choice with no letter writes each choice's `code` in its
-  place, the default's never (upstream solo.c's `m4`). `build:
+  choice names its `symmetry`. `build:
   { value }` lays that value alone, each on a cell that may still hold it
   (a build ladders at the lowest tier until one meets a dead end or builds
   an answer that breaks a rule, and a tier higher after each that does),
@@ -560,11 +577,7 @@ research tools all read through it; the app never does.
   smaller, flipped by a press in the half tile round the grid; `play.wrap`
   carries the cursor over the edge; the `ring` painter circles a kept
   number. A numbered cell's text is its number inside its value's glyph
-  where the glyph's middle is blank (`[3]`). A `tally` setting names a clue
-  at the board of a length and its count that the params give, by its name
-  (Boats' fleet, `f3` and `,3,2,1`); it is skipped as a derived kind, and drawn beneath
-  the board (`engine/fill/tally-display.ts`). `deal.sample: pieces` lays
-  its pieces as straight runs of a value, none touching. `numbers`'
+  where the glyph's middle is blank (`[3]`). `numbers`'
   `hidden` writes a clue not shown and `closed` a comma after each; a
   stream of `codes` alone writes a kind's values by letters with runs of
   empty cells between, and `lastRun: false` leaves its last run off. `play.shape` draws a kind as its cell's piece, never a
