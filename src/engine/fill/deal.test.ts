@@ -14,7 +14,8 @@
  * `numbering`, numbers dealt as a Latin square's, a shaded square's
  * renumbered to repeat a clear one; on `stretching`, a number dealt on each
  * line at a random square of it, and a search tier's board stripped from
- * every clue.
+ * every clue. On `linking` and `climbing` with a rule planted that no board
+ * keeps, the deal refused by the rule's name.
  * Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
@@ -33,11 +34,13 @@ import * as tallying from "../../generated/engine/testing/fixtures/tallying/tall
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { newDealCensus, takingCensus } from "../contract/deal-census.ts";
 import { descValue } from "../contract/desc-error.ts";
+import { MAX_REGENERATE, RetryLimitExceeded } from "../contract/retry-limit.ts";
 import { randomNew } from "../random/index.ts";
 import { clueList } from "../solve/describe-runtime.ts";
 import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, paramSpaceOf, solveBoard } from "./board.ts";
 import { latinNumbers } from "./deal/latin-numbers.ts";
+import { REFUSED_IN_A_ROW } from "./deal/rules-held.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, encodeDesc } from "./desc.ts";
 import { givenOf } from "./game-id.ts";
@@ -725,5 +728,53 @@ describe("a number dealt on each line, and a search tier stripped from every clu
     // that tier does not finish: 105 to 1784 a deal, 2026-11-23.
     const lowestFirst = { ...stretching.deal, stripFrom: undefined } as unknown as Deal;
     expect(Math.min(...thrown(lowestFirst))).toBeGreaterThan(0);
+  });
+});
+
+describe("a rule that holds of no answer drawn", () => {
+  // A rule no board keeps, planted: every answer drawn breaks it.
+  const never = {
+    isAnswer: (): boolean => false,
+    violations: () => [{ rule: "planted", clue: -1, at: [] }],
+  };
+  it.each([
+    [
+      "sampled",
+      () =>
+        dealFill(
+          { ...linking, ...never },
+          linking.deal,
+          { w: 6, h: 6, diff: linking.TIER.easy },
+          randomNew("never"),
+        ),
+    ],
+    [
+      "climbed",
+      () =>
+        dealFill(
+          { ...climbing, ...never },
+          climbing.deal,
+          { w: 6, h: 6, diff: 0 },
+          randomNew("never"),
+        ),
+    ],
+  ])("refuses the deal %s by the rule's name, within its draws in a row", (_, deal) => {
+    const census = newDealCensus();
+    let thrown: unknown = null;
+    try {
+      takingCensus(census, deal);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(RetryLimitExceeded);
+    expect((thrown as RetryLimitExceeded).message).toMatch(
+      /the rule planted held of none/,
+    );
+    expect((thrown as RetryLimitExceeded).max).toBe(REFUSED_IN_A_ROW);
+    // The deal's outermost loop, the guard that tried first, stopped a long
+    // way short of its bound: a draw that comes to nothing before the rules
+    // are asked is tried again, as it always was.
+    const [outer] = census.tries.values();
+    expect(outer).toBeLessThan(MAX_REGENERATE / 10);
   });
 });

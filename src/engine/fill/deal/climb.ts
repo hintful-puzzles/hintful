@@ -22,6 +22,7 @@ import { searchBoard, searches } from "../search.ts";
 import { type DealtFillModule, dealBase } from "./context.ts";
 import { firstKindEach } from "./first-kind.ts";
 import { keepingOf, shownOf } from "./keeping.ts";
+import { rulesHeld } from "./rules-held.ts";
 
 /** One draw of a climb in this many samples every cell afresh, so a climb
  * caught where it cannot get out starts over (upstream clusters.c's
@@ -46,6 +47,7 @@ export function climbFill<C extends Clues<C>>(
   const { value, share } = sample.scatter;
   if (share <= 0) throw new Error("deal: a climb samples no cell");
   const other = (v: number): number => (v === value ? sample.rest : value);
+  const holds = rulesHeld(module, "fill: climb");
   /** What the ladder decided on the last draw, 0 on a cell it left open. */
   const position = new Uint8Array(sp.cells.length);
   let draws = 0;
@@ -59,7 +61,7 @@ export function climbFill<C extends Clues<C>>(
         ? mended(module, g, sp, given, variations, other)
         : module.deriveClues(g, sp, {}, given, (n) => randomUpto(rs, n));
     const clues = derived === null ? null : firstKindEach(deal, p, derived);
-    if (clues === null || !module.isAnswer(g, sp, clues, variations)) {
+    if (clues === null || !holds(g, sp, clues, variations)) {
       position.fill(0);
       return null;
     }

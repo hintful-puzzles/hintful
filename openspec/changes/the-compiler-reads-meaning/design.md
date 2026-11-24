@@ -78,6 +78,12 @@ every registered game's default params, four deals each (2026-11-24): the
 sampled draws were never refused by a rule, and Singles' built answers were
 refused 4 times in 15 tries.
 
+The fixtures are not registered, and the gate found one past that rate:
+`shearing`'s scatter drew cells outside its hexagon, whose kind's meaning
+holds them clear, so on a 5-high hexagon 900 to 3,600 draws were refused
+for every board held. The sampler now leaves those cells at the scatter's
+other value (`outsideKept`), the defect the refusal is meant to show.
+
 So the deal names the rules a refused answer breaks (the module's
 `violations` on the whole answer, which are empty exactly where `isAnswer`
 holds), and once the rules have refused 100 answers with none yet held it

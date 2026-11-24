@@ -1581,9 +1581,12 @@ says how each form is read; what a description's author acts on:
   the square and past it; said again of each line, implied, it names the
   lines: WordTrail's `onWord`, each line on a trail that still fits, so
   every line of a piece no word can be is red, and nothing beside it. A rule false of
-  every whole board keeps a generator that asks the rules from ever
-  finishing, so a defect planted to see the guard fail is planted where it
-  is false only on a board still being filled. An implied statement is in no technique's soundness
+  every whole board deals no board: the fill deal refuses once the rules
+  have refused a hundred answers with none held, naming the rule that broke
+  most (`engine/fill/deal/rules-held.ts`), and a hand-written generator that
+  asks the rules runs its retry bound out. So a defect planted to see the
+  guard fail is planted where it is false only on a board still being
+  filled. An implied statement is in no technique's soundness
   fingerprint and a definition is in every one, so a set only the
   statement reads is written in place. A network is said as the through form over every pair of
   squares and the cycle form, never as "one fewer line than squares, every

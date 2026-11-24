@@ -26,6 +26,7 @@ import { type DealtFillModule, dealContext, type Grown } from "./deal/context.ts
 import { hideOf } from "./deal/hide.ts";
 import { shownOf } from "./deal/keeping.ts";
 import { grownRound } from "./deal/partition.ts";
+import { rulesHeld } from "./deal/rules-held.ts";
 import { drawSample } from "./deal/samplers.ts";
 import { type Draw, dealEveryClue, dealStripped } from "./deal/search-tier.ts";
 import { encodeDesc } from "./desc.ts";
@@ -46,6 +47,7 @@ export function dealFill<C extends Clues<C>>(
   const { sp, sizes, variations, given } = cx;
   const { kind, symmetry } = cx.hide;
   const hide = hideOf(cx);
+  const holds = rulesHeld(module, "fill: deal");
   /** Answer `g`'s clues on the partitions `grown`, every one shown but those
    * of a kind hidden whole; `null` where they are no board. */
   const dealt = (
@@ -66,7 +68,7 @@ export function dealFill<C extends Clues<C>>(
       if (next === null) return null;
       derived = next;
     }
-    if (!module.isAnswer(g, on, derived, variations))
+    if (!holds(g, on, derived, variations))
       return "build" in sample
         ? climbBuild(cx, "fill: the answer built breaks a rule")
         : drawRejected("fill: the answer drawn breaks a rule");

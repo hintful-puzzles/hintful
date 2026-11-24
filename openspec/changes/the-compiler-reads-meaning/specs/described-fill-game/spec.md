@@ -11,9 +11,9 @@ The description compiler SHALL analyze a rule by its structure, so that a rule w
 
 ### Requirement: A rule that cannot hold is refused, never a hang
 
-A description whose rules no board can satisfy SHALL be refused, at compile time where the compiler can see it and otherwise by a bounded deal that names the rule, and SHALL NOT leave the generator running without end.
+A fill deal whose rules have refused a hundred answers in a row, none having held, SHALL be refused with a message naming the rule that broke most often, and SHALL NOT draw on to its retry bound.
 
 #### Scenario: A rule false everywhere
 
 - **WHEN** a description states a rule no board satisfies
-- **THEN** compiling or dealing it fails with a message naming the rule, within the deal's bound
+- **THEN** dealing it fails, once the rules have refused a hundred answers, with a message naming the rule

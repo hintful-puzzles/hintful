@@ -6,6 +6,7 @@
  */
 
 import { drawRejected } from "../../contract/deal-census.ts";
+import { inHexagon } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
 import { piecesOf } from "../params/tally.ts";
 import {
@@ -89,18 +90,34 @@ const SAMPLERS: {
   pieces: (sample, cx) =>
     answer(samplePieces(sample, cx.sp.w, cx.sp.h, piecesOf(cx.deal, cx.p), cx.rs)),
   latin: (_, cx) => answer(sampleLatin(cx.sp, cx.rs)),
-  scatter: (sample, cx) =>
-    answer(
-      sampleAnswer(
-        sample,
-        cx.sp,
-        cx.rs,
-        sample.first === undefined
-          ? null
-          : firstLaid(sample.first, cx.deal, cx.p, cx.rs, cx.layouts++),
-      ),
-    ),
+  scatter: (sample, cx) => {
+    const first =
+      sample.first === undefined
+        ? null
+        : firstLaid(sample.first, cx.deal, cx.p, cx.rs, cx.layouts++);
+    return answer(sampleAnswer(sample, cx.sp, cx.rs, outsideKept(sample, cx, first)));
+  },
 };
+
+/**
+ * `kept`, with each cell of a hexagon's store outside the hexagon holding the
+ * value the scatter leaves a cell: drawn there, a scattered value broke the
+ * outside kind's meaning on all but one draw in hundreds (`shearing`, 5 high,
+ * 2026-11-24). `kept` as it is on a board that is no hexagon, and for a
+ * scatter not drawn a cell at a time, which keeps no cell.
+ */
+function outsideKept<C extends Clues<C>>(
+  sample: Extract<Sample, { scatter: unknown }>,
+  cx: DealContext<C>,
+  kept: Uint8Array | null,
+): Uint8Array | null {
+  if (cx.module.hexagon === undefined || sample.scatter.each !== true) return kept;
+  const { sp } = cx;
+  const out = kept === null ? new Uint8Array(sp.cells.length) : kept.slice();
+  for (const c of sp.cells)
+    if (!inHexagon(sp.w, sp.h, c % sp.w, Math.floor(c / sp.w))) out[c] = sample.rest;
+  return out;
+}
 
 /** A draw of `sample`'s answer by its kind's sampler. */
 export function drawSample<C extends Clues<C>>(

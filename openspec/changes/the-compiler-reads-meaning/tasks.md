@@ -1,7 +1,6 @@
 ## Next
 
-2.3, a rule that can never hold refused by the deal, naming it
-(design.md § "2.3"). Open: none.
+3.1, the four properties (design.md § "3.1"). Open: none.
 
 ## 1. Design
 
@@ -14,9 +13,9 @@
       fixture's checks now bound what they evaluated. `spellings.test.ts`.
 - [x] 2.2 The loop forms by structure (`sameTerm`, `edgeFilter`), and the
       stretch's line; respellings of Path's and Slant's in the same test.
-- [ ] 2.3 A rule that can never hold refused at compile time, or the deal
-      bounded and named; plant a rule false everywhere and see a refusal,
-      not a hang.
+- [x] 2.3 `deal/rules-held.ts`: refused after 100 answers in a row, by
+      the rule. Tents' `pairs` planted turned round: refused in 13 ms
+      naming `pairs`, where HEAD ran 10,000 tries out.
 
 ## 3. Properties
 
