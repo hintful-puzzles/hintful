@@ -25,12 +25,20 @@
  * file, this runs the guard that reads it for that game alone, and writes
  * the pins there, keeping the file's comments.
  *
+ * It ends by running `hint-quality` for the scanned games, so a wording its
+ * rules refuse is named here, beside the pins, and the exit code is 1.
+ *
+ * It prints a line as the scan finishes each board, so a scan of several
+ * minutes is seen to move and how far it has to go; `hint.seeds` (12 when
+ * omitted) is how many boards each params deals.
+ *
  * It writes only the file it was given.
  */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { createInterface } from "node:readline";
 import ts from "typescript";
 import {
   type Document,
@@ -45,6 +53,7 @@ import {
 import {
   type HintScanReport,
   type KindScanReport,
+  SCAN_PROGRESS_MARK,
   SCAN_REPORT_MARK,
 } from "../src/engine/testing/hint-scan-report.ts";
 
@@ -77,29 +86,47 @@ interface VitestJson {
 }
 
 /** Run the file's scans, and return their reports in the order declared. */
-function scan(): HintScanReport[] {
+/** Run vitest on the file's scans, passing each board's progress line on as
+ * it comes, and resolve with everything else it wrote to stderr. */
+function runScan(json: string): Promise<string> {
+  const child = spawn(
+    "npx",
+    ["vitest", "run", testFile, "--reporter=json", `--outputFile=${json}`],
+    {
+      cwd: ROOT,
+      env: {
+        ...process.env,
+        HINT_SCAN: "1",
+        ...(casesGame === null ? {} : { GAME_CASES: casesGame }),
+      },
+      stdio: ["ignore", "ignore", "pipe"],
+    },
+  );
+  let stderr = "";
+  const lines = createInterface({ input: child.stderr });
+  lines.on("line", (line) => {
+    const at = line.indexOf(SCAN_PROGRESS_MARK);
+    if (at >= 0) console.log(line.slice(at + SCAN_PROGRESS_MARK.length));
+    else stderr += `${line}\n`;
+  });
+  const read = new Promise<void>((resolve) => lines.on("close", resolve));
+  const exited = new Promise<void>((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", () => resolve());
+  });
+  return Promise.all([read, exited]).then(() => stderr);
+}
+
+async function scan(): Promise<HintScanReport[]> {
   const out = mkdtempSync(path.join(tmpdir(), "hint-scan-"));
   const json = path.join(out, "report.json");
   try {
-    const run = spawnSync(
-      "npx",
-      ["vitest", "run", testFile, "--reporter=json", `--outputFile=${json}`],
-      {
-        cwd: ROOT,
-        env: {
-          ...process.env,
-          HINT_SCAN: "1",
-          ...(casesGame === null ? {} : { GAME_CASES: casesGame }),
-        },
-        stdio: ["ignore", "ignore", "pipe"],
-        encoding: "utf8",
-      },
-    );
+    const stderr = await runScan(json);
     let result: VitestJson;
     try {
       result = JSON.parse(readFileSync(json, "utf8")) as VitestJson;
     } catch {
-      fail(`vitest wrote no report for ${file}:\n${run.stderr}`);
+      fail(`vitest wrote no report for ${file}:\n${stderr}`);
     }
     const reports: HintScanReport[] = [];
     for (const t of result.testResults)
@@ -328,10 +355,60 @@ function writeCases(reports: readonly HintScanReport[]): never {
   console.log(
     text === original ? `\n${file}: every pin stands` : `\n${file}: pins written`,
   );
-  process.exit(missing > 0 ? 1 : 0);
+  finish(missing, [report.game]);
 }
 
-const reports = scan();
+/**
+ * Hold the scanned games' hint wording to `hint-quality`'s rules (a
+ * deduction's necessity voice, the length a glance takes) and exit: 1 where a
+ * kind went unpinned or a rule refused. The guard runs scoped to the games as
+ * a commit staging them runs it, so its ledgers are the one copy, and a
+ * wording is refused while the porter is still writing it, not first in
+ * `test:hint-sweeps`.
+ */
+function finish(missing: number, games: readonly string[]): never {
+  const out = mkdtempSync(path.join(tmpdir(), "hint-scan-quality-"));
+  const json = path.join(out, "report.json");
+  let refused: string[];
+  try {
+    spawnSync(
+      "npx",
+      [
+        "vitest",
+        "run",
+        "src/guards/hint-quality.test.ts",
+        "--reporter=json",
+        `--outputFile=${json}`,
+      ],
+      {
+        cwd: ROOT,
+        env: { ...process.env, GATE_PRECOMMIT: "1", GATE_GAME_SCOPE: games.join(",") },
+        stdio: "ignore",
+      },
+    );
+    let result: VitestJson;
+    try {
+      result = JSON.parse(readFileSync(json, "utf8")) as VitestJson;
+    } catch {
+      fail("hint-quality wrote no report");
+    }
+    refused = result.testResults.flatMap((t) =>
+      t.assertionResults
+        .filter((a) => a.failureMessages.length > 0)
+        .map((a) => `${a.title}\n  ${a.failureMessages[0].split("\n")[0]}`),
+    );
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+  console.log(
+    refused.length === 0
+      ? `hint-quality: ${games.join(", ")}'s wording holds`
+      : `\nhint-quality refuses ${refused.length}:\n${refused.join("\n")}`,
+  );
+  process.exit(missing > 0 || refused.length > 0 ? 1 : 0);
+}
+
+const reports = await scan();
 if (casesGame !== null) writeCases(reports);
 const sourcePath = path.join(ROOT, file);
 const original = readFileSync(sourcePath, "utf8");
@@ -389,4 +466,7 @@ console.log(logs.join("\n\n"));
 console.log(
   next === original ? `\n${file}: every pin stands` : `\n${file}: pins written`,
 );
-process.exit(missing > 0 ? 1 : 0);
+finish(
+  missing,
+  reports.map((r) => r.game),
+);

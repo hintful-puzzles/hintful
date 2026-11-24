@@ -574,7 +574,10 @@ research tools all read through it; the app never does.
   alone is a setting and has no variation. A variation is named as the game
   offers it, a ruleset's name or a modifier's words, and
   `src/guards/variations.test.ts` refuses a game whose field declares the other
-  word.
+  word. The same guard plays each variation off and on, a fixture's too:
+  a board of each, dealt, drawn with its hint, solved, and its answer held
+  to the rules the live errors read. A capability a variation adds is
+  built on boards with it on, so a board with it off is where it breaks.
 
 ## The formula syntax
 
@@ -1751,7 +1754,10 @@ look alone, `evident`: the ringed squares and the board say the move
 whole, with slots, and its grammar is
 [`engine/hint/stated-clauses.ts`](../src/engine/hint/stated-clauses.ts)'s header; the
 compiler refuses a slot that names no number term, lexicon word, role the
-technique marks, or term of elements, and writes the clauses into the module
+technique marks, or term of elements (and `{tally}` in a game's own
+wording: only the library's fish is given that count, so a game counts with
+a term and says `{numeral term}`, as Solo's `setRows`), and writes the
+clauses into the module
 as `STATED`, by kind and wording, which
 [`engine/hint/stated.ts`](../src/engine/hint/stated.ts) renders over what a firing says.
 `describedFiringHint` speaks every kind its `stated` holds, and a game's `say`

@@ -136,7 +136,10 @@ Pin one position for every rung the game declares, with one
 `describeHintPins` call in `<game>-hint.test.ts`, and let
 `npm run hint-scan -- <the test file>` write the pins; a born game's pins
 are its cases file's `hint` section, and the scan takes that file. Never
-write a seed scan for a hint position.
+write a seed scan for a hint position. The scan prints a line a board, and
+`hint.seeds` (12 when omitted) bounds it: a first scan of a large game is
+quicker at 3. It ends by running `hint-quality` scoped to the game, and
+names each wording that guard refuses.
 
 `describeHintPins`
 ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts))

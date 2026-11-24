@@ -1008,6 +1008,29 @@ describe("what the fill board reads of a description", () => {
     );
   });
 
+  it("refuses {tally}, which only the library's fish is given, in a game's own wording", () => {
+    const source = "src/games/solo/solo.description.yaml";
+    const solo = sources.get(source);
+    if (solo === undefined || !isFormal(solo)) throw new Error("no solo");
+    const compileSolo = (from: string, to: string) => {
+      const text = JSON.stringify(solo);
+      expect(text).toContain(from);
+      return compileGame(
+        JSON.parse(text.replace(from, to)) as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileSolo("{numeral lines} rows}", "{numeral lines} rows}")).toContain(
+      "export const STATED",
+    );
+    expect(() => compileSolo("{numeral lines} rows}", "{tally} rows}")).toThrow(
+      /says look says \{tally\}, which only the library's wordings are given/,
+    );
+  });
+
   it("refuses a clue marked done where no press can reach it", () => {
     const source = "src/engine/testing/fixtures/ordering/ordering.description.yaml";
     const ordering = sources.get(source);

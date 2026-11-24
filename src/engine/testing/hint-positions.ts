@@ -30,6 +30,7 @@ import { dealsPromptly } from "./dealt.ts";
 import {
   type HintScanReport,
   type KindScanReport,
+  SCAN_PROGRESS_MARK,
   SCAN_REPORT_MARK,
 } from "./hint-scan-report.ts";
 
@@ -37,6 +38,10 @@ const env = (globalThis as { process?: { env?: Record<string, string | undefined
   .process?.env;
 /** Set (by `npm run hint-scan`) to scan again instead of testing the pins. */
 const SCANNING = Boolean(env?.["HINT_SCAN"]);
+/** Written past vitest's console capture, so it reaches `npm run hint-scan`
+ * while the run goes on. */
+const stderr = (globalThis as { process?: { stderr?: { write(s: string): void } } })
+  .process?.stderr;
 
 /** A position: a board as `params:desc`, and the moves played on it. A bare
  * string is a board with no moves played. The moves may be their JSON, which
@@ -175,12 +180,13 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
   const held = new Map<string, number>(names.map((k) => [k, 0]));
   let walked = 0;
   let boards = 0;
-  for (const params of scan.params) {
+  const seeds = scan.seeds ?? 12;
+  for (const [p, params] of scan.params.entries()) {
     // A size the game accepts can have boards too rare to deal promptly
     // (Group's 6x6 at Hard, identity shown), which the scan passes over.
     if (!dealsPromptly(game, params)) continue;
     const encoded = game.encodeParams(params, true);
-    for (let n = 0; n < (scan.seeds ?? 12); n++) {
+    for (let n = 0; n < seeds; n++) {
       // `dealsPromptly` vouches for one seed; another of a rare cell can run
       // out of tries (Group's 8x8 at Hard), and is passed over the same way.
       let desc: string;
@@ -232,6 +238,10 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
           moves.push(next);
         }
       }
+      stderr?.write(
+        `${SCAN_PROGRESS_MARK}${game.id}: ${encoded} seed ${n + 1} of ${seeds}, ` +
+          `params ${p + 1} of ${scan.params.length}: ${walked} positions walked\n`,
+      );
     }
   }
   return {

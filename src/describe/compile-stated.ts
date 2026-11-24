@@ -187,6 +187,31 @@ function spokenClauses(w: Wording): StatedClauses & { long?: string } {
   return w.long === null ? w.clauses : { ...w.clauses, long: w.long.why };
 }
 
+/** The lexicon's words only the library's wordings are given: `{tally}`,
+ * the count of lines a fish names, which its narration counts. A game's own
+ * technique counts with a term and says `{numeral term}`. */
+const LIBRARY_ONLY_WORDS: ReadonlySet<string> = new Set(["tally"]);
+
+/** Refuse a word of {@link LIBRARY_ONLY_WORDS} in a game's own wording, which
+ * the hint would otherwise fail on the first time the step is narrated. */
+export function checkOwnWords(own: readonly Technique[]): void {
+  for (const t of own) {
+    if (t.says === null) continue;
+    const wordings = [
+      ...t.says.variants.flatMap((v) => v.words),
+      ...(t.says.fact?.words ?? []),
+    ];
+    for (const w of wordings)
+      for (const [part, src] of Object.entries(w.clauses) as [string, string][])
+        for (const s of slotsOf(src))
+          for (const name of [s.name, ...s.inner])
+            if (name !== null && LIBRARY_ONLY_WORDS.has(name))
+              throw new CompileError(
+                `${t.id}: says ${part} says {${name}}, which only the library's wordings are given: count with a term and say {numeral term}`,
+              );
+  }
+}
+
 /** The module's `STATED`: each kind of step's clauses as the description
  * states them, by wording, and each fact's, for `engine/hint/stated.ts` to render.
  * A firing's `wording`, and a fact's, is the index of the one that held; it is

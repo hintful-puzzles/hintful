@@ -9,6 +9,10 @@
 /** The line of a scan's failure that carries its report as JSON. */
 export const SCAN_REPORT_MARK = "HINT_SCAN_REPORT ";
 
+/** The stderr line a scan writes as it finishes each board, which the script
+ * passes on as it comes. A scan runs for minutes, and it is seen to move. */
+export const SCAN_PROGRESS_MARK = "HINT_SCAN_PROGRESS ";
+
 export interface KindScanReport {
   /** Positions the kind held on. */
   held: number;

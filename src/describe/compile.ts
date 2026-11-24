@@ -42,7 +42,7 @@ import {
   supplies,
   type Val,
 } from "./compile-sorts.ts";
-import { statedTable, stepsBlock } from "./compile-stated.ts";
+import { checkOwnWords, statedTable, stepsBlock } from "./compile-stated.ts";
 import { capitalized, compileTechnique } from "./compile-technique.ts";
 import { freeNames, reads } from "./compile-terms.ts";
 import { type MarkRead, violationCheck } from "./compile-violations.ts";
@@ -366,6 +366,7 @@ export function compileGame(
     cellDomain(d.domain, env, d.json.sizes),
   );
   const own = d.techniques.filter((t) => !t.id.includes("."));
+  checkOwnWords(own);
   const compiled = own.map((t) => ({
     id: t.id,
     kind: t.kind,
