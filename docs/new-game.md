@@ -247,8 +247,10 @@ and no test code ([`testing.md`](./testing.md) § "What a new game ships").
 
 1. **Write the description** whole: help, rules, clues, techniques and
    their words as every described game does, and the parts a born game
-   declares ([`descriptions.md`](./descriptions.md) § "The file", its
-   bullets on the fill board and on a born game). `npm run describe`
+   declares (`catalog:`, `play:`, `settings:`, `id:`, `deal:`, each as
+   [`description.schema.json`](../src/describe/description.schema.json)
+   says it; [`descriptions.md`](./descriptions.md) § "The file" for the
+   rules of writing one). `npm run describe`
    compiles it and registers the game; a dev server does it on save.
 2. **Measure the deal rate** before choosing the menu: what share of
    sampled answers each tier finishes, a size at a time. A size few deals

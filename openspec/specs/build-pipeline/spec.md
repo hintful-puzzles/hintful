@@ -1382,12 +1382,11 @@ A game's own test files SHALL keep, in CI, a shallow form that holds each of the
 
 ### Requirement: Only the compiled descriptions are generated into the source tree
 
-Nothing the build reads SHALL be generated except the modules compiled from
-descriptions: the game catalog is committed TypeScript source (each game's
-`src/games/<id>/catalog.ts`), the per-puzzle icons are a committed snapshot,
-and the help pages are committed markdown and descriptions. A module compiled
-from a description SHALL be generated into `src/generated/`, which git
-ignores, and SHALL NOT be committed.
+Nothing the build reads SHALL be generated except what `npm run describe`
+writes: the modules compiled from descriptions and the types generated from
+the description's schema. The game catalog, the per-puzzle icons and the help
+pages are committed. What `npm run describe` writes SHALL go into
+`src/generated/`, which git ignores, and SHALL NOT be committed.
 
 #### Scenario: No other artifact is generated into the source tree
 

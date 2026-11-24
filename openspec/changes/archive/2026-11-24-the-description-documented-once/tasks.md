@@ -1,6 +1,6 @@
 ## Next
 
-2.1, § "The file" cut to what the schema cannot say. Open: none.
+Done; archived. Open: none.
 
 ## 1. One source
 
@@ -12,7 +12,7 @@
 
 ## 2. The guide
 
-- [ ] 2.1 `docs/descriptions.md` § "The file" points at the schema; the
+- [x] 2.1 `docs/descriptions.md` § "The file" points at the schema; the
       born route first; a vocabulary section of at most a screen.
 - [x] 2.2 No hand-kept list of born games in a guide.
 
@@ -24,5 +24,5 @@
 
 ## 4. Close
 
-- [ ] 4.1 Archive, and take the next change from
+- [x] 4.1 Archive, and take the next change from
       `describe-the-whole-catalog` § "0. The refactor first".

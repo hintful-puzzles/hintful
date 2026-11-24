@@ -771,7 +771,7 @@
           },
           "list": {
             "const": true,
-            "description": "The clue at an element is a list of numbers, each one of `value`, in order: a line's run lengths. `clue(kind, x)` is the list, and its meaning reads it as `v`."
+            "description": "The clue at an element is a list of numbers, each one of `value`, in order: a line's run lengths. `clue(kind, x)` is the list, and its meaning reads it as `v`. Lists compare only whole, by `=` and `!=`."
           },
           "value": {
             "$ref": "#/$defs/formula"
@@ -1066,11 +1066,11 @@
           "items": {
             "type": "string"
           },
-          "description": "The answer functions the board may give values of: givens, not clues."
+          "description": "The answer functions the board may give values of: givens, not clues. On a fill game, `given: [value]` states the clue kind `given`, at a cell, over the answer's domain, first among the kinds so a hide takes it first, and `play.dealt` unless the file names its own."
         },
         "marks": {
           "type": "object",
-          "description": "What the player can write down.",
+          "description": "What the player can write down. A mark on the answer's elements whose notation is `set of` the answer's domain, with no `of` or `means`, is the player's candidate notes: a board of numbers keeps them (`engine/fill/notes.ts`) and is hinted by the candidate walk (`engine/fill/candidates.ts`).",
           "additionalProperties": {
             "type": "object",
             "required": ["sort", "notation"],
@@ -1260,7 +1260,7 @@
             },
             "done": {
               "type": "object",
-              "description": "The clue kinds the player may mark done, each with what one is called (\"sign\"), which the help page's sentence on the mark says (`engine/fill/done.ts`): a press on such a clue, with either button, grays it, a drag on grays those that looked the same, and Shift or Ctrl with an arrow marks the one beside the selected square. Each is a kind drawn in a gap (`gaps`), on a board of `numbers`.",
+              "description": "The clue kinds the player may mark done, each with what one is called (\"sign\"), which the help page's sentence on the mark says (`engine/fill/done.ts`): a press on such a clue, with either button, grays it, a drag on grays those that looked the same, and Shift or Ctrl with an arrow marks the one beside the selected square. Each is a kind drawn in a gap (`gaps`), at a part (a press on its drawn text), or at a slot (a press in its margin square), on a board of `numbers`: with an arrow, Shift or Ctrl marks the gap's clue that way, on a board of parts the next part's that way, and on a board of slots the clue at that end of the cursor's line.",
               "additionalProperties": {
                 "type": "string"
               }
@@ -1337,7 +1337,7 @@
             "secondary": {
               "type": "integer",
               "minimum": 1,
-              "description": "The right button's value, which rules a cell out."
+              "description": "The right button's value, which rules a cell out; unless its painter is one of a pair of alike pieces (Unruly's disc), when it is a placement."
             },
             "blank": {
               "type": "integer",
@@ -1494,7 +1494,7 @@
             },
             "variants": {
               "type": "array",
-              "description": "The boards after the menu's grid, one for each modifier: a size of `boards`, the variations on, and its tier.",
+              "description": "The boards after the menu's grid, one for each modifier: a size of `boards`, `with` the variations on or a deal setting turned on, each by its name (Keen's multiplication-only), and its tier.",
               "items": {
                 "type": "object",
                 "required": ["board", "with", "tier"],
@@ -2459,7 +2459,7 @@
           "items": {
             "type": "string"
           },
-          "description": "The ladder, lowest first; the last is the search where the game has one."
+          "description": "The ladder, lowest first; the last is the search where the game has one, named Unreasonable: its deal strips clues while the search proves one answer and the ladder stops short (`engine/fill/search.ts`)."
         },
         "rulesOut": {
           "type": "object",
@@ -2812,6 +2812,7 @@
             },
             "most": {
               "type": "array",
+              "description": "With `gives: variation`, the most lines a board of each width may have with it on, where its rule bounds the size (Solo's X needs 4 numbers).",
               "items": {
                 "type": "integer",
                 "minimum": 0
@@ -2819,6 +2820,7 @@
             },
             "bounds": {
               "type": "object",
+              "description": "With `gives: variation`, the size bounds a board with it on keeps, as `play.bounds` states them (Solo's Killer holds at most 9).",
               "additionalProperties": false,
               "properties": {
                 "sum": {
@@ -3037,7 +3039,8 @@
           "additionalProperties": false,
           "properties": {
             "kind": {
-              "const": "tally"
+              "const": "tally",
+              "description": "A clue at the board of a length and its count (Boats' fleet): its size by its letter, its counts after a comma at the end (`f3` and `,3,2,1`). The kind is skipped as derived, drawn beneath the board (`engine/fill/tally-display.ts`), and laid by `deal.sample: pieces`."
             },
             "after": {
               "const": "tier",
@@ -3096,7 +3099,8 @@
           "additionalProperties": false,
           "properties": {
             "kind": {
-              "const": "blocks"
+              "const": "blocks",
+              "description": "The two sizes of `blocks(a, b)`, the grid `a * b` on a side, as Custom's columns and rows and the ID's `{b}x{a}`. The ruleset whose variation replaces the blocks with a dealt partition is on exactly where `a` is 1, written `{b}` and `letter` (Solo's `9j`)."
             },
             "letter": {
               "type": "string",
