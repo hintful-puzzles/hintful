@@ -18,8 +18,8 @@ import { tallyAcross, tallyHeight } from "../tally-display.ts";
 export interface FillShape {
   /** The board keeps notes, and the pencil-mode indicator's room. */
   readonly notes: boolean;
-  /** A press off the grid shows the hidden numbers (`play.hides`). */
-  readonly hides: boolean;
+  /** A press off the grid shows the covered numbers (`play.covers`). */
+  readonly covers: boolean;
   /** The lines have a fixed label before their start. */
   readonly lineLabels: boolean;
   /** The lines have lists before their start. */
@@ -38,7 +38,7 @@ export type FillMetrics = ReturnType<typeof fillMetrics>;
 
 /** The geometry of a board of shape `shape` that no frame changes. */
 export function fillMetrics(shape: FillShape) {
-  const { notes, hides, lineLabels, listed, lineClued, slotted, gapped, hexagon } =
+  const { notes, covers, lineLabels, listed, lineClued, slotted, gapped, hexagon } =
     shape;
   /** The tiles before a board's lines its lists take, upstream pattern.c's
    * `TLBORDER`: a line of `d` holds at most about `d / 2` runs, which stack
@@ -46,13 +46,13 @@ export function fillMetrics(shape: FillShape) {
    * longer side's, so the board has one origin. */
   const depthOf = (b: { w: number; h: number }): number =>
     !listed ? 0 : Math.floor(Math.max(b.w, b.h) / 5) + 2;
-  // Where a press off the grid shows the hidden numbers, the board keeps
+  // Where a press off the grid shows the covered numbers, the board keeps
   // half a tile round it to press (upstream singles.c's BORDER); where it
   // keeps notes, the pencil-mode indicator's room at its top right.
   const rim = (ts: number): number =>
     notes
       ? Math.max(Math.floor(ts / 2), pencilIndicatorReach(ts))
-      : !hides
+      : !covers
         ? 1
         : Math.floor(ts / 2);
   // A board with clues at slots keeps a tile's margin round it for them, and

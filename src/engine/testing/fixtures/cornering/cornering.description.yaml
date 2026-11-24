@@ -65,7 +65,7 @@ deal:
   tier: one of the tiers
   sample: { latin: true }
   hide: { given: { first: true }, sum, difference, same, parity }
-  firstKind: [sum, difference, same, parity]
+  oneKind: { kinds: [sum, difference, same, parity], pick: first }
 settings:
   clueTypes:
     kind: set

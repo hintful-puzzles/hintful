@@ -138,8 +138,8 @@ describe("a fill game's labels", () => {
       given: clueList([], [], sp.cells.length),
       count,
     });
-    // Without `hides`, which keeps half a tile round the board to press.
-    const { hides: _hides, ...play } = playing.play;
+    // Without `covers`, which keeps half a tile round the board to press.
+    const { covers: _covers, ...play } = playing.play;
     const frame = (labels: FillLook<playing.Dealt>["labels"]) => {
       const lookOf = { play, lineClues: playing.lineClues, labels };
       const input = fillInput<playing.Dealt, { tileSize: number }>(

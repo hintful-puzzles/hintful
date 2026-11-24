@@ -355,8 +355,8 @@ research tools all read through it; the app never does.
   where it breaks, printed after the text's wall line it lies on, and
   written by `id:`'s `codes`, a kind's code and its number or a code that
   is a kind and a value whole, between runs of corners without one, the
-  longest code read first (`cornering` is the fixture). `deal.firstKind:
-  [kind, …]` keeps one clue an element of kinds at one place, the first
+  longest code read first (`cornering` is the fixture). `deal.oneKind:
+  { kinds, pick: first }` keeps one clue an element of kinds at one place, the first
   in its order the answer makes there (Mathrax's cascade, where a parity
   goes only where no sum or difference holds), and a `set` setting's
   `members` switch kinds off, each by a letter after the tier in a full ID
@@ -426,7 +426,8 @@ research tools all read through it; the app never does.
   no technique need say so. A clue kind `at:`
   such a region is a clue a part: derived where its `means` solves for `v`
   (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
-  kinds a part, in turn and well before `poor` (`engine/fill/deal/one-kind.ts`),
+  kinds a part, in turn (`pick: turn`, the default; `first` is the
+  corners' above) and well before `poor` (`engine/fill/deal/one-kind.ts`),
   its `alone: { when, kinds }` deals `kinds` alone where the flag `when`
   is on,
   `id:`'s `blocks` writes the partition as upstream Keen's block structure,
@@ -554,8 +555,8 @@ research tools all read through it; the app never does.
   cell, one desc-alphabet character each (Singles'). `deal.latin` deals
   such a kind as a Latin square's numbers, the build standing on them, and
   then numbers each cell holding `under` again to repeat one its row or
-  column keeps (`engine/fill/deal/latin-numbers.ts`). `play.hides` is a value
-  whose piece hides its cell's number, with a preference that shows it
+  column keeps (`engine/fill/deal/latin-numbers.ts`). `play.covers` is a value
+  whose piece covers its cell's number, with a preference that shows it
   smaller, flipped by a press in the half tile round the grid; `play.wrap`
   carries the cursor over the edge; the `ring` painter circles a kept
   number. A numbered cell's text is its number inside its value's glyph

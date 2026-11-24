@@ -148,3 +148,37 @@ measure it does not know.
 - **WHEN** a Towers board of 4×4 or 5×5 is dealt at Easy
 - **THEN** no square holds a given
 - **AND** a 6×6 Easy board may keep some
+
+### Requirement: A born game's piece may hide its number
+
+A value named by `play.covers` SHALL hide its cell's number, and its
+preference SHALL show it smaller; a press in the half tile round the grid
+SHALL flip the preference and make no move. `play.wrap` SHALL carry the
+cursor over the grid's edge.
+
+#### Scenario: A press off Singles' grid
+
+- **WHEN** the player presses outside the grid with the preference off
+- **THEN** it is on, and `interpretMove` returns `UI_UPDATE`
+
+### Requirement: A born game may deal one kind of clue an element, of the kinds switched on
+
+`deal.oneKind` with `pick: first` SHALL keep, at each element, the clue
+of the first of its kinds the answer makes there, and no other. A `set` setting SHALL give each of its members a check box
+in Custom and a letter after the tier in a full ID, written only where some
+member is off and read in the letters' order; a board SHALL deal no clue of
+a kind switched off, a board with none on SHALL be refused, and a board's
+name SHALL say the shorter of the kinds on and the kinds off.
+
+#### Scenario: A parity where a sum holds
+
+- **WHEN** the answer's four squares round a corner are all odd and their
+  pairs are the same, and the precedence puts the same before parity
+- **THEN** the corner is dealt the same, and not a parity
+
+#### Scenario: Kinds switched off
+
+- **WHEN** a board is read from `5dnAO`
+- **THEN** it deals sums and parities alone, its name says "only sum/parity"
+  where it says the kinds, and it is written back as `5dnAO`, and as `5dn`
+  with every kind on

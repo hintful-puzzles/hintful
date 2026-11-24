@@ -17,7 +17,6 @@ import {
 import {
   type Description,
   type DescriptionJson,
-  firstKindJsonOf,
   type OneKindJson,
   oneKindOf,
 } from "../description.ts";
@@ -49,25 +48,29 @@ export function latinOf(
   return { kind, under };
 }
 
-/** `deal.firstKind`: kinds at one place other than a part, where a part's
- * one clue is `oneKind`'s; `null` where there is none. */
+/** `deal.oneKind` with `pick: first`: kinds at one place of which each
+ * element keeps the first the answer makes there; `null` where there is
+ * none. */
 export function firstKindOf(
   json: DescriptionJson,
   d: Description,
 ): readonly string[] | null {
-  const kinds = firstKindJsonOf(json);
-  if (kinds === null) return null;
+  const one = oneKindOf(json);
+  if (one?.pick !== "first") return null;
+  const { kinds } = one;
+  if (one.poor !== undefined || one.never !== undefined || one.alone !== undefined)
+    throw new CompileError(
+      "deal oneKind: poor, never and alone choose in turn, and it picks first",
+    );
   const places = new Set(kinds.map((k) => d.clueKinds.get(k)?.at));
   for (const k of kinds) {
     const c = d.clueKinds.get(k);
-    if (c === undefined) throw new CompileError(`deal firstKind: no clue kind ${k}`);
+    if (c === undefined) throw new CompileError(`deal oneKind: no clue kind ${k}`);
     if (c.complete)
-      throw new CompileError(
-        `deal firstKind: ${k} is complete, a clue at every element`,
-      );
+      throw new CompileError(`deal oneKind: ${k} is complete, a clue at every element`);
   }
   if (places.size !== 1 || kinds.length < 2)
-    throw new CompileError("deal firstKind: two kinds or more, at one place");
+    throw new CompileError("deal oneKind: two kinds or more, at one place");
   return kinds;
 }
 
@@ -88,7 +91,7 @@ export function oneKindDeal(
   };
 } | null {
   const one = oneKindOf(json);
-  if (one === null) return null;
+  if (one === null || one.pick === "first") return null;
   const { alone } = one;
   if (partition === null)
     throw new CompileError(

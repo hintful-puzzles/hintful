@@ -185,9 +185,9 @@ export interface PlayJson {
   /** A wash over the open cells where `when` holds, which read as the
    * secondary value, and a preference that draws that value's piece on one. */
   wash?: { when: string; pref?: { kw: string; name: string } };
-  /** A value whose piece hides its cell's number, and the preference that
+  /** A value whose piece covers its cell's number, and the preference that
    * shows it. */
-  hides?: { value: number; pref: { kw: string; name: string } };
+  covers?: { value: number; pref: { kw: string; name: string } };
   /** Whether the cursor carries over the grid's edge. */
   wrap?: true;
   click?: "toggle" | "cycle";
@@ -365,22 +365,19 @@ export function oneKindOf(json: DescriptionJson): OneKindJson | null {
   return typeof g === "object" ? (g as unknown as OneKindJson) : null;
 }
 
-/** One clue a part, of one of `kinds`, dealt in turn: each kind to the
- * first part in a random order it suits, a part where its clue is `poor`
- * (from tier `from`, where given) only where it suits none, and never where
- * `never` holds; and where the flag `alone.when` is on, `alone.kinds` alone.
- * Each formula reads the part `at` and the clue's value `v`. */
+/** One clue a place, of one of `kinds`. With `pick: first`, the first of
+ * them the answer makes there. Else (`pick: turn`) at a part, dealt in
+ * turn: each kind to the first part in a random order it suits, a part
+ * where its clue is `poor` (from tier `from`, where given) only where it
+ * suits none, and never where `never` holds; and where the flag
+ * `alone.when` is on, `alone.kinds` alone. Each formula reads the part `at`
+ * and the clue's value `v`. */
 export interface OneKindJson {
   kinds: string[];
+  pick?: "turn" | "first";
   poor?: Record<string, string | { when: string; from: string }>;
   never?: Record<string, string>;
   alone?: { when: string; kinds: string[] };
-}
-
-/** `deal.firstKind`, where the description has one. */
-export function firstKindJsonOf(json: DescriptionJson): string[] | null {
-  const k = json.deal?.["firstKind"];
-  return Array.isArray(k) ? (k as unknown as string[]) : null;
 }
 
 /** The partition the deal grows round its answer (`deal.grow`), or `null`

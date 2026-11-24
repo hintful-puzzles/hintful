@@ -1,8 +1,7 @@
 ## Next
 
-4.1's rest: `deal.firstKind` into `deal.oneKind` (`pick: first`) and
-`play.hides` renamed `play.covers` (design.md § "The one-user keys").
-The hide keys are one `hide`, and `withhold` is `never`'s. Open: none.
+4.2, fixtures renamed for their concepts: `fleet` (Boats), `killing`
+(Solo), `washing` (Light Up) and any other named for a game. Open: none.
 
 ## 1. Design
 
@@ -27,7 +26,7 @@ The hide keys are one `hide`, and `withhold` is `never`'s. Open: none.
 
 ## 4. Keys and fixtures
 
-- [ ] 4.1 The one-user keys renamed or folded per 1.2; the hides one key.
+- [x] 4.1 The one-user keys renamed or folded per 1.2; the hides one key.
 - [ ] 4.2 Fixtures renamed for their concepts.
 
 ## 5. Close

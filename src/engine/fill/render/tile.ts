@@ -98,7 +98,7 @@ export function tileWordsOf<C extends Clues<C>>(
         washes[i] |
         (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
       const n = shownNumber(cx, state, i, shown.values[i], ui.hiddenShown);
-      if (n >= 0 && shown.values[i] === cx.play.hides?.value) lk |= NUMBER_UNDER;
+      if (n >= 0 && shown.values[i] === cx.play.covers?.value) lk |= NUMBER_UNDER;
       const part =
         parts === null
           ? null

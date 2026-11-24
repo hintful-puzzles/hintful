@@ -81,7 +81,7 @@ export function fillSetup<C extends Clues<C>>(
   const pal: FillPalette = fillPalette(play, numbers.length > 0, walled !== undefined);
   const metrics: FillMetrics = fillMetrics({
     notes,
-    hides: play.hides !== undefined,
+    covers: play.covers !== undefined,
     lineLabels: labelStart !== undefined,
     listed: lineLists.length > 0,
     lineClued: lineClues.length > 0,

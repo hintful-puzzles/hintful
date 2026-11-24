@@ -1379,9 +1379,9 @@
                 }
               }
             },
-            "hides": {
+            "covers": {
               "type": "object",
-              "description": "A value whose piece hides the number on its cell, and a preference, off by default, that shows the number there smaller; a press off the grid flips it (upstream's Singles).",
+              "description": "A value whose piece covers the number on its cell, and a preference, off by default, that shows the number there smaller; a press off the grid flips it (upstream's Singles).",
               "required": ["value", "pref"],
               "additionalProperties": false,
               "properties": {
@@ -2046,7 +2046,7 @@
             },
             "oneKind": {
               "type": "object",
-              "description": "One clue a part of the clue kinds at a dealt partition, dealt from those the answer derives there: the kinds in turn, in `kinds`' order and over and over, each to the first part in a random order that holds none yet and where its clue is not poor, or else where it is; until a round deals none (upstream keen.c's even mix). `poor` and `never` are formulas of the part `at` and the clue's value `v`; a poor clue may be poor only from a tier (`from`), and a clue `never` refuses is not dealt.",
+              "description": "One clue a place of `kinds`, dealt from those the answer derives there. With `pick: first`, kinds at one place, each element keeping the first in `kinds`' order that the answer makes there, of those on (upstream mathrax.c's cascade). Else, `pick: turn`, kinds at a dealt partition's parts, the kinds in turn, in `kinds`' order and over and over, each to the first part in a random order that holds none yet and where its clue is not poor, or else where it is; until a round deals none (upstream keen.c's even mix). `poor` and `never` are formulas of the part `at` and the clue's value `v`; a poor clue may be poor only from a tier (`from`), and a clue `never` refuses is not dealt.",
               "required": ["kinds"],
               "additionalProperties": false,
               "properties": {
@@ -2057,6 +2057,9 @@
                   },
                   "minItems": 1,
                   "uniqueItems": true
+                },
+                "pick": {
+                  "enum": ["turn", "first"]
                 },
                 "poor": {
                   "type": "object",
@@ -2107,15 +2110,6 @@
                   }
                 }
               }
-            },
-            "firstKind": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "minItems": 2,
-              "uniqueItems": true,
-              "description": "Clue kinds at one place of which an element holds one clue: the first in this order the answer makes there, of those on (upstream mathrax.c's cascade)."
             },
             "grow": {
               "type": "object",

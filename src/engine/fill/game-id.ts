@@ -141,7 +141,7 @@ export interface FillDeal {
     readonly alone?: { readonly kinds: readonly string[]; readonly when: string };
   };
   /** Kinds at one place of which an element holds one clue: the first in
-   * this order the answer makes there. */
+   * this order the answer makes there (`deal.oneKind`'s `pick: first`). */
   readonly firstKind?: readonly string[];
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */

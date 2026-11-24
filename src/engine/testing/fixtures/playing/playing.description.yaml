@@ -37,7 +37,7 @@ play:
   erase: B
   wrap: true
   sweepWith: secondary
-  hides:
+  covers:
     value: 1
     pref: { kw: show-hidden, name: Show what a shaded square hides }
   labels: { start: "i + 1" }

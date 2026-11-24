@@ -223,7 +223,7 @@ export function fillGame<C extends Clues<C> & object>(
     pref as unknown as GamePref<FillUi>;
   const prefs = [
     ...(play.wash?.pref === undefined ? [] : [flag(play.wash.pref, "washedMarks")]),
-    ...(play.hides === undefined ? [] : [flag(play.hides.pref, "hiddenShown")]),
+    ...(play.covers === undefined ? [] : [flag(play.covers.pref, "hiddenShown")]),
     ...(!notes
       ? []
       : [

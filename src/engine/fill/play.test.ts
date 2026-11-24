@@ -271,7 +271,7 @@ describe("a fill game's input", () => {
       UI_UPDATE,
     );
     expect(ui.hiddenShown).toBe(true);
-    const { hides: _hides, ...plain } = both;
+    const { covers: _covers, ...plain } = both;
     const off = fillInput<playing.Dealt, typeof ds>(playing, plain, () => 0);
     expect(
       off.interpretMove(dealt(), newFillUi(), ds, { x: 100, y: 5 }, LEFT_BUTTON),

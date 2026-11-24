@@ -177,10 +177,10 @@ export interface FillPlay {
   /** Where the open cells a definition holds of are washed (`washed`), the
    * preference that draws the secondary piece on one, on by default. */
   readonly wash?: { readonly pref?: { readonly kw: string; readonly name: string } };
-  /** The value whose piece hides the number on its cell, and the preference
-   * that shows it there, smaller, off by default; a press off the grid
-   * flips it (upstream singles.c). */
-  readonly hides?: {
+  /** The value whose piece covers the number on its cell, and the
+   * preference that shows it there, smaller, off by default; a press off
+   * the grid flips it (upstream singles.c). */
+  readonly covers?: {
     readonly value: number;
     readonly pref: { readonly kw: string; readonly name: string };
   };
@@ -218,8 +218,8 @@ export interface FillUi {
   /** The wash's preference (`FillPlay.wash`): whether the secondary piece is
    * drawn on a washed cell. */
   washedMarks: boolean;
-  /** The hiding preference (`FillPlay.hides`): whether a number shows on the
-   * piece that hides it. */
+  /** The covering preference (`FillPlay.covers`): whether a number shows on
+   * the piece that covers it. */
   hiddenShown: boolean;
   /** On a board of numbers (`numbers.ts`, `typedUi`), whether the keyboard
    * moved the note-taking cell's highlight. */
@@ -635,9 +635,9 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
         const got = dragArm(b, ui, ui.drag, ds, p, button);
         if (got !== PASS) return got;
       }
-      // A press off the grid shows or hides the numbers the piece hides.
+      // A press off the grid shows or hides the numbers the piece covers.
       if (
-        play.hides !== undefined &&
+        play.covers !== undefined &&
         isMouseDown(button) &&
         geometry.pointerTarget(b, ds, p, ui) === null
       ) {

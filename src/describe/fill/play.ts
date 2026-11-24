@@ -156,9 +156,9 @@ export function playOf(
     wash,
     ...rest
   } = p;
-  if (rest.hides !== undefined && values[rest.hides.value] === undefined)
+  if (rest.covers !== undefined && values[rest.covers.value] === undefined)
     throw new CompileError(
-      `play hides: ${rest.hides.value} is not a value the player places`,
+      `play covers: ${rest.covers.value} is not a value the player places`,
     );
   const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
   for (const [key, ids] of [

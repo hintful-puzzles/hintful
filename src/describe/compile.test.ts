@@ -1202,16 +1202,19 @@ describe("what the fill board reads of a description", () => {
       );
     };
     expect(compileCornering(() => {})()).toContain('"firstKind":["sum","difference"');
-    expect(
+    const picking = (one: Record<string, unknown>) =>
       compileCornering((j) => {
-        j.deal["firstKind"] = ["sum", "given"];
-      }),
-    ).toThrow(/deal firstKind: two kinds or more, at one place/);
-    expect(
-      compileCornering((j) => {
-        j.deal["firstKind"] = ["sum", "nothing"];
-      }),
-    ).toThrow(/deal firstKind: no clue kind nothing/);
+        j.deal["oneKind"] = { pick: "first", ...one };
+      });
+    expect(picking({ kinds: ["sum", "given"] })).toThrow(
+      /deal oneKind: two kinds or more, at one place/,
+    );
+    expect(picking({ kinds: ["sum", "nothing"] })).toThrow(
+      /deal oneKind: no clue kind nothing/,
+    );
+    expect(picking({ kinds: ["sum", "parity"], never: { sum: "v = 0" } })).toThrow(
+      /deal oneKind: poor, never and alone choose in turn, and it picks first/,
+    );
     const letters = (edit: (l: Letter[]) => void) =>
       compileCornering((j) => {
         edit(j.settings.clueTypes.members);

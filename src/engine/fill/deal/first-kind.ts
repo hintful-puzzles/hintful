@@ -1,6 +1,6 @@
 /**
  * Which kinds of clue a board deals: those a `set` setting switches on
- * (Mathrax's `A S M D E O`), and of `deal.firstKind`'s
+ * (Mathrax's `A S M D E O`), and of a `deal.oneKind` that picks first
  * one clue an element, the first kind in its order that the answer makes
  * there (upstream mathrax.c's cascade, where four squares that are all odd
  * and add in pairs to 6 are a sum and never Odd).
@@ -13,7 +13,7 @@ import { kindsOn } from "../params/set.ts";
 
 /**
  * `derived` with no clue of a kind board `p` switches off, and of
- * `deal.firstKind`'s kinds only the first that holds at each element.
+ * `FillDeal.firstKind`'s kinds only the first that holds at each element.
  */
 export function firstKindEach<C extends Clues<C>>(
   deal: FillDeal,

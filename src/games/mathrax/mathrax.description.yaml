@@ -161,7 +161,9 @@ deal:
   tier: one of the tiers
   sample: { latin: true }
   hide: { given: { first: true }, sum, difference, equal, product, quotient, parity }
-  firstKind: [sum, difference, equal, product, quotient, parity]
+  oneKind:
+    kinds: [sum, difference, equal, product, quotient, parity]
+    pick: first
 settings:
   clueTypes:
     kind: set

@@ -61,7 +61,7 @@ export function numbersLeft<C extends Clues<C>>(
 }
 
 /** Cell `i`'s number as drawn, holding `v`: -1 where it has none, or its
- * piece hides it (`play.hides`) and the preference does not show it. */
+ * piece covers it (`play.covers`) and the preference does not show it. */
 export function shownNumber<C extends Clues<C>>(
   cx: FillSetup<C>,
   state: FillBoard<C>,
@@ -70,7 +70,7 @@ export function shownNumber<C extends Clues<C>>(
   show: boolean,
 ): number {
   const at = cx.numberAt(state, i);
-  if (at === null || (v === cx.play.hides?.value && !show)) return -1;
+  if (at === null || (v === cx.play.covers?.value && !show)) return -1;
   return listOf(state.dealt, at.kind).v[at.k];
 }
 

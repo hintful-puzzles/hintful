@@ -103,7 +103,7 @@ play:
   blank: 2
   # The number fills its square, and reads no block of squares.
   plain: [number]
-  hides:
+  covers:
     value: 1
     pref: { kw: show-black-nums, name: Show numbers on shaded squares }
   wrap: true

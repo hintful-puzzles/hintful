@@ -62,7 +62,7 @@ export const JOIN_SHIFT = 8;
 export const WASHED = 1 << 12;
 /** The cell is washed and the preference leaves its secondary piece out. */
 export const WASH_HIDES = 1 << 13;
-/** The cell's piece hides its number (`play.hides`) and the preference shows
+/** The cell's piece covers its number (`play.covers`) and the preference shows
  * it: it is drawn smaller, the piece staying what the cell holds. */
 export const NUMBER_UNDER = 1 << 14;
 /** The cell's running piece runs on, which way the board does not yet say
