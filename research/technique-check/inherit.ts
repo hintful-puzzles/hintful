@@ -124,8 +124,18 @@ export function inCandidateWords(
   ]);
   const carried = Object.entries(source.define).filter(([n]) => !own.has(n));
   const tiers = candidate.tiers ?? ["any"];
+  // The hide keeps a kind only where a technique reads it, which a ladder of
+  // one cannot be held to; the words, not the deal, are the question here.
+  const {
+    hide: _,
+    thorough: __,
+    symmetric: ___,
+    stripFrom: ____,
+    ...deal
+  } = candidate.deal ?? {};
   const json: DescriptionJson = {
     ...candidate,
+    ...(candidate.deal === undefined ? {} : { deal }),
     tiers,
     define: { ...Object.fromEntries(carried), ...candidate.define },
     // The compiler refuses a technique with no name, and a library's has
