@@ -74,7 +74,7 @@ ids:
   # A given past the board, one too many, a character neither part holds,
   # and the grid cut short.
   - {id: "3de:12345678,d", refused: DESC_OUT_OF_RANGE}
-  - {id: "3de:1231231231,c", refused: '/"1" where it can.t have one/'}
+  - {id: "3de:1231231231,c", refused: DESC_TOO_LONG}
   - {id: "3de:12?,d", refused: '/"\?"/'}
   - {id: "3de:12,d", refused: '/"," where it can.t have one/'}
   # A run past either part, a clue too many, and anything after the clues.
@@ -82,9 +82,10 @@ ids:
   - {id: "3de:i,e", refused: DESC_TOO_LONG}
   - {id: "3de:i,dA2", refused: DESC_TOO_LONG}
   - {id: "3de:i,d!", refused: DESC_TOO_LONG}
-  # A clue part cut short, or none at all.
+  # A clue part cut short; none at all reads as no clue, as Seismic's does,
+  # and leaves the board more than one answer.
   - {id: "3de:i,A2", refused: DESC_TOO_SHORT}
-  - {id: "3de:i", refused: DESC_TOO_SHORT}
+  - {id: "3de:i", refused: DESC_NOT_UNIQUE}
   - {id: "3de:", refused: DESC_TOO_SHORT}
   # An arithmetic clue without its number, and a parity clue with one.
   - {id: "3de:i,Ac", refused: '/"c"/'}
