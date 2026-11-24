@@ -2,6 +2,9 @@
  * The clues a fill board draws in the gaps between its cells (`play.gaps`):
  * which is at an edge, and which way it points, for the renderer and the
  * text format alike.
+ *
+ * A gap's other parts: the site that draws its clues, `render/sites/gaps.ts`,
+ * and the compiler's check of its painters, `describe/fill/locations.ts`.
  */
 
 import {

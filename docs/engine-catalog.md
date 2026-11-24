@@ -1170,7 +1170,13 @@ climb beside them. `desc.ts` is
 its desc, from the description's `id:`: a segment kind is a module of
 `segments/` and a line of `desc.ts`'s registry. `game-id.ts` is its params,
 each setting a module of `params/` that `fillParams` places in the params'
-grammar.
+grammar. What a game's module holds for these is the compiler's
+`describe/compile-fill.ts`, which writes its parts in their order, each
+concept a module of `describe/fill/`; a segment kind the compiler reads is
+a line of `fill/id-checks.ts`'s `SEGMENTS`, keyed as `desc.ts`'s, and a
+params letter is claimed in `fill/letters.ts`. A new concept is a new
+module: no file of the fill engine is over 800 lines, which
+`scripts/checks/fill-lines.mjs` holds.
 `hint.ts` is the hint, `describedFiringHint`'s hooks read off the board,
 the walk begun at the lowest tier that finishes the board as dealt; a step
 decides values (`PLACE` facts) and, where the game's mark is a link, marks

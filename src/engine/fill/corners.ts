@@ -4,6 +4,10 @@
  * the renderer and the text format alike. The corners are numbered as the
  * space numbers them (`describe-runtime/space.ts`), in reading order over
  * the `(w - 1) × (h - 1)` points inside the grid.
+ *
+ * A corner's other parts: the site that draws its clues,
+ * `render/sites/corners.ts`, and the compiler's check of its signs,
+ * `describe/fill/locations.ts`.
  */
 
 import type { GridSpace } from "../solve/describe-runtime.ts";

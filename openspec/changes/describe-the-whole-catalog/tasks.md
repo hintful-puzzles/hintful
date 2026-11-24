@@ -19,7 +19,7 @@ what is left, and whether the migration is good to proceed.
 - [x] 0.1 `the-commit-catches-what-ci-would`
 - [x] 0.2 `session-tools-for-the-flip` (for the debrief: its archived
       tasks.md 4.1; and 0.1's 2.3, whether the push runs its fitted plan)
-- [ ] 0.3 `fill-engine-by-concern`
+- [x] 0.3 `fill-engine-by-concern`
 - [ ] 0.4 `one-way-to-say-a-setting`
 - [ ] 0.5 `the-compiler-reads-meaning`
 - [ ] 0.6 `the-description-documented-once`

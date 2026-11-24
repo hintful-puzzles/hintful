@@ -6,6 +6,9 @@
  * The slots are numbered as the space numbers them
  * (`describe-runtime/space.ts`): above each column, below each, left of
  * each row, right of each.
+ *
+ * A slot's other parts: the site that draws its clues, `render/sites/slots.ts`,
+ * and the compiler's export of the kinds at slots, `describe/fill/locations.ts`.
  */
 
 import type { Point } from "../contract/types.ts";

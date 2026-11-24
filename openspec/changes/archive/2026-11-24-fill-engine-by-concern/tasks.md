@@ -1,7 +1,7 @@
 ## Next
 
-2.5, by design.md § 6: whether each location's parts are found from its
-engine file by a reference. Then 3.1. Open: none. Goes before
+3.2: the hint sweeps, and the app on three born games. Open: none. Goes
+before
 `a-fill-board-of-any-slot` (`describe-the-whole-catalog` § "0. The
 refactor first").
 
@@ -25,13 +25,17 @@ game's cases, render snapshots, ID cases and fingerprints pass unchanged.
 - [x] 2.4 The compiler's per-concept parts (`compile-fill.ts`): 2,845 →
       under 320 lines, `fill/`'s modules each under 460; the letters'
       registry, and the segment kinds read by key.
-- [ ] 2.5 Clue locations: each one module across all four, if task 1.1
-      finds that is the cleaner cut than per-registry.
+- [x] 2.5 Clue locations: each one module across all four, if task 1.1
+      finds that is the cleaner cut than per-registry. Per registry:
+      `slots.ts`, `corners.ts` and `gaps.ts` name their site and the
+      compiler's `fill/locations.ts`; a location has no segment of its own.
 
 ## 3. Close
 
-- [ ] 3.1 The guides point at the registries; no file of the fill engine is
-      over the size task 1.1 sets as its bound, and a check holds it.
-- [ ] 3.2 `npm run test:hint-sweeps`, the app run on three born games.
-- [ ] 3.3 Archive, and take the next change from
+- [x] 3.1 The guides point at the registries; no file of the fill engine is
+      over the size task 1.1 sets as its bound, and a check holds it
+      (`scripts/checks/fill-lines.mjs`, seen failing at a bound of 600).
+- [x] 3.2 `npm run test:hint-sweeps`, the app run on three born games
+      (665 passed; Mathrax, Solo and Adjacent play to solved in Chrome).
+- [x] 3.3 Archive, and take the next change from
       `describe-the-whole-catalog` § "0. The refactor first".

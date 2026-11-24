@@ -452,6 +452,13 @@ step node scripts/checks/unused-exports.mjs
 # in vitest because it is a line count, under a tenth of a second.
 step node scripts/checks/game-lines.mjs
 
+# --- 1b-v-b. No file of the fill engine is over 800 lines. ~0s. ---
+#
+# A concept of the fill board is one module that registers with the code that
+# runs it (`fill-engine-by-concern`); a runner that gathers concepts again
+# grows past the bound. A line count, so here rather than in vitest.
+step node scripts/checks/fill-lines.mjs
+
 # --- 1b-vi. Absence has one spelling. ~7s. ---
 #
 # `undefined` written into a union, and a strict comparison testing for an
