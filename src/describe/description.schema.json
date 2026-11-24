@@ -1049,7 +1049,7 @@
             },
             "default": {
               "type": "string",
-              "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$",
+              "pattern": "^[1-9][0-9]*(x[1-9][0-9]*|[a-z](?![0-9]))([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$",
               "description": "The default board, one of `boards`, where it is not the first."
             },
             "defaultTier": {
@@ -1060,13 +1060,47 @@
               "type": "object",
               "description": "The first and last tier a board of `boards` is offered at, by its `WxH`, where it is not every tier.",
               "propertyNames": {
-                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
+                "pattern": "^[1-9][0-9]*(x[1-9][0-9]*|[a-z](?![0-9]))([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
               },
               "additionalProperties": {
                 "type": "array",
                 "minItems": 2,
                 "maxItems": 2,
                 "items": { "type": "string" }
+              }
+            },
+            "blocks": {
+              "type": "object",
+              "description": "A board sized by its blocks (Solo's): the partition among the units is `blocks(a, b)` of two sizes, the grid `a * b` on a side, and a variation that replaces the partition with a dealt one is on exactly where `a` is 1. The params give `b` and `a` as the Custom fields `columns` and `rows`, written `{b}x{a}`, or `{b}` then `letter` where the blocks are dealt, a bare number read as both (upstream solo.c's `3x3`, `9j`, `3`). `rulesets` gives the rule of the puzzle with blocks and of the variation, by name, the game mode in the Custom dialog and the help's `{{rulesets}}`. A preset board is written as the ID writes it (`2x3`, `9j`).",
+              "required": ["letter", "columns", "rows", "rulesets"],
+              "additionalProperties": false,
+              "properties": {
+                "letter": { "type": "string", "pattern": "^[a-z]$" },
+                "columns": {
+                  "type": "object",
+                  "required": ["kw", "name", "doc"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kw": { "type": "string" },
+                    "name": { "type": "string" },
+                    "doc": { "type": "string" }
+                  }
+                },
+                "rows": {
+                  "type": "object",
+                  "required": ["kw", "name"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kw": { "type": "string" },
+                    "name": { "type": "string" }
+                  }
+                },
+                "rulesets": {
+                  "type": "object",
+                  "minProperties": 2,
+                  "maxProperties": 2,
+                  "additionalProperties": { "type": "string" }
+                }
               }
             },
             "sizes": {
@@ -1141,7 +1175,7 @@
                 "properties": {
                   "board": {
                     "type": "string",
-                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
+                    "pattern": "^[1-9][0-9]*(x[1-9][0-9]*|[a-z](?![0-9]))([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
                   },
                   "with": { "type": "array", "items": { "type": "string" } },
                   "tier": { "type": "string" }
@@ -1208,11 +1242,11 @@
             },
             "boards": {
               "type": "array",
-              "description": "The sizes the preset menu offers, `WxH`, each followed by the sizes beyond the grid's it gives by their letters (`8x8s2`, two stars; a size it does not name is at its `min`), smallest first, each at every tier unless `boardTiers` says otherwise; the first at the easiest tier is the default board unless `default` names another. A game born from its description (`catalog:`) states them.",
+              "description": "The sizes the preset menu offers, `WxH` (or as `blocks` writes them), each followed by the sizes beyond the grid's it gives by their letters (`8x8s2`, two stars; a size it does not name is at its `min`), smallest first, each at every tier unless `boardTiers` says otherwise; the first at the easiest tier is the default board unless `default` names another. A game born from its description (`catalog:`) states them.",
               "minItems": 1,
               "items": {
                 "type": "string",
-                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
+                "pattern": "^[1-9][0-9]*(x[1-9][0-9]*|[a-z](?![0-9]))([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
               }
             },
             "hintMarks": {
@@ -1392,10 +1426,11 @@
                 "type": "object",
                 "required": ["blocks"],
                 "additionalProperties": false,
-                "description": "A dealt partition as upstream's block structure (`engine/game-id/block-structure.ts`, upstream Keen's and Solo's): the borders between two cells side by side, those inside the rows in reading order and then those between them column by column, as runs of borders inside a part, each a letter `a`-`y` for 1 to 25 before a border between parts, `_` for none and `z` for 25 with none after, and a letter repeated three times or more written once and then the count. With `before`, it follows that mark.",
+                "description": "A dealt partition as upstream's block structure (`engine/game-id/block-structure.ts`, upstream Keen's and Solo's): the borders between two cells side by side, those inside the rows in reading order and then those between them column by column, as runs of borders inside a part, each a letter `a`-`y` for 1 to 25 before a border between parts, `_` for none and `z` for 25 with none after, and a letter repeated three times or more written once and then the count. With `before`, it follows that mark, and with `after`, that mark follows it. A partition a variation deals in place of blocks (Solo's Jigsaw) is written, with its marks, only on a board that deals it.",
                 "properties": {
                   "blocks": { "type": "string" },
-                  "before": { "type": "string", "minLength": 1, "maxLength": 1 }
+                  "before": { "type": "string", "minLength": 1, "maxLength": 1 },
+                  "after": { "type": "string", "minLength": 1, "maxLength": 1 }
                 }
               },
               {

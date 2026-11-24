@@ -41,7 +41,7 @@ import {
   size,
   unusedLetter,
 } from "../game-id/params-codec.ts";
-import { RULESET_KW, rulesetItem } from "../game-id/ruleset.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../game-id/ruleset.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
 import { encodeWallRuns, readRegionWalls } from "../game-id/wall-runs.ts";
 import { regionNumbers } from "../generate/divide.ts";
@@ -122,8 +122,10 @@ export type IdSegment =
    * written from both its ends (upstream's Adjacent), every other edge's 0. */
   | { readonly records: string; readonly sides: string; readonly both?: true }
   /** A dealt partition as upstream's block structure
-   * (`engine/game-id/block-structure.ts`), after `before` where given. */
-  | { readonly blocks: string; readonly before?: string }
+   * (`engine/game-id/block-structure.ts`), after `before` and before
+   * `after` where given; with them, nothing on a board that does not deal
+   * it (`FillDivide.variation`). */
+  | { readonly blocks: string; readonly before?: string; readonly after?: string }
   /** A clue a part of partition `parts`, in the order of the parts' first
    * cells: its kind's letter (`letters`, by letter), then its number. */
   | {
@@ -317,6 +319,8 @@ export interface FillDeal {
   /** Kinds the player switches on and off, each by its letter after the
    * tier, in this order; every one on where none is written. */
   readonly kindLetters?: readonly FillKindLetter[];
+  /** Where the board is sized by its blocks (`play.blocks`). */
+  readonly blocks?: FillBlocks;
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, ClueUniverse>>;
@@ -377,15 +381,26 @@ export interface FillHideFlag {
  * cells; a part at a time grown to a size drawn from one of `sizes`, the
  * first, or with `by` the one at the setting's value less its least; or the
  * board tiled by parts of `equal` cells, a number, a size the params give, or
- * `w`, the board's width. */
-export type FillDivide =
+ * `w`, the board's width. One with a `variation` is divided only on a board
+ * it is on (the blocks Solo's Jigsaw deals). */
+export type FillDivide = (
   | { readonly partition: string; readonly pairs: number; readonly most: number }
   | {
       readonly partition: string;
       readonly sizes: readonly (readonly number[])[];
       readonly by?: { readonly size: string; readonly min: number };
     }
-  | { readonly partition: string; readonly equal: number | string };
+  | { readonly partition: string; readonly equal: number | string }
+) & { readonly variation?: string };
+
+/** The divides of `deal` a board with `variations` on is dealt. */
+export const dividesOn = (
+  deal: FillDeal,
+  variations: readonly string[],
+): readonly FillDivide[] =>
+  (deal.divide ?? []).filter(
+    (d) => d.variation === undefined || variations.includes(d.variation),
+  );
 
 /** A setting the player may turn on, under which the deal deals `kinds`
  * alone of `deal.oneKind`'s (`deal.onlyFlag`), written after the tier by its
@@ -409,6 +424,137 @@ export interface FillKindLetter {
   readonly doc: string;
   /** What a board's name calls the kind, where it says which are on. */
   readonly word: string;
+}
+
+/**
+ * A board sized by its blocks (`play.blocks`): the params give how many
+ * blocks it has across, `across`, each that many squares tall, and down,
+ * `down`, each that many wide, the grid `across * down` on a side; a board of
+ * blocks one square wide deals its blocks instead, the variation `dealtBy`
+ * (Solo's Jigsaw, `across` then the order). Written `{across}x{down}`, or
+ * `{across}` and `letter` where the blocks are dealt, and a bare number read
+ * as that many both ways, as upstream solo.c reads it.
+ */
+export interface FillBlocks {
+  readonly across: string;
+  readonly down: string;
+  readonly letter: string;
+  readonly dealtBy: string;
+  readonly columns: {
+    readonly kw: string;
+    readonly name: string;
+    readonly doc: string;
+  };
+  readonly rows: { readonly kw: string; readonly name: string };
+  /** The puzzle with blocks cut, then the one with them dealt. */
+  readonly rulesets: readonly [Ruleset, Ruleset];
+  readonly bounds: Readonly<
+    Record<"across" | "down", { readonly min: number; readonly max: number }>
+  >;
+}
+
+/** The blocks across and down board `p` has. */
+const blocksOn = (b: FillBlocks, p: FillParams): [number, number] => {
+  const s = sizesOf(p);
+  return [s[b.across] ?? b.bounds.across.min, s[b.down] ?? b.bounds.down.min];
+};
+
+/** Sets `p` to `across` blocks by `down`: the sizes, the grid, and the
+ * variation that deals the blocks, on where they are one square wide. */
+export function setBlocks(
+  b: FillBlocks,
+  p: FillParams,
+  across: number,
+  down: number,
+): void {
+  p.sizes = { ...p.sizes, [b.across]: across, [b.down]: down };
+  p.w = p.h = across * down;
+  const rest = variationsOf(p).filter((v) => v !== b.dealtBy);
+  const now = down === 1 ? [b.dealtBy, ...rest] : rest;
+  if (now.length > 0) p.variations = now;
+  else delete p.variations;
+}
+
+/** The squarest blocks of an `order` grid, `[across, down]` with `across ≤
+ * down`, or dealt blocks where the order is prime. */
+function squarest(order: number): [number, number] {
+  for (let a = Math.floor(Math.sqrt(order)); a >= 2; a--)
+    if (order % a === 0) return [a, order / a];
+  return [order, 1];
+}
+
+/** The Custom dialog's fields of a board sized by its blocks: across, down,
+ * and the ruleset, last, since choosing it folds the two (the midend sets
+ * fields in order). */
+function blocksItems(b: FillBlocks): ParamConfigItem<FillParams>[] {
+  return [
+    {
+      kw: b.columns.kw,
+      name: b.columns.name,
+      type: "string",
+      doc: b.columns.doc,
+      bounds: b.bounds.across,
+      label: {
+        slot: "size",
+        // Dealt blocks have no width and height, so it says its grid's.
+        words: (p) => {
+          const [a, d] = blocksOn(b, p);
+          return d === 1 ? `${a}x${a}` : `${a}x${d}`;
+        },
+      },
+      get: (p) => String(blocksOn(b, p)[0]),
+      set: (p, v) => setBlocks(b, p, parseConfigInt(v), blocksOn(b, p)[1]),
+    },
+    {
+      kw: b.rows.kw,
+      name: b.rows.name,
+      type: "string",
+      doc: { with: b.columns.kw },
+      bounds: b.bounds.down,
+      get: (p) => String(blocksOn(b, p)[1]),
+      set: (p, v) => setBlocks(b, p, blocksOn(b, p)[0], parseConfigInt(v)),
+    },
+    rulesetItem<FillParams>(b.rulesets, {
+      get: (p) => (blocksOn(b, p)[1] === 1 ? 1 : 0),
+      set: (p, i) => {
+        const [a, d] = blocksOn(b, p);
+        if (i === 1 && d !== 1) setBlocks(b, p, a * d, 1);
+        else if (i === 0 && d === 1) setBlocks(b, p, ...squarest(a));
+      },
+    }),
+  ];
+}
+
+/** A board's blocks in the params: `{across}x{down}`, or `{across}` and the
+ * letter where they are dealt. Read as upstream solo.c reads them: a bare
+ * number is that many both ways, and the letter after `{a}x{d}` makes a
+ * board of dealt blocks of the order `a * d`. */
+function blocksSegment(b: FillBlocks): ParamsSegment<FillParams> {
+  return {
+    encode: (p) => {
+      const [a, d] = blocksOn(b, p);
+      return d === 1 ? `${a}${b.letter}` : `${a}x${d}`;
+    },
+    decode: (s, i, p) => {
+      const first = parseLeadingInt(s, i);
+      let [a, d] = [first.value, first.value];
+      let at = first.next;
+      let seenDown = false;
+      if (s[at] === "x" && isDigit(s[at + 1] ?? "")) {
+        const down = parseLeadingInt(s, at + 1);
+        d = down.value;
+        at = down.next;
+        seenDown = true;
+      }
+      if (s[at] === b.letter) {
+        at++;
+        if (seenDown) a *= d;
+        d = 1;
+      }
+      setBlocks(b, p, a, d);
+      return at;
+    },
+  };
 }
 
 /** A variation the player may switch on (`play.modifiers`). */
@@ -817,26 +963,32 @@ export function fillParams(
     leasts.length === 0
       ? ""
       : ` It must be at least ${leasts.slice(0, -1).join(", ")}${leasts.length > 1 ? " and " : ""}${leasts.at(-1)}.`;
+  const { blocks } = deal;
   const paramConfig: ParamConfigItem<FillParams>[] = [
-    ...(deal.square === true
-      ? [
-          {
-            kw: "grid-size",
-            name: "Grid size",
-            type: "string" as const,
-            doc: `Width and height of the grid, which is square.${leastWords}`,
-            ...sizeBounds,
-            label: { slot: "size" as const, words: (p: FillParams) => `${p.w}x${p.w}` },
-            get: (p: FillParams) => String(p.w),
-            set: (p: FillParams, v: string) => {
-              p.w = p.h = parseConfigInt(v);
+    ...(blocks !== undefined
+      ? blocksItems(blocks)
+      : deal.square === true
+        ? [
+            {
+              kw: "grid-size",
+              name: "Grid size",
+              type: "string" as const,
+              doc: `Width and height of the grid, which is square.${leastWords}`,
+              ...sizeBounds,
+              label: {
+                slot: "size" as const,
+                words: (p: FillParams) => `${p.w}x${p.w}`,
+              },
+              get: (p: FillParams) => String(p.w),
+              set: (p: FillParams, v: string) => {
+                p.w = p.h = parseConfigInt(v);
+              },
             },
-          },
-        ]
-      : dimensionParamConfig<FillParams>({
-          doc: `Size of the grid in squares.${step === 2 ? " Both must be even." : ""}${leastWords}`,
-          ...sizeBounds,
-        })),
+          ]
+        : dimensionParamConfig<FillParams>({
+            doc: `Size of the grid in squares.${step === 2 ? " Both must be even." : ""}${leastWords}`,
+            ...sizeBounds,
+          })),
     ...settings.map((s) =>
       rulesetItem<FillParams>(s.rulesets, {
         get: (p) => rulesetOf(s, p),
@@ -862,12 +1014,15 @@ export function fillParams(
         rule: m.rule,
         ...(m.note === undefined ? {} : { note: m.note }),
         get: (p) => variationsOf(p).includes(variation),
-        // In the modifiers' order, whichever is set first, and absent where
-        // none is on.
+        // In the modifiers' order, whichever is set first, after any the
+        // sizes put on (dealt blocks), and absent where none is on.
         set: (p, on) => {
-          const now = named
-            .map(([n]) => n)
-            .filter((n) => (n === variation ? on : variationsOf(p).includes(n)));
+          const now = [
+            ...variationsOf(p).filter((n) => modifiers[n] === undefined),
+            ...named
+              .map(([n]) => n)
+              .filter((n) => (n === variation ? on : variationsOf(p).includes(n))),
+          ];
           if (now.length > 0) p.variations = now;
           else delete p.variations;
         },
@@ -901,7 +1056,11 @@ export function fillParams(
   return {
     paramConfig,
     ...paramsCodec(defaults, [
-      deal.square === true ? size(paramConfig, "grid-size") : dims(paramConfig),
+      blocks !== undefined
+        ? blocksSegment(blocks)
+        : deal.square === true
+          ? size(paramConfig, "grid-size")
+          : dims(paramConfig),
       ...unused("size"),
       // A size the params give, written as the number itself after its
       // letter, or as its ruleset's bare letter (the ruleset field's).
@@ -982,6 +1141,14 @@ export function fillParams(
           return deal.square === true
             ? `${ruleset.name}: the grid size must be at least ${ruleset.least}.`
             : `${ruleset.name}: width and height must both be at least ${ruleset.least}.`;
+      }
+      if (blocks !== undefined) {
+        const [a, d] = blocksOn(blocks, p);
+        const { across, down } = blocks.bounds;
+        if (a < across.min || a > across.max)
+          return `${blocks.columns.name} must be between ${across.min} and ${across.max}.`;
+        if (d < down.min || d > down.max)
+          return `${blocks.rows.name} must be between ${down.min} and ${down.max}.`;
       }
       const outside = beyond(bounds.all, p);
       if (outside !== null) return `${outside}.`;
@@ -1279,9 +1446,12 @@ export function encodeDesc<C extends Clues<C>>(
       continue;
     }
     if ("blocks" in seg) {
-      const { of } = dealt[seg.blocks as keyof C] as Partition;
+      const partition = dealt[seg.blocks as keyof C] as Partition | undefined;
+      if (partition === undefined) continue;
+      const { of } = partition;
       out += seg.before ?? "";
       out += encodeBlockStructure(sp.w, sp.h, (a, b) => of[a] === of[b]);
+      out += seg.after ?? "";
       continue;
     }
     if ("parts" in seg) {
@@ -1803,6 +1973,9 @@ export function decodeDesc<C extends Clues<C>>(
   /** What the grown partition's parts hold on this board, where the deal
    * grows one. */
   grown: GrowSizes | null = null,
+  /** The variations the board has on, which say whether it deals a
+   * partition a variation deals. */
+  variations: readonly string[] = [],
 ): DescParse<C> {
   return readDesc(desc, (r) => {
     const out: Partial<Record<keyof C, ClueList | ListClues | Partition>> = {};
@@ -1833,6 +2006,9 @@ export function decodeDesc<C extends Clues<C>>(
         continue;
       }
       if ("blocks" in seg) {
+        const divide = deal.divide?.find((d) => d.partition === seg.blocks);
+        if (divide !== undefined && !dividesOn(deal, variations).includes(divide))
+          continue;
         if (seg.before !== undefined) r.expect(seg.before);
         const n = sp.cells.length;
         const joined = new Dsf(n);
@@ -1840,6 +2016,7 @@ export function decodeDesc<C extends Clues<C>>(
         const parts = partitionOf(regionNumbers(joined, n));
         if (!equalParts(deal, seg.blocks, sp, parts)) r.fail(DESC_MALFORMED);
         out[seg.blocks as keyof C] = parts;
+        if (seg.after !== undefined) r.expect(seg.after);
         continue;
       }
       if ("parts" in seg) {

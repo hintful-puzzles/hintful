@@ -64,6 +64,8 @@ export interface FillModule<C> {
   readonly boxes?: {
     readonly name: string;
     readonly blocks?: readonly [number | string, number | string];
+    /** The variation under which a board with blocks deals them instead. */
+    readonly dealtBy?: string;
   };
   readonly tiers: readonly string[];
   /** How the board is played: where `dealt` names a clue kind at a cell,
@@ -226,7 +228,11 @@ export function spaceOf<C>(module: FillModule<C>, b: SpaceOf): GridSpace {
   const dealt = sizes[boxes.name] as Partition | undefined;
   if (dealt !== undefined) return describedSpace(units, b.w, b.h, dealt.cells);
   // Before the deal divides it, a board has no boxes yet.
-  if (boxes.blocks === undefined) return describedSpace(units, b.w, b.h);
+  if (
+    boxes.blocks === undefined ||
+    (boxes.dealtBy !== undefined && b.variations.includes(boxes.dealtBy))
+  )
+    return describedSpace(units, b.w, b.h);
   const [bw, bh] = boxes.blocks.map((a) => {
     const v = typeof a === "number" ? a : sizes[a];
     if (typeof v !== "number") throw new Error(`boxes: no size ${a} on the board`);

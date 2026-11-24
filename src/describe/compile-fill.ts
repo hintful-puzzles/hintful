@@ -576,11 +576,35 @@ const sizeOf =
     options?: Record<string, number>;
     tally?: number;
   } => {
-    const m = /^(\d+)x(\d+)((?:[a-z]\d+|[A-Za-z](?!\d))*)$/.exec(b);
+    const blocks = json.play?.blocks;
+    // A board sized by its blocks is written as its ID writes it: `{b}x{a}`
+    // of `blocks(a, b)`, or `{b}` and the letter where they are dealt.
+    const cut =
+      blocks === undefined
+        ? null
+        : blocksOf(
+            json,
+            Object.keys(json.space.regions ?? {}).find((r) =>
+              json.space.units.includes(r),
+            ) ?? null,
+          );
+    const dealtAt =
+      blocks === undefined ? null : new RegExp(`^(\\d+)${blocks.letter}`).exec(b);
+    const written =
+      dealtAt === null ? b : `${dealtAt[1]}x1${b.slice(dealtAt[0].length)}`;
+    const m = /^(\d+)x(\d+)((?:[a-z]\d+|[A-Za-z](?!\d))*)$/.exec(written);
     if (m === null) throw new CompileError(`play boards: ${b} is not WxH`);
     const sizes: Record<string, number> = Object.fromEntries(
       Object.keys(json.play?.sizes ?? {}).map((n) => [n, json.sizes[n]?.min ?? 0]),
     );
+    if (cut !== null) {
+      const [down, across] = cut;
+      const side = Number(m[1]) * Number(m[2]);
+      sizes[String(across)] = Number(m[1]);
+      sizes[String(down)] = Number(m[2]);
+      m[1] = String(side);
+      m[2] = String(side);
+    }
     const options: Record<string, number> = {};
     let tally: number | null = null;
     for (const [, letter, n] of m[3].matchAll(/([A-Za-z])(\d*)/g)) {
@@ -1189,8 +1213,18 @@ export function dealOf(
         `${r}: a fill game's dealt partition is one the deal grows or divides`,
       );
   const settings = settingsOf(json, env);
+  // The partition among the units a variation deals is divided only where
+  // it is on.
+  const boxesBy = boxesDealtBy(json, env);
   const divided =
-    divides.length === 0 ? null : divides.map((x) => divideDeal(x, settings, json));
+    divides.length === 0
+      ? null
+      : divides.map((x) => ({
+          ...divideDeal(x, settings, json),
+          ...(boxesBy !== null && x.partition === env.boxes
+            ? { variation: boxesBy }
+            : {}),
+        }));
   // The kinds dealt one a part sit at the parts of one partition divided.
   const oneKind = oneKindDeal(
     json,
@@ -1299,6 +1333,10 @@ export function dealOf(
       throw new CompileError(`unusedLetters: the letter ${letter} is taken`);
   const tierAliases = tierAliasesOf(json, tiers, tierLetters);
   const { grid } = json.space;
+  const blocksDeal = fillBlocksOf(json, env);
+  // The blocks' letter follows the size, before any modifier's.
+  if (blocksDeal !== null && taken.includes(blocksDeal.letter))
+    throw new CompileError(`play blocks: the letter ${blocksDeal.letter} is taken`);
   const deal = {
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(hexagon === null ? {} : { hexagon }),
@@ -1324,6 +1362,7 @@ export function dealOf(
     ...present("onlyFlag", oneKind?.only ?? null),
     ...present("firstKind", firstKind),
     ...present("kindLetters", kindLetters),
+    ...present("blocks", blocksDeal),
     ...(grow === null
       ? {}
       : {
@@ -1614,8 +1653,11 @@ function suitsOf(
  */
 function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
   const given = json.play?.sizes ?? {};
+  // A board sized by its blocks gives their sizes as its own.
+  const blocks: readonly (number | string)[] =
+    json.play?.blocks === undefined ? [] : (blocksOf(json, env.boxes) ?? []);
   for (const n of env.sizes.names)
-    if (given[n] === undefined)
+    if (given[n] === undefined && !blocks.includes(n))
       throw new CompileError(`play sizes: ${n} is a size the params must give`);
   const taken = new Set([
     "d",
@@ -1883,6 +1925,120 @@ function optionsJsonOf(
       return [name, { ...o, min, max, ...(choices === undefined ? {} : { choices }) }];
     }),
   );
+}
+
+/**
+ * The width and height of the blocks the partition among the units is cut
+ * into, where a formula and not a deal gives it: `blocks(a, b)`, each a
+ * number or a size the params give. `null` where the partition is dealt or
+ * there is none. A partition stated by any other formula, or one that is no
+ * unit, is refused: nothing builds it.
+ */
+export function blocksOf(
+  json: DescriptionJson,
+  boxes: string | null,
+): [number | string, number | string] | null {
+  let out: [number | string, number | string] | null = null;
+  for (const [name, how] of Object.entries(json.space.regions ?? {})) {
+    if (how === "dealt") continue;
+    if (name !== boxes)
+      throw new CompileError(`${name}: a partition by formula is one among the units`);
+    const e = parse(how);
+    const args =
+      e.k === "call" && e.fn === "blocks" && e.args.length === 2
+        ? e.args.map((a) =>
+            a.k === "num"
+              ? a.v
+              : a.k === "name" && a.name in json.sizes
+                ? a.name
+                : null,
+          )
+        : [];
+    const [bw, bh] = args;
+    if (args.length !== 2 || bw === null || bh === null)
+      throw new CompileError(
+        `${name}: a partition by formula is blocks(a, b), each a number or a size`,
+      );
+    out = [bw, bh];
+  }
+  return out;
+}
+
+/**
+ * `play.blocks` as the deal reads it (`FillBlocks`), or `null` where the
+ * description has none: the blocks must be `blocks(a, b)` of two sizes, the
+ * grid `a * b` on a side, and a variation must deal them, which is on where
+ * `a`, the blocks' width, is 1; `rulesets` names that variation and one
+ * other puzzle.
+ */
+function fillBlocksOf(json: DescriptionJson, env: Env): FillBlocksJson | null {
+  const given = json.play?.blocks;
+  if (given === undefined) return null;
+  const cut = blocksOf(json, env.boxes);
+  const dealtBy = boxesDealtBy(json, env);
+  const [down, across] = cut ?? [];
+  if (typeof down !== "string" || typeof across !== "string" || dealtBy === null)
+    throw new CompileError(
+      "play blocks: the blocks are blocks(a, b) of two sizes, and a variation deals them",
+    );
+  const side = (f?: string) => (f ?? "").replace(/\s+/g, "");
+  const grid = json.space.grid;
+  if (
+    side(grid?.w) !== side(grid?.h) ||
+    ![`${across}*${down}`, `${down}*${across}`].includes(side(grid?.w))
+  )
+    throw new CompileError(`play blocks: the grid is ${across} * ${down} on a side`);
+  const [a, d] = [json.sizes[across], json.sizes[down]];
+  if (a?.max === undefined || d?.max === undefined || d.min !== 1)
+    throw new CompileError(
+      `play blocks: ${across} and ${down} have a max, and ${down} goes down to 1`,
+    );
+  const names = Object.keys(given.rulesets);
+  const cutName = names.find((n) => n !== dealtBy);
+  if (cutName === undefined || !names.includes(dealtBy))
+    throw new CompileError(`play blocks: rulesets name ${dealtBy} and one other`);
+  return {
+    across,
+    down,
+    letter: given.letter,
+    dealtBy,
+    columns: given.columns,
+    rows: given.rows,
+    rulesets: [
+      { name: cutName, rule: given.rulesets[cutName] ?? "" },
+      { name: dealtBy, rule: given.rulesets[dealtBy] ?? "" },
+    ],
+    bounds: {
+      across: { min: a.min, max: a.max },
+      down: { min: d.min, max: d.max },
+    },
+  };
+}
+
+/** A board sized by its blocks as the deal holds it (`FillBlocks`). */
+type FillBlocksJson = {
+  across: string;
+  down: string;
+  letter: string;
+  dealtBy: string;
+  columns: { kw: string; name: string; doc: string };
+  rows: { kw: string; name: string };
+  rulesets: [{ name: string; rule: string }, { name: string; rule: string }];
+  bounds: Record<"across" | "down", { min: number; max: number }>;
+};
+
+/** The variation under which the partition among the units, cut by blocks
+ * on every other board, is dealt (Solo's Jigsaw), or `null` where none
+ * deals it. */
+export function boxesDealtBy(json: DescriptionJson, env: Env): string | null {
+  const { boxes } = env;
+  if (boxes === null || json.space.regions?.[boxes] === "dealt") return null;
+  const by = Object.entries(json.variations ?? {}).filter(
+    ([, v]) => v.replace?.space?.regions?.[boxes] === "dealt",
+  );
+  if (by.length > 1)
+    throw new CompileError(`${boxes}: dealt by ${by.map(([n]) => n).join(" and ")}`);
+  return by[0]?.[0] ?? null;
 }
 
 /** `deal.symmetric` as the deal reads it: a symmetry by its name, or the

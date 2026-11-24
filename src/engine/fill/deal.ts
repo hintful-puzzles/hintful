@@ -40,6 +40,7 @@ import {
 import { dividePartition } from "./divide.ts";
 import { firstKindEach } from "./first-kind.ts";
 import {
+  dividesOn,
   elementCount,
   encodeDesc,
   type FillDeal,
@@ -219,7 +220,7 @@ export function dealFill<C extends Clues<C>>(
    * divides any; `null` where this draw left a cell alone. */
   const divided = (): Grown | null => {
     const out: Record<string, Partition> = {};
-    for (const divide of deal.divide ?? []) {
+    for (const divide of dividesOn(deal, variations)) {
       const parts = dividePartition(divide, sp, sizes, rs);
       if (parts === null) return drawRejected("fill: the division left a cell alone");
       out[divide.partition] = partitionOf(parts);

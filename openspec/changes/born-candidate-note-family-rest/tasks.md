@@ -70,7 +70,7 @@ the predecessor's were, in a commit before the flip.
         region fills as Keen's cages are; cage outlines dashed in ink
         rather than upstream's khaki solid lines; the X diagonals in the
         grid's color.
-  - [ ] 2.1d The symmetry option of seven, written as upstream's suffixes;
+  - [x] 2.1d The symmetry option of seven, written as upstream's suffixes;
         the `{c}x{r}` and `{n}j` sizes. Read 2026-11-23 for this: Solo's
         symmetry is eight choices (`SYMM_*` in `games/solo/state.ts`, the
         default 2-way rotation unwritten, the rest `a`, `r4`, `m2`, `md2`,
@@ -93,7 +93,19 @@ the predecessor's were, in a commit before the flip.
         the default's never; options are written after the modifiers'
         letters (no game had both); and the search sample runs where no
         partition is divided, on the board's units alone (Solo's Standard
-        and X boards). Left: the sizes.
+        and X boards). Built, the sizes, on the `blocking` fixture:
+        `play.blocks` sizes a board by the two sizes of its `blocks(a, b)`,
+        the ID's `{b}x{a}`, `{b}j`, a bare `n`, and the Custom dialog's
+        columns, rows and game mode (folding to the squarest, as Solo's
+        does); the variation that replaces the blocks with a dealt
+        partition is found by the compiler (`boxes.dealtBy`), is on exactly
+        where `a` is 1, and alone divides, cuts and writes that partition
+        (`FillDivide.variation`, the blocks segment's `after`); the blocks'
+        sizes are in `Dealt`, which the space reads; a preset variant now
+        keeps its board's sizes. For the flip: Solo's sizes need other
+        names, since `given:` reads `c` in the domain as its cell (the
+        loader now refuses a size named `c`); the fill codec writes the
+        default tier's `dt`, which upstream omits and reads either way.
   - [ ] 2.1e The flip: its words as `says`, its tests to `cases.yaml`.
 - [ ] 2.2 ABCD born: the number size, letters, the walk with no region, a
       clue per value derived, written and drawn in a margin, corner

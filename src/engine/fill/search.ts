@@ -69,8 +69,9 @@ function groupsOf<C>(
     for (const c of (board.dealt[kind as keyof C] as ClueList).at)
       out.push(cellsOf(sp, c));
   }
+  // A partition a variation deals is absent from a board it is off on.
   for (const kind of module.deal?.partitions ?? [])
-    out.push(...(board.dealt[kind as keyof C] as Partition).cells);
+    out.push(...((board.dealt[kind as keyof C] as Partition | undefined)?.cells ?? []));
   return out;
 }
 

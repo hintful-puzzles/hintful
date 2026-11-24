@@ -220,6 +220,16 @@ export interface PlayJson {
   /** Each size beyond the grid's that the params give, by name: its letter
    * in the params, and its rulesets, one a value from the size's `min`. */
   sizes?: Record<string, SizeSettingJson>;
+  /** A board sized by its blocks, the two sizes of `blocks(a, b)`: the
+   * letter its game ID writes where they are dealt, the Custom fields of
+   * the blocks across and down, and the rule of each puzzle, the one with
+   * blocks and the variation that deals them, by name. */
+  blocks?: {
+    letter: string;
+    columns: { kw: string; name: string; doc: string };
+    rows: { kw: string; name: string };
+    rulesets: Record<string, string>;
+  };
   /** The numbers on cells drawn plain: no block, never faint, not counted. */
   plain?: string[];
   /** Each variation the player may switch on, by its name. */
@@ -312,7 +322,7 @@ export type IdSegmentJson =
     }
   | { glyphs: string; values: Record<string, number> }
   | { records: string; sides: string }
-  | { blocks: string; before?: string }
+  | { blocks: string; before?: string; after?: string }
   | { parts: string; before?: string; letters: Record<string, string> }
   | { codes: Record<string, string>; before?: string };
 

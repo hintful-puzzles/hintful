@@ -56,6 +56,7 @@ import {
   type FillParams,
   fillParams,
   partKindsOf,
+  setBlocks,
   sizesOf,
   tallyClue,
   tallyDefault,
@@ -111,7 +112,7 @@ export interface BornModule<C>
       readonly first: number;
       readonly last: number;
     })[];
-    readonly variants: readonly (Size & {
+    readonly variants: readonly (Board & {
       readonly variations: readonly string[];
       /** The deal's settings the board turns on (`FillDeal.onlyFlag`,
        * `FillDeal.hideFlag`). */
@@ -163,37 +164,54 @@ export function fillGame<C extends Clues<C> & object>(
   const byDefault = module.menu?.default ?? boards[0];
   // A board gives each size beyond the grid's, its least where it names none,
   // and each option, its default where it names none.
-  const sized = ({ w, h, sizes, options, tally }: Board, diff = 0): FillParams =>
-    withThorough(deal, {
-      w,
-      h,
-      diff,
-      ...(deal.tally === undefined
-        ? {}
-        : { tally: tallyDefault(tally ?? deal.tally.size.default) }),
-      ...(deal.hideFlag === undefined ? {} : { hides: false }),
-      ...(deal.onlyFlag === undefined ? {} : { only: false }),
-      ...(deal.kindLetters === undefined
-        ? {}
-        : { kinds: deal.kindLetters.map((l) => l.kind) }),
-      ...(deal.settings === undefined
-        ? {}
-        : {
-            sizes: Object.fromEntries(
-              deal.settings.map((s) => [s.size, sizes?.[s.size] ?? s.min]),
-            ),
-          }),
-      ...(deal.options === undefined
-        ? {}
-        : {
-            options: Object.fromEntries(
-              Object.entries(deal.options).map(([n, o]) => [
-                n,
-                options?.[n] ?? o.default,
-              ]),
-            ),
-          }),
-    });
+  /** `p` with a board's blocks, where the board is sized by them: dealt
+   * where they are one square wide. */
+  const blocked = (p: FillParams, sizes: Board["sizes"]): FillParams => {
+    const b = deal.blocks;
+    if (b === undefined) return p;
+    const out = { ...p };
+    setBlocks(b, out, sizes?.[b.across] ?? p.w, sizes?.[b.down] ?? 1);
+    return out;
+  };
+  const sized = (
+    { w, h, sizes, options, tally }: Board,
+    diff = 0,
+    variations: readonly string[] = [],
+  ): FillParams =>
+    blocked(
+      withThorough(deal, {
+        w,
+        h,
+        diff,
+        ...(variations.length === 0 ? {} : { variations }),
+        ...(deal.tally === undefined
+          ? {}
+          : { tally: tallyDefault(tally ?? deal.tally.size.default) }),
+        ...(deal.hideFlag === undefined ? {} : { hides: false }),
+        ...(deal.onlyFlag === undefined ? {} : { only: false }),
+        ...(deal.kindLetters === undefined
+          ? {}
+          : { kinds: deal.kindLetters.map((l) => l.kind) }),
+        ...(deal.settings === undefined
+          ? {}
+          : {
+              sizes: Object.fromEntries(
+                deal.settings.map((s) => [s.size, sizes?.[s.size] ?? s.min]),
+              ),
+            }),
+        ...(deal.options === undefined
+          ? {}
+          : {
+              options: Object.fromEntries(
+                Object.entries(deal.options).map(([n, o]) => [
+                  n,
+                  options?.[n] ?? o.default,
+                ]),
+              ),
+            }),
+      }),
+      sizes,
+    );
   // The default board is dealt at the first tier the menu offers it at,
   // unless the description names another, so a menu that starts a board above
   // Easy never opens on a board it hides.
@@ -229,9 +247,8 @@ export function fillGame<C extends Clues<C> & object>(
     ...(variants.length === 0
       ? {}
       : {
-          variants: variants.map(({ w, h, variations, diff, only, hides }) => ({
-            ...sized({ w, h }, diff),
-            ...(variations.length === 0 ? {} : { variations }),
+          variants: variants.map(({ variations, diff, only, hides, ...board }) => ({
+            ...sized(board, diff, variations),
             ...(only === true ? { only } : {}),
             ...(hides === true ? { hides } : {}),
           })),
@@ -340,7 +357,9 @@ export function fillGame<C extends Clues<C> & object>(
     const sp = paramSpaceOf(module, p);
     const sizes = sizesOf(p);
     const grown = module.growBy?.(sp, sizes) ?? null;
-    const clues = descValue(decodeDesc<C>(deal, sp, module.clueMax, desc, grown));
+    const clues = descValue(
+      decodeDesc<C>(deal, sp, module.clueMax, desc, grown, variationsOf(p)),
+    );
     const tally =
       deal.tally === undefined ? {} : { [deal.tally.kind]: tallyClue(deal.tally, p) };
     return newBoard<C>(

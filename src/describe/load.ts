@@ -235,6 +235,10 @@ function withGivens(data: DescriptionFile, path: string): DescriptionFile {
   const { domain } = data.answer.value;
   if (/\bat\b/.test(domain))
     throw new DescriptionError(`${path}: given: the answer's domain reads an at`);
+  if ("c" in (data.sizes ?? {}))
+    throw new DescriptionError(
+      `${path}: given: a size is named c, which the answer's domain reads as its cell`,
+    );
   return {
     ...data,
     clues:

@@ -98,3 +98,59 @@ SHALL be searched under them all.
 - **WHEN** a desc of such a game writes a 4×4 board's blocks as one of
   eight cells and two of four
 - **THEN** the desc is refused as malformed
+
+### Requirement: A born game's clues may keep a symmetry the player chooses
+
+A born game's deal MAY hide a clue kind at cells keeping a symmetry, one
+named by what it keeps or the one a deal option's choice names. A clue
+SHALL be hidden with the clues of its orbit still shown, and one a square of
+whose orbit holds none SHALL not be shown.
+
+#### Scenario: Givens closed under the chosen symmetry
+
+- **WHEN** a board is dealt with any of Solo's eight symmetries chosen
+- **THEN** every square the symmetry takes a given's square to holds a
+  given
+
+### Requirement: A deal option may be written by its choices' codes
+
+A deal option with no letter SHALL write its choice's code in a full game
+ID, after the modifiers' letters, and nothing for its default; reading an
+ID, the default's code or none SHALL give the default.
+
+#### Scenario: Upstream solo.c's symmetry suffix
+
+- **WHEN** a board with the diagonals' modifier and 4-way mirror symmetry is
+  written as a full game ID
+- **THEN** the ID ends `xm4` and its tier, and `r2` or no suffix reads as the
+  default 2-way rotation
+
+### Requirement: A born game may be sized by its blocks
+
+A born game whose blocks are `blocks(a, b)` of two sizes, the grid `a * b`
+on a side, MAY be sized by them (`play.blocks`). Its params SHALL give the
+blocks across and down, written as upstream solo.c writes them, `{b}x{a}`,
+or `{b}` and a letter where the blocks are one square wide, and a bare
+number SHALL read as that many both ways. The variation that deals the
+blocks SHALL be on exactly where they are one square wide; only there SHALL
+the board deal them, and its desc write them.
+
+#### Scenario: Jigsaw read as upstream writes it
+
+- **WHEN** the params `5j` or `2x3` are read
+- **THEN** the first is a 5×5 board that deals its blocks, the second a 6×6
+  board of blocks 3 wide and 2 tall that deals none and writes none in its
+  desc
+
+### Requirement: The Custom dialog of a board sized by its blocks
+
+The Custom dialog of a board sized by its blocks SHALL offer the blocks
+across and down, and after them the game mode, which folds the blocks into
+dealt ones and back to the squarest blocks of the order.
+
+#### Scenario: The game mode folds the blocks
+
+- **WHEN** the Custom dialog's game mode is set to the dealt blocks on a
+  `2x3` board, and back
+- **THEN** the board is a 6×6 dealing its blocks, then `2x3` again, with any
+  modifier left as it was

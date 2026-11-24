@@ -524,8 +524,13 @@ export function fillRender<C extends Clues<C>>(
     b: FillBoard<C>,
   ): Map<number, { kind: keyof C & string; k: number; text: string }> => {
     const out = new Map<number, { kind: keyof C & string; k: number; text: string }>();
-    if (labeledBy === undefined) return out;
-    const { cells } = b.dealt[labeledBy] as Partition;
+    // Blocks a variation deals are absent from a board it is off on.
+    const by =
+      labeledBy === undefined
+        ? undefined
+        : (b.dealt[labeledBy] as Partition | undefined);
+    if (by === undefined) return out;
+    const { cells } = by;
     for (const kind of partKinds) {
       const list = listOf(b.dealt, kind);
       list.at.forEach((r, k) => {

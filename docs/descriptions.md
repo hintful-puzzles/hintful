@@ -225,7 +225,16 @@ research tools all read through it; the app never does.
   board it has an answer on (Star Battle's `stars`, `s2`); a preset board
   gives it after its `WxH` (`8x8s2`). With `letters` in place of `letter`,
   each ruleset is written as its own bare letter, `""` as nothing
-  (Seismic's Tectonic, `6x6T`). A grid as high as it is wide
+  (Seismic's Tectonic, `6x6T`). A board sized by its blocks (Solo's) names
+  no such size: `play.blocks` gives the two sizes of its `blocks(a, b)`,
+  the grid `a * b` on a side, as the Custom dialog's columns and rows and
+  the ID's `{b}x{a}`, and the variation that replaces the blocks with a
+  dealt partition is on exactly where `a` is 1, written `{b}` and the
+  block's `letter` (`9j`); that partition's `divide`, its desc segment and
+  the space's blocks then follow the variation, which the compiler finds
+  (the `blocking` fixture). A preset board is written as the ID writes it.
+  A size is never named `c` where the answer's domain is `given`: the
+  domain reads `c` as its cell. A grid as high as it is wide
   (`grid: { w: w, h: w }`) has one size field and a bare-number ID. `play.dealt` names a
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
   givens, which `id:` writes as `dots`); one whose meaning goes on after an
@@ -413,7 +422,8 @@ research tools all read through it; the app never does.
   kinds a part, in turn and well before `poor` (`engine/fill/one-kind.ts`),
   `deal.onlyFlag` is a setting after the tier dealing its `kinds` alone,
   `id:`'s `blocks` writes the partition as upstream Keen's block structure
-  and `parts` a letter and a number a part, and `play.signs` draws each at
+  (with `after`, a mark after it, and nothing at all on a board that does
+  not deal it) and `parts` a letter and a number a part, and `play.signs` draws each at
   its part's first square, its number and sign, with every square's notes
   below that line (`caging` is the fixture). The
   `domino` painter draws two alike pieces touching only each other as one.

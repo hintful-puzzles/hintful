@@ -17,6 +17,8 @@
 
 import { compileExpr } from "./compile-expr.ts";
 import {
+  blocksOf,
+  boxesDealtBy,
   dealOf,
   derivedClues,
   markWhileOf,
@@ -352,6 +354,11 @@ export function compileGame(
     supposed: [],
     kept: { defs: new Map(), used, terms: new Map() },
   };
+  // The fill engine's space reads the sizes the blocks are cut by off the
+  // board (`spaceOf`).
+  if (json.play !== undefined)
+    for (const a of blocksOf(json, boxes) ?? [])
+      if (typeof a === "string") env.sizes.read.add(a);
   Out.own("", () => {
     for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
   });
@@ -432,6 +439,7 @@ export function compileGame(
   // Read before any variation: a ruleset that deals the partition (Solo's
   // Jigsaw) leaves the formula every other board cuts it by.
   const boxBlocks = blocksOf(json, boxes);
+  const dealtBy = boxBlocks === null ? null : boxesDealtBy(json, env);
   // A unit a variation adds is a unit only of a board it is on.
   const unitVariations = Object.fromEntries(
     Object.entries(json.variations ?? {}).flatMap(([name, v]) =>
@@ -461,8 +469,9 @@ export function compileGame(
           ]
         : [
             "/** The partition among the units, cut into blocks this wide and tall,",
-            " * each a number or a size the params give, where the board deals none. */",
-            `export const boxes = ${JSON.stringify({ name: boxes, blocks: boxBlocks })} as const;`,
+            " * each a number or a size the params give, where the board deals none:",
+            " * one the variation `dealtBy` is on deals it. */",
+            `export const boxes = ${JSON.stringify({ name: boxes, blocks: boxBlocks, ...(dealtBy === null ? {} : { dealtBy }) })} as const;`,
             "",
           ]),
     ...(space.grid?.hexagon === undefined
@@ -971,43 +980,6 @@ function markRead(json: DescriptionJson, env: Env): MarkRead | null {
     ),
   ) as Expr;
   return { def: call.fn, sort: m.sort, of, ofDef };
-}
-
-/**
- * The width and height of the blocks the partition among the units is cut
- * into, where a formula and not a deal gives it: `blocks(a, b)`, each a
- * number or a size the params give. `null` where the partition is dealt or
- * there is none. A partition stated by any other formula, or one that is no
- * unit, is refused: nothing builds it.
- */
-function blocksOf(
-  json: DescriptionJson,
-  boxes: string | null,
-): [number | string, number | string] | null {
-  let out: [number | string, number | string] | null = null;
-  for (const [name, how] of Object.entries(json.space.regions ?? {})) {
-    if (how === "dealt") continue;
-    if (name !== boxes)
-      throw new CompileError(`${name}: a partition by formula is one among the units`);
-    const e = parse(how);
-    const args =
-      e.k === "call" && e.fn === "blocks" && e.args.length === 2
-        ? e.args.map((a) =>
-            a.k === "num"
-              ? a.v
-              : a.k === "name" && a.name in json.sizes
-                ? a.name
-                : null,
-          )
-        : [];
-    const [bw, bh] = args;
-    if (args.length !== 2 || bw === null || bh === null)
-      throw new CompileError(
-        `${name}: a partition by formula is blocks(a, b), each a number or a size`,
-      );
-    out = [bw, bh];
-  }
-  return out;
 }
 
 /**
