@@ -1414,7 +1414,7 @@ draft").
 
 Exemplar: `findMistakes` in
 [`skeleton/grid/index.ts`](../src/skeleton/grid/index.ts), and
-[`engine/fill/render.ts`](../src/engine/fill/render.ts) for drawing what it
+[`engine/fill/render/layers/mistakes.ts`](../src/engine/fill/render/layers/mistakes.ts) for drawing what it
 returns. The overlay is part of the render diff key
 ([rendering.md](./rendering.md) § "Overlay sidecars"), and the coupling
 between the refusal and the banner is in [hints.md](./hints.md).

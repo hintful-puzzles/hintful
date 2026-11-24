@@ -82,12 +82,8 @@ import {
   fillInput,
   newFillUi,
 } from "./play.ts";
-import {
-  type FillDrawState,
-  type FillRender,
-  fillRender,
-  PLACE_ANIM_TIME,
-} from "./render.ts";
+import { PLACE_ANIM_TIME } from "./render/tile.ts";
+import { type FillDrawState, type FillRender, fillRender } from "./render.ts";
 import { answerSearched, searches } from "./search.ts";
 
 /** What a game born from its description's compiled module holds. */

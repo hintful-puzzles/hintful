@@ -39,7 +39,8 @@ import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { type FillParams, fillParams } from "./game-id.ts";
 import { fillInput, newFillUi } from "./play.ts";
-import { fillRender, PLACE_ANIM_TIME } from "./render.ts";
+import { PLACE_ANIM_TIME } from "./render/tile.ts";
+import { fillRender } from "./render.ts";
 
 const BLOCK = 1;
 const DISC = 2;

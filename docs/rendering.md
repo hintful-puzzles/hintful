@@ -142,7 +142,7 @@ never holds a bare cache array or a `started` flag.
   paints its neighbors are loops a game writes around `changed`, with one
   `TileCache` per family. A tile that paints into its neighbors reads
   `overlayMoved` for them before the loop and `forget`s what it painted
-  over. Exemplar: [`engine/fill/render.ts`](../src/engine/fill/render.ts)
+  over. Exemplar: [`engine/fill/render/three-d.ts`](../src/engine/fill/render/three-d.ts)
   (a raised value).
 - **A tile that moves keys as never drawn (-1) and is forced while it
   moves**, by a term of its own after `changed` (`|| animating`), so the
@@ -161,7 +161,7 @@ never holds a bare cache array or a `started` flag.
   needs more bits grows by a word: a `TileCache` built with `words` (up to
   four) compares them together, or an overlay sidecar carries it (§ "When
   the packed key runs out of bits"). Exemplar:
-  [`engine/fill/render.ts`](../src/engine/fill/render.ts).
+  [`engine/fill/render/tile-word.ts`](../src/engine/fill/render/tile-word.ts).
 - **When the candidate set alone exceeds about 26 bits, key it in a word of
   its own**, not a digit and a pencil bitmap in one word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
   all. Candidate masks go through `engine/board/candidate-bits.ts`, which throws
@@ -258,7 +258,7 @@ names a game, the cause is one of these, and each is a rule:
   the mark lands on belongs to one of those squares.** Each tile clips to
   what it owns, and a tile on the board's edge owns the ground beside it
   that the mark reaches. Exemplar:
-  [`fill/render.ts`](../src/engine/fill/render.ts).
+  [`fill/render/tile.ts`](../src/engine/fill/render/tile.ts).
 - **A tile that repaints over a decoration forgets what the decoration
   showed.** A decoration inside a tile's box that repaints only on its own
   change (the pencil indicator in a clue ring's corner) is otherwise filled
@@ -569,7 +569,7 @@ geometry". On the draw side:
   counts the corners leaves them out.
 
 Exemplar: a fill game's hexagon in
-[`fill/render.ts`](../src/engine/fill/render.ts), the shift shared with the
+[`fill/render/geometry.ts`](../src/engine/fill/render/geometry.ts), the shift shared with the
 pointer (`hexShift`).
 
 ## A rule that input and display both need
@@ -592,7 +592,7 @@ grid while a gesture is live, and paints only what they say:
   or corner), and on both otherwise.
 - **Any other violation marks its elements**, and a clue's marks the clue.
   A fill board reads its cells' shape first
-  ([`engine/fill/render.ts`](../src/engine/fill/render.ts), `lineShape`):
+  ([`engine/fill/render/layers/live-errors.ts`](../src/engine/fill/render/layers/live-errors.ts), `lineShape`):
   three or more in a row along part of a line get a bar along them, two or
   more whole parallel lines a bar across each, and the rest their pieces in
   error, which a pair piece shows as a `!` badge (Unruly's run of three,
@@ -628,7 +628,7 @@ grid while a gesture is live, and paints only what they say:
   too coarse, the fix is the statement's shape or the compiler's bound on
   its form, so every game gains it.
 
-Exemplar: [`engine/fill/render.ts`](../src/engine/fill/render.ts) and
+Exemplar: [`engine/fill/render/layers/live-errors.ts`](../src/engine/fill/render/layers/live-errors.ts) and
 `rulesOf` in [`engine/fill/answer.ts`](../src/engine/fill/answer.ts).
 
 ## Special paint shapes
@@ -948,7 +948,7 @@ names the one it applies.
   region": the heavy border still tells two regions apart, and everything
   else is drawn over the fill as over the plain surface. A mistake's wash
   and the win flash take its place. Exemplar: a fill game's parts
-  ([`engine/fill/render.ts`](../src/engine/fill/render.ts)).
+  ([`engine/fill/render/layers/surface.ts`](../src/engine/fill/render/layers/surface.ts)).
   - **A region's color is one value a scheme in every game** (the owner,
     2026-10-15: consistency first), so a yellow region in Map and in Star
     Battle is one yellow in both schemes.

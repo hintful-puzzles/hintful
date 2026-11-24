@@ -14,7 +14,7 @@
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { COL_INK, fillSlots } from "../engine/fill/render.ts";
+import { COL_INK, fillSlots } from "../engine/fill/render/palette.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
 import * as ballsort from "../games/ballsort/render.ts";

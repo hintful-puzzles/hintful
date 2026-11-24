@@ -124,6 +124,15 @@ The registries:
 - **Raised and 3D stay one module with hook points.** It is a second
   tile renderer, and no layer can hold it.
 
+As built (2.2): a site is `FillSite = { on, paint }`, and `on` filters
+`SITES` once per board look. The sites' caches stay named fields of
+`FillDrawState`, so `size?` was not needed. The hint's rings and the link
+rings are sites as well, because they paint between the slots and the
+corners. What the board's look decides once is `render/setup.ts`. The
+geometry is `FillMetrics` plus a `Layout` built each frame
+(`render/geometry.ts`, `render/cell-text.ts`). The cursor's corners stay
+inline in `drawTile`, and the win flash is the surface's tone.
+
 ### 5. The compiler: modules beside a core (`compile-fill.ts`, 2.4)
 
 Concepts:

@@ -840,7 +840,7 @@ points at. How to write a renderer is [`rendering.md`](./rendering.md).
 Reach for it when the game marks a broken rule as the board is filled:
 `liveErrors(rules, state, g?)` gives the pairs, the elements and the clues
 to paint, from `Game.rules` ([`rendering.md`](./rendering.md) § "Live
-errors are the rules'"). Exemplar: `src/engine/fill/render.ts`.
+errors are the rules'"). Exemplar: `src/engine/fill/render/layers/live-errors.ts`.
 
 ### `piece.ts` — a piece on its cell
 
@@ -864,7 +864,7 @@ Exemplar: `src/skeleton/grid/render.ts`.
 A painter draws one piece in a cell and declares the colors it is drawn
 in, so a board drawn from painters has no palette of its own. A fill
 game's `play:` names one per value by `paint:` (`PAINTERS`), and
-`fill/render.ts` gives each its slots. A new piece is a painter here,
+`fill/render/palette.ts` gives each its slots. A new piece is a painter here,
 addressed to the piece, never to a game.
 
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
@@ -876,7 +876,7 @@ value (upstream towers.c's 3D). `topFace` is where the top goes,
 reaches into, for notes, and `pressedRaised` the square whose top a press
 lands on. A tile repaints with the raised values of the three squares in
 `RECEIVED_FROM` painted over it, inside its clip. Exemplar:
-`engine/fill/render.ts` (`play.numbers.raised`).
+`engine/fill/render/three-d.ts` (`play.numbers.raised`).
 
 ### `region-walls.ts` — the heavy walls round dealt regions
 
@@ -885,7 +885,7 @@ inside a tile-cached grid. `regionWalls(w, h, regions)` in `newDrawState`
 keeps each square's walls; `drawWalledSquare` paints a square's box, its
 halves of the walls and its corners round the surface the game lays, and
 `walledBoxes` gives that surface, for a hint's band. Exemplar:
-`engine/fill/render.ts`.
+`engine/fill/render/layers/surface.ts`.
 
 ### `ring.ts` — the round ring
 
@@ -948,7 +948,7 @@ each tile shows (a key of one to four words), the first frame, and the
 overlay sidecars registered on it; `changed(i, key)` is the miss test and
 the record in one call, so no frame tests the key and forgets an overlay.
 The walk over the tiles stays the game's. Exemplars:
-`src/skeleton/grid/render.ts`, and `src/engine/fill/render.ts` for a clip
+`src/skeleton/grid/render.ts`, and `src/engine/fill/render/three-d.ts` for a clip
 that paints its neighbors (a raised value's). The palette's shared roles, which a tiled board
 paints with, are `color/roles.ts`.
 
@@ -1157,8 +1157,11 @@ values in the space's own order, one mark a cell and the dealt clues, so
 the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
 `play.ts` is the input the description's `play:` declares, and the engine's
-`FillUi`. `render.ts` draws the board by layers from the painters `play:`
-names, and `marks.ts` holds the hint's mark kinds beside the cells.
+`FillUi`. `render.ts` draws the board from the painters `play:` names: a
+cell layer is a module of `render/layers/`, which `render/tile.ts`'s
+`drawTile` calls in its paint order, and what is drawn after the tiles is a
+site, a module of `render/sites/` and a line of `render.ts`'s `SITES`.
+`marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws. `desc.ts` is
 its desc, from the description's `id:`: a segment kind is a module of
 `segments/` and a line of `desc.ts`'s registry. `game-id.ts` is its params,
@@ -1304,7 +1307,7 @@ its fills are tried. Two callers, which differ only in that choice:
   fills by area. The colors are `REGION_FILLS` (`color/colors.ts`), one palette
   slot each; [`rendering.md`](./rendering.md) § "What a board looks like:
   pieces on a quiet surface" says what a game owes when it takes them.
-  Exemplars: `engine/fill/render.ts`, `rect/render.ts`.
+  Exemplars: `engine/fill/render/layers/surface.ts`, `rect/render.ts`.
 - **A generator whose answer is a coloring** passes a `choice` that draws.
   Its order deals the boards there: the walk asks once for the region and
   once for its fills at every step, which are the draws of upstream's

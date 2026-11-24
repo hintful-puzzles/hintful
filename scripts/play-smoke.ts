@@ -213,11 +213,17 @@ async function walk(page: Page, o: WalkOptions): Promise<WalkReport> {
     await page.waitForTimeout(100);
   }
   if (!r.dealt) return r;
-  // A game's first open shows its rules over the board, until Play.
+  // A game's first open shows its rules over the board, until Play. Every
+  // run's open is a first, and on a busy machine the card comes seconds
+  // after the deal: a press made before it shows lands on the card.
   const play = page.getByRole("button", { name: "Play", exact: true }).first();
-  for (let t = 0; t < 10 && (await play.count()) === 0; t++)
+  for (let t = 0; t < 100 && (await play.count()) === 0; t++)
     await page.waitForTimeout(100);
-  if ((await play.count()) > 0) await play.click();
+  if ((await play.count()) > 0) {
+    await play.click();
+    for (let t = 0; t < 50 && (await play.count()) > 0; t++)
+      await page.waitForTimeout(100);
+  }
   await page.waitForTimeout(300);
   await shot("dealt");
 

@@ -39,7 +39,7 @@ import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
 import type { FillMove } from "./notes.ts";
-import { COL_INK } from "./render.ts";
+import { COL_INK } from "./render/palette.ts";
 
 const game = fillGame("caging", caging);
 type Board = FillBoard<caging.Dealt>;

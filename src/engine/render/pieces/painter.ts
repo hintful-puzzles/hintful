@@ -1,6 +1,6 @@
 /**
  * A painter draws one piece in a cell: what a fill game's description names
- * by `paint:` for each value (`engine/fill/render.ts`). It declares the colors
+ * by `paint:` for each value (`engine/fill/render/palette.ts`). It declares the colors
  * it is drawn in, so the board's palette is the painters' colors and no game
  * numbers a slot of its own.
  */

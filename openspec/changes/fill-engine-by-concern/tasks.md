@@ -1,6 +1,6 @@
 ## Next
 
-2.2, the renderer, by design.md § 4. Open: none. Goes before
+2.3, the deal, by design.md § 3. Open: none. Goes before
 `a-fill-board-of-any-slot` (`describe-the-whole-catalog` § "0. The
 refactor first").
 
@@ -16,7 +16,9 @@ game's cases, render snapshots, ID cases and fingerprints pass unchanged.
 
 - [x] 2.1 ID segment kinds (`game-id.ts`): `segments/` and `desc.ts`, and
       the params' settings, `params/`. game-id.ts 2,231 → 429 lines.
-- [ ] 2.2 Painter layers (`render.ts`); `fillRender` a loop over them.
+- [x] 2.2 Painter layers (`render.ts`); `fillRender` a loop over them.
+      render.ts 2,368 → 243 lines, with `render/`'s modules each under
+      230.
 - [ ] 2.3 Deal steps (`deal.ts`).
 - [ ] 2.4 The compiler's per-concept parts (`compile-fill.ts`).
 - [ ] 2.5 Clue locations: each one module across all four, if task 1.1

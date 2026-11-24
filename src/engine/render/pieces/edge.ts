@@ -1,6 +1,7 @@
 /**
  * The painters that draw a clue at an edge in the gap between its two cells
- * (`play.gaps`, `engine/fill/render.ts`), by the name a description gives.
+ * (`play.gaps`, `engine/fill/render/sites/gaps.ts`), by the name a
+ * description gives.
  * A clue valued one of the edge's ends is drawn toward the other end; a clue
  * valued a number, from the edge's end above or left of the other.
  */

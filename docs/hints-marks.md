@@ -174,7 +174,7 @@ The parts are in [`engine/render/hint-mark.ts`](../src/engine/render/hint-mark.t
 exports' comments say what each owns, and `expectRing` in
 [`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts)
 asserts a ring on a recorded frame. Exemplars:
-[`fill/render.ts`](../src/engine/fill/render.ts) for a gutter between cells
+[`fill/render/hint.ts`](../src/engine/fill/render/hint.ts) for a gutter between cells
 and a clue in a corner,
 [`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts) for a number in
 the middle.
@@ -305,7 +305,7 @@ erase and repaint undo it.
   calls: `drawMarkSides(dr, band, sidecar.outlineSides(i), …)` and
   `drawCellRing(dr, band, clear)`, which rings the band's box as `HintMarks`
   does. Its hint bits ride the sidecar, never its own tile word. Exemplar:
-  the fill engine's tile ([`engine/fill/render.ts`](../src/engine/fill/render.ts)).
+  the fill engine's tile ([`engine/fill/render/tile.ts`](../src/engine/fill/render/tile.ts)).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
   part too. Exemplar: `markBand` in
@@ -738,7 +738,7 @@ the new color from the cell's center over `animTime`, with the previous color
 beneath, and let animating cells bypass the tile cache
 ([`rendering.md`](./rendering.md) § "Animation and flash"). Exemplar:
 `animLength` in [`engine/fill/game.ts`](../src/engine/fill/game.ts) and the
-grow branch in [`engine/fill/render.ts`](../src/engine/fill/render.ts), which a
+grow branch in [`engine/fill/render/layers/piece.ts`](../src/engine/fill/render/layers/piece.ts), which a
 painter takes as its `grown`.
 
 ## Group one firing into one step
