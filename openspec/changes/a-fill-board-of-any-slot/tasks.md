@@ -1,7 +1,10 @@
 ## Next
 
 2.2 step 5, the input (design.md § "Each concept, its form on an element,
-in order"). The `lacing` fixture (3.1's) is the test bed of each step; its
+in order"). Planned: `play.ts` keeps its target a `Point`, on an edge
+answer the half-grid point `border-grid.ts`'s cursor uses, with one map
+target ↔ element; the tile's `CURSOR` bit stays a cell's, and the edge word
+gains the cursor's side. The `lacing` fixture (3.1's) is the test bed of each step; its
 `edge-answer.test.ts` grows with each. Lacing loads and draws in the app,
 but a click places nothing on an edge yet, and Auto-solve fails at the
 hint's gesture (step 6), whose words also still say "the ringed square".
