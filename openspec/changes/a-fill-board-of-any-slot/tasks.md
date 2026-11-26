@@ -1,13 +1,14 @@
 ## Next
 
-2.2 step 5, the input (design.md § "Each concept, its form on an element,
-in order"). Planned: `play.ts` keeps its target a `Point`, on an edge
-answer the half-grid point `border-grid.ts`'s cursor uses, with one map
-target ↔ element; the tile's `CURSOR` bit stays a cell's, and the edge word
-gains the cursor's side. The `lacing` fixture (3.1's) is the test bed of each step; its
-`edge-answer.test.ts` grows with each. Lacing loads and draws in the app,
-but a click places nothing on an edge yet, and Auto-solve fails at the
-hint's gesture (step 6), whose words also still say "the ringed square".
+2.2 step 6, the hint (design.md § "Each concept, its form on an element,
+in order"). The input is done: a target is an edge's half-grid point
+(`fill/edge-target.ts`, whose `pointOfElement` the gesture's clicks can
+aim with), a drag is the target verbs' sweep, and the cursor's side or
+corner is in the edge word. The `lacing` fixture (3.1's) is the test bed of
+each step; its `edge-answer.test.ts` grows with each. Lacing loads, draws
+and plays in the app (clicks, right-clicks, a drag undone as one step, the
+keyboard on the half grid), but Auto-solve fails at the hint's gesture,
+whose words also still say "the ringed square".
 To look at a fixture in the app, copy its description under
 `src/games/<id>/` with a `catalog:` block, run `npm run describe`, and
 delete the copy after; Chrome refuses `file://` SVGs, so a recording is
@@ -33,7 +34,7 @@ read with `toSvg` and `rsvg-convert`. Open: none.
   - [ ] 3b A divided partition sampled as walls, with 3.2's fixture.
   - [x] 4 The drawing: edge painters in a fifth tile word, the edge
         word; an edge reddened; a number on a disc the lines run in to.
-  - [ ] 5 The input: edge targets, the half-grid cursor.
+  - [x] 5 The input: edge targets, the half-grid cursor.
   - [ ] 6 The hint: an edge ringed; the gesture.
   - [ ] 7 The refusals of what assumes a cell.
 

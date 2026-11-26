@@ -54,8 +54,14 @@ import {
   hexShift,
   inHexagon,
 } from "../solve/describe-runtime.ts";
-import { type Clues, type FillBoard, type FillModule, listOf } from "./board.ts";
-
+import {
+  type Clues,
+  type FillBoard,
+  type FillModule,
+  listOf,
+  spaceOf,
+} from "./board.ts";
+import { edgeGeometry, edgeReach, elementAtPoint } from "./edge-target.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 
 /** Whether the painter named `paint` draws one of a pair of alike pieces. */
@@ -304,8 +310,12 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   if (axes !== null && play.straight !== true)
     throw new Error("play: a game whose values are lines drags straight");
   type Verb = TargetVerb<FillBoard<C>, FillUi, Point, Edit>;
-  const geometry =
-    module.hexagon === undefined
+  // On an answer on the edges, a target is an edge's half-grid point
+  // (`edge-target.ts`), and a drag is the engine's sweep along the edges.
+  const onEdges = module.answerSort === "edge";
+  const geometry = onEdges
+    ? edgeGeometry<FillBoard<C>, D>(origin)
+    : module.hexagon === undefined
       ? squareGrid<FillBoard<C>, D>({
           size: (b) => b,
           border: origin,
@@ -325,12 +335,16 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
     (module.hexagon !== undefined &&
       numpadDirection(raw & ~(MOD_SHFT | MOD_CTRL)) !== null);
 
-  /** A verb that sets a cell to `to(v)` from `v`, or means nothing on a fixed
-   * cell or where it would leave the cell as it is. */
+  /** The element target `t` is, `-1` where it is none. */
+  const elementAt = (b: FillBoard<C>, t: Point): number =>
+    onEdges ? elementAtPoint(spaceOf(module, b), t) : t.y * b.w + t.x;
+  /** A verb that sets an element to `to(v)` from `v`, or means nothing on a
+   * fixed one or where it would leave the element as it is. */
   const setting =
     (to: (v: number) => number) =>
-    (b: FillBoard<C>, { x, y }: Point): Edit | null => {
-      const c = y * b.w + x;
+    (b: FillBoard<C>, t: Point): Edit | null => {
+      const c = elementAt(b, t);
+      if (c < 0) return null;
       const v = to(b.values[c]);
       return b.fixed[c] || v === b.values[c] ? null : { set: [c, v] };
     };
@@ -379,7 +393,15 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
         ? clicking(secondary, primary)
         : rulingOut(clicking(secondary, primary)),
     keyOnly,
-    drags: dragWords(play, geometry.noun, axes !== null),
+    ...(onEdges
+      ? {
+          sweep: {
+            holds: (b: FillBoard<C>, t: Point) => b.values[elementAt(b, t)],
+            ...(play.sweepWith === undefined ? {} : { buttons: [play.sweepWith] }),
+            ...edgeReach<FillBoard<C>, D>(origin),
+          },
+        }
+      : { drags: dragWords(play, geometry.noun, axes !== null) }),
   };
 
   const links = play.links;
@@ -631,6 +653,9 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       return edit === null ? b : applyEdit(module, b, edit);
     },
     interpretMove(b, ui, ds, p, raw) {
+      // On the edges the verbs are all of it: a drag is their sweep, and an
+      // arrow with Shift or Ctrl moves the cursor as a bare one does.
+      if (onEdges) return interpretTargetVerbs(targetVerbs, b, ui, ds, p, raw);
       const button = stripModifiers(raw);
       if (isMouseDown(button) || ui.dragButton >= 0) {
         ui.drag ??= newDrag();

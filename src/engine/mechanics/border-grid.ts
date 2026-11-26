@@ -43,6 +43,7 @@ import {
 import { cursorDelta, type GridCursor } from "../input/pointer.ts";
 import {
   rulingOut,
+  type Sweep,
   type TargetGeometry,
   type TargetVerbs,
 } from "../input/target-verb.ts";
@@ -131,13 +132,21 @@ export const margin = (ts: number): number => Math.floor(ts / 2);
 
 // --- the input mechanic ------------------------------------------------------
 
+/** The size of the grid, all the geometry reads of a state. */
+export interface BorderGridSize {
+  readonly w: number;
+  readonly h: number;
+}
+
 /** The part of a game's state this mechanic reads. Both games' states satisfy
  * it structurally. */
-export interface BorderGridState {
-  w: number;
-  h: number;
+export interface BorderGridState extends BorderGridSize {
   borders: ArrayLike<number>;
 }
+
+/** How far in from the canvas's top left the grid is drawn, by tile size:
+ * the mechanic's own {@link margin}, where a board draws none of its own. */
+export type BorderOf<State> = (tileSize: number, state: State) => number;
 
 /** The cursor state this mechanic maintains: the collection's shared
  * {@link GridCursor}, but read in HALF-cells — `(2x+1, 2y+1)` is the center of
@@ -166,17 +175,23 @@ export interface BorderEdge {
 }
 
 /**
- * The interior edge nearest a press at `(px0, py0)`, or `null` outside the grid
+ * The interior edge nearest a press at `(px, py)`, or `null` outside the grid
  * or on its rim.
  */
 export function pointerEdge(
-  state: BorderGridState,
+  state: BorderGridSize,
   px: number,
   py: number,
   ts: number,
+  border = margin(ts),
 ): BorderEdge | null {
   // No still middle: every press inside a cell aims at one of its sides.
-  const side = sideAt(squareEdges(state.w, state.h), layout(ts), { x: px, y: py }, 0);
+  const side = sideAt(
+    squareEdges(state.w, state.h),
+    layout(ts, border),
+    { x: px, y: py },
+    0,
+  );
   if (!side) return null;
   return {
     x: side.cell % state.w,
@@ -186,7 +201,7 @@ export function pointerEdge(
 }
 
 /** The board's pixel layout, as `square-edges.ts` aims at an edge in it. */
-const layout = (ts: number): EdgeLayout => ({ tile: ts, border: margin(ts) });
+const layout = (ts: number, border = margin(ts)): EdgeLayout => ({ tile: ts, border });
 
 /** `square-edges.ts`'s side for an edge named from a cell. */
 export const squareSide = (w: number, { x, y, dir }: BorderEdge): Side => ({
@@ -281,14 +296,23 @@ export function revealBorderEdge(
  * addresses the edge it rests on, or nothing on a corner or a tile center.
  */
 export function borderGridGeometry<
-  State extends BorderGridState,
+  State extends BorderGridSize,
   DrawState extends { readonly tileSize: number },
->(): TargetGeometry<State, BorderGridUi, DrawState, BorderEdge> {
+>(
+  border: BorderOf<State> = margin,
+): TargetGeometry<State, BorderGridUi, DrawState, BorderEdge> {
   return {
     noun: "edge",
-    pointerTarget: (s, ds, p) => pointerEdge(s, p.x, p.y, ds.tileSize),
+    pointerTarget(s, ds, p) {
+      const ts = ds.tileSize;
+      return pointerEdge(s, p.x, p.y, ts, border(ts, s));
+    },
     pointAt: (s, ds, e) =>
-      pointAtSide(squareEdges(s.w, s.h), layout(ds.tileSize), squareSide(s.w, e)),
+      pointAtSide(
+        squareEdges(s.w, s.h),
+        layout(ds.tileSize, border(ds.tileSize, s)),
+        squareSide(s.w, e),
+      ),
     cursorTarget(_s, ui) {
       const { x, y } = ui.cursor;
       if (x % 2 === y % 2) return null;
@@ -337,17 +361,33 @@ export function borderGridVerbs<
         "it to undecided",
       apply: (s: State, e: BorderEdge) => toMove(edgeEdits(s, e, false)),
     }),
-    // Along a line of edges or round a corner, each taken near its middle:
-    // every corner the drag passes is where four edges' catchments meet.
     sweep: {
       holds: (s, { x, y, dir }) => {
         const b = s.borders[y * s.w + x];
         return b & BORDER(dir) ? YES : b & DISABLED(BORDER(dir)) ? NO : MAYBE;
       },
-      within: (ds) => ds.tileSize * 0.3,
-      middle: (ds, s, e) =>
-        sideMiddle(squareEdges(s.w, s.h), layout(ds.tileSize), squareSide(s.w, e)),
+      ...edgeSweepReach<State, DrawState>(),
     },
+  };
+}
+
+/** How near its middle a drag takes an edge. Along a line of edges or round
+ * a corner, each is taken near its middle: every corner the drag passes is
+ * where four edges' catchments meet. */
+export function edgeSweepReach<
+  State extends BorderGridSize,
+  DrawState extends { readonly tileSize: number },
+>(
+  border: BorderOf<State> = margin,
+): Required<Pick<Sweep<State, DrawState, BorderEdge>, "within" | "middle">> {
+  return {
+    within: (ds) => ds.tileSize * 0.3,
+    middle: (ds, s, e) =>
+      sideMiddle(
+        squareEdges(s.w, s.h),
+        layout(ds.tileSize, border(ds.tileSize, s)),
+        squareSide(s.w, e),
+      ),
   };
 }
 

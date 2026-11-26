@@ -1088,6 +1088,9 @@ input (`borderGridVerbs`, `borderGridGeometry`, `edgeEdits`). The game
 keeps its clues, solver, generator, completion test and its own `Move`: the
 shared code reports which edge and which cycle and the game's `toMove`
 wraps it, so no two save formats are coupled. Exemplar: `palisade/index.ts`.
+The geometry and a drag's reach (`edgeSweepReach`) take the board's own
+border, so the fill engine aims at an answer on the edges with them, its
+target the edge's half-grid point (`fill/edge-target.ts`).
 
 ### `border-grid-render.ts` — that mechanic's look
 

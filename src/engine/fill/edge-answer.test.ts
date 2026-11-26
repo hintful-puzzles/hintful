@@ -5,16 +5,40 @@
 
 import { describe, expect, it } from "vitest";
 import * as lacing from "../../generated/engine/testing/fixtures/lacing/lacing.compiled.ts";
-import { COL_ERROR } from "../color/roles.ts";
+import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
 import { descValue } from "../contract/desc-error.ts";
+import { UI_UPDATE } from "../contract/game.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  RIGHT_BUTTON,
+  RIGHT_RELEASE,
+} from "../input/pointer.ts";
+import { sweepPending } from "../input/target-verb.ts";
 import { randomNew } from "../random/index.ts";
 import type { DrawOp } from "../testing/recording-drawing.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
 import { type AnswerReading, edgeTextOf, encodeAnswer, textFormat } from "./answer.ts";
-import { elementsOf, marksOf, newBoard, paramSpaceOf, solveBoard } from "./board.ts";
+import {
+  elementsOf,
+  type FillBoard,
+  marksOf,
+  newBoard,
+  paramSpaceOf,
+  solveBoard,
+} from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc } from "./desc.ts";
+import { elementAtPoint, pointOfElement } from "./edge-target.ts";
+import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
+import { fillInput, newFillUi } from "./play.ts";
 import { COL_CELL, COL_INK, fillSlots } from "./render/palette.ts";
 import { sampleAnswer } from "./sample.ts";
 
@@ -169,6 +193,150 @@ describe("an answer on the edges", () => {
       const shown = ops([{ set: [inner, LINE] }], true);
       expect(tiles(shown, COL_ERROR, "rect")).toHaveLength(2);
       expect(tiles(shown, lineInk, "rect")).toHaveLength(0);
+    });
+  });
+
+  describe("is played", () => {
+    const TS = 20;
+    const ds = { tileSize: TS };
+    const input = fillInput<lacing.Dealt, typeof ds>(lacing, lacing.play, () => 0);
+    const { geometry } = input.targetVerbs;
+    const sp = paramSpaceOf(lacing, { w: 3, h: 3 });
+    const fresh = () => {
+      const { board } = dealtOn(ring);
+      return { board, ui: fillGame("lacing", lacing).newUi(board) };
+    };
+    /** The pointer's point aiming at the edge between squares `a` and `b`. */
+    const aim = (b: FillBoard<lacing.Dealt>, a: number, z: number) =>
+      geometry.pointAt(b, ds, pointOfElement(sp, sp.edgeOf(a, z)), newFillUi());
+    /** Each button at its point in turn, every edit made applied. */
+    function drive(
+      start: ReturnType<typeof fresh>,
+      steps: readonly (readonly [number, { x: number; y: number }])[],
+    ) {
+      let { board } = start;
+      const edits: Edit[] = [];
+      for (const [button, p] of steps)
+        do {
+          const got = input.interpretMove(board, start.ui, ds, p, button);
+          if (got !== null && got !== UI_UPDATE) {
+            edits.push(got);
+            board = applyEdit(lacing, board, got);
+          }
+        } while (sweepPending(start.ui));
+      return { board, edits };
+    }
+
+    it("aiming at each edge by the point its half-grid cursor rests on", () => {
+      for (const sp2 of [sp, paramSpaceOf(lacing, { w: 4, h: 2 })]) {
+        const board = newBoard(lacing, sp2.w, sp2.h, dealtOn(ring).board.dealt);
+        for (const e of sp2.edges) {
+          const t = pointOfElement(sp2, e);
+          expect(elementAtPoint(sp2, t)).toBe(e);
+          expect(
+            geometry.pointerTarget(
+              board,
+              ds,
+              geometry.pointAt(board, ds, t, newFillUi()),
+              newFillUi(),
+            ),
+          ).toEqual(t);
+        }
+      }
+      // A square's middle, a corner and the rim are no edge.
+      for (const p of [
+        { x: 1, y: 1 },
+        { x: 2, y: 2 },
+        { x: 0, y: 1 },
+        { x: 6, y: 1 },
+      ])
+        expect(elementAtPoint(sp, p)).toBe(-1);
+    });
+
+    it("by a click, which draws a line, and a right-click, which crosses it out", () => {
+      const s = fresh();
+      const { board } = drive(s, [
+        [LEFT_BUTTON, aim(s.board, 0, 1)],
+        [LEFT_RELEASE, aim(s.board, 0, 1)],
+        [RIGHT_BUTTON, aim(s.board, 4, 7)],
+        [RIGHT_RELEASE, aim(s.board, 4, 7)],
+      ]);
+      expect(board.values[sp.edgeOf(0, 1)]).toBe(LINE);
+      expect(board.values[sp.edgeOf(4, 7)]).toBe(NONE);
+      // A second click empties the edge.
+      const again = drive({ ...s, board }, [[LEFT_BUTTON, aim(s.board, 0, 1)]]);
+      expect(again.board.values[sp.edgeOf(0, 1)]).toBe(0);
+    });
+
+    it("by a drag along a row's edges, each taken near its middle", () => {
+      const s = fresh();
+      const { board, edits } = drive(s, [
+        [LEFT_BUTTON, { x: TS, y: TS / 2 }],
+        [LEFT_DRAG, { x: 2 * TS, y: TS / 2 }],
+        [LEFT_RELEASE, { x: 2 * TS, y: TS / 2 }],
+      ]);
+      expect(edits).toHaveLength(2);
+      const lines = sp.edges.filter((e) => board.values[e] === LINE);
+      expect(lines).toEqual([sp.edgeOf(0, 1), sp.edgeOf(1, 2)]);
+    });
+
+    it("by the keyboard, on the half grid", () => {
+      const s = fresh();
+      // The cursor starts on the first square's middle, where Enter does
+      // nothing, and one step right is the edge beside it.
+      const { board } = drive(s, [
+        [CURSOR_RIGHT, { x: 0, y: 0 }],
+        [CURSOR_SELECT, { x: 0, y: 0 }],
+        [CURSOR_DOWN, { x: 0, y: 0 }],
+        [CURSOR_DOWN, { x: 0, y: 0 }],
+        [CURSOR_SELECT2, { x: 0, y: 0 }],
+        [CURSOR_LEFT, { x: 0, y: 0 }],
+        [CURSOR_SELECT, { x: 0, y: 0 }],
+      ]);
+      expect(board.values[sp.edgeOf(0, 1)]).toBe(LINE);
+      expect(board.values[sp.edgeOf(3, 4)]).toBe(NONE);
+      expect(sp.edges.filter((e) => board.values[e] !== 0)).toHaveLength(2);
+    });
+
+    describe("with its cursor drawn", () => {
+      const game = fillGame("lacing", lacing);
+      const id = `3x3:${dealtOn(ring).board.dealt.number.v.join("")}`;
+      const cursorLines = (presses: number[]) =>
+        renderScenario({ game, id, presses }).recording.ops.filter(
+          (o) => o.op === "line" && o.color === COL_CURSOR,
+        );
+      const discs = renderScenario({ game, id }).recording.ops.flatMap((o) =>
+        o.op === "circle" && o.fill === COL_CELL ? [{ x: o.cx, y: o.cy }] : [],
+      );
+      /** The middle of the brackets `lines` draw. */
+      const middle = (lines: ReturnType<typeof cursorLines>) => {
+        const xs = lines.flatMap((l) => (l.op === "line" ? [l.x1, l.x2] : []));
+        const ys = lines.flatMap((l) => (l.op === "line" ? [l.y1, l.y2] : []));
+        return {
+          x: (Math.min(...xs) + Math.max(...xs)) / 2,
+          y: (Math.min(...ys) + Math.max(...ys)) / 2,
+        };
+      };
+      const near = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+        Math.hypot(a.x - b.x, a.y - b.y) <= 1;
+
+      it("on an edge by its two squares, between their middles", () => {
+        const lines = cursorLines([CURSOR_RIGHT]);
+        // Each square draws the brackets' eight strokes in its own clip.
+        expect(lines).toHaveLength(16);
+        const [a, b] = [discs[0], discs[1]];
+        expect(near(middle(lines), { x: (a.x + b.x) / 2, y: a.y })).toBe(true);
+      });
+
+      it("on a corner by its four squares, and on a middle by its square", () => {
+        expect(cursorLines([CURSOR_RIGHT, CURSOR_DOWN])).toHaveLength(32);
+        const corner = middle(cursorLines([CURSOR_RIGHT, CURSOR_DOWN]));
+        const [a, , , , e] = discs;
+        expect(near(corner, { x: (a.x + e.x) / 2, y: (a.y + e.y) / 2 })).toBe(true);
+        const square = cursorLines([CURSOR_RIGHT, CURSOR_RIGHT]);
+        expect(square).toHaveLength(8);
+        expect(near(middle(square), discs[1])).toBe(true);
+      });
     });
   });
 

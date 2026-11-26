@@ -19,6 +19,7 @@ import {
   stickyPencilPref,
 } from "../hint/pencil-prefs.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
+import { newCursor } from "../input/pointer.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import { searchTiers } from "../solve/answer-search.ts";
@@ -362,6 +363,9 @@ export function fillGame<C extends Clues<C> & object>(
         };
   const newUi = (b: FillBoard<C>): FillUi => {
     const ui = typed === null ? newFillUi() : typedUi(newFillUi(), play);
+    // On the edges the cursor is on the half grid (`edge-target.ts`), and
+    // starts in the first square's middle.
+    if (module.answerSort === "edge") ui.cursor = newCursor(1, 1);
     // A hexagon's store has no cell at its top left; the cursor starts on
     // the first that is the board's.
     if (module.hexagon !== undefined)

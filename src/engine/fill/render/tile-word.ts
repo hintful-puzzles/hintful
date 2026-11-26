@@ -86,6 +86,11 @@ export const EDGE_VALUE_BITS = 2;
 export const EDGE_ERR_SHIFT = 8;
 /** Check & Save found side `d`'s edge wrong. */
 export const EDGE_MISTAKE_SHIFT = 12;
+/** The half-grid cursor (`edge-target.ts`) rests on side `d`'s edge. */
+export const EDGE_CURSOR_SHIFT = 16;
+/** The cursor rests on corner `k` of the tile, clockwise from the top left;
+ * on its middle, the tile's word says so (`CURSOR`). */
+export const CORNER_CURSOR_SHIFT = 20;
 
 /** A cell's walls and fill, its inset partition's walls (`-1` where the
  * board has none) and the diagonals through it: what a board never

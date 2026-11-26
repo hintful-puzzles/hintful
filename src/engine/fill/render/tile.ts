@@ -15,7 +15,11 @@ import { isDone } from "../done.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import type { CellLayout } from "./cell-text.ts";
 import { paintDot } from "./layers/dots.ts";
-import { paintEdgeValues } from "./layers/edge-values.ts";
+import {
+  edgeCursorBits,
+  paintEdgeCursor,
+  paintEdgeValues,
+} from "./layers/edge-values.ts";
 import type { TileFrame } from "./layers/layer.ts";
 import { paintLinkHalves } from "./layers/links.ts";
 import { paintBars, paintDiamonds } from "./layers/live-errors.ts";
@@ -93,7 +97,10 @@ export function tileWordsOf<C extends Clues<C>>(
       const label = labels.get(i) ?? null;
       const v = valueAt(i);
       let k = words.word[i] | v | (state.fixed[i] ? FIXED : 0);
-      if (x === cx0 && y === cy0) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
+      // On the edges the cursor is on the half grid, a square's middle its
+      // own point.
+      if (cx.onEdges ? cx0 === 2 * x + 1 && cy0 === 2 * y + 1 : x === cx0 && y === cy0)
+        k |= CURSOR | (ui.linkArmed ? ARMED : 0);
       k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
       const hk = words.hintWord(x, y);
       let lk =
@@ -116,7 +123,7 @@ export function tileWordsOf<C extends Clues<C>>(
             };
       if (lay.f.threeD) lk |= THREE_D | (v !== 0 ? RAISED : 0);
       const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
-      const ek = words.edgeWord[i];
+      const ek = words.edgeWord[i] | (cx.onEdges ? edgeCursorBits(ui.cursor, x, y) : 0);
       // A growing piece is no key's: its tile is drawn every frame.
       const grows = before !== null && before[i] !== v;
       if (grows) ds.tiles.forget(i);
@@ -204,6 +211,7 @@ function drawTile<C extends Clues<C>>(
       COL_CURSOR,
       word & ARMED ? Math.max(3, ts >> 3) : Math.max(2, ts >> 4),
     );
+  paintEdgeCursor(frame);
 
   for (const s of spill) paintRaised(cx, lay.f.top, dr, s.tile, s);
   dr.unclip();
