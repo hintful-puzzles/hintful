@@ -11,7 +11,7 @@ import { liveErrors } from "../../../render/live-errors.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../../board.ts";
 import { numberText } from "../geometry.ts";
 import type { FillPalette } from "../palette.ts";
-import { COL_ERRTEXT, COL_INK } from "../palette.ts";
+import { COL_CELL, COL_ERRTEXT, COL_INK } from "../palette.ts";
 import type { FillSetup } from "../setup.ts";
 import {
   BLOCK_SHIFT,
@@ -76,13 +76,18 @@ export function shownNumber<C extends Clues<C>>(
 
 /** A number over whatever its cell holds: light over a dark piece; faint
  * once done; and broken, a badge on a decided cell, where red ink on a
- * piece would differ in hue with little of lightness in the dark scheme. */
+ * piece would differ in hue with little of lightness in the dark scheme.
+ * On an answer on the edges (`island`) the number stands on a disc of the
+ * cell's surface, as Bridges' islands and Pearl's pearls do, which the
+ * lines from its sides run in to. */
 export function paintNumber(
   pal: FillPalette,
   { dr, ts, tx, ty, lineWord, n, piece }: TileFrame,
+  island: boolean,
 ): void {
   if (n < 0) return;
   const full = numberText(ts, tx, ty);
+  if (island) dr.drawCircle(full.origin, ts * 0.3, COL_CELL, COL_INK);
   const text =
     lineWord & NUMBER_UNDER
       ? {

@@ -5,12 +5,17 @@
 
 import { describe, expect, it } from "vitest";
 import * as lacing from "../../generated/engine/testing/fixtures/lacing/lacing.compiled.ts";
+import { COL_ERROR } from "../color/roles.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
+import type { DrawOp } from "../testing/recording-drawing.ts";
+import { renderScenario } from "../testing/render-scenario.ts";
 import { type AnswerReading, edgeTextOf, encodeAnswer, textFormat } from "./answer.ts";
 import { elementsOf, marksOf, newBoard, paramSpaceOf, solveBoard } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc } from "./desc.ts";
+import { fillGame } from "./game.ts";
+import { COL_CELL, COL_INK, fillSlots } from "./render/palette.ts";
 import { sampleAnswer } from "./sample.ts";
 
 const LINE = 1;
@@ -122,6 +127,49 @@ describe("an answer on the edges", () => {
       expect(() => sampleAnswer(sample, sp, randomNew("e"), null, sp.edges)).toThrow(
         /only a cell keeps a distance/,
       );
+  });
+
+  describe("is drawn", () => {
+    const game = fillGame("lacing", lacing);
+    const slots = fillSlots(lacing.play, true).edgeByValue;
+    const lineInk = slots.get(LINE)?.slot[0] ?? -1;
+    const crossInk = slots.get(NONE)?.slot[0] ?? -1;
+    const sp = paramSpaceOf(lacing, { w: 3, h: 3 });
+    const id = `3x3:${dealtOn(ring).board.dealt.number.v.join("")}`;
+    const ops = (moves: { set: number[] }[], showMistakes = false) =>
+      renderScenario({ game, id, moves, showMistakes }).recording.ops;
+    const tiles = (o: readonly DrawOp[], color: number, op: string) =>
+      o.filter((x) => x.op === op && "color" in x && x.color === color);
+
+    it("with each edge's two squares each drawing its half", () => {
+      // Each square draws a line's half from its middle to the side the two
+      // share, which the two halves meet across.
+      const right = sp.edgeOf(0, 1);
+      const halves = tiles(ops([{ set: [right, LINE] }]), lineInk, "rect");
+      expect(halves).toHaveLength(2);
+      const [a, b] = halves.map((r) => (r.op === "rect" ? r : null));
+      expect(a !== null && b !== null && a.x + a.w >= b.x && a.y === b.y).toBe(true);
+      // A cross is two strokes, in each square's clip.
+      const below = sp.edgeOf(0, 3);
+      expect(tiles(ops([{ set: [below, NONE] }]), crossInk, "line")).toHaveLength(4);
+      expect(tiles(ops([]), lineInk, "rect")).toHaveLength(0);
+    });
+
+    it("with each number on a disc the lines run in to", () => {
+      const discs = ops([]).filter(
+        (o) => o.op === "circle" && o.fill === COL_CELL && o.outline === COL_INK,
+      );
+      expect(discs).toHaveLength(9);
+    });
+
+    it("with an edge Check & Save finds wrong in error", () => {
+      // The ring's answer has no line between the corner and the center's
+      // side.
+      const inner = sp.edgeOf(1, 4);
+      const shown = ops([{ set: [inner, LINE] }], true);
+      expect(tiles(shown, COL_ERROR, "rect")).toHaveLength(2);
+      expect(tiles(shown, lineInk, "rect")).toHaveLength(0);
+    });
   });
 
   it("finds a board whose values break a number impossible", () => {

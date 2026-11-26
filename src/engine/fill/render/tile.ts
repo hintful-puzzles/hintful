@@ -15,6 +15,7 @@ import { isDone } from "../done.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import type { CellLayout } from "./cell-text.ts";
 import { paintDot } from "./layers/dots.ts";
+import { paintEdgeValues } from "./layers/edge-values.ts";
 import type { TileFrame } from "./layers/layer.ts";
 import { paintLinkHalves } from "./layers/links.ts";
 import { paintBars, paintDiamonds } from "./layers/live-errors.ts";
@@ -66,14 +67,18 @@ export function tileWordsOf<C extends Clues<C>>(
   words: {
     readonly word: Int32Array;
     readonly lineWord: Int32Array;
+    readonly edgeWord: Int32Array;
     readonly hintWord: (x: number, y: number) => number;
   },
 ): (TileWords | null)[] {
   const { w, h } = state;
   const cx0 = ui.cursor.visible ? ui.cursor.x : -1;
   const cy0 = ui.cursor.visible ? ui.cursor.y : -1;
+  // On an answer on the edges a cell holds no value: its sides' are in its
+  // edge word.
+  const valueAt = (i: number): number => (cx.onEdges ? 0 : shown.values[i]);
   // A cell whose value just changed, while the engine drives timed redraws.
-  const before = animTime > 0 && prev !== null ? prev.values : null;
+  const before = animTime > 0 && prev !== null && !cx.onEdges ? prev.values : null;
   const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
   const states = numberStates(cx, shown);
   const joins = joinsOf(cx, shown);
@@ -86,7 +91,8 @@ export function tileWordsOf<C extends Clues<C>>(
       if (!lay.m.drawn(state, x, y)) continue;
       const i = y * w + x;
       const label = labels.get(i) ?? null;
-      let k = words.word[i] | shown.values[i] | (state.fixed[i] ? FIXED : 0);
+      const v = valueAt(i);
+      let k = words.word[i] | v | (state.fixed[i] ? FIXED : 0);
       if (x === cx0 && y === cy0) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
       k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
       const hk = words.hintWord(x, y);
@@ -97,8 +103,8 @@ export function tileWordsOf<C extends Clues<C>>(
         (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
         washes[i] |
         (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
-      const n = shownNumber(cx, state, i, shown.values[i], ui.hiddenShown);
-      if (n >= 0 && shown.values[i] === cx.play.covers?.value) lk |= NUMBER_UNDER;
+      const n = shownNumber(cx, state, i, v, ui.hiddenShown);
+      if (n >= 0 && v === cx.play.covers?.value) lk |= NUMBER_UNDER;
       const part =
         parts === null
           ? null
@@ -108,21 +114,23 @@ export function tileWordsOf<C extends Clues<C>>(
               inset: parts.inset?.[i] ?? -1,
               diagonal: parts.diagonal[i],
             };
-      if (lay.f.threeD) lk |= THREE_D | (shown.values[i] !== 0 ? RAISED : 0);
+      if (lay.f.threeD) lk |= THREE_D | (v !== 0 ? RAISED : 0);
       const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
+      const ek = words.edgeWord[i];
       // A growing piece is no key's: its tile is drawn every frame.
-      const grows = before !== null && before[i] !== shown.values[i];
+      const grows = before !== null && before[i] !== v;
       if (grows) ds.tiles.forget(i);
       tiles[i] = {
         k,
         hk,
         lk,
         nk,
+        ek,
         n,
         part,
         label: label?.text ?? null,
         anim: grows ? { from: before[i], frac } : null,
-        changed: grows || ds.tiles.changed(i, k, hk, lk, nk),
+        changed: grows || ds.tiles.changed(i, k, hk, lk, nk, ek),
       };
     }
   return tiles;
@@ -142,7 +150,7 @@ function drawTile<C extends Clues<C>>(
   spill: readonly RaisedAt[],
 ): void {
   const { pal, typed, play } = cx;
-  const { k: word, hk: hintWord, lk: lineWord, nk: noteWord, part } = t;
+  const { k: word, hk: hintWord, lk: lineWord, nk: noteWord, ek: edgeWord, part } = t;
   const [x, y, h] = at;
   const v = word & 0xff;
   const tx = lay.cellX(x, y, h, ts);
@@ -159,6 +167,7 @@ function drawTile<C extends Clues<C>>(
     hintWord,
     lineWord,
     noteWord,
+    edgeWord,
     n: t.n,
     part,
     struck,
@@ -178,8 +187,9 @@ function drawTile<C extends Clues<C>>(
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);
   paintLinkHalves(frame);
+  paintEdgeValues(pal, frame);
   paintDiamonds(frame);
-  paintNumber(pal, frame);
+  paintNumber(pal, frame, cx.onEdges);
   paintNumberHint(pal, frame);
   if (word & MISTAKE && !raised) drawMistake(dr, ts, tx, ty);
   // A board of buttons draws the cursor's corners; a board of numbers shows

@@ -26,6 +26,7 @@ import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
 import { layoutOf } from "./render/geometry.ts";
 import { hintPass } from "./render/hint.ts";
+import { edgeWordsOf } from "./render/layers/edge-values.ts";
 import { addLinks } from "./render/layers/links.ts";
 import { errorWords } from "./render/layers/live-errors.ts";
 import { addMistakes } from "./render/layers/mistakes.ts";
@@ -179,14 +180,16 @@ export function fillRender<C extends Clues<C>>(
     if (ds.tiles.firstFrame()) drawFrame(cx, lay, dr, ds, state);
 
     // The live errors, on the board as the drag would leave it.
-    const { word, lineWord, ...errors } = errorWords(cx, state, shown);
-    addMistakes(word, mistakes ?? []);
+    const { word, lineWord, edgeErrors, ...errors } = errorWords(cx, state, shown);
+    if (!cx.onEdges) addMistakes(word, mistakes ?? []);
     addLinks(cx, word, shown, mistakes ?? []);
+    const edgeWord = edgeWordsOf(cx, shown, edgeErrors, mistakes ?? []);
     const hint = hintPass(cx, lay, ds, frame, shown);
 
     const tiles = tileWordsOf(cx, lay, ds, frame, shown, {
       word,
       lineWord,
+      edgeWord,
       hintWord: hint.hintWord,
     });
     const raisedInto = raisedIntoOf(lay, state, ts, tiles);
@@ -216,7 +219,7 @@ export function fillRender<C extends Clues<C>>(
       return {
         tileSize: metrics.tileOf(tileSize),
         parts: partsOf(cx, b),
-        tiles: new TileCache(b.w * b.h, { words: 4, overlays: [struck] }),
+        tiles: new TileCache(b.w * b.h, { words: 5, overlays: [struck] }),
         struck,
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),

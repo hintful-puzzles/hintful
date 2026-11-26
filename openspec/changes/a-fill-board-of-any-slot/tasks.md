@@ -1,10 +1,14 @@
 ## Next
 
-2.2 step 4, the drawing (design.md § "Each concept, its form on an
-element, in order"): `fillGame("lacing", …)` still throws at the palette,
-which reads every value's painter as a cell's. The `lacing` fixture
-(3.1's) exists from 2.1 and is the test bed of each step; its
-`edge-answer.test.ts` grows with each. Open: none.
+2.2 step 5, the input (design.md § "Each concept, its form on an element,
+in order"). The `lacing` fixture (3.1's) is the test bed of each step; its
+`edge-answer.test.ts` grows with each. Lacing loads and draws in the app,
+but a click places nothing on an edge yet, and Auto-solve fails at the
+hint's gesture (step 6), whose words also still say "the ringed square".
+To look at a fixture in the app, copy its description under
+`src/games/<id>/` with a `catalog:` block, run `npm run describe`, and
+delete the copy after; Chrome refuses `file://` SVGs, so a recording is
+read with `toSvg` and `rsvg-convert`. Open: none.
 
 ## 1. Design
 
@@ -24,7 +28,8 @@ which reads every value's painter as a cell's. The `lacing` fixture
         clues, hide, codec, `aux`) needed nothing: lacing deals and solves
         to its `aux` (`edge-answer.test.ts`).
   - [ ] 3b A divided partition sampled as walls, with 3.2's fixture.
-  - [ ] 4 The drawing: edge painters in the tile words.
+  - [x] 4 The drawing: edge painters in a fifth tile word, the edge
+        word; an edge reddened; a number on a disc the lines run in to.
   - [ ] 5 The input: edge targets, the half-grid cursor.
   - [ ] 6 The hint: an edge ringed; the gesture.
   - [ ] 7 The refusals of what assumes a cell.

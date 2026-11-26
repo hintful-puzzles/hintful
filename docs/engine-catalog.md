@@ -865,7 +865,11 @@ A painter draws one piece in a cell and declares the colors it is drawn
 in, so a board drawn from painters has no palette of its own. A fill
 game's `play:` names one per value by `paint:` (`PAINTERS`), and
 `fill/render/palette.ts` gives each its slots. A new piece is a painter here,
-addressed to the piece, never to a game.
+addressed to the piece, never to a game. On an answer on the edges
+(`value.sort: edge`) `paint:` names an edge painter instead
+(`EDGE_VALUE_PAINTERS`, `edge-value.ts`): a wall, a line or a cross, which
+each of the edge's two squares draws its half of, in its own clip, as Pearl
+draws a line.
 
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
 
@@ -944,7 +948,7 @@ holds the opacity in both schemes. When to use it:
 ### `tile-cache.ts` — the tile cache and its miss test
 
 Reach for it whenever a board is painted as tiles. `TileCache` holds what
-each tile shows (a key of one to four words), the first frame, and the
+each tile shows (a key of one to five words), the first frame, and the
 overlay sidecars registered on it; `changed(i, key)` is the miss test and
 the record in one call, so no frame tests the key and forgets an overlay.
 The walk over the tiles stays the game's. Exemplars:

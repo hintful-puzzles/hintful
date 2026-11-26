@@ -2,8 +2,10 @@
  * The live errors (`Game.rules`): two cells that break a rule together get a
  * diamond on the side or corner they share; a run the rules forbid gets a bar
  * along it, two or more whole lines a bar across each; a cell any other rule
- * breaks at turns its piece red. A clue a rule breaks is marked by its own
- * layer or site, from the sets {@link errorWords} returns.
+ * breaks at turns its piece red. On an answer on the edges a rule breaks at
+ * edges, which the edge values' layer draws red (`edge-values.ts`). A clue a
+ * rule breaks is marked by its own layer or site, from the sets
+ * {@link errorWords} returns.
  */
 
 import { COL_ERROR } from "../../../color/roles.ts";
@@ -83,9 +85,16 @@ export function errorWords<C extends Clues<C>>(
   const { w, h } = state;
   const errors = liveErrors(rules, shown);
   const word = new Int32Array(w * h);
+  // On an answer on the edges a rule breaks at edges, each drawn in error
+  // whatever their number or shape.
+  const edgeErrors = new Uint8Array(setup.onEdges ? errors.at.length : 0);
+  if (setup.onEdges)
+    for (const list of errors.byRule.values())
+      for (const at of list) for (const e of at) edgeErrors[e] = 1;
+  const cellRules = setup.onEdges ? [] : [...errors.byRule];
   // Two cells a rule breaks at together, but a part's: the two crosses
   // that leave a region no room are no pair.
-  const pairs = [...errors.byRule].flatMap(([rule, list]) =>
+  const pairs = cellRules.flatMap(([rule, list]) =>
     partRules.includes(rule) ? [] : list.filter((at) => at.length === 2),
   );
   for (const [a, b] of pairs) {
@@ -109,7 +118,7 @@ export function errorWords<C extends Clues<C>>(
   // bar, two or more whole lines a bar across each, and any other cells
   // their pieces in error.
   const lineWord = new Int32Array(w * h);
-  for (const [rule, list] of errors.byRule)
+  for (const [rule, list] of cellRules)
     for (const at of list) {
       const ofPart = partRules.includes(rule);
       if (at.length === 2 && !ofPart) continue;
@@ -143,7 +152,15 @@ export function errorWords<C extends Clues<C>>(
           LABEL_BROKEN;
       else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
     }
-  return { word, lineWord, lineErrors, gapErrors, slotErrors, cornerErrors };
+  return {
+    word,
+    lineWord,
+    edgeErrors,
+    lineErrors,
+    gapErrors,
+    slotErrors,
+    cornerErrors,
+  };
 }
 
 /** A broken rule's bar, a thick outline inset from `box`. */

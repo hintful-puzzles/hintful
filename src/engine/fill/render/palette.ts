@@ -29,7 +29,9 @@ import {
 import { COL_BACKGROUND, FIRST_GAME_SLOT, rolePalette } from "../../color/roles.ts";
 import type { Color } from "../../contract/types.ts";
 import type { PencilIndicatorStyle } from "../../render/pencil-indicator.ts";
+import type { EdgeValuePainter } from "../../render/pieces/edge-value.ts";
 import { PAINTERS, type Painter, type PainterName } from "../../render/pieces/index.ts";
+import { edgeTextOf } from "../answer.ts";
 import type { FillPlay } from "../play.ts";
 
 /** The fills a dealt partition's parts take: the region palette's first four,
@@ -49,7 +51,10 @@ export const COL_LABEL = FIRST_GAME_SLOT + 4;
 const FIRST_PAINTER_SLOT = FIRST_GAME_SLOT + 5;
 
 /** A value's painter and the slot of each of its colors. */
-export type Placed = { readonly painter: Painter; readonly slot: readonly number[] };
+export type Placed<P = Painter> = {
+  readonly painter: P;
+  readonly slot: readonly number[];
+};
 
 /**
  * The palette's slots past the board's own: each painter's colors, one slot
@@ -57,44 +62,59 @@ export type Placed = { readonly painter: Painter; readonly slot: readonly number
  * under a value the cell was dealt, after the painters' so a board without
  * one numbers them as before; then a number's over a dark piece
  * (`COL_NUMBER_LIGHT`) and its two done colors, which only a board with
- * numbers fills. The board's ink is {@link COL_INK}.
+ * numbers fills. The board's ink is {@link COL_INK}. On an answer on the
+ * edges (`onEdges`) each value's painter is an edge painter
+ * (`EDGE_VALUE_PAINTERS`), in `edgeByValue`, and `byValue` is empty.
  */
-export function fillSlots(play: FillPlay): {
-  painted: ReadonlyMap<PainterName, Placed>;
+export function fillSlots(
+  play: FillPlay,
+  onEdges = false,
+): {
+  painted: ReadonlyMap<string, Placed<Painter | EdgeValuePainter>>;
   byValue: ReadonlyMap<number, Placed>;
+  edgeByValue: ReadonlyMap<number, Placed<EdgeValuePainter>>;
   COL_GIVEN: number;
   COL_NUMBER_LIGHT: number;
 } {
-  const painted = new Map<PainterName, Placed>();
+  const painted = new Map<string, Placed<Painter | EdgeValuePainter>>();
   const byValue = new Map<number, Placed>();
+  const edgeByValue = new Map<number, Placed<EdgeValuePainter>>();
   const slotOf = new Map<Color, number>();
   let next = FIRST_PAINTER_SLOT;
-  for (const [v, { paint }] of [
-    ...Object.entries(play.values ?? {}),
-    ...Object.entries(play.given ?? {}),
-  ]) {
-    if (!(paint in PAINTERS)) throw new Error(`play: no painter ${paint}`);
-    const name = paint as PainterName;
-    let got = painted.get(name);
-    if (got === undefined) {
-      const painter: Painter = PAINTERS[name];
-      const slot = painter.colors([0, 0, 0]).map((c) => {
-        const known = slotOf.get(c);
-        if (known !== undefined) return known;
-        slotOf.set(c, next);
-        return next++;
-      });
-      got = { painter, slot };
-      painted.set(name, got);
+  const place = <P extends Painter | EdgeValuePainter>(
+    name: string,
+    painter: P,
+  ): Placed<P> => {
+    const got = painted.get(name);
+    if (got !== undefined) return got as Placed<P>;
+    const slot = painter.colors([0, 0, 0]).map((c) => {
+      const known = slotOf.get(c);
+      if (known !== undefined) return known;
+      slotOf.set(c, next);
+      return next++;
+    });
+    const placed = { painter, slot };
+    painted.set(name, placed);
+    return placed;
+  };
+  if (onEdges)
+    for (const [v, { paint }] of Object.entries(play.values ?? {}))
+      edgeByValue.set(Number(v), place(paint, edgeTextOf(play)[Number(v)]));
+  else
+    for (const [v, { paint }] of [
+      ...Object.entries(play.values ?? {}),
+      ...Object.entries(play.given ?? {}),
+    ]) {
+      if (!(paint in PAINTERS)) throw new Error(`play: no painter ${paint}`);
+      byValue.set(Number(v), place(paint, PAINTERS[paint as PainterName]));
     }
-    byValue.set(Number(v), got);
-  }
-  return { painted, byValue, COL_GIVEN: next, COL_NUMBER_LIGHT: next + 1 };
+  return { painted, byValue, edgeByValue, COL_GIVEN: next, COL_NUMBER_LIGHT: next + 1 };
 }
 
 /** Every slot a board's look takes past the board's own, and its colors. */
 export interface FillPalette {
   readonly byValue: ReadonlyMap<number, Placed>;
+  readonly edgeByValue: ReadonlyMap<number, Placed<EdgeValuePainter>>;
   readonly COL_GIVEN: number;
   readonly COL_NUMBER_LIGHT: number;
   readonly COL_NUMBER_LIGHT_DONE: number;
@@ -113,14 +133,19 @@ export interface FillPalette {
   colors(background: Color): Color[];
 }
 
-/** The palette of a board of `play`, with numbers on cells where `numbered`
- * and a partition drawn as walls and fills where `walled`. */
+/** The palette of a board of `play`, with numbers on cells where `numbered`,
+ * a partition drawn as walls and fills where `walled`, and its values on the
+ * edges where `onEdges`. */
 export function fillPalette(
   play: FillPlay,
   numbered: boolean,
   walled: boolean,
+  onEdges: boolean,
 ): FillPalette {
-  const { painted, byValue, COL_GIVEN, COL_NUMBER_LIGHT } = fillSlots(play);
+  const { painted, byValue, edgeByValue, COL_GIVEN, COL_NUMBER_LIGHT } = fillSlots(
+    play,
+    onEdges,
+  );
   const COL_NUMBER_LIGHT_DONE = COL_GIVEN + 2;
   const COL_NUMBER_DONE = COL_GIVEN + 3;
   /** A part's walls, and the first of the fills its cells take: after the
@@ -204,6 +229,7 @@ export function fillPalette(
 
   return {
     byValue,
+    edgeByValue,
     COL_GIVEN,
     COL_NUMBER_LIGHT,
     COL_NUMBER_LIGHT_DONE,

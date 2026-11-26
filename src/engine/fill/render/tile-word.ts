@@ -77,6 +77,16 @@ export const LABEL_DONE = 1 << 17;
 export const THREE_D = 1 << 18;
 export const RAISED = 1 << 19;
 
+// --- the edge word: on an answer on the edges, the tile's four sides --------
+/** Side `d`'s value (up, right, down, left), {@link EDGE_VALUE_BITS} a side
+ * from bit 0, 0 where the edge is open or the tile's side is the board's
+ * rim. */
+export const EDGE_VALUE_BITS = 2;
+/** A rule breaks at side `d`'s edge: its mark is drawn in error. */
+export const EDGE_ERR_SHIFT = 8;
+/** Check & Save found side `d`'s edge wrong. */
+export const EDGE_MISTAKE_SHIFT = 12;
+
 /** A cell's walls and fill, its inset partition's walls (`-1` where the
  * board has none) and the diagonals through it: what a board never
  * changes, so no tile's key holds it. */
@@ -93,6 +103,8 @@ export type TileWords = {
   readonly hk: number;
   readonly lk: number;
   readonly nk: number;
+  /** The edge word, 0 on an answer on the cells. */
+  readonly ek: number;
   readonly n: number;
   readonly part: CellPart | null;
   readonly label: string | null;

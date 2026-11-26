@@ -78,7 +78,15 @@ export function fillSetup<C extends Clues<C>>(
   const raises = play.numbers?.raised === true;
   /** The clue kind a link from a cell names the clue of. */
   const linkClues = play.links === undefined ? null : (play.links.clue as keyof C);
-  const pal: FillPalette = fillPalette(play, numbers.length > 0, walled !== undefined);
+  const pal: FillPalette = fillPalette(
+    play,
+    numbers.length > 0,
+    walled !== undefined,
+    module.answerSort === "edge",
+  );
+  /** Whether the answer sits on the edges: each tile then draws its four
+   * sides' values (`tile-word.ts`'s edge word), and holds none of its own. */
+  const onEdges = module.answerSort === "edge";
   const metrics: FillMetrics = fillMetrics({
     notes,
     covers: play.covers !== undefined,
@@ -159,6 +167,7 @@ export function fillSetup<C extends Clues<C>>(
     notes,
     raises,
     linkClues,
+    onEdges,
     pal,
     metrics,
     tallied,

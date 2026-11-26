@@ -40,8 +40,8 @@ export class TileCache {
       overlays = [],
     }: { words?: number; overlays?: readonly OverlaySidecar[] } = {},
   ) {
-    if (words < 1 || words > 4)
-      throw new RangeError(`a tile key is 1 to 4 words, not ${words}`);
+    if (words < 1 || words > 5)
+      throw new RangeError(`a tile key is 1 to 5 words, not ${words}`);
     this.words = words;
     this.overlays = overlays;
     this.keys = new Int32Array(count * words).fill(NEVER_DRAWN);
@@ -58,12 +58,12 @@ export class TileCache {
   /**
    * Whether tile `i` must be painted to show `key`: what it shows differs, or
    * an overlay on it moved. When it must, the tile is recorded as showing
-   * both, so the caller paints it now. `k1` to `k3` are the key's further
+   * both, so the caller paints it now. `k1` to `k4` are the key's further
    * words, in a cache built with them. Parameters and not a rest array,
    * because this runs for every tile of every frame and a rest array is an
    * allocation each time.
    */
-  changed(i: number, key: number, k1 = 0, k2 = 0, k3 = 0): boolean {
+  changed(i: number, key: number, k1 = 0, k2 = 0, k3 = 0, k4 = 0): boolean {
     const keys = this.keys;
     const at = i * this.words;
     const n = this.words;
@@ -71,12 +71,14 @@ export class TileCache {
       keys[at] === key &&
       (n < 2 || keys[at + 1] === k1) &&
       (n < 3 || keys[at + 2] === k2) &&
-      (n < 4 || keys[at + 3] === k3);
+      (n < 4 || keys[at + 3] === k3) &&
+      (n < 5 || keys[at + 4] === k4);
     if (same && !this.overlayMoved(i)) return false;
     keys[at] = key;
     if (n > 1) keys[at + 1] = k1;
     if (n > 2) keys[at + 2] = k2;
     if (n > 3) keys[at + 3] = k3;
+    if (n > 4) keys[at + 4] = k4;
     for (const o of this.overlays) o.commit(i);
     return true;
   }

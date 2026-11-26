@@ -25,6 +25,9 @@ export interface TileFrame {
   /** On a board that keeps notes, the cell's notes, bit `v` a value's, and
    * `NOTES_MODE` where the selection takes notes. */
   readonly noteWord: number;
+  /** On an answer on the edges, the values on the tile's sides and their
+   * errors (`tile-word.ts`'s edge word); 0 on one on the cells. */
+  readonly edgeWord: number;
   /** The number on the cell, `-1` where it has none. */
   readonly n: number;
   /** The cell's walls and fill, where the board deals a partition. */
