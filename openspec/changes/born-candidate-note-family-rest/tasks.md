@@ -1,10 +1,8 @@
 ## Next
 
-3.1b, then 3.1a: the figures for Solo, ABCD and Salad are taken
-(design.md § "The figures (3.1)"); Solo's deal passes the bar on four
-menu boards, and Solo's and Salad's step changes are to explain: by rung
-in design.md, Salad's `borderNear` and Solo's `intersect` to read on a
-board in both trees. Then 2.4a.
+3.1a: Solo's deal passes the bar on four menu boards (design.md § "The
+figures (3.1)"); bring it back under 100 ms in the engine. Then 2.4a. The
+step figures of 3.1 are taken again at the end, after 3.1b's fix.
 Group's controls are answered: keep them, as engine capabilities
 (design.md § "Decisions" 2).
 
@@ -67,8 +65,9 @@ changed for a player" gets its line. In the order task 1.1 set.
 
 - [ ] 3.1a Solo's deal back under 100 ms on its four menu boards past the
       bar, in the engine (design.md § "The figures (3.1)").
-- [ ] 3.1b Solo's 434 fewer steps and Salad's 511 more explained, and
-      Salad's fixed if each hint does less.
+- [x] 3.1b Solo's 434 fewer steps and Salad's 511 more explained, and
+      Salad's fixed if each hint does less (design.md § "The figures
+      (3.1)", "The steps by rung"): the commit that ticks 3.1b.
 - [ ] 3.1 The figures of `docs/descriptions.md` § "Judging a family moved
       onto its description", per game, with `npm run compare-cost --
       --base <this change's baseline>`, recorded in design.md; each deal

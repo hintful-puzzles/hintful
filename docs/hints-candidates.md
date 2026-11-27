@@ -728,11 +728,17 @@ within that:
   sentence. A firing whose premise is a whole region (a cage) splits by
   cell, the shaded region constant across the journey, and a list of values
   within a leg is fine. A firing whose premise names one digit across cells
-  is one multi-cell step. Exemplars: a cell a leg, or a value a leg where
-  the description says `shown: value` (Towers' heights, and ABCD's
-  `satisfied`, one letter struck from a whole line in one step), in
-  [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts), which
-  walks a born game's own techniques, Keen's cages among them; guard
+  is one multi-cell step. Exemplars: a born game's own techniques, walked
+  by [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts), are
+  cut a value a leg where the description says `shown: value` (Towers'
+  heights, and ABCD's `satisfied`, one letter struck from a whole line in
+  one step); a cell a leg where the words name the leg's cell (`{ring}`),
+  the values it strikes (`{struck}`) or a fact's own, as Keen's cages do
+  (`speaksOfOneCell`, compiled as `byCell`); and otherwise as the library's
+  strikes are (`byWrittenCell`: Solo's `intersect`). `shown: value` is for
+  a sentence that names the value; on one that names a cell, a firing
+  striking several values from it says the same thing a step a value, "so
+  the B must go", then "so the C must go", of one square. Guard
   `engine/fill/own-steps.test.ts` "strikes one number a step".
 
 ## Placements lead when the deductions are placements

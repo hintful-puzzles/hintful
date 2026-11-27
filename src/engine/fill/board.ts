@@ -156,7 +156,8 @@ export type LadderedFillModule<C> = FillModule<C> &
      * in the margin beyond a line's end, and those that name a clue, by its
      * kind, which they mark where it is drawn; whether it places reading no notes,
      * so the walk offers it before they are set up; whether its steps
-     * strike a value each, from every square it strikes it in; the one
+     * strike a value each, from every square it strikes it in, or a cell
+     * each, its words being one cell's; the one
      * rung its steps are recorded under, where that is not its id; and the
      * kind of rule it was placed as, by which the walk knows its own
      * singles. */
@@ -170,6 +171,7 @@ export type LadderedFillModule<C> = FillModule<C> &
           readonly clueTerms?: Readonly<Record<string, string>>;
           readonly leads?: boolean;
           readonly byValue?: boolean;
+          readonly byCell?: boolean;
           readonly rung?: string;
         }
       >

@@ -245,6 +245,33 @@ export function checkOwnWords(own: readonly Technique[]): void {
   }
 }
 
+/** The words that say the values a strike step removes. */
+const STRUCK_WORDS: ReadonlySet<string> = new Set(["struck", "struckOr", "struckA"]);
+
+/**
+ * Whether a technique's steps speak of one cell's strikes: their words name
+ * the cell a step strikes from (`{ring}`) or the values it strikes
+ * (`{struck}`), or each fact or square has words of its own. On a board of
+ * notes its strikes are then a step a cell; any other technique's from the
+ * cells with notes are one step, as the library's are.
+ */
+export function speaksOfOneCell(says: Says): boolean {
+  if (says.each || says.legs || says.fact !== null) return true;
+  return says.variants.some((v) =>
+    v.words.some((w) =>
+      (Object.values(w.clauses) as (string | undefined)[]).some(
+        (src) =>
+          src !== undefined &&
+          slotsOf(src).some(
+            (s) =>
+              s.role === "ring" ||
+              [s.name, ...s.inner].some((n) => n !== null && STRUCK_WORDS.has(n)),
+          ),
+      ),
+    ),
+  );
+}
+
 /** The module's `STATED`: each kind of step's clauses as the description
  * states them, by wording, and each fact's, for `engine/hint/stated.ts` to render.
  * A firing's `wording`, and a fact's, is the index of the one that held; it is

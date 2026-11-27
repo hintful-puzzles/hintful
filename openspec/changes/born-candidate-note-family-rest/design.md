@@ -348,18 +348,36 @@ seed's least of three runs, bundled; baseline / working median):
 No walk comes near 100 ms on a menu board.
 
 **The steps by rung (3.1b)**, `--quick` (one board a menu board; baseline
-/ working), read so far:
+/ working), read 2026-11-27 step by step in both trees, each board walked
+by its hint from the same ID:
 
-- **Salad**, 996 / 1,141. `borderNear` 114 / 305 is the rise; `emptyLine`
-  121 stands for the hand-written `countLettersDone` and `countHolesDone`
-  (87 and 76), and `crossNaked`, `circleXNote` and `xNoteGone` (64) are
-  gone into `emptySquare` and `ball` (54). A `borderNear` firing strikes
-  one square (those before it are placed empty), so the rise is in how
-  often it fires, not a firing cut into legs: to read on a board, step by
-  step in both trees.
-- **Solo**, 1,329 / 1,234. `note` 188 / 43 is the fall (the implicit
-  reading writes fewer cells' notes); `intersect` 69 / 136 doubles, to
-  read the same way, as a firing cut by cell would do less a step.
+- **Salad**, 996 / 1,141, and 957 fixed. `borderNear` 114 / 305 was the
+  rise, and it was a firing cut into legs after all: the description said
+  `shown: value`, so a firing striking B and C from the square nearest a
+  clue was two steps ("so the B must go", "so the C must go") where the
+  hand-written game's one said "so B and C must go". Both trees fire it on
+  the same squares (12 on 5n3Lde). Its words name the square, not a value,
+  so the fix drops `shown: value` there: `borderNear` 121, each step doing
+  what the hand-written one did. The rest is the family's: `emptyLine` 121
+  stands for the hand-written `countLettersDone` and `countHolesDone` (87
+  and 76), and `crossNaked`, `circleXNote` and `xNoteGone` (64) are gone
+  into `emptySquare` and `ball` (54).
+- **Solo**, 1,329 / 1,234, and 1,231 with the split below. `note` 188 / 43
+  is the fall and `intersect` 69 / 136 the rise, one cause: under the
+  implicit reading an `intersect` striking a digit from a note-less cell
+  writes that cell's notes without it ("so this cell can only be 2, 3, 5,
+  6, 8 or 9"), a step a cell, where the hand-written game first spent a
+  `note` step on each cell and then one `intersect` step striking all of
+  them. 101 of the 136 are such folds. No step does less: the fold says
+  in one step what took two.
+- **The split.** Reading Solo showed the fill engine cut every described
+  strike firing a leg a cell, where the library's strikes put the cells
+  with notes written in one leg (`byWrittenCell`). A described technique
+  now splits as the library's do unless its words are one cell's (they
+  say `{ring}`, `{struck}` or a fact's own: Keen's cages, Mathrax's
+  clues), compiled as `byCell`. It moves Solo's `intersect` and
+  `digitSet` and Salad's `borderNear` and `ball`; Solo's three
+  `intersect` firings over noted cells are one step each.
 
 ## Open Questions
 

@@ -159,7 +159,7 @@ exports[`salad: pinned hint positions > says, at each pin 1`] = `
 {
   "ball": "The outlined ball means its square holds a number, so the X must go.",
   "borderFar": "This clue sees C first, after at most one empty square, so the Cs must go.",
-  "borderNear": "This clue sees A first, and the square nearest it can only be A or empty, so the B must go.",
+  "borderNear": "This clue sees A first, and the square nearest it can only be A or empty, so B and C must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its square's row or column.",
   "dup": "The A just placed can't repeat in its row and column, so the As must go from the other squares.",
   "emptyLine": "All 3 numbers of this row are already placed, so this square must be empty.",

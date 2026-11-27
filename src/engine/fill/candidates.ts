@@ -15,7 +15,8 @@
  * techniques placed as `one.cell` and `one.place` are none of its rungs. The
  * library's strikes are worded by the library (`hint-text.ts`'s Latin words),
  * a firing one leg over the cells with notes written and a leg each over
- * those without (`byWrittenCell`); where a placed value rules itself out of
+ * those without (`byWrittenCell`), and so are the description's own, unless
+ * their words are one cell's or one value's; where a placed value rules itself out of
  * more than its row and column, the description words how far
  * (`WALK_STEPS`).
  */
@@ -316,8 +317,11 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   /**
    * A firing of the description's own technique `id` as legs, as the walk
    * makes moves: a placement each, the later legs of the journey saying
-   * their `again`; or the strikes a cell each, or a value each where the
-   * technique says so (`byValue`, Towers' heights). Each is worded by what
+   * their `again`; or the strikes, those from cells whose notes are
+   * `written` as one leg and each other cell's its own, as the library's
+   * are (`byWrittenCell`); a cell each where its words are one cell's
+   * (`byCell`), or a value each where the technique says so (`byValue`,
+   * Towers' heights). Each is worded by what
    * the technique states, of the fact its first move is where it words each
    * fact, else of its step: a strike by its look, the walk saying what the
    * leg strikes. A look may name the leg's cells (`{ring}`) and the values it
@@ -328,6 +332,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     f: LadderFiring,
     sp: GridSpace,
     board: FillBoard<C>,
+    written: ArrayLike<number>,
   ): Firing<FillMove, CandidateFillHint, Reason> {
     const { w, h } = sp;
     const vocab = vocabOf(board);
@@ -415,8 +420,13 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       return places;
     }
     const strikes = strikesOf(f, w);
+    const split = module.techniques[id];
     const legs =
-      module.techniques[id]?.byValue === true ? byValue(strikes) : byCell(strikes);
+      split?.byValue === true
+        ? byValue(strikes)
+        : split?.byCell === true
+          ? byCell(strikes)
+          : byWrittenCell(strikes, written, w);
     return legs.map((strike) => {
       const { clauses, context } = wordsOf(strikes.indexOf(strike[0]), strike);
       const { look } = statedParts(clauses, { ...context, struck: valuesOf(strike) });
@@ -550,7 +560,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
             techniqueRung<FillMove, CandidateFillHint, Reason>(
               on,
               id,
-              (f) => ownLegs(id, f, sp, board),
+              (f, _shown, written) => ownLegs(id, f, sp, board, written),
               { leads: module.techniques[id]?.leads === true },
             ),
           ),

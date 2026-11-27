@@ -66,11 +66,11 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * which it marks off the grid, and those that name a clue, by its kind,
  * which it marks where the clue is drawn;
  * the kind of rule it was placed as; whether it leads, placing with no
- * notes read; whether its steps strike a value each; and its one rung,
- * where that is not its id. */
+ * notes read; whether its steps strike a value each, or a cell each; and
+ * its one rung, where that is not its id. */
 export const techniques = {
-  adjacent: { dealt: true, run: adjacent, reads: {"at":{"a":["given"],"b":["given"],"e":["bar"]},"clues":{}}, kind: "rel.support" },
-  adjacentSet: { dealt: true, run: adjacentSet, reads: {"at":{"a":["given"],"b":["given"],"e":["bar"]},"clues":{}}, kind: "rel.support" },
+  adjacent: { dealt: true, run: adjacent, reads: {"at":{"a":["given"],"b":["given"],"e":["bar"]},"clues":{}}, kind: "rel.support", byCell: true },
+  adjacentSet: { dealt: true, run: adjacentSet, reads: {"at":{"a":["given"],"b":["given"],"e":["bar"]},"clues":{}}, kind: "rel.support", byCell: true },
 } as const;
 
 /** The ladder: each technique's tier, on its scale where that is not the

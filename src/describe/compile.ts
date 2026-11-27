@@ -34,7 +34,12 @@ import {
   supplies,
   type Val,
 } from "./compile-sorts.ts";
-import { checkOwnWords, statedTable, stepsBlock } from "./compile-stated.ts";
+import {
+  checkOwnWords,
+  speaksOfOneCell,
+  statedTable,
+  stepsBlock,
+} from "./compile-stated.ts";
 import { capitalized, compileTechnique } from "./compile-technique.ts";
 import { freeNames, reads } from "./compile-terms.ts";
 import { type MarkRead, violationCheck } from "./compile-violations.ts";
@@ -370,6 +375,7 @@ export function compileGame(
     id: t.id,
     kind: t.kind,
     byValue: t.says?.byValue === true,
+    byCell: t.says !== null && !t.says.byValue && speaksOfOneCell(t.says),
     rung: t.rungs.length === 1 && t.rungs[0] !== t.id ? t.rungs[0] : null,
     ...compileTechnique(t, env),
   }));
@@ -584,8 +590,8 @@ export function compileGame(
     " * which it marks off the grid, and those that name a clue, by its kind,",
     " * which it marks where the clue is drawn;",
     " * the kind of rule it was placed as; whether it leads, placing with no",
-    " * notes read; whether its steps strike a value each; and its one rung,",
-    " * where that is not its id. */",
+    " * notes read; whether its steps strike a value each, or a cell each; and",
+    " * its one rung, where that is not its id. */",
     "export const techniques = {",
     ...compiled.map(
       (c) =>
@@ -713,16 +719,18 @@ export function compileGame(
  * easiest tier as accepting no other. */
 /** What the walk of a board's notes reads of a technique, past its entry's
  * own: the kind of rule it was placed as, whether it leads, whether its steps
- * strike a value each, and its one rung where that is not its id. */
+ * strike a value each or a cell each, and its one rung where that is not its
+ * id. */
 function walkOf(c: {
   kind: string | null;
   leads: boolean;
   byValue: boolean;
+  byCell: boolean;
   rung: string | null;
 }): string {
   return `${c.kind === null ? "" : `, kind: ${JSON.stringify(c.kind)}`}${
     c.leads ? ", leads: true" : ""
-  }${c.byValue ? ", byValue: true" : ""}${
+  }${c.byValue ? ", byValue: true" : ""}${c.byCell ? ", byCell: true" : ""}${
     c.rung === null ? "" : `, rung: ${JSON.stringify(c.rung)}`
   }`;
 }

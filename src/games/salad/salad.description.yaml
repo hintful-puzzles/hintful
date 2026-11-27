@@ -172,7 +172,6 @@ techniques:
       forall e in domain where e != v(k) and e <= n: strike(c, e)
     # The empty squares the clue sees past outlined, where there are any.
     says:
-      shown: value
       terms: { k: k, v: "v(k)", f: f }
       marks:
         outline: "{c in L where index(c, L) < f}"

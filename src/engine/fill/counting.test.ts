@@ -32,7 +32,7 @@ import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.t
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import type { FillHint } from "./hint.ts";
-import type { FillMove } from "./notes.ts";
+import { type FillMove, isCandidateMove } from "./notes.ts";
 import { marginPlaceAt, marginPoint } from "./value-margin.ts";
 
 const game = fillGame("counting", counting);
@@ -468,6 +468,32 @@ describe("the walk of notes on a board with no unit", () => {
     expect(boards).toBe(8);
     expect(rungs.has("full")).toBe(true);
     expect(rungs.has("hiddenSingle")).toBe(false);
+  });
+
+  // `full`'s words name neither a cell nor the letter struck, so a firing's
+  // strikes from cells whose notes are written are one step, as a set's are.
+  it("strikes a technique's firing from every noted cell in one step", () => {
+    let widest = 0;
+    let fulls = 0;
+    for (const seed of ["a", "b", "c", "d"]) {
+      let b = dealt("4x4k3", `populate${seed}`);
+      for (let k = 0; game.status(b) !== "solved"; k++) {
+        if (k > 200) throw new Error("the walk runs on");
+        const [step] = plan(b, "populate");
+        const { move } = step;
+        if (
+          step.rung === "full" &&
+          isCandidateMove(move) &&
+          move.type === "pencilStrike"
+        ) {
+          fulls++;
+          widest = Math.max(widest, new Set(move.marks.map((m) => m.y * 4 + m.x)).size);
+        }
+        b = game.executeMove(b, step.move);
+      }
+    }
+    expect(fulls).toBeGreaterThan(0);
+    expect(widest).toBeGreaterThan(1);
   });
 
   it("says how far a placed number reaches in the description's words", () => {

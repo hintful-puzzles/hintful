@@ -63,8 +63,8 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * which it marks off the grid, and those that name a clue, by its kind,
  * which it marks where the clue is drawn;
  * the kind of rule it was placed as; whether it leads, placing with no
- * notes read; whether its steps strike a value each; and its one rung,
- * where that is not its id. */
+ * notes read; whether its steps strike a value each, or a cell each; and
+ * its one rung, where that is not its id. */
 export const techniques = {
   line: { dealt: true, run: line, reads: {"at":{"L":["runs"],"c":["given"]},"clues":{}} },
 } as const;

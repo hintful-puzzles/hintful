@@ -581,3 +581,24 @@ the board's ruleset does not deal.
 - **WHEN** `5n3Bde:d1cO32b3aXa1d2b` is printed as text
 - **THEN** its ball's square reads `O`, its cross `X`, and the grid has no
   rim of border clues
+
+### Requirement: A born game's own strikes are steps as its words speak of them
+
+A firing of a description's own technique that strikes notes SHALL be one
+step a value where its steps say `shown: value`; one step a cell where its
+words name the step's cell (`{ring}`), the values it strikes (`{struck}`)
+or a fact's own terms; and otherwise one step for every cell whose notes are
+written, and one for each cell without, as the library's strikes are.
+
+#### Scenario: A technique whose words name neither cell nor value
+
+- **WHEN** a counting board is walked under the reading that pencils every
+  candidate in first, and a line holding all of a letter it counts strikes
+  that letter
+- **THEN** one step strikes it from every open cell of the line that notes it
+
+#### Scenario: Salad's nearest square
+
+- **WHEN** a border clue sees B first and the square nearest it notes A, B
+  and C
+- **THEN** one step strikes A and C from that square, "so A and C must go"
