@@ -205,7 +205,7 @@ exports[`solo: pinned hint positions > says, at each pin 1`] = `
 {
   "cageMinMax": "This cage's open cells make 7; the others leave no room for 7, 8 or 9, so this cell can only be 1, 2, 3, 4, 5 or 6.",
   "cageSingle": "This cage's other cells leave 9, so its last cell must be 9.",
-  "cageSums": "No set of different numbers that makes 19 in this cage's open cells has 1, so this cell can only be 2, 3, 4, 5, 6, 7, 8 or 9.",
+  "cageSums": "This cage's open cells make 19 in different numbers, never with 1, so this cell can only be 2, 3, 4, 5, 6, 7, 8 or 9.",
   "clean": "Now clear the easy ones: cross out any number already in its cell's row, column or block.",
   "dup": "The 6 just placed can't repeat in its row, column or block, so the 6 must go from the other cells.",
   "hiddenSingle": "No other cell in this block can be 1, so this cell must be 1.",

@@ -32,6 +32,14 @@ import { divided } from "./partition.ts";
  * partition divided again. */
 const ANSWER_SEARCH_BUDGET = 2_000;
 
+/** The tier the search for an answer deduces up to: the easiest, or none
+ * where the easiest is the search tier. Any answer will do, and a stronger
+ * technique costs more at every position than the branches it saves: Solo's
+ * search over its whole ladder below Unreasonable, `latin.set`'s walk of
+ * each line's subsets included, dealt 3x3 Unreasonable in 101 ms and at the
+ * easiest tier in 19 (median of six seeds, bundled, 2026-11-27). */
+const ANSWER_SEARCH_CAP = 0;
+
 /** An answer drawn, and the partitions drawn with it; `null` where they are
  * left to be dealt round it. */
 export interface Drawn {
@@ -66,7 +74,11 @@ const SAMPLERS: {
     const found = searchedPositions(
       cx.module,
       cx.board(cx.module.deriveClues(blank, cx.sp, grown, cx.given)),
-      { budget: ANSWER_SEARCH_BUDGET, random: cx.rs },
+      {
+        budget: ANSWER_SEARCH_BUDGET,
+        random: cx.rs,
+        cap: Math.min(ANSWER_SEARCH_CAP, cx.module.tiers.length - 2),
+      },
       1,
     );
     if (found === null || found.length === 0)

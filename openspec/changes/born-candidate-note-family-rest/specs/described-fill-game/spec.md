@@ -602,3 +602,34 @@ written, and one for each cell without, as the library's strikes are.
 - **WHEN** a border clue sees B first and the square nearest it notes A, B
   and C
 - **THEN** one step strikes A and C from that square, "so A and C must go"
+
+## MODIFIED Requirements
+
+### Requirement: A born game's answer may be searched under a partition dealt first
+
+`deal.divide` with `sizes` SHALL deal a partition before the answer, one
+part at a time grown to a size drawn from a list (one list a ruleset, with
+`by`), and `deal.sample: { search: true }` SHALL find the answer under it
+by a search over the ladder's easiest tier, a cell's values tried in a
+random order, a draw whose search runs out divided again. Where a
+cell's domain is its part's numbers, the keypad SHALL run to the largest
+size drawn, and a cell SHALL take no number past its part's size.
+
+#### Scenario: Areas of drawn sizes, each holding 1 to its size
+
+- **WHEN** a born game whose areas are divided to sizes drawn from 2, 3 and
+  4 deals a 6×7 board
+- **THEN** no area is larger than 4, the board has one answer, and each
+  area holds 1 to its size once
+
+#### Scenario: A ruleset written as its bare letter
+
+- **WHEN** a born game's ruleset setting names `letters: ["", T]` and a
+  board of the second ruleset is written
+- **THEN** its params are `6x6T`, the first ruleset's `6x6`, each read back
+  to its ruleset, and the Custom dialog offers both as its game mode
+
+#### Scenario: A number past the cell's area is not typed
+
+- **WHEN** a player selects a cell of an area of three and types 4
+- **THEN** nothing is entered, and the keypad offers 1 to 4

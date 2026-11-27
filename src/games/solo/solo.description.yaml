@@ -399,8 +399,8 @@ variations:
             terms: { t: t }
             marks: { stripes: "cells(r)" }
             look: >-
-              No set of different numbers that makes {numeral t} in
-              {stripes: this cage}'s open cells has {struckOr}
+              {stripes: This cage}'s open cells make {numeral t} in different
+              numbers, never with {struckOr}
         # The same reading of each partial cage of two to four cells, as
         # `partMinMax` binds them. With no set of values left, the marks
         # are inconsistent.

@@ -342,6 +342,20 @@ seed's least of three runs, bundled; baseline / working median):
   9 Jigsaw Extreme 96 / 325. Those the baseline already passed are dearer
   too: 3x3 Advanced 163 / 516 (slowest 615 / 6,402), 3x3 Extreme 135 / 621,
   2x3 Intermediate 263 / 645. To be fixed in the engine (3.1a).
+- **Fixed (3.1a).** Nearly all of it was the search for the answer under
+  the blocks and cages (`sample: { search: true }`), which ran the ladder
+  below Unreasonable at every position it tried: 41% of a profile's samples
+  were `latin.set`, which walks each line's subsets of values, and 77% the
+  search. Any answer will do there, so the search now deduces at the
+  easiest tier alone (`samplers.ts`'s `ANSWER_SEARCH_CAP`); Seismic's ladder
+  already capped it there, and the fixtures' one tier is the search's.
+  `--quick --times 12` against `f5b6497c3` (before / after, median ms):
+  3x3 Intermediate 86 / 14, Unreasonable 122 / 20, Killer 79 / 18, 9 Jigsaw
+  Extreme 243 / 54, 3x3 Advanced 332 / 50, 3x3 Extreme 431 / 56, 2x3
+  Intermediate 429 / 129 (the hand-written 263); deal instructions 86.7 /
+  15.6 G, −82%. The walk, the steps and Seismic's figures do not move.
+  2x3 Intermediate is the one menu board over the bar, as the hand-written
+  game's was.
 - **ABCD and Salad stay under it**: ABCD's largest median 17 ms (6x8 Hard),
   Salad's 159 on 5n4Bdx, which the baseline passed at 128.
 
