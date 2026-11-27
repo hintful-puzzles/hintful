@@ -124,13 +124,15 @@ export function inCandidateWords(
   ]);
   const carried = Object.entries(source.define).filter(([n]) => !own.has(n));
   const tiers = candidate.tiers ?? ["any"];
-  // The hide keeps a kind only where a technique reads it, which a ladder of
-  // one cannot be held to; the words, not the deal, are the question here.
+  // The hide keeps a kind only where a technique reads it, and a refusal
+  // names techniques of the ladder, neither of which a ladder of one can be
+  // held to; the words, not the deal, are the question here.
   const {
     hide: _,
     thorough: __,
     symmetric: ___,
     stripFrom: ____,
+    refuse: _____,
     ...deal
   } = candidate.deal ?? {};
   const json: DescriptionJson = {
