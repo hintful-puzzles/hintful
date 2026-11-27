@@ -16,17 +16,18 @@ import { type RandomState, randomBits, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { latinGenerate, matching } from "../solve/latin.ts";
 import type { FillDivision } from "./game-id.ts";
+import type { GroupSample } from "./group-table.ts";
 
 type Near = "adj4" | "adj8";
 
-/** How a deal draws its answer (`deal/samplers.ts`): built by the ladder
- * (`buildAnswer`),
- * scattered (`sampleAnswer`), as dominoes (`sampleDominoes`), or a count to
- * every line (`sampleLines`). */
+/** How a deal draws its answer (`deal/samplers.ts`), each kind's sampler
+ * named there: built by the ladder, scattered, as dominoes, a group's table,
+ * a count to every line, and the rest. */
 export type Sample =
   | BuiltSample
   | ScatterSample
   | DominoSample
+  | GroupSample
   | LinesSample
   | PictureSample
   | PiecesSample

@@ -4,6 +4,7 @@
  * the deal.
  */
 
+import { type GroupSample, groupTable } from "../../engine/fill/group-table.ts";
 import type { WallsSample } from "../../engine/fill/sample.ts";
 import { SET_BLACKS_SYMM } from "../../engine/generate/symmetry.ts";
 import { CompileError } from "../compile-sorts.ts";
@@ -13,6 +14,7 @@ import {
   type SampleJson,
   sampleOf,
 } from "../description.ts";
+import { underOf } from "./hide.ts";
 import type { SettingOut } from "./settings.ts";
 import { sizeSettings } from "./sizes.ts";
 
@@ -22,6 +24,7 @@ export function sampledValue(sample: SampleJson | null): number {
   if (
     sample === null ||
     "build" in sample ||
+    "group" in sample ||
     "latin" in sample ||
     "search" in sample ||
     "walls" in sample
@@ -46,7 +49,14 @@ export function sampledValue(sample: SampleJson | null): number {
 export function dealtSample(
   json: DescriptionJson,
   sample: SampleJson | null,
-): Exclude<SampleJson, { walls: unknown }> | WallsSample | null {
+  settings: readonly SettingOut[],
+):
+  | Exclude<SampleJson, { walls: unknown } | { group: unknown }>
+  | WallsSample
+  | GroupSample
+  | null {
+  if (sample !== null && "group" in sample)
+    return groupSampleOf(json, sample, settings);
   if (sample === null || !("walls" in sample)) return sample;
   if (json.answer.value.sort !== "edge")
     throw new CompileError("deal sample walls: the answer is not on the edges");
@@ -69,6 +79,71 @@ export function dealtSample(
       rest: Number(others[0][0]),
     },
   };
+}
+
+/**
+ * A group's table as the deal reads it, its `hidden` resolved. Refused where
+ * the board is not square, where a side the sizes allow has no group of its
+ * order, and where a group's generators are not each a permutation of its
+ * elements, or their table is not filled or is no group's: a row or column
+ * holding an element twice, or a product that is not associative.
+ */
+function groupSampleOf(
+  json: DescriptionJson,
+  sample: Extract<SampleJson, { group: unknown }>,
+  settings: readonly SettingOut[],
+): GroupSample {
+  const { tables, hidden } = sample.group;
+  const grid = json.space.grid;
+  if (grid === undefined || grid.w !== grid.h)
+    throw new CompileError("deal sample group: the board is not square");
+  const side = json.sizes[grid.w];
+  if (side !== undefined)
+    for (let n = side.min; n <= (side.max ?? side.min); n++)
+      if (tables[String(n)] === undefined)
+        throw new CompileError(`deal sample group: no group of order ${n}`);
+  for (const [key, groups] of Object.entries(tables)) {
+    const n = Number(key);
+    const letters = Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i));
+    for (const gens of groups) {
+      const where = `deal sample group: order ${n}'s group ${gens.join(" ")}`;
+      for (const gen of gens)
+        if ([...gen].sort().join("") !== letters.join(""))
+          throw new CompileError(`${where}: ${gen} is no permutation of ${n} elements`);
+      const t = groupTable(n, gens);
+      if (t === null) throw new CompileError(`${where}: its table is not filled`);
+      const problem = notAGroup(t, n);
+      if (problem !== null) throw new CompileError(`${where}: ${problem}`);
+    }
+  }
+  return {
+    group: {
+      tables,
+      ...(hidden === undefined
+        ? {}
+        : { hidden: underOf(json, settings, hidden, "deal sample group hidden") }),
+    },
+  };
+}
+
+/** What makes table `t` of `n` elements no group's, or `null`. */
+function notAGroup(t: Uint8Array, n: number): string | null {
+  const at = (a: number, b: number) => t[(a - 1) * n + (b - 1)];
+  for (let i = 0; i < n; i++) {
+    const row = new Set<number>();
+    const col = new Set<number>();
+    for (let j = 0; j < n; j++) {
+      row.add(t[i * n + j]);
+      col.add(t[j * n + i]);
+    }
+    if (row.size < n || col.size < n) return "an element twice in a line";
+  }
+  for (let a = 1; a <= n; a++)
+    for (let b = 1; b <= n; b++)
+      for (let c = 1; c <= n; c++)
+        if (at(at(a, b), c) !== at(a, at(b, c)))
+          return `(${a}·${b})·${c} is not ${a}·(${b}·${c})`;
+  return null;
 }
 
 /** Refuses a sample of lines counted by no size the params give, an unpair

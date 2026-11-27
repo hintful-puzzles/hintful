@@ -24,13 +24,13 @@ import { climbFill } from "./deal/climb.ts";
 import { CLUE_STEPS } from "./deal/clue-steps.ts";
 import { type DealtFillModule, dealContext, type Grown } from "./deal/context.ts";
 import { hideOf } from "./deal/hide.ts";
-import { shownOf } from "./deal/keeping.ts";
+import { keepingOf, shownOf } from "./deal/keeping.ts";
 import { grownRound } from "./deal/partition.ts";
 import { rulesHeld } from "./deal/rules-held.ts";
 import { drawSample } from "./deal/samplers.ts";
 import { type Draw, dealEveryClue, dealStripped } from "./deal/search-tier.ts";
 import { encodeDesc } from "./desc.ts";
-import type { FillDeal, FillParams } from "./game-id.ts";
+import { elementCount, type FillDeal, type FillParams } from "./game-id.ts";
 import { searches } from "./search.ts";
 
 export function dealFill<C extends Clues<C>>(
@@ -48,12 +48,26 @@ export function dealFill<C extends Clues<C>>(
   const { kind, symmetry } = cx.hide;
   const hide = hideOf(cx);
   const holds = rulesHeld(module, "fill: deal");
+  /** `clues` with none of a hidden kind at a cell of `blank`. */
+  const blanked = (clues: C, blank: readonly number[]): C => {
+    const out = new Set(blank);
+    let kept = clues;
+    for (const k of cx.hide.kinds) {
+      if (deal.universes[k] !== "cells") continue;
+      const list = kept[k as keyof C] as ClueList;
+      const shown = shownOf(list).filter((i) => !out.has(list.at[i]));
+      kept = keepingOf(kept, k as keyof C, shown, elementCount(deal, sp, kept, k));
+    }
+    return kept;
+  };
   /** Answer `g`'s clues on the partitions `grown`, every one shown but those
-   * of a kind hidden whole; `null` where they are no board. */
+   * of a kind hidden whole and a hidden kind's at the cells `blank`; `null`
+   * where they are no board. */
   const dealt = (
     g: Uint8Array,
     grown: Grown,
     tier: number,
+    blank: readonly number[],
   ): { g: Uint8Array; clues: C } | null => {
     // The board's units, where it deals the partition among them.
     const on = spaceOf(module, {
@@ -73,6 +87,7 @@ export function dealFill<C extends Clues<C>>(
         ? climbBuild(cx, "fill: the answer built breaks a rule")
         : drawRejected("fill: the answer drawn breaks a rule");
     if (kind === null) return { g, clues: derived };
+    if (blank.length > 0) derived = blanked(derived, blank);
     const list = derived[kind] as ClueList;
     // A clue a square of whose orbit has none cannot be shown symmetrically.
     const shown =
@@ -85,7 +100,7 @@ export function dealFill<C extends Clues<C>>(
     const got = drawSample(sample, cx);
     if (got === null) return null;
     const grown = got.grown ?? grownRound(cx, got.g, tier);
-    return grown === null ? null : dealt(got.g, grown, tier);
+    return grown === null ? null : dealt(got.g, grown, tier, got.blank ?? []);
   };
 
   if (searches(module) && p.diff === module.tiers.length - 1)

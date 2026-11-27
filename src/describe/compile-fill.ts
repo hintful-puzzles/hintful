@@ -29,7 +29,7 @@ import type { Expr } from "./expr.ts";
 import { firstKindOf, latinOf, oneKindDeal, suitsOf } from "./fill/clue-steps.ts";
 import { derivedClues } from "./fill/derive.ts";
 import { answerEnv, param, present, tierIndex } from "./fill/emit.ts";
-import { hideOf, hideRankOf, symmetricOf } from "./fill/hide.ts";
+import { hideFormulasOf, hideOf, symmetricOf } from "./fill/hide.ts";
 import {
   checkNamed,
   checkSegments,
@@ -175,7 +175,7 @@ function dealOf(
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(hexagon === null ? {} : { hexagon }),
     settings,
-    sample: dealtSample(json, sample),
+    sample: dealtSample(json, sample, settings),
     ...present("hide", hide),
     ...present("refuse", refuseOf(json, d)),
     ...(stripFrom === undefined ? {} : { stripFrom }),
@@ -223,7 +223,7 @@ function dealOf(
     ...(grow === null ? [] : growByOf(grow, env)),
     ...refusePlacesOf(json, env),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
-    ...hideRankOf(json, env, measured),
+    ...hideFormulasOf(json, env, measured),
   ];
 }
 

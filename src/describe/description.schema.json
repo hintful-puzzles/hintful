@@ -2084,6 +2084,10 @@
                             "$ref": "#/$defs/formula",
                             "description": "A number, a formula of `at` read on the clues as dealt: a clue with a higher one is hidden first, so the board keeps those with the lowest; alike, in a random order, and within each side of `first` (Adjacent's givens, those with fewest bars beside them kept, as upstream unequal.c's `gg_best_clue` adds a given where its cell has fewest clues)."
                           },
+                          "keep": {
+                            "$ref": "#/$defs/formula",
+                            "description": "A truth, a formula of `at` read on the clues as dealt: a clue where it holds is never hidden (Group's givens on the identity's row and column, where the identity is shown)."
+                          },
                           "from": {
                             "type": "string",
                             "description": "The tier from which the deal hides it: a board below that tier shows every clue of the kind (Towers' clues at Easy)."
@@ -2127,7 +2131,7 @@
                   }
                 }
               ],
-              "description": "The clue kinds the deal hides from the answer's, in one random order, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier. One kind, a list of them, or by kind how it is hidden, each kind in the deal's order."
+              "description": "The clue kinds the deal hides from the answer's, in one random order, a tier at a time from the lowest the board's rulesets take: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier. One kind, a list of them, or by kind how it is hidden, each kind in the deal's order."
             },
             "oneIn": {
               "type": "object",
@@ -2347,6 +2351,43 @@
                   "properties": {
                     "latin": {
                       "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as a group's table on the square board (upstream group.c's `new_game_desc`): row a, column b holds a·b, the elements numbered from 1. A group of the board's order is drawn from `tables`, by order a list of groups, each its generators: a permutation of the elements as capital letters from A, their products from the identity's row filling the table, the identity 1. Its elements are then permuted at random, the identity kept 1 but under `hidden`, a ruleset or variation by name, where the identity's row and column and those of another element at random are dealt no clue of a kind the deal hides, so the blank lines do not give the identity away. The compiler refuses a table its generators do not fill, or that is no group's.",
+                  "required": ["group"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "group": {
+                      "type": "object",
+                      "required": ["tables"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "tables": {
+                          "type": "object",
+                          "minProperties": 1,
+                          "patternProperties": {
+                            "^[1-9][0-9]*$": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                  "type": "string",
+                                  "pattern": "^[A-Z]+$"
+                                }
+                              }
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "hidden": {
+                          "type": "string"
+                        }
+                      }
                     }
                   }
                 },

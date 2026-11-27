@@ -44,7 +44,7 @@ export interface Hide<C> {
 
 export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
   const { module, deal, p, rs, sp, thorough, finishes, board } = cx;
-  const { kinds, kind, symmetry, whole } = cx.hide;
+  const { kinds, kind, symmetry, whole, lowest } = cx.hide;
   const keeping = (clues: C, shown: readonly number[]): C =>
     keepingAll(clues, deal, kinds, sp, shown);
   const allShown = (clues: C): number[] => {
@@ -66,9 +66,36 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     }
     return out;
   };
+  /** What the hide's formulas read: the clues, and the board's sizes. */
+  const withSizes = (clues: C): C => ({ ...clues, ...cx.sizes });
+  /** The indices of the clues the hide never takes (a hidden kind's
+   * `keep`), but of a kind this board hides whole. */
+  const keptOf = (clues: C): Set<number> => {
+    const out = new Set<number>();
+    const { hideKeep } = module;
+    if (hideKeep === undefined) return out;
+    const offsets = offsetsOf(clues, kinds);
+    const read = withSizes(clues);
+    for (const [n, k] of kinds.entries()) {
+      if (whole.includes(k)) continue;
+      const list = clues[k as keyof C] as ClueList;
+      for (const [i, at] of list.at.entries())
+        if (hideKeep(sp, read, k, at)) out.add(offsets[n] + i);
+    }
+    return out;
+  };
+  /** The clues of `run`, and every clue the hide keeps. */
+  const withKept = (clues: C, run: readonly number[]): number[] => {
+    const kept = keptOf(clues);
+    if (kept.size === 0) return [...run].sort(byIndex);
+    for (const i of run) kept.add(i);
+    return [...kept].sort(byIndex);
+  };
   /** Each with those of its orbit still shown where the deal is symmetric,
-   * alone otherwise. */
-  const unitsOf = (clues: C, shown: readonly number[]): number[][] => {
+   * alone otherwise; none the hide keeps. */
+  const unitsOf = (clues: C, allShown: readonly number[]): number[][] => {
+    const kept = keptOf(clues);
+    const shown = kept.size === 0 ? allShown : allShown.filter((i) => !kept.has(i));
     if (symmetry === "none") return shown.map((i) => [i]);
     const list = clues[kind as keyof C] as ClueList;
     const of = new Set(shown);
@@ -131,10 +158,11 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
       offsets.findLastIndex((o) => o <= u[0]);
     let order = units;
     if (hideRank !== undefined) {
+      const read = withSizes(clues);
       const rank = (u: readonly number[]): number => {
         const k = kindOf(u);
         const list = clues[kinds[k] as keyof C] as ClueList;
-        return hideRank(sp, clues, kinds[k], list.at[u[0] - offsets[k]]);
+        return hideRank(sp, read, kinds[k], list.at[u[0] - offsets[k]]);
       };
       // Each kind's units, higher first, a stable sort keeping those ranked
       // alike in their random order; then dealt back into the kind's places.
@@ -179,23 +207,14 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
       const mid = (lo + hi) >> 1;
       if (
         finishes(
-          keeping(
-            clues,
-            units
-              .slice(units.length - mid)
-              .flat()
-              .sort(byIndex),
-          ),
+          keeping(clues, withKept(clues, units.slice(units.length - mid).flat())),
           t,
         )
       )
         hi = mid;
       else lo = mid + 1;
     }
-    return units
-      .slice(units.length - hi)
-      .flat()
-      .sort(byIndex);
+    return withKept(clues, units.slice(units.length - hi).flat());
   };
   /**
    * Hidden at the lowest tier, and then at `tier`.
@@ -224,11 +243,11 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     // the lowest's solve is the cheaper; the deal holds the board to the
     // asked tier once its clues are hidden. Asking the asked tier first cost
     // Mosaic's 8x10 Normal deal a third more (2026-11-23).
-    let from = 0;
-    if (finishes(clues, 0)) cx.shortOfLowest = 0;
+    let from = lowest;
+    if (finishes(clues, from)) cx.shortOfLowest = 0;
     else {
       if (++cx.shortOfLowest < SHORT_OF_LOWEST_RUN) return null;
-      from = 1;
+      from = lowest + 1;
       while (from <= tier && !finishes(clues, from)) from++;
       if (from > tier) return null;
     }
@@ -250,10 +269,12 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
       return true;
     });
     const later = (i: number): boolean => unread[offsets.findLastIndex((o) => o <= i)];
-    const pruned = unitsOf(clues, shown)
-      .filter((u) => u.some((i) => read.has(i) || later(i)))
-      .flat()
-      .sort(byIndex);
+    const pruned = withKept(
+      clues,
+      unitsOf(clues, shown)
+        .filter((u) => u.some((i) => read.has(i) || later(i)))
+        .flat(),
+    );
     if (finishes(keeping(clues, pruned), from)) shown = pruned;
     const lead = leaderOf(clues);
     const atFrom = (units: number[][]): number[][] =>

@@ -8,7 +8,9 @@ import type { Symmetry } from "../../generate/symmetry.ts";
 import type { Clues } from "../board.ts";
 import type { FillDeal, FillParams } from "../game-id.ts";
 import { within } from "../params/bounds.ts";
-import { isOn, settingOf, symmetricOf } from "../params/settings.ts";
+import { choiceOf } from "../params/choice.ts";
+import { isOn, symmetricOf } from "../params/settings.ts";
+import { isUnder } from "../params/under.ts";
 
 export interface HideSettings<C> {
   /** The kinds hidden, in the deal's order. */
@@ -18,6 +20,9 @@ export interface HideSettings<C> {
   readonly symmetry: Symmetry;
   /** The hidden kinds this board hides whole (their `whole`). */
   readonly whole: readonly string[];
+  /** The lowest tier the board's rulesets take (a choice's `tiers`), which
+   * the hide hides from. */
+  readonly lowest: number;
 }
 
 export function hideSettingsOf<C extends Clues<C>>(
@@ -35,13 +40,17 @@ export function hideSettingsOf<C extends Clues<C>>(
     return (
       h !== undefined &&
       p.diff < h.below &&
-      (h.with === undefined || variations.includes(h.with)) &&
+      (h.with === undefined || isUnder(deal, p, variations, { with: h.with })) &&
       (h.ruleset === undefined ||
-        settingOf(deal, p, h.ruleset.setting) === h.ruleset.choice) &&
+        isUnder(deal, p, variations, { ruleset: h.ruleset })) &&
       within(h.bounds, p)
     );
   });
-  return { kinds, kind, symmetry, whole };
+  let lowest = 0;
+  for (const s of deal.settings)
+    if (s.kind === "choice")
+      lowest = Math.max(lowest, s.choices[choiceOf(s, p)]?.tiers?.[0] ?? 0);
+  return { kinds, kind, symmetry, whole, lowest };
 }
 
 /** The kinds the deal hides on a board of `p` (`deal.hide`), but one kept

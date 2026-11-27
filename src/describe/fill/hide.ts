@@ -6,6 +6,7 @@
  * symmetry of the clues it leaves.
  */
 
+import type { Under } from "../../engine/fill/params/under.ts";
 import { SYMMETRIES, type Symmetry } from "../../engine/generate/symmetry.ts";
 import { compileExpr } from "../compile-expr.ts";
 import {
@@ -22,8 +23,8 @@ import { parse } from "../expr.ts";
 import { answerEnv, param, tierIndex } from "./emit.ts";
 import { dealFlag, type SettingOut } from "./settings.ts";
 
-/** A kind the deal hides as `FillDeal.hide` holds it: `by` is compiled
- * into `hideRank`, and the rest are the deal's. */
+/** A kind the deal hides as `FillDeal.hide` holds it: `by` and `keep` are
+ * compiled into `hideRank` and `hideKeep`, and the rest are the deal's. */
 export interface HiddenKindOut {
   kind: string;
   first?: true;
@@ -145,11 +146,10 @@ function wholeOf(
   tiers: readonly string[],
 ): NonNullable<HiddenKindOut["whole"]> {
   const { below, with: named, ...bounds } = spec;
-  const ruleset = named === undefined ? null : rulesetNamed(settings, named);
-  if (named !== undefined && ruleset === null && json.variations?.[named] === undefined)
-    throw new CompileError(
-      `deal hide: ${kind} whole with ${named}, no variation or ruleset`,
-    );
+  const under =
+    named === undefined
+      ? {}
+      : underOf(json, settings, named, `deal hide: ${kind} whole with`);
   if (below === undefined && named === undefined)
     throw new CompileError(
       `deal hide: ${kind} whole below a tier, or with a variation or ruleset`,
@@ -162,8 +162,22 @@ function wholeOf(
   return {
     below: at,
     bounds,
-    ...(named === undefined ? {} : ruleset === null ? { with: named } : { ruleset }),
+    ...under,
   };
+}
+
+/** The ruleset or variation of name `name`, as the deal reads it (`Under`). */
+export function underOf(
+  json: DescriptionJson,
+  settings: readonly SettingOut[],
+  name: string,
+  where: string,
+): Under {
+  const ruleset = rulesetNamed(settings, name);
+  if (ruleset !== null) return { ruleset };
+  if (json.variations?.[name] === undefined)
+    throw new CompileError(`${where}: ${name}, no variation or ruleset`);
+  return { with: name };
 }
 
 /** The ruleset of name `name`, by its setting and its choice's index; `null`
@@ -181,23 +195,68 @@ function rulesetNamed(
 }
 
 /**
- * `hideRank(sp, cl, kind, at)`: where the hide puts a clue of `kind` at
- * `at`, by its `by`, a formula of `at`: a higher one is hidden first. None
- * where no kind states one.
+ * The hide's formulas of a clue `at`, read on the clues as dealt and the
+ * board's sizes:
+ * `hideRank(sp, cl, kind, at)`, where the hide puts a clue of `kind` (its
+ * `by`: a higher one is hidden first), and `hideKeep`, whether it keeps one
+ * (its `keep`). Each is written where some kind states it.
  */
-export function hideRankOf(
+export function hideFormulasOf(
   json: DescriptionJson,
   env: Env,
   measured: (e: Expr) => Expr,
 ): string[] {
-  const by = hideEntries(json).flatMap(([kind, { by: src }]) =>
-    src === undefined ? [] : [{ kind, src }],
-  );
-  if (by.length === 0) return [];
+  return [
+    ...hideFormulaOf(json, env, measured, {
+      prop: "by",
+      name: "hideRank",
+      sort: "number",
+      none: "0",
+      doc: [
+        "/** Where the hide puts a clue of `kind` at `at` (its `by` in `deal.hide`):",
+        " * a higher one is hidden first. */",
+      ],
+    }),
+    ...hideFormulaOf(json, env, measured, {
+      prop: "keep",
+      name: "hideKeep",
+      sort: "boolean",
+      none: "false",
+      doc: [
+        "/** Whether the hide keeps a clue of `kind` at `at` (its `keep` in",
+        " * `deal.hide`). */",
+      ],
+    }),
+  ];
+}
+
+function hideFormulaOf(
+  json: DescriptionJson,
+  env: Env,
+  measured: (e: Expr) => Expr,
+  f: {
+    prop: "by" | "keep";
+    name: string;
+    sort: "number" | "boolean";
+    none: string;
+    doc: readonly string[];
+  },
+): string[] {
+  const stated = hideEntries(json).flatMap(([kind, props]) => {
+    const src = props[f.prop];
+    return src === undefined ? [] : [{ kind, src }];
+  });
+  if (stated.length === 0) return [];
   const scratch: string[] = [];
-  const henv = answerEnv(env, { yes: false }, scratch);
+  // The deal hands the formulas the sizes beside the clues, so a size one
+  // reads is not one the clues as dealt carry.
+  const read = new Set<string>();
+  const henv = {
+    ...answerEnv(env, { yes: false }, scratch),
+    sizes: { names: env.sizes.names, read },
+  };
   const lines: string[] = [];
-  for (const { kind, src } of by) {
+  for (const { kind, src } of stated) {
     const sorts = env.clues.get(kind) as ClueKind;
     const out = new Out(2);
     const e = compileExpr(
@@ -206,26 +265,37 @@ export function hideRankOf(
       henv,
       out,
     );
-    if (e.sort.k !== "int" && e.sort.k !== "num")
-      throw new CompileError(`deal hide: ${kind}'s by is not a number`);
+    const numeric = e.sort.k === "int" || e.sort.k === "num";
+    if (f.sort === "number" ? !numeric : e.sort.k !== "bool")
+      throw new CompileError(
+        `deal hide: ${kind}'s ${f.prop} is not a ${f.sort === "number" ? "number" : "truth"}`,
+      );
     lines.push(
       `  if (kind === ${JSON.stringify(kind)}) {`,
       ...out.text(),
-      `    return Number(${e.code});`,
+      `    return ${f.sort === "number" ? "Number" : "Boolean"}(${e.code});`,
       "  }",
     );
   }
-  const body = [...scratch.map((s) => `  ${s}`), ...lines, "  return 0;"];
+  const body = [...scratch.map((s) => `  ${s}`), ...lines, `  return ${f.none};`];
   return [
     "",
-    "/** Where the hide puts a clue of `kind` at `at` (its `by` in `deal.hide`):",
-    " * a higher one is hidden first. */",
-    `export function hideRank(${[
+    ...f.doc,
+    `export function ${f.name}(${[
       param("sp", "GridSpace", body),
-      param("cl", "Dealt", body),
+      param(
+        "cl",
+        read.size === 0
+          ? "Dealt"
+          : `Dealt & Readonly<Record<${[...read]
+              .sort()
+              .map((n) => JSON.stringify(n))
+              .join(" | ")}, number>>`,
+        body,
+      ),
       param("kind", "string", body),
       param("at", "number", body),
-    ].join(", ")}): number {`,
+    ].join(", ")}): ${f.sort} {`,
     ...body,
     "}",
   ];

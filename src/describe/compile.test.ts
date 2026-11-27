@@ -1573,6 +1573,60 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play boardSkips: 7x7 skips Tricky, not between its first and last tier/);
   });
 
+  it("refuses a group's table that is no group's, and a hide's keep that is no truth", () => {
+    const source = "src/engine/testing/fixtures/grouping/grouping.description.yaml";
+    const grouping = sources.get(source);
+    if (grouping === undefined || !isFormal(grouping)) throw new Error("no grouping");
+    type Json = {
+      deal: {
+        sample: { group: { tables: Record<string, string[][]>; hidden: string } };
+        hide: { given: { keep: string } };
+      };
+    };
+    const edited = (edit: (j: Json) => void) => () => {
+      const j = structuredClone(grouping) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(edited(() => {})()).toContain(
+      '"hidden":{"ruleset":{"setting":"plain","choice":1}}',
+    );
+    const tables = (order: string, groups: string[][]) =>
+      edited((j) => {
+        j.deal.sample.group.tables[order] = groups;
+      });
+    expect(tables("3", [["BCC"]])).toThrow(
+      /order 3's group BCC: BCC is no permutation/,
+    );
+    // One transposition reaches two of the three rows.
+    expect(tables("3", [["BAC"]])).toThrow(
+      /order 3's group BAC: its table is not filled/,
+    );
+    // Two transpositions reach every row, but of six permutations.
+    expect(tables("3", [["ACB", "BAC"]])).toThrow(/an element twice in a line/);
+    expect(
+      edited((j) => {
+        delete j.deal.sample.group.tables["5"];
+      }),
+    ).toThrow(/deal sample group: no group of order 5/);
+    expect(
+      edited((j) => {
+        j.deal.sample.group.hidden = "Shuffled";
+      }),
+    ).toThrow(/deal sample group hidden: Shuffled, no variation or ruleset/);
+    expect(
+      edited((j) => {
+        j.deal.hide.given.keep = "x(at)";
+      }),
+    ).toThrow(/deal hide: given's keep is not a truth/);
+  });
+
   it("prints a value on a cell by its glyph, and one on an edge by its edge painter", () => {
     type Values = {
       play: { values: Record<string, { glyph?: string; paint: string }> };

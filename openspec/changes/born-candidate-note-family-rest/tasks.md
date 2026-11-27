@@ -1,15 +1,16 @@
 ## Next
 
-2.4f, Group's deal. Group's tiers, for the flip (2.4e's pieces): the
-identity hidden is a ruleset (`i`, least 4) taking `tiers: [Normal,
-Tricky, Hard, Unreasonable]`, its board its own menu section, `8x8i` at
-`boardTiers` Normal; `sizeLacksTier` (`games/group/state.ts`) becomes each
-choice's `bounds.tiers` (shown: Normal and Unreasonable `shorter` min 5,
-Tricky and Hard min 6; hidden: Hard min 6, Unreasonable min 5); 8x8 is
-`boardSkips` Hard. The figures of 3.1 are taken again at the end, after
-3.1a's and 3.1b's fixes.
-Group's controls are answered: keep them, as engine capabilities
-(design.md § "Decisions" 2).
+2.4g, a rule's breach labeled at its squares (Group's `(ab)c`, `a(bc)`:
+`games/group/render.ts` § "live errors"), on a fixture before the flip.
+For the flip: the deal is the `grouping` fixture's, with `groupdata.ts`'s
+77 groups as generator rows (machine-extracted), `hidden: In order`, the
+`keep` on the identity's lines. The tiers: `i` (least 4) takes
+`[Normal, Tricky, Hard, Unreasonable]`, its own menu section, `8x8i` at
+Normal; `sizeLacksTier` (`games/group/state.ts`) becomes `bounds.tiers`
+(shown: Normal, Unreasonable min 5, Tricky, Hard min 6; hidden: Hard min
+6, Unreasonable min 5); 8x8 `boardSkips` Hard. Group's three controls
+stay, as engine capabilities (design.md § "Decisions" 2). The figures of
+3.1 are taken again at the end.
 
 ## 1. Design
 
@@ -74,10 +75,9 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.4e A ruleset's tiers (a choice's `tiers`, its `only`) and a
         tier a board skips (`play.boardSkips`), on the `lettering`
         fixture; the commit that ticks 2.4e.
-  - [ ] 2.4f The deal: an answer drawn from shipped data (a group's table
-        from its generators, its elements permuted, the identity kept
-        first where shown); the givens on the identity's lines kept; under
-        `i`, the identity's lines and one more blanked before the hide.
+  - [x] 2.4f The deal from shipped data: `deal.sample.group`, a hidden
+        kind's `keep`, the hide from the ruleset's lowest tier, on the
+        `grouping` fixture; the commit that ticks 2.4f.
   - [ ] 2.4g A rule's breach labeled at its squares, as Group's
         associativity draws `(ab)c` and `a(bc)`.
   - [ ] 2.4h The flip: its words, tests in `cases.yaml`, specs, the help.

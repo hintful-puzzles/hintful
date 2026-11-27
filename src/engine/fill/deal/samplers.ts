@@ -9,7 +9,9 @@ import { drawRejected } from "../../contract/deal-census.ts";
 import { inHexagon } from "../../solve/describe-runtime.ts";
 import { type Clues, elementsOf, topValue } from "../board.ts";
 import { dividePartition } from "../divide.ts";
+import { sampleGroup } from "../group-table.ts";
 import { piecesOf } from "../params/tally.ts";
+import { isUnder } from "../params/under.ts";
 import {
   type LatinSample,
   type Sample,
@@ -41,16 +43,19 @@ const ANSWER_SEARCH_BUDGET = 2_000;
 const ANSWER_SEARCH_CAP = 0;
 
 /** An answer drawn, and the partitions drawn with it; `null` where they are
- * left to be dealt round it. */
+ * left to be dealt round it. `blank` is the cells dealt no clue of a kind
+ * the deal hides, where the sample leaves any. */
 export interface Drawn {
   readonly g: Uint8Array;
   readonly grown: Grown | null;
+  readonly blank?: readonly number[];
 }
 
 type SampleKey =
   | "search"
   | "build"
   | "dominoes"
+  | "group"
   | "lines"
   | "picture"
   | "pieces"
@@ -101,6 +106,16 @@ const SAMPLERS: {
     );
   },
   dominoes: (sample, cx) => answer(sampleDominoes(sample, cx.sp, cx.rs)),
+  group(sample, cx) {
+    const { hidden } = sample.group;
+    const got = sampleGroup(
+      sample,
+      cx.sp,
+      cx.rs,
+      hidden !== undefined && isUnder(cx.deal, cx.p, cx.variations, hidden),
+    );
+    return { g: got.g, grown: null, blank: got.blank };
+  },
   lines: (sample, cx) => answer(sampleLines(sample, cx.sp, cx.sizes, cx.rs)),
   picture: (sample, cx) => answer(samplePicture(sample, cx.sp, cx.rs)),
   pieces: (sample, cx) =>

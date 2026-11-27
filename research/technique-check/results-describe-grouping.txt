@@ -1,0 +1,12 @@
+ok  grouping plain=0 associativity                  3  sound    (want sound   )     3 queries    0.1s
+ok  grouping plain=0 associativity (planted)        3  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  grouping plain=1 associativity                  3  sound    (want sound   )     3 queries    0.1s
+ok  src/engine/testing/fixtures/grouping/grouping.description.yaml#associativity: recorded sound, proved whole on all 2 boards
+ok  grouping plain=0 identity                       3  sound    (want sound   )     1 queries    0.0s
+ok  grouping plain=0 identity (planted)             3  unsound  (want unsound )     1 queries    0.0s   at ?
+ok  grouping plain=1 identity                       3  sound    (want sound   )     1 queries    0.0s
+ok  src/engine/testing/fixtures/grouping/grouping.description.yaml#identity: recorded sound, proved whole on all 2 boards
+ok  grouping plain=0 notIdentity                    3  sound    (want sound   )     3 queries    0.0s
+ok  grouping plain=0 notIdentity (planted)          3  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  grouping plain=1 notIdentity                    3  sound    (want sound   )     3 queries    0.0s
+ok  src/engine/testing/fixtures/grouping/grouping.description.yaml#notIdentity: recorded sound, proved whole on all 2 boards
