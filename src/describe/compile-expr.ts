@@ -472,7 +472,8 @@ function name(n: string, scope: Scope, env: Env, out: Out): Val {
   if (n === "h") return { code: "sp.h", sort: NUM };
   if (env.sizes.names.has(n)) {
     env.sizes.read.add(n);
-    env.readsClues.yes = true;
+    if (env.readsSizes !== undefined) env.readsSizes.yes = true;
+    else env.readsClues.yes = true;
     return { code: `cl.${n}`, sort: NUM };
   }
   const def = env.defs.get(n);
@@ -1899,6 +1900,7 @@ function linkedAggregate(
       ...env,
       used: kept.used,
       readsClues,
+      readsSizes: undefined,
       scratch: null,
       hoist: null,
       boardRoot: null,
@@ -2012,6 +2014,7 @@ function keptEdgeSet(
       ...env,
       used: kept.used,
       readsClues,
+      readsSizes: undefined,
       scratch: null,
       hoist: null,
       boardRoot: null,
@@ -3451,6 +3454,7 @@ function rungKept(
           ...env,
           used: kept.used,
           readsClues,
+          readsSizes: undefined,
           readsCands: { yes: false },
           memos: nested,
           scratch: null,
@@ -3571,6 +3575,7 @@ function keptDefinition(
           ...env,
           used: kept.used,
           readsClues,
+          readsSizes: undefined,
           scratch: null,
           hoist: null,
           boardRoot: null,

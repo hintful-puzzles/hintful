@@ -1,0 +1,125 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A draft of Salad's born description, compiled to find what the engine
+# lacks; removed at the flip.
+game: saladborn
+produces: latin
+words:
+  cell: square
+  value: letter
+sizes:
+  w: { min: 3, max: 10 }
+  # The symbols each line holds; the rest of it is empty.
+  n: { min: 2, max: 9 }
+  # 0 ABC End View's letters, 1 Number Ball's numbers.
+  mode: { min: 0, max: 1 }
+space:
+  grid: { w: "w", h: "w" }
+  slots: true
+  units: [rows, cols]
+answer:
+  # n + 1 is the empty square, which fills the rest of each line.
+  value:
+    sort: cell
+    domain: "range(1, n + 1)"
+    repeat: { value: "n + 1", times: "w - n" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, n + 1)" }
+shape:
+  - "latin(value, lines)"
+clues:
+  # ABC End View: the first square from the clue that is not empty holds it.
+  border:
+    at: slot
+    value: "range(1, n)"
+    means: >-
+      exists c in sight(at):
+      value(c) = v and (forall c2 in before(c, sight(at)): value(c2) = n + 1)
+  # Number Ball: a ball's square is not empty.
+  ball: { at: cell, value: "range(0, 0)", means: "value(at) != n + 1" }
+freedom: { kind: fill }
+play:
+  numbers: { letters: true }
+  boards: [4x4n3L, 5x5n3L, 5x5n4L, 6x6n4L, 7x7n4L, 8x8n5L, 5x5n3B, 5x5n4B, 6x6n3B, 6x6n4B, 7x7n4B, 8x8n5B]
+  default: 4x4n3L
+  hintMarks:
+    ring: the square the step fills in.
+    strike: the pencil marks the step crosses out.
+    outline: what the step reasons from.
+    stripes: the row or column the sentence names.
+deal:
+  answer: a Latin square of o symbols, those past n read as empty
+  border: every clue the answer shows, then each hidden while the board still finishes
+  ball: every square's ball, then each weakened, then hidden
+  given: every square, then each hidden while the board still finishes
+  tier: one of the tiers
+  sample: { latin: true }
+  hide: [given, border]
+settings:
+  n:
+    kind: number
+    gives: size
+    letter: n
+    kw: symbols
+    name: Symbols
+    doc: The amount of different symbols that appear in each row.
+    min: 2
+    max: 9
+    default: 3
+    words: "{n} symbols"
+  mode:
+    kind: choice
+    gives: size
+    choices:
+      - name: Letters
+        code: L
+        rule: The letters on the edge show which letter appears first when 'looking' into the grid.
+      - name: Numbers
+        code: B
+        rule: Squares with a ball must contain a number. Squares with a cross must remain empty.
+id:
+  - { numbers: border }
+  - { digits: given, apart: "_", codes: { O: "ball 0" } }
+tierLetters: ex
+tiers: [Easy, Normal]
+names:
+  dup: "a placed letter's row and column"
+  single: "the only letter left in a square"
+  hiddenSingle: "the only square left for a letter"
+  set: "letters already accounted for"
+  wing: "a wing"
+  borderNear: "the letter a clue sees first"
+  borderFar: "how far in a clue's letter sits"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - id: border
+    tier: Easy
+    rung: [borderNear, borderFar]
+    for: >-
+      k in clues(border),
+      L = sight(at(k)),
+      H = w - n,
+      f = index(first({c in L where not (known(c) and value(c) = n + 1)}), L),
+      reach = H - count(c in L where index(c, L) >= H and known(c) and value(c) = n + 1),
+      stop = index(first({c in L where n + 1 not in cand(c)}), L)
+    conclude: >-
+      forall c in L, i = index(c, L):
+      ((f < 0 or i <= f) implies (forall e in domain where e != v(k) and e <= n: strike(c, e)))
+      and (((stop >= 0 and i > stop) or i > reach) implies strike(c, v(k)))
+    says:
+      shown: value
+      terms: { k: k, L: L, v: "v(k)" }
+      marks: {}
+      arms:
+        borderNear:
+          when: "f >= 0"
+          look: "{outline k: This clue} sees {v} first, and nothing nearer it is known to hold a letter"
+        borderFar:
+          when: "true"
+          look: "{outline k: This clue} sees {v} first, so {v} sits no further in"
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Normal, rung: set }
+  - { use: latin.fish, tier: Normal, rung: set }
+  - { use: latin.wing, tier: Normal, rung: wing }

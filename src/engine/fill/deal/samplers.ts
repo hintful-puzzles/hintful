@@ -7,10 +7,11 @@
 
 import { drawRejected } from "../../contract/deal-census.ts";
 import { inHexagon } from "../../solve/describe-runtime.ts";
-import { type Clues, elementsOf } from "../board.ts";
+import { type Clues, elementsOf, topValue } from "../board.ts";
 import { dividePartition } from "../divide.ts";
 import { piecesOf } from "../params/tally.ts";
 import {
+  type LatinSample,
   type Sample,
   sampleAnswer,
   sampleDominoes,
@@ -92,7 +93,12 @@ const SAMPLERS: {
   picture: (sample, cx) => answer(samplePicture(sample, cx.sp, cx.rs)),
   pieces: (sample, cx) =>
     answer(samplePieces(sample, cx.sp.w, cx.sp.h, piecesOf(cx.deal, cx.p), cx.rs)),
-  latin: (_, cx) => answer(sampleLatin(cx.sp, cx.rs)),
+  // The domain is read off the sizes, which the clues hold where a deal
+  // keeps them.
+  latin<C extends Clues<C>>(_: LatinSample, cx: DealContext<C>) {
+    const top = topValue(cx.module, cx.sp, cx.sizes as unknown as C);
+    return answer(sampleLatin(cx.sp, cx.rs, top));
+  },
   walls(sample, cx) {
     const parts = dividePartition(sample.walls.division, cx.sp, cx.sizes, cx.rs);
     return answer(parts === null ? null : wallsOf(sample, cx.sp, parts));

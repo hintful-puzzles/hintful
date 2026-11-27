@@ -77,6 +77,9 @@ export interface FillModule<C> {
   /** The values element `c` of the answer's sort may hold, as a bitmask
    * (bit `d`). */
   domainOf(sp: GridSpace, cl: C, c: number): number;
+  /** Where the answer has a value a unit may hold more than once (Salad's
+   * empty square): it, and how many times each unit holds it. */
+  repeatOf?(sp: GridSpace, cl: C): { readonly value: number; readonly times: number };
   /** The answer check and the violations, a variation's rules where
    * `variations` has it on: a module with none takes no such argument. */
   isAnswer(
@@ -397,7 +400,7 @@ export function marksOf<C>(
     sp,
     domainMask(module, sp, board.dealt),
     values,
-    null,
+    module.repeatOf?.(sp, board.dealt) ?? null,
     module.answerSort,
   );
   const { entries, placing, striking } = ladderOf(module, board);

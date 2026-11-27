@@ -521,7 +521,11 @@ square), and `times(d)` reads its count, 1 for every other value and in a
 game that declares none. The library's techniques read it behind a test
 that holds where it is 1 (`times(d) = 1 or ...`), so a Latin square's ladder
 reads as it would without it. State a library technique's multiplicity the
-same way, or every Latin game pays for a count only Salad needs.
+same way, or every Latin game pays for a count only Salad needs. A born
+board's marks read the count from the compiled `repeatOf`, and its Latin
+sample (`deal.sample.latin`) is folded to the domain, each value past its
+top read as the top: a board wider than its distinct values is drawn as
+upstream Salad draws one.
 
 A technique is `for` (its binders), an optional `premise`, and `conclude`.
 A technique may say `"on": "place"`: the engine runs it as each value is

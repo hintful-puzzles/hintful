@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a square board each of whose rows and columns holds
+# the numbers 1 to `k` once, `k` a size the params give, and the empty
+# square, `k + 1`, on the rest of it; a clue beside a line's end says the
+# first number seen from it past the empty squares. For the fill engine's
+# tests of an answer with a value a unit holds more than once, a Latin square
+# folded to the domain as its sample, and a derived clue whose meaning reads a
+# size, on a description that names no game.
+game: emptying
+produces: latin
+sizes:
+  w: { min: 3, max: 6 }
+  k: { min: 2, max: 5 }
+space:
+  grid: { w: "w", h: "w" }
+  slots: true
+  units: [rows, cols]
+answer:
+  value:
+    sort: cell
+    domain: "range(1, k + 1)"
+    repeat: { value: "k + 1", times: "w - k" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, k + 1)" }
+shape:
+  - "latin(value, lines)"
+clues:
+  # The first square from the clue that is not empty holds it.
+  sees:
+    at: slot
+    value: "range(1, k)"
+    means: >-
+      exists c in sight(at):
+      value(c) = v and (forall c2 in before(c, sight(at)): value(c2) = k + 1)
+freedom: { kind: fill }
+play:
+  numbers: {}
+  boards: [4x4k3, 5x5k3, 5x5k4]
+  hintMarks:
+    ring: the square the step fills in.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the row or column the step is about.
+deal:
+  answer: a Latin square, its numbers past k read as the empty square
+  sees: every clue the answer shows, then each hidden while the board still finishes
+  given: none
+  tier: the one tier
+  sample: { latin: true }
+  hide: [given, sees]
+settings:
+  k:
+    kind: number
+    gives: size
+    letter: k
+    kw: values
+    name: Values
+    doc: The numbers each row and column holds.
+    min: 2
+    max: 5
+    default: 3
+    words: "{n} values"
+id:
+  - { numbers: sees }
+  - { digits: given, apart: "_", before: "," }
+tiers: [Easy]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a square"
+  hiddenSingle: "the only square left for a number"
+  near: "what a clue sees first"
+  far: "how far in a clue's number sits"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  # Near a clue, every square up to the first not known empty holds no
+  # number but the clue's; and the clue's number sits no further in than the
+  # line's empty squares reach, less those known empty beyond anywhere it
+  # could sit, nor past the first square known to hold a number.
+  - id: sees
+    tier: Easy
+    rung: [near, far]
+    for: >-
+      q in clues(sees),
+      L = sight(at(q)),
+      H = w - k,
+      f = index(first({c in L where not (known(c) and value(c) = k + 1)}), L),
+      reach = H - count(c in L where index(c, L) >= H and known(c) and value(c) = k + 1),
+      stop = index(first({c in L where k + 1 not in cand(c)}), L)
+    conclude: >-
+      forall c in L, i = index(c, L):
+      ((f < 0 or i <= f) implies (forall e in domain where e != v(q) and e <= k: strike(c, e)))
+      and (((stop >= 0 and i > stop) or i > reach) implies strike(c, v(q)))
+    says:
+      shown: value
+      terms: { q: q, v: "v(q)" }
+      marks: {}
+      arms:
+        near:
+          when: "f >= 0"
+          look: "{outline q: This clue} sees {v} first"
+        far:
+          when: "true"
+          look: "{outline q: This clue} sees {v} first, no further in than its line's empty squares reach"
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }

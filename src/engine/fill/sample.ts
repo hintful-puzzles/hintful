@@ -71,10 +71,12 @@ export interface SearchSample {
 }
 
 /** A Latin square on the square board `sp`, as upstream's latin.c
- * `latin_generate` draws one. */
-export function sampleLatin(sp: GridSpace, rs: RandomState): Uint8Array {
+ * `latin_generate` draws one, folded to a domain whose top is `top`: each
+ * value past it reads as `top`, so a line holds `1` to `top - 1` once and
+ * `top` on the rest of its cells (upstream salad.c's, its empty squares). */
+export function sampleLatin(sp: GridSpace, rs: RandomState, top: number): Uint8Array {
   if (sp.w !== sp.h) throw new Error("sample latin: the board is not square");
-  return Uint8Array.from(latinGenerate(sp.w, rs));
+  return Uint8Array.from(latinGenerate(sp.w, rs), (v) => Math.min(v, top));
 }
 
 /** The tally's pieces (`FillTally`), each a straight run of `value` as long

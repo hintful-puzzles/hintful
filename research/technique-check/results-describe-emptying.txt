@@ -1,0 +1,3 @@
+ok  emptying k=2 sees                           3  sound    (want sound   )    12 queries    0.1s
+ok  emptying k=2 sees (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
+ok  src/engine/testing/fixtures/emptying/emptying.description.yaml#sees: recorded sound, proved whole on all 1 boards

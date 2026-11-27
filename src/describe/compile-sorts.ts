@@ -479,6 +479,10 @@ export interface Env {
   /** Whether the code reads what the board deals, its clues or partitions,
    * so the function takes them. */
   readsClues: { yes: boolean };
+  /** Where set, a read of a size the params give is recorded here and not
+   * as a read of the clues: code whose caller holds the sizes apart from
+   * any clue (a sampled deal's derivation, before a clue is dealt). */
+  readsSizes?: { yes: boolean };
   /** Where a technique's body moves terms to; `null` outside one, and in
    * code that is compiled only for its sort. */
   hoist: Hoist | null;

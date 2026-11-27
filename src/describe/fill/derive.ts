@@ -289,8 +289,11 @@ export function derivedClues(
     // A clue one a value is read at its element for the value `per`.
     const per = sorts.per ? "per" : null;
     const readsClues = { yes: false };
+    // A size the params give is at hand before any clue is dealt (Salad's
+    // symbols, which say which value is the empty square).
+    const readsSizes = { yes: false };
     const scratch: string[] = [];
-    const henv = answerEnv(env, readsClues, scratch);
+    const henv = { ...answerEnv(env, readsClues, scratch), readsSizes };
     const out = new Out(1);
     const means = compileExpr(
       measured(c.means),
@@ -324,7 +327,9 @@ export function derivedClues(
       `export function clueHolds_${kind}(${[
         "g: ArrayLike<number>",
         param("sp", "GridSpace", body),
-        ...(group === undefined && !parts ? [] : [param("cl", "Dealt", body)]),
+        ...(group === undefined && !parts && !readsSizes.yes
+          ? []
+          : [param("cl", "Dealt", body)]),
         param("at", "number", body),
         ...(per === null ? [] : [param(per, "number", body)]),
         param("v", "number", body),
@@ -374,7 +379,9 @@ export function derivedClues(
     bindingLoops(
       binders,
       new Map(),
-      { ...henv, readsClues: { yes: false } },
+      // The loops read the sizes off the `cl` built before them, not
+      // through the meaning's call.
+      { ...henv, readsClues: { yes: false }, readsSizes: { yes: false } },
       derive,
       (sc) => {
         const el = (sc.get("at") as Val).code;
@@ -390,7 +397,7 @@ export function derivedClues(
         // A value only an ID writes is never derived.
         const withheld = (neverValues.get(kind) ?? []).map((n) => ` && ${v} !== ${n}`);
         derive.emit(
-          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts ? "cl, " : ""}${el}, ${d === null ? "" : `${d}, `}${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
+          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts || readsSizes.yes ? "cl, " : ""}${el}, ${d === null ? "" : `${d}, `}${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
         );
       },
     );

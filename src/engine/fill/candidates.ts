@@ -439,11 +439,12 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     let domain = 0;
     for (const c of sp.cells) domain |= module.domainOf(sp, board.dealt, c);
     const ladder = ladderOf(module, board);
+    const repeat = module.repeatOf?.(sp, board.dealt) ?? null;
     const on: NotesLadder = {
       ladder,
       caps: capsOf(module, tierOf(board)),
       marks: () => {
-        const m = new CellMarks(sp, domain, grid.slice());
+        const m = new CellMarks(sp, domain, grid.slice(), repeat);
         m.placing = ladder.placing;
         m.striking = ladder.striking;
         return m;

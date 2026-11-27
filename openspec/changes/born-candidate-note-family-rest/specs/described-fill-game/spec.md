@@ -335,3 +335,17 @@ small cross at each corner inside the grid while its variation is on.
 - **THEN** the first is refused, values must be at least 4 with no
   diagonal touching; the 2x2 is refused as no Easy puzzle with every clue
   showing, and not with clues hidden
+
+### Requirement: A born board's answer may hold a value more than once in a unit
+
+Where the answer declares a value a unit repeats (`answer.value.repeat`),
+the ladder's marks and the candidate walk SHALL count it as many times as
+the description says a unit holds it. A Latin sample SHALL be folded to the
+domain: each value past its top reads as the top. A derived clue's meaning
+MAY read a size the params give.
+
+#### Scenario: The emptying fixture
+
+- **WHEN** a `5k3` board is sampled, and its clues derived from the answer
+- **THEN** each line holds 1 to 3 once and the empty square twice, each clue
+  is a number up to 3, and the ladder never proves the board impossible

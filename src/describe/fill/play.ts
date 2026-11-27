@@ -254,6 +254,7 @@ export function playOf(
   ];
   return [
     ...boardDomainOf(d, env, measured),
+    ...repeatOf(d, env, measured),
     ...washedOf(wash?.when ?? null, env, measured),
     "",
     "/** How the player fills the board: the engine's `FillPlay`. */",
@@ -353,6 +354,32 @@ function boardDomainOf(
     "",
     "/** The values each cell may hold: the board's domain, the same at every cell. */",
     `export function domainOf(${param("sp", "GridSpace", body)}, ${param("cl", "Dealt", body)}, _c: number): number {`,
+    ...body,
+    "}",
+  ];
+}
+
+/**
+ * `repeatOf`, where the answer declares a value that repeats in a unit
+ * (Salad's empty square): the value and how many times each unit holds it,
+ * which the ladder's marks count it by. Nothing where it declares none.
+ */
+function repeatOf(d: Description, env: Env, measured: (e: Expr) => Expr): string[] {
+  if (d.repeat === null) return [];
+  const out = new Out(1);
+  const cenv = { ...env, answer: { repeats: false } };
+  const value = compileExpr(measured(d.repeat.value), new Map(), cenv, out);
+  const times = compileExpr(measured(d.repeat.times), new Map(), cenv, out);
+  expect(value, "num", "answer repeat value");
+  expect(times, "num", "answer repeat times");
+  const body = [
+    ...out.text(),
+    `  return { value: ${value.code}, times: ${times.code} };`,
+  ];
+  return [
+    "",
+    "/** The value a unit may hold more than once, and how many times it does. */",
+    `export function repeatOf(${param("sp", "GridSpace", body)}, ${param("cl", "Dealt", body)}): { value: number; times: number } {`,
     ...body,
     "}",
   ];

@@ -1,0 +1,11 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # The clue's number let sit one square further in than the empties reach.
+  sees:
+    conclude: >-
+      forall c in L, i = index(c, L):
+      ((f < 0 or i <= f) implies (forall e in domain where e != v(q) and e <= k: strike(c, e)))
+      and (((stop >= 0 and i > stop) or i > reach - 1) implies strike(c, v(q)))

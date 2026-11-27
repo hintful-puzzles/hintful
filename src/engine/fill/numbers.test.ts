@@ -52,7 +52,7 @@ describe("a board of numbers' deal", () => {
     for (const w of [3, 4, 6]) {
       const sp = paramSpaceOf(squaring, { w, h: w });
       for (let i = 0; i < 5; i++)
-        expect(isLatin(sampleLatin(sp, randomNew(`latin-${w}-${i}`)), w)).toBe(true);
+        expect(isLatin(sampleLatin(sp, randomNew(`latin-${w}-${i}`), w), w)).toBe(true);
     }
   });
 
