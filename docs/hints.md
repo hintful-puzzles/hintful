@@ -882,13 +882,6 @@ On the candidate walk the game writes no stamp
   reasons' kinds]` and its steps carry `PlanRung<Reason>`.
 - **A `placeWords` that narrates another reason than the one it was handed
   returns that `rung` beside the words**, so the id and the sentence agree.
-- **A plan with a `setUp` of its own is on the populate reading alone and
-  says so in its types**: `runLatinCandidatePlan<…, "populate">`, steps of
-  `PlanRung<Reason, "populate">`, a reason union of
-  `SingleReasonUnder<"populate">`, and a rung list without `note` and
-  `regionsFull`. The argument does not compile without a `setUp`,
-  and a plan on both readings does not compile with one. The walk throws
-  before it reads a single with no notes on such a plan.
 - **A candidate game's pin scan gives `ui` a rule that splits its boards
   between the two readings**, since `populate` is spoken only under one and
   `note` only under the other (`group-hint.test.ts`). A born game's cases

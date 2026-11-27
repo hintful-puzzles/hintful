@@ -68,10 +68,10 @@ each of these the shared way is
 | Deduce from the notes when the mistake check vouches for them | you make your techniques the plan's rungs, or decide what the hint may read |
 | A premise names everything its deduction reads | you write a technique's terms, a reason or its words |
 | Persist, populate, and the moves | you add the note moves, the opening steps or the notes half of `findMistakes` |
-| A populate step never resets notes | you write a fill-all move, a `setUp`, or a Mark-all press |
+| A populate step never resets notes | you write a fill-all move or a Mark-all press |
 | Two readings of an unmarked cell | you add the `hint-notes` preference, choose its default, or a step rests on a cell with no notes |
 | – Joining the preference | you add the `hint-notes` preference to a game |
-| – Choosing the default | you set the reading `newUi` starts on, or your plan has a `setUp` of its own |
+| – Choosing the default | you set the reading `newUi` starts on |
 | – What the walk folds, and what a step owes it | a step under the implicit reading rests on a cell with no notes |
 | Re-derive a placement's why | a placement is narrated as a single |
 | Solve the way a human does | you split a firing into legs, add auto-pencil, or a clue forces cells with no notes needed |
@@ -264,8 +264,6 @@ Requirements: "A row/column Latin square answers no question its regions
 already settle", "The fields the row/column preset supplies", "A game
 reasoning over other regions cannot take the preset".
 
-- **A game with a `setUp` of its own still gives the `notes` vocabulary**,
-  for the conclusions.
 - **A game that differs is turned back by the checker.** The parameter type
   carries `NarratesSingles<Reason>`, which is `never` unless the game's
   reason union can hold the `SingleReason` the preset synthesizes. A game
@@ -399,8 +397,8 @@ board shows its premise".
   a hidden single in each region of `regionsOf` that holds every value, read
   off `RungContext.shown`. A technique's rung runs on the same view, so
   nothing it offers rests on a mark the board has yet to show.
-- **Setup is outside the frontier.** The default is `populateThenClean`,
-  built from the plan's `notes` words. A `setUp` of the game's own says
+- **Setup is outside the frontier.** It is the walk's alone,
+  `populateThenClean` built from the plan's `notes` words, and says
   whether it is `done`, not only whether a call did something.
 
 Guard: `hint-frontier.test.ts` reads each plan through
@@ -555,9 +553,7 @@ does this; a game supplies the moves it is written in.
   `emitObviousCleanStep` strikes every such note in one `pencilStrike`,
   continuing the populate when it follows one and standalone otherwise. It
   fires once, as a step of the walk, so it also cleans a board the player
-  noted. A game writing its own `setUp` keeps the order `populateThenClean`
-  has ("Candidate-elimination hints clean obvious candidates at populate",
-  "The obvious-candidate cleanup is one strike step").
+  noted.
 - **The clean is a setup step**, several cells and several values. Exempt it,
   by its rung `clean` (and the fill by `populate`), from a per-firing test
   that a strike's marks share one cell or one value, or that every step uses
@@ -627,11 +623,8 @@ seeds, the steps of the implicit plan over the populate plan, and the share
 of cells the implicit plan writes notes into. `hint-frontier.test.ts` walks
 both readings, so the continuity bound holds whichever is the default.
 
-**A game with a `setUp` of its own walks the populate reading only**, and
-the walk refuses it the implicit one ("A plan's setup declares the reading
-it walks"). Its rung list leaves out `note` and `regionsFull`
-([`hints.md`](./hints.md) § "Name the rung a step speaks"). So does a game where no region rules a candidate out, whose
-implicit reading would be a populate done one cell at a time.
+**A game where no region rules a candidate out walks the populate reading
+only**: its implicit reading would be a populate done one cell at a time.
 
 ### What the walk folds, and what a step owes it
 

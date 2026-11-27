@@ -29,7 +29,6 @@ import {
   type Firing as LadderFiring,
   techniqueFirings,
 } from "../solve/ladder-runtime.ts";
-import type { PlanSetUp } from "./candidate-hint.ts";
 import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
@@ -37,7 +36,7 @@ import {
   type Mark,
   NOTES_RUNGS,
   type NoteEncoding,
-  type NotesRungUnder,
+  type NotesRung,
   type PlanJudging,
   type Reach,
 } from "./candidate-hint.ts";
@@ -54,8 +53,8 @@ import {
   type CellRegion,
   type RowColRegion,
   rowColRegions,
-  type SingleReasonUnder,
-  type SingleWhyUnder,
+  type SingleReason,
+  type SingleWhy,
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
@@ -64,11 +63,10 @@ import {
  * cull ({@link DupReason}). */
 export const CANDIDATE_RUNGS = [...NOTES_RUNGS, "dup"] as const;
 
-/** The rungs a plan's steps carry: the walk's own under the readings the plan
- * walks, and the `kind` of each of the game's reasons, which is the rung of
- * the step a reason narrates. */
-export type PlanRung<Reason, Reading extends CandidateReading = CandidateReading> =
-  | NotesRungUnder<Reading>
+/** The rungs a plan's steps carry: the walk's own, and the `kind` of each of
+ * the game's reasons, which is the rung of the step a reason narrates. */
+export type PlanRung<Reason> =
+  | NotesRung
   | DupReason["kind"]
   | (Reason extends { kind: infer K extends string } ? K : never);
 
@@ -233,12 +231,11 @@ export interface CandidatePlan<
   H extends CandidateHighlights,
   Reason,
   Reg extends CellRegion,
-  Reading extends CandidateReading = CandidateReading,
 > {
   /** The board's row stride; its height is read off `grid`. */
   w: number;
   /** The steps the plan pushes to. */
-  steps: HintStep<M, H, PlanRung<Reason, Reading>>[];
+  steps: HintStep<M, H, PlanRung<Reason>>[];
   /** The working board, advanced as the plan is built: 0 = empty. */
   grid: Uint8Array | Int8Array;
   /** The working notes, in `enc`'s encoding. */
@@ -255,7 +252,7 @@ export interface CandidatePlan<
    * `implicit` there is no populate: a firing first writes the notes of every
    * blank, note-less cell it strikes or outlines as evidence, one leg each, and
    * a single needs no notes at all. Default `populate`. */
-  reading?: Reading;
+  reading?: CandidateReading;
   /** Names the plan if its step budget trips. */
   label: string;
   /** Iteration cap, a backstop for a rung that fires without progress. Default
@@ -274,7 +271,7 @@ export interface CandidatePlan<
    * Default: every cell of the placed cell's `regionsOf`. */
   reach?: Reach;
   /** The reason a single the board shows narrates as. */
-  singleReason: (n: number, why: SingleWhyUnder<WholeRegion<Reg>, Reading>) => Reason;
+  singleReason: (n: number, why: SingleWhy<WholeRegion<Reg>>) => Reason;
   /** A placement's words; `continues` is true on a journey's later legs. The
    * step's rung is the reason's kind, unless the words narrate another of the
    * game's reasons than the one handed in, and then they say which: `rung`. */
@@ -293,20 +290,15 @@ export interface CandidatePlan<
    * implicit reading a strike from one cell with no notes is not a strike at
    * all: its step writes the values left, or places the one left. */
   conclude: Conclusions;
-  /** The words of the default setup: pencil everything in, then clear the
-   * obvious; and of a note leg under the implicit reading, which writes
-   * `values` into the note-less `cell` (`every` when its regions rule nothing
-   * out yet). Omit only with {@link setUp}. */
-  notes?: {
+  /** The words of the setup: pencil everything in, then clear the obvious;
+   * and of a note leg under the implicit reading, which writes `values` into
+   * the note-less `cell` (`every` when its regions rule nothing out yet). */
+  notes: {
     populate: string;
     /** Words over the notes the clean strikes, which it rings. */
     cleanObvious: (marks: readonly Mark[]) => Sentence;
     note: (cell: Point, values: number[], every: boolean) => Sentence;
   };
-  /** A setup of the game's own, replacing the default. It is a populate the
-   * walk cannot leave out, so it is also how a plan says it walks the populate
-   * reading alone ({@link OwnSetUp}). */
-  setUp?: "implicit" extends Reading ? never : PlanSetUp;
   /** The game's rungs, tried after the singles, in the note-free opening too. */
   rungs?: readonly CandidateRung<M, H, Reason>[];
   /** Whether a single the notes show, naked or hidden, is one the plan places:
@@ -327,22 +319,9 @@ export function runCandidatePlan<
   H extends CandidateHighlights,
   Reason,
   Reg extends CellRegion,
-  Reading extends CandidateReading = CandidateReading,
->(plan: CandidatePlan<M, H, Reason, Reg, Reading> & OwnSetUp<Reading>): void {
-  // The walk is written once, for both readings. What a narrower `Reading`
-  // takes out of the plan's types it refuses to do: `note` is spoken under the
-  // implicit reading, which `reading` cannot then name, and `single` throws
-  // before it reads a single off a cell with no notes.
-  new CandidateWalk(plan as unknown as CandidatePlan<M, H, Reason, Reg>).run();
+>(plan: CandidatePlan<M, H, Reason, Reg>): void {
+  new CandidateWalk(plan).run();
 }
-
-/** What a plan on the populate reading alone must give: the setup of its own
- * that says so. The walk can see a `setUp` and cannot see a type argument, so
- * the narrower step type is given only where the walk can hold the plan to it.
- * `unknown` for a plan on both readings, which takes the default setup. */
-type OwnSetUp<Reading extends CandidateReading> = "implicit" extends Reading
-  ? unknown
-  : { setUp: PlanSetUp };
 
 /** Whether a reason union can hold the `SingleReason` the row/column
  * preset synthesizes. `unknown` when it can (and so intersects away), `never`
@@ -350,21 +329,12 @@ type OwnSetUp<Reading extends CandidateReading> = "implicit" extends Reading
  * narrate differently (Solo names a block or a diagonal) is turned back to
  * {@link runCandidatePlan} by the checker rather than by a convention. The
  * tuples stop the union distributing, so `Reason` is tested whole. */
-type NarratesSingles<Reason, Reading extends CandidateReading> = [
-  SingleReasonUnder<Reading>,
-] extends [Reason]
-  ? unknown
-  : never;
+type NarratesSingles<Reason> = [SingleReason] extends [Reason] ? unknown : never;
 
 /** A {@link CandidatePlan} with the row/column family's answers taken out: see
  * {@link runLatinCandidatePlan} for why each one is not a parameter. */
-export type LatinCandidatePlan<
-  M,
-  H extends CandidateHighlights,
-  Reason,
-  Reading extends CandidateReading = CandidateReading,
-> = Omit<
-  CandidatePlan<M, H, Reason, RowColRegion, Reading>,
+export type LatinCandidatePlan<M, H extends CandidateHighlights, Reason> = Omit<
+  CandidatePlan<M, H, Reason, RowColRegion>,
   "regionsOf" | "singleReason" | "notes" | "conclude"
 > & {
   /** The words the shared setup sentences and conclusions are built from: the
@@ -414,15 +384,8 @@ export const LATIN_RUNGS = [
  * {@link runCandidatePlan}, which every game may call and which the checker
  * sends it back to anyway ({@link NarratesSingles}).
  */
-export function runLatinCandidatePlan<
-  M,
-  H extends CandidateHighlights,
-  Reason,
-  Reading extends CandidateReading = CandidateReading,
->(
-  plan: LatinCandidatePlan<M, H, Reason, Reading> &
-    NarratesSingles<Reason, Reading> &
-    OwnSetUp<Reading>,
+export function runLatinCandidatePlan<M, H extends CandidateHighlights, Reason>(
+  plan: LatinCandidatePlan<M, H, Reason> & NarratesSingles<Reason>,
 ): void {
   const { w, notes, placeWords, ...rest } = plan;
   const value = notes.value ?? String;
@@ -433,7 +396,7 @@ export function runLatinCandidatePlan<
     regions: "row or column",
     cell,
   };
-  const full: CandidatePlan<M, H, Reason, RowColRegion, Reading> = {
+  const full: CandidatePlan<M, H, Reason, RowColRegion> = {
     ...rest,
     w,
     notes: {
@@ -450,12 +413,11 @@ export function runLatinCandidatePlan<
       M,
       H,
       Reason,
-      RowColRegion,
-      Reading
+      RowColRegion
     >["singleReason"],
     // A hidden single's line ("in this row") is striped by the words that name
     // it (`narrateLatinReason`), so the preset adds nothing to the placement.
     placeWords,
   };
-  runCandidatePlan(full as typeof full & OwnSetUp<Reading>);
+  runCandidatePlan(full);
 }

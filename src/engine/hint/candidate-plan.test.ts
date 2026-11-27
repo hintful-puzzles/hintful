@@ -3,7 +3,7 @@ import type { HintStep } from "../contract/game.ts";
 import { CELL, mark, Narration, phrase, unshaped } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import type { DupReason } from "../solve/cell-marks.ts";
-import type { CandidateHighlights, CandidateReading } from "./candidate-hint.ts";
+import type { CandidateHighlights } from "./candidate-hint.ts";
 import {
   type CandidatePlan,
   type Firing,
@@ -17,13 +17,7 @@ import { type RowColRegion, rowColRegions, type SingleReason } from "./latin-hin
 type Reason = { kind: string; near?: Point } | DupReason;
 type Move = { type: string; [k: string]: unknown };
 type Step = HintStep<Move, CandidateHighlights>;
-type Plan<Reading extends CandidateReading = CandidateReading> = CandidatePlan<
-  Move,
-  CandidateHighlights,
-  Reason,
-  RowColRegion,
-  Reading
->;
+type Plan = CandidatePlan<Move, CandidateHighlights, Reason, RowColRegion>;
 type Board = Pick<Plan, "w" | "grid" | "pencil" | "steps">;
 type Legs = Firing<Move, CandidateHighlights, Reason>;
 
@@ -72,6 +66,17 @@ function near(s: string, r: Reason): Narration {
     : Narration.plain(s);
 }
 
+/** Setup words that say which step the walk took. */
+const notes = {
+  populate: "populate",
+  cleanObvious: () => unshaped(Narration.plain("clean"), "setup"),
+  note: (c: Point, values: number[], every: boolean) =>
+    unshaped(
+      Narration.plain(`note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`),
+      "bare",
+    ),
+};
+
 /** Hooks whose words name the reason, the cell and whether the leg continues. */
 const hooks = (
   w: number,
@@ -84,7 +89,9 @@ const hooks = (
   | "placeWords"
   | "strikeWords"
   | "conclude"
+  | "notes"
 > => ({
+  notes,
   autoClean: false,
   label: "test plan",
   regionsOf: (x, y) => rowColRegions(x, y, w),
@@ -101,19 +108,9 @@ const hooks = (
   conclude,
 });
 
-/** Walk a plan with a setup of its own, done from the start unless `over`
- * gives another: a plan on the populate reading alone. `over` supplies the
- * board and whatever else the case needs. */
-function walk(over: Partial<Plan<"populate">> & Board): void {
-  runCandidatePlan<Move, CandidateHighlights, Reason, RowColRegion, "populate">({
-    ...hooks(over.w),
-    setUp: { done: () => true, step: () => false },
-    ...over,
-  });
-}
-
-/** Walk a plan on the default setup, under the reading `over` names. */
-function walkDefault(over: Partial<Plan> & Board & Pick<Plan, "notes">): void {
+/** Walk a plan under the reading `over` names, the populate reading unless it
+ * names one. `over` supplies the board and whatever else the case needs. */
+function walk(over: Partial<Plan> & Board): void {
   runCandidatePlan<Move, CandidateHighlights, Reason, RowColRegion>({
     ...hooks(over.w),
     ...over,
@@ -121,18 +118,22 @@ function walkDefault(over: Partial<Plan> & Board & Pick<Plan, "notes">): void {
 }
 
 describe("runCandidatePlan", () => {
-  /** A 4×1 board with a rung that places cell 0 with no notes, and one that
-   * waits for the setup and then places a clue in each other cell up to
-   * `stuckAt`, one by one. */
-  function phases(opts: { setUpSteps: number; stuckAt?: number }): string[] {
+  /** A 4×1 board, noted from the start when `noted`, with a rung that places
+   * cell 0 with no notes, and one that waits for the setup and then places a
+   * clue in each other cell up to `stuckAt`, one by one. */
+  function phases(opts: { noted: boolean; stuckAt?: number }): string[] {
     const steps: Step[] = [];
     const grid = new Uint8Array(4);
-    let setUps = 0;
     walk({
       w: 4,
       steps,
       grid,
-      pencil: new Int32Array(4),
+      pencil: new Int32Array(4).fill(opts.noted ? bits(1, 2, 3, 4) : 0),
+      // A placement's cull is silent, so the steps are the phases alone.
+      autoClean: true,
+      // The board is one row: a column of one cell would hold a hidden single
+      // of every note in it.
+      regionsOf: () => [rowColRegions(0, 0, 4)[0]],
       rungs: [
         () =>
           grid[0]
@@ -148,39 +149,34 @@ describe("runCandidatePlan", () => {
                 ])
             : [],
       ],
-      setUp: {
-        done: () => setUps >= opts.setUpSteps,
-        step: () => {
-          setUps++;
-          steps.push({
-            move: { type: "none" },
-            rung: "populate",
-            explanation: "setUp",
-          });
-          return true;
-        },
-      },
     });
     return steps.map((s) => s.explanation);
   }
 
   it("takes the note-free rungs, then sets up, then the whole ladder", () => {
-    expect(phases({ setUpSteps: 2 })).toEqual([
+    // The clue rung reads the notes, so it waits for the setup, as the
+    // note-free opening does not; the last cell is down to one note.
+    expect(phases({ noted: false })).toEqual([
       "opening 0,0",
-      "setUp",
-      "setUp",
+      "populate",
+      "clean",
       "clue 1,0",
       "clue 2,0",
-      "clue 3,0",
+      "naked 3,0",
     ]);
   });
 
   it("goes straight to the ladder when there is nothing to set up", () => {
-    expect(phases({ setUpSteps: 0 })[0]).toBe("opening 0,0");
+    expect(phases({ noted: true })).toEqual([
+      "opening 0,0",
+      "clue 1,0",
+      "clue 2,0",
+      "naked 3,0",
+    ]);
   });
 
   it("ends when nothing fires on an unfinished board", () => {
-    expect(phases({ setUpSteps: 0, stuckAt: 2 })).toEqual(["opening 0,0", "clue 1,0"]);
+    expect(phases({ noted: true, stuckAt: 2 })).toEqual(["opening 0,0", "clue 1,0"]);
   });
 
   /** A 3×3 board noting 1–3 everywhere, whose one deduction places 1 in the
@@ -316,17 +312,6 @@ describe("runCandidatePlan", () => {
       strike: ns.map((n) => ({ x, y, n })),
       reason: { kind, near },
     });
-    const notes = {
-      populate: "populate",
-      cleanObvious: () => unshaped(Narration.plain("clean"), "setup"),
-      note: (c: Point, values: number[], every: boolean) =>
-        unshaped(
-          Narration.plain(
-            `note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`,
-          ),
-          "bare",
-        ),
-    };
     /** Walk a 3×3 board whose one firing is `legs`, with `over`'s hooks. */
     function implicitWalk(
       grid: Uint8Array,
@@ -335,13 +320,12 @@ describe("runCandidatePlan", () => {
     ): Step[] {
       const steps: Step[] = [];
       const pencil = new Int32Array(9);
-      walkDefault({
+      walk({
         w: 3,
         steps,
         grid,
         pencil,
         reading: "implicit",
-        notes,
         rungs: legs.length > 0 ? [until(grid, pencil, 3, legs)] : [],
         ...over,
       });
@@ -475,28 +459,13 @@ describe("runCandidatePlan", () => {
 
     it("leaves the populate reading as it was: a note-less cell is no single", () => {
       const steps: Step[] = [];
-      walkDefault({
+      walk({
         w: 3,
         steps,
         grid: Uint8Array.from([0, 2, 3, 0, 0, 0, 0, 0, 0]),
         pencil: new Int32Array(9),
-        notes,
       });
       expect(steps[0].explanation).toBe("populate");
-    });
-
-    it("refuses a setup of the game's own, which it could not leave out", () => {
-      expect(() =>
-        walk({
-          w: 3,
-          steps: [],
-          grid: new Uint8Array(9),
-          pencil: new Int32Array(9),
-          // The checker refuses this too (`setUpAgainstReadings`); the cast
-          // is a caller that got round it.
-          reading: "implicit" as "populate",
-        }),
-      ).toThrow(/implicit reading/);
     });
   });
 
@@ -616,11 +585,6 @@ describe("runLatinCandidatePlan", () => {
     // single shaded along the wrong region.
     expect(blockRegionGame).not.toThrow();
   });
-
-  it("refuses a setup that disagrees with a plan's readings at compile time", () => {
-    // The refusals live in {@link setUpAgainstReadings}'s `@ts-expect-error`s.
-    expect(setUpAgainstReadings).toBeTypeOf("function");
-  });
 });
 
 /**
@@ -642,8 +606,7 @@ function blockRegionGame(): void {
   runLatinCandidatePlan<
     Move,
     CandidateHighlights,
-    BlockReason,
-    "populate"
+    BlockReason
     // @ts-expect-error the reason union cannot hold a row/column hidden single.
   >({
     w: 3,
@@ -655,31 +618,5 @@ function blockRegionGame(): void {
     placeWords: () => ({ explanation: "", area: [] }),
     strikeWords: () => ({ premise: "", area: [] }),
     notes: { noun: "number", placedVerb: "standing" },
-    setUp: { done: () => true, step: () => false },
   });
-}
-
-/**
- * The two ways a plan's setup and its readings can disagree, each a type error
- * for the reason `blockRegionGame`'s is: a plan typed on both readings that
- * gives a setup of its own, which the implicit reading could not leave out,
- * and a plan typed on the populate reading alone that gives none, which the
- * walk could not tell from a plan on both. Never called: the first would throw
- * under the implicit reading and the second has no setup to run.
- */
-function setUpAgainstReadings(board: Board): void {
-  runCandidatePlan<Move, CandidateHighlights, Reason, RowColRegion>({
-    ...hooks(board.w),
-    ...board,
-    // @ts-expect-error a plan on both readings takes the default setup.
-    setUp: { done: () => true, step: () => false },
-  });
-  runCandidatePlan<
-    Move,
-    CandidateHighlights,
-    Reason,
-    RowColRegion,
-    "populate"
-    // @ts-expect-error a plan on the populate reading alone says so by its setup.
-  >({ ...hooks(board.w), ...board });
 }

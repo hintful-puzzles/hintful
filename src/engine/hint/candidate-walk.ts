@@ -192,47 +192,38 @@ export class CandidateWalk<
     this.judging = plan.judging !== undefined;
     const reach = plan.reach ?? regionReach(w, plan.regionsOf);
     this.reach = reach;
-    if (plan.setUp) {
-      // A setup of the game's own is a populate the walk cannot leave out.
-      if (this.implicit)
-        throw new Error(`${plan.label}: the implicit reading takes the default setup`);
-      this.setUp = plan.setUp;
+    const notes = plan.notes;
+    const clean = (): boolean =>
+      emitObviousCleanStep(steps, grid, pencil, w, reach, notes.cleanObvious, {
+        enc,
+        adapter: dialect,
+      });
+    if (this.implicit) {
+      // Nothing to pencil in, but a note the player left stale is still on
+      // the board, and every strike and hidden single after the opening
+      // reads the notes as written. With none stale there is nothing to set
+      // up, so there is no opening: holding the strikes back behind one
+      // would pass over the strike that continues a placement.
+      let cleaned = false;
+      this.setUp = {
+        done: () =>
+          (cleaned ||= obviousCandidateMarks(grid, pencil, w, reach, enc).length === 0),
+        step: () => {
+          cleaned = true;
+          return clean();
+        },
+      };
     } else {
-      const notes = plan.notes;
-      if (!notes) throw new Error(`${plan.label}: give either notes or setUp`);
-      const clean = (): boolean =>
-        emitObviousCleanStep(steps, grid, pencil, w, reach, notes.cleanObvious, {
-          enc,
-          adapter: dialect,
-        });
-      if (this.implicit) {
-        // Nothing to pencil in, but a note the player left stale is still on
-        // the board, and every strike and hidden single after the opening
-        // reads the notes as written. With none stale there is nothing to set
-        // up, so there is no opening: holding the strikes back behind one
-        // would pass over the strike that continues a placement.
-        let cleaned = false;
-        this.setUp = {
-          done: () =>
-            (cleaned ||=
-              obviousCandidateMarks(grid, pencil, w, reach, enc).length === 0),
-          step: () => {
-            cleaned = true;
-            return clean();
-          },
-        };
-      } else {
-        const pop = lazyPopulate<M, H>(
-          { grid, pencil },
-          grid,
-          pencil,
-          w,
-          steps,
-          notes.populate,
-          { enc, adapter: dialect },
-        );
-        this.setUp = populateThenClean(pop, clean);
-      }
+      const pop = lazyPopulate<M, H>(
+        { grid, pencil },
+        grid,
+        pencil,
+        w,
+        steps,
+        notes.populate,
+        { enc, adapter: dialect },
+      );
+      this.setUp = populateThenClean(pop, clean);
     }
     this.shown = this.view();
     const singles: CandidateRung<M, H, Reason> = () => this.singles();

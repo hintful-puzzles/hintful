@@ -1,6 +1,6 @@
 ## Next
 
-3.1, the family's figures, with 3.4 beside it; Salad flipped (2.3f).
+3.1, the family's figures; 3.4 done.
 Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
@@ -64,6 +64,5 @@ changed for a player" gets its line. In the order task 1.1 set.
 - [ ] 3.2 Update the guides for what the family added.
 - [ ] 3.3 Commit, push, archive; mark the route's task 1.2 done, or file
       the next part beneath it.
-- [ ] 3.4 Retire the candidate plan's own setup (`setUp`, `OwnSetUp`, the
-      populate-only typing and its tests): no plan has had one since
-      Salad's flip, which also retired `onPlace` and `ownState`.
+- [x] 3.4 Retire the candidate plan's own setup (`setUp`, `OwnSetUp`, the
+      populate-only typing and its tests): the commit that ticks 3.4.

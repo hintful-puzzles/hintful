@@ -509,11 +509,6 @@ export function impliedNotes(
 export const NOTES_RUNGS = ["populate", "clean", "note"] as const;
 export type NotesRung = (typeof NOTES_RUNGS)[number];
 
-/** The {@link NotesRung}s a plan walking `Reading` can speak: `note` is the
- * implicit reading's alone. */
-export type NotesRungUnder<Reading extends CandidateReading> =
-  "implicit" extends Reading ? NotesRung : Exclude<NotesRung, "note">;
-
 /** The populate/mark-all opener step. It deliberately declares **no board
  * marks** — the banner narration is the whole display, and the cross-game
  * guards (`hint-overlay.test.ts`, `hint-quality.test.ts`) recognize exactly

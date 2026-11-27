@@ -1793,9 +1793,6 @@ supplies its rungs, regions and words; the walk itself is
 - **Its `reading` is the player's.** Under the implicit one there is no
   populate, and a firing first writes the notes of every note-less cell its
   premise reads.
-- **A plan with a `setUp` of its own walks the populate reading alone** and
-  is typed so (`PlanRung<Reason, "populate">`). See
-  [`hints.md`](./hints.md) § "Name the rung a step speaks".
 - **A plain row/column square calls `runLatinCandidatePlan`** and supplies
   its rungs and words alone. A game whose singles narrate otherwise
   fails to type-check against it and calls `runCandidatePlan`
