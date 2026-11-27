@@ -357,7 +357,7 @@ describe("a hide that keeps its clues symmetric, and may go less far", () => {
     const sp = paramSpaceOf(mirroring, { w: 3, h: 3 });
     const { number } = mirroring.deriveClues(new Uint8Array(9).fill(2), sp);
     const given = clueList([4], [2], 9);
-    const desc = encodeDesc(mirroring.deal, sp, { number, given });
+    const desc = encodeDesc(mirroring, mirroring.deal, sp, { number, given });
     const read = descValue(
       decodeDesc<mirroring.Dealt>(mirroring.deal, sp, mirroring.clueMax, desc),
     );
@@ -502,7 +502,7 @@ describe("a partition grown round dominoes, some closed as regions of their own"
     // Two regions, the left two columns and the rest, on a 4x2 board.
     const parts = partitionOf([0, 0, 1, 1, 0, 0, 1, 1]);
     const small = paramSpaceOf(growing, { w: 4, h: 2 });
-    const desc = encodeDesc(growing.deal, small, { region: parts });
+    const desc = encodeDesc(growing, growing.deal, small, { region: parts });
     const read = descValue(
       decodeDesc<growing.Dealt>(growing.deal, small, growing.clueMax, desc),
     );

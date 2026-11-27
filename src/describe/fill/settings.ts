@@ -114,6 +114,20 @@ function choiceOut(
       if (!env.clues.has(k))
         throw new CompileError(`settings ${id}: deals ${k}, no clue kind`);
     }
+  // A ruleset's letters are a board of numbers' glyphs, which a raised
+  // block, as tall as its number, has none of, and which one ruleset alone
+  // chooses.
+  if (choices.some((c) => c.letters === true)) {
+    const numbers = json.play?.numbers;
+    if (!size) throw new CompileError(`settings ${id}: letters, and is no ruleset`);
+    if (numbers === undefined || numbers.letters === true || numbers.raised === true)
+      throw new CompileError(
+        `settings ${id}: letters, on no board of numbers drawn flat in numerals`,
+      );
+    for (const [other, s] of Object.entries(json.settings ?? {}))
+      if (other !== id && (s.choices ?? []).some((c) => c.letters === true))
+        throw new CompileError(`settings ${id}: letters, and ${other} too`);
+  }
   const symmetries = choices.filter((c) => c.symmetry !== undefined).length;
   if (symmetries > 0 && symmetries !== choices.length)
     throw new CompileError(`settings ${id}: a symmetry on some choices only`);

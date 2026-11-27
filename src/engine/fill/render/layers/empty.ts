@@ -9,7 +9,7 @@ import { drawRuledOutCross } from "../../../render/piece.ts";
 import { surfaceOf } from "../../../render/pieces/painter.ts";
 import { drawRingIn } from "../../../render/pieces/stock.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../../board.ts";
-import { emptyOf } from "../../numbers.ts";
+import { emptyOf } from "../../glyphs.ts";
 import { COL_INK } from "../palette.ts";
 import type { FillSetup } from "../setup.ts";
 import { BALL, BALL_BARE, BALL_GIVEN } from "../tile-word.ts";

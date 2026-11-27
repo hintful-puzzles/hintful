@@ -406,3 +406,51 @@ value SHALL show no notes inside it.
   notes
 - **THEN** after the first it is noted 1 to 3 and drawn as a bare ball, and
   after the second it holds no notes and no ball
+
+### Requirement: A born board's ruleset may draw its values as letters
+
+A ruleset of a board of numbers MAY draw its values as letters from A
+(`letters` on its choice), every other ruleset's drawing numerals. A board
+SHALL draw, offer, print, say and write each value as its ruleset draws
+it, its empty square as `X`; a letter key and a digit SHALL each type the
+value at its place on every board of the game.
+
+#### Scenario: The emptying fixture's two rulesets drawn
+
+- **WHEN** a `5k3S` board and a `5k3B` board are dealt and drawn, and `A`,
+  `a` and `1` typed into an open square of each
+- **THEN** the first draws its clues and givens as letters and offers `A`
+  to `C`, `X`, `O` and clear; the second draws numerals and offers `1` to
+  `3`; each key types 1 on both
+
+### Requirement: A clue at a slot may say a value
+
+A clue kind at a slot whose number is one of the answer's values (`glyph`)
+SHALL be drawn and printed as that value's glyph.
+
+#### Scenario: The emptying fixture's clues drawn as letters
+
+- **WHEN** a `5k3S` board is drawn and printed
+- **THEN** its clues at the lines' ends are letters, no numeral among them
+
+### Requirement: A born board's ID may write its values as the board draws them
+
+An ID stream MAY write its own kind's number as the board's glyph, one
+character (`glyphs`), the kind a given or a clue with `glyph`; a stream at
+slots MAY write them in an order of sides of its own (`sides`), and any
+stream MAY end in a mark written wherever it is written (`after`). A glyph
+SHALL be read only as the board's ruleset draws it, and only up to the
+largest value its sizes give.
+
+#### Scenario: Salad's IDs
+
+- **WHEN** an ID upstream Salad's generator writes is read by the draft of
+  Salad's description, in either ruleset, from 3x3 to 9x9 and 2 to 9
+  symbols
+- **THEN** it holds the border clues, balls and givens the hand-written
+  game reads, and is written back byte for byte
+
+#### Scenario: The emptying fixture's slots in Salad's order
+
+- **WHEN** the `4k3S` desc `dAk,p` is read
+- **THEN** its one clue is at the left of the first row

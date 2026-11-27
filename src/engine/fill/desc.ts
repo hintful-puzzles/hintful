@@ -15,8 +15,9 @@ import {
   type ListClues,
   type Partition,
 } from "../solve/describe-runtime.ts";
-import type { Clues } from "./board.ts";
+import { type Clues, type FillModule, perValuesOf } from "./board.ts";
 import type { ClueMax, FillDeal } from "./game-id.ts";
+import { boardGlyphs, type ValueGlyphs } from "./glyphs.ts";
 import type { GrowSizes } from "./grow.ts";
 import { offKinds } from "./params/settings.ts";
 import { blocks } from "./segments/blocks.ts";
@@ -79,21 +80,27 @@ const segmentsOn = (deal: FillDeal, off: ReadonlySet<string>): readonly IdSegmen
     ? deal.id
     : deal.id.filter((_, i) => !(deal.idKinds?.[i] ?? []).every((k) => off.has(k)));
 
-/** The desc of the clues `dealt`, by the deal's `id`; `values`, the top of
- * the board's domain, where a kind is one a value. The sizes a ruleset
- * chooses its kinds by are `dealt`'s, which holds each size the deal reads. */
+/** How a board of `module` on `sp` dealt `dealt` draws its values, where it
+ * is a board of numbers; `null` on any other. */
+export const glyphsIn = <C>(module: FillModule<C>, sp: GridSpace, dealt: C) =>
+  module.play?.numbers === undefined ? null : boardGlyphs(module, sp, dealt);
+
+/** The desc of the clues `dealt` on the space `sp` of a board of `module`,
+ * by the deal's `id`. The sizes a ruleset chooses its kinds and glyphs by
+ * are `dealt`'s, which holds each size the deal reads. */
 export function encodeDesc<C extends Clues<C>>(
+  module: FillModule<C>,
   deal: FillDeal,
   sp: GridSpace,
   dealt: C,
-  values = 0,
 ): string {
   const cx = {
     deal,
     sp,
     dealt,
     listOf: (kind: string): ClueList => dealt[kind as keyof C] as ClueList,
-    values,
+    values: perValuesOf(module, sp, dealt),
+    glyphs: glyphsIn(module, sp, dealt),
   };
   const off = offKinds(deal, dealt as unknown as Readonly<Record<string, number>>);
   return segmentsOn(deal, off)
@@ -117,13 +124,39 @@ export function decodeDesc<C extends Clues<C>>(
   variations: readonly string[] = [],
   /** The top of the board's domain, where a kind is one a value. */
   values = 0,
-  /** The sizes the params give, which choose the kinds a ruleset deals. */
+  /** The sizes the params give, which choose the kinds a ruleset deals and
+   * which a clue's most may read. */
   sizes: Readonly<Record<string, number>> = {},
+  /** How the board draws its values, where it is a board of numbers. */
+  glyphs: ValueGlyphs | null = null,
 ): DescParse<C> {
   const off = offKinds(deal, sizes);
+  // A kind's most reads the board's sizes beside the clues read before it
+  // (Salad's letters, to `n`).
+  const sized = Object.fromEntries(
+    Object.entries(clueMax).map(([kind, max]) => [
+      kind,
+      (s: GridSpace, at: number, cl: C) =>
+        (max as (s: GridSpace, at: number, cl: C) => number)(s, at, {
+          ...sizes,
+          ...cl,
+        }),
+    ]),
+  ) as ClueMax<C>;
   return readDesc(desc, (r) => {
     const out: Partial<Record<keyof C, ClueList | ListClues | Partition>> = {};
-    const cx = { r, deal, sp, clueMax, out, grown, variations, values, off };
+    const cx = {
+      r,
+      deal,
+      sp,
+      clueMax: sized,
+      out,
+      grown,
+      variations,
+      values,
+      off,
+      glyphs,
+    };
     for (const seg of segmentsOn(deal, off)) kindOf(seg).decode(seg, cx);
     // A kind the board is not dealt holds no clue.
     for (const k of off)

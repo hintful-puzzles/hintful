@@ -8,7 +8,10 @@
 # folded to the domain as its sample, a derived clue whose meaning reads a
 # size, a ruleset choosing which kind of clue its boards are dealt (the
 # clues at a line's end, or a ball on a square that is not empty), and the
-# empty square typed, noted and drawn, on a description that names no game.
+# empty square typed, noted and drawn; and a ruleset's values drawn, typed and
+# written as letters (Sight's) where the other's are numerals, in an ID of
+# glyphs over the slots in an order of its own, on a description that names
+# no game.
 game: emptying
 produces: latin
 sizes:
@@ -31,9 +34,11 @@ marks:
 shape:
   - "latin(value, lines)"
 clues:
-  # The first square from the clue that is not empty holds it.
+  # The first square from the clue that is not empty holds it, drawn as
+  # that value is.
   sees:
     at: slot
+    glyph: true
     value: "range(1, k)"
     means: >-
       exists c in sight(at):
@@ -77,15 +82,19 @@ settings:
     choices:
       - name: Sight
         code: S
-        rule: A clue beside a line's end says the first number seen from it.
+        rule: A clue beside a line's end says the first letter seen from it.
         deals: [sees]
+        letters: true
       - name: Balls
         code: B
         rule: A square with a ball holds a number.
         deals: [ball]
+# Each value as the board draws it, a letter under Sight and a numeral under
+# Balls, the empty square X: the clues at the lines' ends top, left, bottom
+# and right, then a comma, on a Sight board; then the squares.
 id:
-  - { numbers: sees }
-  - { digits: given, apart: "_", before: ",", codes: { O: "ball 0" } }
+  - { digits: sees, glyphs: true, sides: [top, left, bottom, right], after: "," }
+  - { digits: given, glyphs: true, codes: { O: "ball 0" } }
 tiers: [Easy]
 names:
   dup: "a placed number's row and column"

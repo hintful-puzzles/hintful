@@ -60,11 +60,13 @@ describe("a clue at a corner in the desc", () => {
 
   it("writes it back byte for byte, a run at the end too", () => {
     const b = board(4, D4);
-    expect(encodeDesc(cornering.deal, spaceOf(cornering, b), b.dealt)).toBe(D4);
-    const bare = board(4, "p,i");
-    expect(encodeDesc(cornering.deal, spaceOf(cornering, bare), bare.dealt)).toBe(
-      "p,i",
+    expect(encodeDesc(cornering, cornering.deal, spaceOf(cornering, b), b.dealt)).toBe(
+      D4,
     );
+    const bare = board(4, "p,i");
+    expect(
+      encodeDesc(cornering, cornering.deal, spaceOf(cornering, bare), bare.dealt),
+    ).toBe("p,i");
   });
 
   it("refuses a run past the corners, too few, a number out of range and a stray code", () => {
@@ -106,7 +108,7 @@ describe("a clue at a corner in the desc", () => {
         for (const c of sp.cornerCells[k]) expect(g[c] % 2).toBe(parity.v[i]);
       });
       expect(sum.at.length + difference.at.length + same.at.length).toBeGreaterThan(0);
-      expect(encodeDesc(cornering.deal, sp, b.dealt)).toBe(desc);
+      expect(encodeDesc(cornering, cornering.deal, sp, b.dealt)).toBe(desc);
     }
   });
 });

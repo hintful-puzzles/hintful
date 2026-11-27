@@ -137,7 +137,7 @@ export interface FillPlay {
    * a letter from A, a digit typing the letter at its place. `empty`: the
    * value the answer repeats in a unit is the empty square, drawn as a
    * cross, and a square whose notes lack it is drawn in the ball the clue
-   * kind `ball` is drawn as (`numbers.ts`'s `emptyOf`). */
+   * kind `ball` is drawn as (`glyphs.ts`'s `emptyOf`). */
   readonly numbers?: {
     readonly raised?: true;
     readonly letters?: true;

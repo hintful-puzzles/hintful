@@ -30,7 +30,7 @@ const ANCHOR = 3;
 
 const reading: AnswerReading<linking.Dealt> = {
   blank: EMPTY,
-  glyphs: {},
+  glyphs: () => ({}),
   lineClues: linking.lineClues,
 };
 

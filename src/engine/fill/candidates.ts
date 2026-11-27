@@ -84,8 +84,8 @@ import {
   listOf,
   spaceOf,
 } from "./board.ts";
+import { boardGlyphs } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
-import { glyphsOf } from "./numbers.ts";
 import { variationFlags } from "./params/settings.ts";
 import { slotPoint } from "./slots.ts";
 import { marginPoint, marginValuesOf } from "./value-margin.ts";
@@ -299,15 +299,16 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       throw new Error(`a step of ${kind}, which the description names nothing`);
   const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
-  const value = glyphsOf(module.play).draw;
-  const vocab: LatinVocab = {
+  /** The words a hint on `board` says its values and squares by: each value
+   * its glyph, by the board's ruleset. */
+  const vocabOf = (board: FillBoard<C>): LatinVocab => ({
     noun: module.WORDS?.value ?? "number",
-    value,
+    value: boardGlyphs(module, spaceOf(module, board), board.dealt).draw,
     cell: module.WORDS?.cell ?? "square",
     ...(module.WORDS?.alongside === undefined
       ? {}
       : { beside: module.WORDS.alongside }),
-  };
+  });
 
   /**
    * A firing of the description's own technique `id` as legs, as the walk
@@ -326,6 +327,8 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     board: FillBoard<C>,
   ): Firing<FillMove, CandidateFillHint, Reason> {
     const { w, h } = sp;
+    const vocab = vocabOf(board);
+    const { value } = vocab;
     const { says } = f.reasons[0] as Said<unknown, StatedSays>;
     const kind = says.arm ?? module.techniques[id]?.rung ?? id;
     const stated = module.STATED?.[says.arm === undefined ? id : `${id}.${says.arm}`];
@@ -433,6 +436,8 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   ): HintStep<FillMove, CandidateFillHint, string>[] {
     const sp = spaceOf(module, board);
     const w = board.w;
+    const vocab = vocabOf(board);
+    const { value } = vocab;
     const grid = Uint8Array.from(board.values);
     // A placed cell's notes are nothing the walk reads.
     const pencil = Int32Array.from(board.pencil ?? grid, (p, c) => (grid[c] ? 0 : p));
@@ -593,6 +598,8 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
    * the walk says a row and a column. */
   function walkWords(board: FillBoard<C>) {
     if (walkSteps === null) return null;
+    const vocab = vocabOf(board);
+    const { value } = vocab;
     // Its terms are what `WALK_STEPS` gives each, which the compiler held the
     // description to.
     const voice = stepVoice<Readonly<Record<string, StepType>>, Point>(

@@ -793,7 +793,8 @@ ruleset's `only` is what it offers of the other fields (`only.ts`).
 Exemplar: `path/state.ts`; a born game states its rulesets in
 `settings:`, a choice that `gives: size` (Seismic's), each choice naming
 the clue kinds dealt on its boards alone (`deals`, the `emptying`
-fixture's).
+fixture's), and one whose boards draw their values as letters (`letters`,
+`fill/glyphs.ts`).
 
 ### `only.ts` — what one setting leaves of the others
 
@@ -1167,7 +1168,8 @@ values in the space's own order, one mark a cell and the dealt clues, so
 the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
 `play.ts` is the input the description's `play:` declares, and the engine's
-`FillUi`. `render.ts` draws the board from the painters `play:` names: a
+`FillUi`; on a board of numbers, `glyphs.ts` is how a board's values are
+drawn, typed, said and written in its ID, by its ruleset. `render.ts` draws the board from the painters `play:` names: a
 cell layer is a module of `render/layers/`, which `render/tile.ts`'s
 `drawTile` calls in its paint order, and what is drawn after the tiles is a
 site, a module of `render/sites/` and a line of `render.ts`'s `SITES`.

@@ -71,6 +71,9 @@ export interface FillLook<C> {
   /** The clue kinds at lines one a value, each line's before its start, a
    * tile a value (`value-margin.ts`). */
   readonly valueMargins?: readonly (keyof C)[];
+  /** The clue kinds whose number is one of the answer's values, drawn as
+   * its glyph. */
+  readonly glyphClues?: readonly (keyof C)[];
   /** The fixed text before each line's start, by the line's index along its
    * axis. */
   readonly labels?: { readonly start?: (i: number) => string };

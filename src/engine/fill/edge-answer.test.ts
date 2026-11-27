@@ -90,7 +90,7 @@ describe("an answer on the edges", () => {
     const { g, board } = dealtOn(ring);
     const reading: AnswerReading<lacing.Dealt> = {
       blank: NONE,
-      glyphs: {},
+      glyphs: () => ({}),
       lineClues: [],
       numbers: lacing.numbers,
       edges: {

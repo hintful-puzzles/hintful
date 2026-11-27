@@ -32,6 +32,7 @@ clues:
   # ABC End View: the first square from the clue that is not empty holds it.
   border:
     at: slot
+    glyph: true
     value: "range(1, n)"
     means: >-
       exists c in sight(at):
@@ -40,7 +41,7 @@ clues:
   ball: { at: cell, value: "range(0, 0)", means: "value(at) != n + 1" }
 freedom: { kind: fill }
 play:
-  numbers: { letters: true, empty: { ball: ball } }
+  numbers: { empty: { ball: ball } }
   boards: [4x4n3L, 5x5n3L, 5x5n4L, 6x6n4L, 7x7n4L, 8x8n5L, 5x5n3B, 5x5n4B, 6x6n3B, 6x6n4B, 7x7n4B, 8x8n5B]
   default: 4x4n3L
   hintMarks:
@@ -76,13 +77,14 @@ settings:
         code: L
         rule: The letters on the edge show which letter appears first when 'looking' into the grid.
         deals: [border]
+        letters: true
       - name: Numbers
         code: B
         rule: Squares with a ball must contain a number. Squares with a cross must remain empty.
         deals: [ball]
 id:
-  - { numbers: border }
-  - { digits: given, apart: "_", codes: { O: "ball 0" } }
+  - { digits: border, glyphs: true, sides: [top, left, bottom, right], after: "," }
+  - { digits: given, glyphs: true, codes: { O: "ball 0" } }
 tierLetters: ex
 tiers: [Easy, Normal]
 names:

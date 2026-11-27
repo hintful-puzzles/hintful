@@ -8,7 +8,7 @@ import { drawRejected } from "../../contract/deal-census.ts";
 import { retryLimit } from "../../contract/retry-limit.ts";
 import { dealUnreasonable } from "../../solve/answer-search.ts";
 import { encodeAnswer } from "../answer.ts";
-import { type Clues, perValuesOf } from "../board.ts";
+import type { Clues } from "../board.ts";
 import { encodeDesc } from "../desc.ts";
 import { searchAgainst } from "../search.ts";
 import type { DealContext } from "./context.ts";
@@ -55,7 +55,7 @@ export function dealEveryClue<C extends Clues<C>>(
     answer: (b, budget) => searchAgainst(module, board(b.clues), b.g, budget),
   });
   return {
-    desc: encodeDesc(cx.deal, cx.sp, got.clues, perValuesOf(module, cx.sp, got.clues)),
+    desc: encodeDesc(module, cx.deal, cx.sp, got.clues),
     aux: encodeAnswer(got.g),
   };
 }
@@ -135,7 +135,7 @@ export function dealStripped<C extends Clues<C>>(
   });
   const clues = held(got);
   return {
-    desc: encodeDesc(deal, cx.sp, clues, perValuesOf(cx.module, cx.sp, clues)),
+    desc: encodeDesc(cx.module, deal, cx.sp, clues),
     aux: encodeAnswer(answer),
   };
 }

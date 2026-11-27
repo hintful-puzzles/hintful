@@ -7,11 +7,11 @@
 import type { Painter } from "../../render/pieces/index.ts";
 import type { Partition } from "../../solve/describe-runtime.ts";
 import { rulesOf } from "../answer.ts";
-import { type Clues, type FillBoard, listOf } from "../board.ts";
+import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
 import { type ClueMax, partKindsOf } from "../game-id.ts";
 import { gapKindsOf } from "../gaps.ts";
-import { glyphsOf } from "../numbers.ts";
+import { boardGlyphs } from "../glyphs.ts";
 import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
 import type { FillLook } from "../render.ts";
@@ -77,7 +77,21 @@ export function fillSetup<C extends Clues<C>>(
   /** On a board of numbers (`play.numbers`), each value is drawn as its
    * glyph. */
   const typed = play.numbers !== undefined;
-  const glyph = glyphsOf(play).draw;
+  // A board's glyphs are its ruleset's, and one board is drawn frame after
+  // frame.
+  const glyphsBy = new WeakMap<object, (v: number) => string>();
+  /** The glyph each value of board `b` is drawn as (`glyphs.ts`). */
+  const glyphOf = (b: FillBoard<C>): ((v: number) => string) => {
+    const key = b.dealt as object;
+    let got = glyphsBy.get(key);
+    if (got === undefined) {
+      got = boardGlyphs(module, spaceOf(module, b), b.dealt).draw;
+      glyphsBy.set(key, got);
+    }
+    return got;
+  };
+  /** The clue kinds whose number is a value, drawn as its glyph. */
+  const glyphClues: readonly (keyof C)[] = look.glyphClues ?? [];
   const notes = play.notes === true;
   /** Where the board draws its values raised (`play.numbers.raised`). */
   const raises = play.numbers?.raised === true;
@@ -185,7 +199,8 @@ export function fillSetup<C extends Clues<C>>(
     gapped,
     hexagon,
     typed,
-    glyph,
+    glyphOf,
+    glyphClues,
     notes,
     raises,
     linkClues,

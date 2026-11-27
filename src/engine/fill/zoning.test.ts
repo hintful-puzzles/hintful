@@ -54,7 +54,7 @@ describe("an answer searched under a partition dealt first", () => {
             cs.map((_, i) => i + 1),
           );
         expect(aux).toBeTruthy();
-        expect(encodeDesc(zoning.deal, spaceOf(zoning, b), b.dealt)).toBe(desc);
+        expect(encodeDesc(zoning, zoning.deal, spaceOf(zoning, b), b.dealt)).toBe(desc);
       }
   });
 
@@ -90,7 +90,7 @@ describe("the ID", () => {
     expect(b.dealt.area.cells.map((cs) => cs.length)).toEqual([3, 3, 3]);
     expect(Array.from(b.dealt.given.at)).toEqual([4]);
     expect(b.values[4]).toBe(2);
-    expect(encodeDesc(zoning.deal, spaceOf(zoning, b), b.dealt)).toBe(ROWS3);
+    expect(encodeDesc(zoning, zoning.deal, spaceOf(zoning, b), b.dealt)).toBe(ROWS3);
   });
 
   it("refuses a given larger than its area", () => {

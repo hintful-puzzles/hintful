@@ -164,6 +164,7 @@ function drawTile<C extends Clues<C>>(
   spill: readonly RaisedAt[],
   crossed: boolean,
   empty: number,
+  glyph: (v: number) => string,
 ): void {
   const { pal, typed, play } = cx;
   const { k: word, hk: hintWord, lk: lineWord, nk: noteWord, ek: edgeWord, part } = t;
@@ -198,11 +199,11 @@ function drawTile<C extends Clues<C>>(
   paintPiece(cx, frame, t.anim);
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;
-  if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord });
-  else if (typed && v !== empty) paintNumeral(pal.COL_ENTRY, cx.glyph, frame);
+  if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord }, glyph);
+  else if (typed && v !== empty) paintNumeral(pal.COL_ENTRY, glyph, frame);
   paintEmpty(pal.COL_ENTRY, empty, frame);
-  // The empty square's note is an X (upstream Salad's).
-  paintNotes(pal.COL_PENCIL, (n) => (n === empty ? "X" : cx.glyph(n)), frame);
+  // The empty square's note is its glyph, an X (upstream Salad's).
+  paintNotes(pal.COL_PENCIL, glyph, frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);
   paintLinkHalves(frame);
@@ -225,7 +226,7 @@ function drawTile<C extends Clues<C>>(
     );
   paintEdgeCursor(frame);
 
-  for (const s of spill) paintRaised(cx, lay.f.top, dr, s.tile, s);
+  for (const s of spill) paintRaised(cx, lay.f.top, dr, s.tile, s, glyph);
   dr.unclip();
   dr.drawUpdate(part === null ? { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 } : tile);
 }
@@ -246,6 +247,7 @@ export function paintTiles<C extends Clues<C>>(
   const cross = cx.play.cornerCrosses;
   const crossed = cross !== undefined && b.variations.includes(cross);
   const empty = emptyIn(cx, b);
+  const glyph = cx.glyphOf(b);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -262,6 +264,7 @@ export function paintTiles<C extends Clues<C>>(
         raisedInto(x, y),
         crossed,
         empty,
+        glyph,
       );
     }
 }

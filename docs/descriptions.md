@@ -220,8 +220,11 @@ description cannot: the rules for writing one, and why.
 - **State a rule over a row's run by the row and a place along it**, not by
   its cell, so a break is drawn as one bar (§ "Where a rule breaks").
 - **A layout upstream's IDs need is a property of a kind** of `id:`'s
-  segments (`apart`, `before`, `lastRun`, `counts: false`), never a kind of
-  its own; a kind is added only for a shape another game could write.
+  segments (`apart`, `before`, `after`, `lastRun`, `counts: false`, `sides`,
+  `glyphs`), never a kind of its own; a kind is added only for a shape
+  another game could write. A value is written as the board draws it
+  (`glyphs`, Salad's letters under one ruleset and numerals under the
+  other), so a ruleset that draws letters writes them too.
 - **A hand-written game's saves may break when it is moved onto a
   description**: the owner approved that for the whole initiative
   (2026-11-22), so a later change states the break and does not ask.

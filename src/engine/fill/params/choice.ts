@@ -42,6 +42,9 @@ export interface Choice {
   /** Where it is a ruleset: the clue kinds dealt only on its boards and
    * another's that names them. */
   readonly deals?: readonly string[];
+  /** Where it is a ruleset: its boards draw their values as letters, and
+   * every other ruleset's as numerals (`glyphs.ts`). */
+  readonly letters?: true;
 }
 
 /** A choice, its index from `from`. Where it `gives` a size, the size of its

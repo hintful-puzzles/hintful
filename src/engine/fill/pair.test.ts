@@ -134,7 +134,7 @@ describe("a fill game of two alike pieces", () => {
       1,
       0,
     ]);
-    expect(encodeDesc(pairing.deal, spaceOf(pairing, b), dealt)).toBe(desc);
+    expect(encodeDesc(pairing, pairing.deal, spaceOf(pairing, b), dealt)).toBe(desc);
   });
 
   it("writes a variation's flag by its letter, and no variation where none is on", () => {

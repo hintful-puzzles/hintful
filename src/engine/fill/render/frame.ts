@@ -45,7 +45,7 @@ export function drawFrame<C extends Clues<C>>(
         { x: coord(x, ts) + Math.floor(ts / 2), y: coord(y, ts) + Math.floor(ts / 2) },
         glyphFont(Math.floor(ts / 2)),
         COL_LABEL,
-        cx.glyph(v),
+        cx.glyphOf(state)(v),
       );
   if (labelStart === undefined) return;
   const size = Math.floor((ts * 2) / 5);

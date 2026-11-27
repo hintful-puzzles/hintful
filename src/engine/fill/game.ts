@@ -51,7 +51,7 @@ import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
 import type { DealtFillModule } from "./deal/context.ts";
 import { dealFill } from "./deal.ts";
-import { decodeDesc } from "./desc.ts";
+import { decodeDesc, glyphsIn } from "./desc.ts";
 import { pointOfElement } from "./edge-target.ts";
 import type { Edit } from "./edit.ts";
 import {
@@ -66,6 +66,7 @@ import {
   startSettings,
 } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
+import { boardGlyphs } from "./glyphs.ts";
 import {
   type FillHint,
   type FillHintModule,
@@ -75,7 +76,7 @@ import {
   tierOfBoard,
 } from "./hint.ts";
 import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
-import { glyphsOf, type NumberInput, numberInput, typedUi } from "./numbers.ts";
+import { type NumberInput, numberInput, typedUi } from "./numbers.ts";
 import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
@@ -101,6 +102,9 @@ export interface BornModule<C>
   readonly lineLists?: readonly (keyof C)[];
   readonly slotClues?: readonly (keyof C)[];
   readonly valueMargins?: readonly (keyof C)[];
+  /** The clue kinds whose number is one of the answer's values, drawn and
+   * printed as its glyph (a clue's `glyph`). */
+  readonly glyphClues?: readonly (keyof C)[];
   readonly labels?: { readonly start?: (i: number) => string };
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
@@ -262,23 +266,25 @@ export function fillGame<C extends Clues<C> & object>(
   const gapKinds = gapKindsOf<C>(play);
   const partKinds = partKindsOf(deal) as (keyof C & string)[];
   const cornerKinds = cornerKindsOf(deal) as (keyof C & string)[];
+  const valueGlyphs = Object.fromEntries(
+    Object.entries({ ...play.given, ...play.values }).flatMap(([v, { glyph }]) =>
+      glyph === undefined ? [] : [[Number(v), glyph]],
+    ),
+  );
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
     glyphs:
       play.numbers === undefined
-        ? Object.fromEntries(
-            Object.entries({ ...play.given, ...play.values }).flatMap(
-              ([v, { glyph }]) => (glyph === undefined ? [] : [[Number(v), glyph]]),
-            ),
-          )
+        ? () => valueGlyphs
         : // Every value a cell's domain mask can hold that has a glyph.
-          Object.fromEntries(
-            Array.from({ length: glyphsOf(play).top }, (_, i) => [
-              i + 1,
-              ` ${glyphsOf(play).draw(i + 1)} `,
-            ]),
-          ),
+          (b) => {
+            const { draw, top } = boardGlyphs(module, spaceOf(module, b), b.dealt);
+            return Object.fromEntries(
+              Array.from({ length: top }, (_, i) => [i + 1, ` ${draw(i + 1)} `]),
+            );
+          },
+    ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
@@ -331,7 +337,7 @@ export function fillGame<C extends Clues<C> & object>(
     const sp = paramSpaceOf(module, p);
     const sizes = sizesOf(p);
     const grown = module.growBy?.(sp, sizes) ?? null;
-    const values = perValuesOf(module, sp, givenOf(deal, p) as C);
+    const given = givenOf(deal, p) as C;
     const clues = descValue(
       decodeDesc<C>(
         deal,
@@ -340,8 +346,9 @@ export function fillGame<C extends Clues<C> & object>(
         desc,
         grown,
         variationsOf(p),
-        values,
+        perValuesOf(module, sp, given),
         sizes,
+        glyphsIn(module, sp, given),
       ),
     );
     return newBoard<C>(
@@ -364,6 +371,7 @@ export function fillGame<C extends Clues<C> & object>(
       ...(module.valueMargins === undefined
         ? {}
         : { valueMargins: module.valueMargins }),
+      ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
       ...(module.labels === undefined ? {} : { labels: module.labels }),
     },
     (b, ui) => buttons?.previewed(b, ui) ?? b,

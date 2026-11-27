@@ -115,7 +115,7 @@ describe("a partition among the units divided into equal parts", () => {
     const { desc } = game.newDesc(p, randomNew("id"));
     const b = game.newState(p, desc);
     expect(desc.split(",").length).toBe(4);
-    expect(encodeDesc(fitting.deal, spaceOf(fitting, b), b.dealt)).toBe(desc);
+    expect(encodeDesc(fitting, fitting.deal, spaceOf(fitting, b), b.dealt)).toBe(desc);
   });
 
   it("refuses blocks that are not all as large as a row", () => {
@@ -270,6 +270,7 @@ function encodeBlocks(w: number, of: readonly number[]): string {
   };
   const seg = fitting.deal.id[0];
   return encodeDesc(
+    fitting,
     { ...fitting.deal, id: [seg] },
     spaceOf(fitting, { w, h: w, dealt: {}, variations: [] }),
     { box } as unknown as fitting.Dealt,

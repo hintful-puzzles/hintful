@@ -101,6 +101,13 @@ export function playOf(
   measured: (e: Expr) => Expr,
 ): string[] {
   const p = json.play;
+  // A clue saying a value is drawn as its glyph, beyond a line's end.
+  const glyphClues = Object.entries(json.clues ?? {})
+    .filter(([, c]) => c.glyph === true)
+    .map(([k]) => k);
+  for (const k of glyphClues)
+    if (p?.numbers === undefined || json.clues?.[k]?.at !== "slot")
+      throw new CompileError(`clue ${k}: a glyph, not at a slot of a board of numbers`);
   if (p === undefined) return [];
   // The schema gives a board of buttons all three, and one of numbers none.
   const values = p.values ?? {};
@@ -275,6 +282,13 @@ export function playOf(
     "/** How the player fills the board: the engine's `FillPlay`. */",
     `export const play = ${JSON.stringify(play)} as const;`,
     ...margins,
+    ...(glyphClues.length === 0
+      ? []
+      : [
+          "",
+          "/** The clue kinds whose number is a value, drawn as its glyph. */",
+          `export const glyphClues = ${JSON.stringify(glyphClues)} as const;`,
+        ]),
     ...(partRules.length === 0
       ? []
       : [

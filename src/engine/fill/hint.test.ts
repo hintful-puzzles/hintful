@@ -41,7 +41,7 @@ function dealt(): FillBoard<playing.Dealt> {
 }
 
 const { hint } = fillHint(playing);
-const reading = { blank: CROSSED, glyphs: {}, lineClues: playing.lineClues };
+const reading = { blank: CROSSED, glyphs: () => ({}), lineClues: playing.lineClues };
 
 function plan(board: FillBoard<playing.Dealt>) {
   const got = hint.plan(board);

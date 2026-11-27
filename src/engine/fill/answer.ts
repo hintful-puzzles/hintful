@@ -59,8 +59,12 @@ export interface AnswerReading<C> {
    * answer is the other values alone (Tents' grass); `null` where every
    * cell must be filled. */
   readonly blank: number | null;
-  /** How each value prints in the text format, three characters. */
-  readonly glyphs: Readonly<Record<number, string>>;
+  /** How each value prints in the text format on a board, three
+   * characters. */
+  readonly glyphs: (board: FillBoard<C>) => Readonly<Record<number, string>>;
+  /** The clue kinds whose number is one of the answer's values, printed as
+   * its glyph. */
+  readonly glyphClues?: readonly (keyof C)[];
   /** The clue kinds that sit at lines, printed past each line's end. */
   readonly lineClues: readonly (keyof C)[];
   /** The list kinds at lines: a column's printed stacked above it, and a
@@ -391,7 +395,8 @@ function withValueMargins<C extends Clues<C>>(
     const at = marginClueAt(margins.kinds, board, perPlace(line, v));
     return at === null ? "" : String(at.v);
   };
-  const heading = (v: number): string => (reading.glyphs[v] ?? String(v)).trim();
+  const glyphs = reading.glyphs(board);
+  const heading = (v: number): string => (glyphs[v] ?? String(v)).trim();
   // A column of the rows' clues is as wide as its widest text and a space.
   let width = 2;
   for (let line = 0; line < w + h; line++)
@@ -433,9 +438,13 @@ function withSlotClues<C extends Clues<C>>(
   const kinds = reading.slotClues ?? [];
   if (kinds.length === 0) return grid;
   const { w, h } = board;
+  const glyphs = reading.glyphs(board);
   const clue = (s: number): string => {
     const at = slotClueAt(kinds, board, s);
-    return at === null ? " " : String(at.v);
+    if (at === null) return " ";
+    return reading.glyphClues?.includes(at.kind) === true
+      ? (glyphs[at.v] ?? String(at.v)).trim()
+      : String(at.v);
   };
   // A cell's text is three characters after a one-character wall, so a
   // column's middle is two past its wall, behind the rows' two-character
@@ -530,6 +539,7 @@ function gridFormat<C extends Clues<C>>(
   board: FillBoard<C>,
 ): string {
   const { w, h, values, dealt } = board;
+  const glyphs = reading.glyphs(board);
   const margin = reading.lineClues.length > 0 ? 1 : 0;
   const clue = (line: number): string => {
     for (const kind of reading.lineClues) {
@@ -616,11 +626,11 @@ function gridFormat<C extends Clues<C>>(
       for (const kind of reading.numbers ?? []) {
         const n = listOf(dealt, kind).valueAt[y * w + x];
         if (n < 0) continue;
-        const g = reading.glyphs[values[y * w + x]];
+        const g = glyphs[values[y * w + x]];
         return g?.[1] === " " && n < 10 ? `${g[0]}${n}${g[2]}` : ` ${n} `;
       }
       const v = values[y * w + x];
-      return v === 0 ? " . " : (reading.glyphs[v] ?? " ? ");
+      return v === 0 ? " . " : (glyphs[v] ?? " ? ");
     },
   });
 }

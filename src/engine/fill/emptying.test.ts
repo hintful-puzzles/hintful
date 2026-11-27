@@ -20,6 +20,7 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
 import { applyMove, type FillMove } from "./notes.ts";
 import { numberInput } from "./numbers.ts";
@@ -316,10 +317,10 @@ describe("a clue kind a ruleset deals", () => {
       expect(b.dealt[on].at.length, id).toBeGreaterThan(0);
       expect(b.dealt[off].at.length, id).toBe(0);
       expect(solveBoard(emptying, b, 0).verdict, id).toBe("solved");
-      // The slots' segment is a comma between each two slots, which a board
-      // without them does not write.
+      // The slots' segment ends in a comma, which a board without them does
+      // not write.
       const commas = desc.split(",").length - 1;
-      expect(commas, id).toBe(on === "sees" ? 4 * p.w : 1);
+      expect(commas, id).toBe(on === "sees" ? 1 : 0);
       // The other ruleset reads none of it.
       const other = game.decodeParams(id.replace(/[SB]$/, on === "sees" ? "B" : "S"));
       expect(() => game.newState(other, desc), id).toThrow();
@@ -328,17 +329,147 @@ describe("a clue kind a ruleset deals", () => {
 
   it("reads no code of a kind its board is not dealt", () => {
     // Every slot blank, then a ball on the first square and the rest blank.
-    const slots = ",".repeat(15);
     const read = (id: string, desc: string) =>
       game.newState(game.decodeParams(id), desc).dealt;
-    expect([...read("4k3B", ",Oo").ball.at]).toEqual([0]);
-    expect(() => read("4k3S", `${slots},Oo`)).toThrow();
-    expect([...read("4k3S", `${slots},1o`).given.at]).toEqual([0]);
+    expect([...read("4k3B", "Oo").ball.at]).toEqual([0]);
+    expect(() => read("4k3S", "p,Oo")).toThrow();
+    expect([...read("4k3S", "p,Ao").given.at]).toEqual([0]);
   });
 
   it("writes the ruleset's code at its default", () => {
     const p = game.decodeParams("4k3");
     expect(game.encodeParams(p, false)).toBe("4k3S");
     expect(game.encodeParams(game.decodeParams("4k3B"), false)).toBe("4k3B");
+  });
+});
+
+describe("values as a ruleset draws them", () => {
+  const dealt = (id: string, seed: string) => {
+    const p = game.decodeParams(id);
+    const { desc } = game.newDesc(p, randomNew(seed));
+    return { p, desc, b: game.newState(p, desc) };
+  };
+  const read = (id: string, desc: string) =>
+    game.newState(game.decodeParams(id), desc).dealt;
+
+  it("writes each as its glyph, the slots' clues and a comma, then the squares", () => {
+    for (let i = 0; i < 10; i++) {
+      // Sight's in letters, the empty square X; Balls' in numerals, X and O.
+      const sight = dealt("5k3S", `glyph-${i}`);
+      expect(sight.desc, sight.desc).toMatch(
+        /^[a-z]*([A-C][a-z]*)*,[a-z]*([A-CX][a-z]*)*$/,
+      );
+      const balls = dealt("5k3B", `glyph-${i}`);
+      expect(balls.desc, balls.desc).toMatch(/^[a-z]*([1-3XO][a-z]*)*$/);
+      // Each reads back to what it was written from.
+      for (const { b, desc } of [sight, balls])
+        expect(encodeDesc(emptying, emptying.deal, spaceOf(emptying, b), b.dealt)).toBe(
+          desc,
+        );
+    }
+    // A board of no givens writes its squares as a run (upstream Salad's),
+    // and the comma stands between the two.
+    expect(read("4k3S", "p,p").given.at.length).toBe(0);
+    expect(() => read("4k3S", "pp")).toThrow();
+    expect(() => read("4k3S", "p")).toThrow();
+  });
+
+  it("writes the slots top, left, bottom and right, where the space numbers them top, bottom, left, right", () => {
+    // The fifth slot written is the left of the first row, the space's
+    // ninth; the ninth written the bottom of the first column, its fifth.
+    expect([...read("4k3S", "dAk,p").sees.at]).toEqual([8]);
+    expect([...read("4k3S", "hAg,p").sees.at]).toEqual([4]);
+    expect([...read("4k3S", "oA,p").sees.at]).toEqual([15]);
+  });
+
+  it("reads a glyph of the board's ruleset alone, within the values its size gives", () => {
+    expect([...read("4k3B", "1o").given.v]).toEqual([1]);
+    expect([...read("4k3B", "Xo").given.v]).toEqual([4]);
+    expect(() => read("4k3B", "Ao")).toThrow();
+    expect(() => read("4k3S", "p,1o")).toThrow();
+    // A value past `k`, which a desc read without the sizes once let by.
+    expect(() => read("4k3B", "4o")).toThrow();
+    expect(() => read("4k3S", "p,Do")).toThrow();
+    expect(() => read("4k3S", "Do,p")).toThrow();
+  });
+
+  it("draws, prints and offers keys in the ruleset's glyphs, typed by letter or digit on both", () => {
+    const sight = dealt("5k3S", "keys").b;
+    const balls = dealt("5k3B", "keys").b;
+    const labels = (id: string) =>
+      game.requestKeys?.(game.decodeParams(id)).map((k) => k.label);
+    expect(labels("5k3S")).toEqual(["A", "B", "C", "X", "O", "Clear"]);
+    expect(labels("5k3B")).toEqual(["1", "2", "3", "X", "O", "Clear"]);
+    const input = numberInput<emptying.Dealt, { tileSize: number }>(emptying, () => 0);
+    for (const b of [sight, balls]) {
+      const open = [...b.fixed].indexOf(0);
+      for (const key of ["A", "a", "1"]) {
+        const ui = game.newUi(b);
+        Object.assign(ui.cursor, {
+          x: open % 5,
+          y: Math.floor(open / 5),
+          visible: true,
+        });
+        const at = { x: 0, y: 0 };
+        expect(
+          input.interpretMove(b, ui, { tileSize: 32 }, at, key.charCodeAt(0)),
+          key,
+        ).toMatchObject({ n: 1 });
+      }
+    }
+    // Drawn, a Sight board's givens and clues are letters; a Balls board's
+    // numerals.
+    const drawn = (b: FillBoard<emptying.Dealt>) => {
+      const render = fillRender(
+        emptying,
+        {
+          play: emptying.play,
+          lineClues: emptying.lineClues,
+          slotClues: emptying.slotClues,
+          glyphClues: emptying.glyphClues,
+        },
+        (s) => s,
+      );
+      const dr = new RecordingDrawing(render.colors(DEFAULT_BACKGROUND));
+      render.redraw(dr, render.newDrawState(b, 32), {
+        state: b,
+        prev: null,
+        dir: 1,
+        ui: newFillUi(),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
+      return dr.ops.flatMap((o) => (o.op === "text" ? [o.text] : [])).join("");
+    };
+    expect(drawn(sight)).toMatch(/^[A-C]+$/);
+    expect(drawn(balls)).toMatch(/^[1-3]+$/);
+    // The text format prints the board's glyphs: the slots' letters, and the
+    // empty square as X.
+    const text = game.textFormat?.(sight) ?? "";
+    expect(text).toMatch(/[A-C]/);
+    expect(text).not.toMatch(/[1-9]/);
+    expect(game.textFormat?.(balls) ?? "").not.toMatch(/[A-C]/);
+    const open = [...balls.fixed].indexOf(0);
+    const emptied = {
+      ...balls,
+      values: balls.values.map((v, c) => (c === open ? 4 : v)),
+    };
+    expect(game.textFormat?.(emptied) ?? "").toContain(" X ");
+  });
+
+  it("says a clue's value in the ruleset's glyph", () => {
+    let said = 0;
+    for (let i = 0; i < 10 && said === 0; i++) {
+      const { b } = dealt("5k3S", `said-${i}`);
+      const got = game.hint.plan(b);
+      if (!got.ok) throw new Error(`no plan: ${got.error}`);
+      for (const s of got.steps) {
+        const m = /sees (\S+) first/.exec(s.explanation ?? "");
+        if (m === null) continue;
+        expect(m[1]).toMatch(/^[A-C]$/);
+        said++;
+      }
+    }
+    expect(said).toBeGreaterThan(0);
   });
 });

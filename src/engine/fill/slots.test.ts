@@ -79,7 +79,9 @@ describe("a clue at a slot in the desc", () => {
   it("writes it back byte for byte, and no comma where no square is given", () => {
     for (const desc of [D4, FLANKS4]) {
       const b = board(4, desc);
-      expect(encodeDesc(flanking.deal, spaceOf(flanking, b), b.dealt)).toBe(desc);
+      expect(encodeDesc(flanking, flanking.deal, spaceOf(flanking, b), b.dealt)).toBe(
+        desc,
+      );
     }
   });
 
@@ -106,7 +108,7 @@ describe("a clue at a slot in the desc", () => {
         const [a, z] = sp.sight[s];
         expect(answer[a] + answer[z]).toBe(b.dealt.flank.v[k]);
       });
-      expect(encodeDesc(flanking.deal, sp, b.dealt)).toBe(desc);
+      expect(encodeDesc(flanking, flanking.deal, sp, b.dealt)).toBe(desc);
     }
   });
 

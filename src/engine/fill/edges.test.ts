@@ -77,7 +77,9 @@ describe("a record a cell", () => {
       "0,0D,0L,0L,0,0,0,0D,0,0,0,0,0R,0,0U,0,",
     ]) {
       const b = board(4, desc);
-      expect(encodeDesc(ordering.deal, spaceOf(ordering, b), b.dealt)).toBe(desc);
+      expect(encodeDesc(ordering, ordering.deal, spaceOf(ordering, b), b.dealt)).toBe(
+        desc,
+      );
     }
   });
 
@@ -98,7 +100,9 @@ describe("a record a cell", () => {
       const { desc } = game.newDesc(params(5, NORMAL), randomNew(seed));
       const b = board(5, desc);
       expect(b.dealt.greater.at.length).toBeGreaterThan(0);
-      expect(encodeDesc(ordering.deal, spaceOf(ordering, b), b.dealt)).toBe(desc);
+      expect(encodeDesc(ordering, ordering.deal, spaceOf(ordering, b), b.dealt)).toBe(
+        desc,
+      );
     }
   });
 

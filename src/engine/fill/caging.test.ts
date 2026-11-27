@@ -74,7 +74,7 @@ describe("a block structure and a clue a part", () => {
 
   it("writes it back byte for byte, a letter run as upstream compresses it", () => {
     const b = board(4, D4);
-    expect(encodeDesc(caging.deal, spaceOf(caging, b), b.dealt)).toBe(D4);
+    expect(encodeDesc(caging, caging.deal, spaceOf(caging, b), b.dealt)).toBe(D4);
   });
 
   it("refuses a clue past what its part can make, a part left out and one too many", () => {
@@ -316,7 +316,7 @@ describe("a deal", () => {
       }
       for (let r = 0; r < cage.parts.length; r++)
         expect(Number(sum.byAt[r] >= 0) + Number(product.byAt[r] >= 0)).toBe(1);
-      expect(encodeDesc(caging.deal, spaceOf(caging, b), b.dealt)).toBe(desc);
+      expect(encodeDesc(caging, caging.deal, spaceOf(caging, b), b.dealt)).toBe(desc);
       // At the tier, and not below it.
       expect(solveBoard(caging, b, NORMAL).verdict).toBe("solved");
       expect(solveBoard(caging, b, NORMAL - 1).verdict).not.toBe("solved");

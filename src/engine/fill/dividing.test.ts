@@ -42,7 +42,9 @@ describe("a partition a modifier adds", () => {
       expect(b.dealt.given.at.length).toBeGreaterThan(0);
       // The givens alone.
       expect(desc).not.toContain(",");
-      expect(encodeDesc(dividing.deal, spaceOf(dividing, b), b.dealt)).toBe(desc);
+      expect(encodeDesc(dividing, dividing.deal, spaceOf(dividing, b), b.dealt)).toBe(
+        desc,
+      );
     }
   });
 
@@ -76,7 +78,9 @@ describe("a partition a modifier adds", () => {
     // A number a cage, at its first square in reading order.
     const numbers = sums.match(/\d+/g) ?? [];
     expect(numbers.length).toBe(b.dealt.cage.cells.length);
-    expect(encodeDesc(dividing.deal, spaceOf(dividing, b), b.dealt)).toBe(desc);
+    expect(encodeDesc(dividing, dividing.deal, spaceOf(dividing, b), b.dealt)).toBe(
+      desc,
+    );
   });
 
   it("reads a sum anywhere in its cage, as upstream does, and refuses a cage with none or two", () => {

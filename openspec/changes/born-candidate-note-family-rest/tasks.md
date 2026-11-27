@@ -1,7 +1,7 @@
 ## Next
 
-Salad (2.3): 2.3d, the ID, then 2.3e and the flip, a capability a
-fixture each, built on `emptying`.
+Salad (2.3): 2.3e, the deal, then the flip, a capability a fixture each,
+built on `emptying`.
 Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
@@ -50,16 +50,8 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.3c The empty value (`play.numbers.empty`): typed by `X`, drawn
         as a cross, noted as an X; `O` strikes it from the notes, drawn as
         a ball; its reach waits for a line's every copy.
-  - [ ] 2.3d The ID: Letters' `<border>,<grid>` and Numbers' `<grid>`;
-        slots in the ID's order (top, left, bottom, right), a stream over
-        slots; values written as the board draws them, letters under
-        Letters and digits under Numbers (glyphs by ruleset, drawn, typed
-        and said so too); the empty value's code `X` and the ball's `O`.
-        The draft's grid stream has no `,` before it, so a 6x6 or 7x7
-        Letters desc whose last slot is blank does not load (2026-11-27),
-        and a Numbers desc writes `_` after an `O`. The text format prints
-        the empty square as its glyph (`AnswerReading.glyphs` is one per
-        value, not per board): `X`, as upstream's.
+  - [x] 2.3d The ID, and values drawn, typed, said and written by
+        ruleset: the commit that ticks 2.3d.
   - [ ] 2.3e The deal: no givens on a Letters board below 8x8; a given
         weakened to a ball before it goes (Numbers'); a board refused
         where a named part of the ladder finishes it (Numbers' empty

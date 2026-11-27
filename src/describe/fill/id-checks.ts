@@ -200,6 +200,25 @@ const STREAM: SegmentRead<SegmentOf<"codes">> = {
     const own = numbered(seg.digits, cx);
     const { kind, c, values } = own;
     checkCodes(seg, cx, own);
+    if (seg.sides !== undefined && c.at !== "slot")
+      throw new CompileError(`id: sides, on digits of ${kind}, which is not at a slot`);
+    // A glyph is one character, as the board draws the value: an answer's
+    // value given or a clue that says one, on a board of numbers.
+    if (seg.glyphs === true) {
+      if (json.play?.numbers === undefined)
+        throw new CompileError(`id: glyphs of ${kind}, on a board that draws none`);
+      if (kind !== "given" && json.clues?.[kind]?.glyph !== true)
+        throw new CompileError(
+          `id: glyphs of ${kind}, which is no given and no clue with \`glyph\``,
+        );
+      if (seg.apart !== undefined)
+        throw new CompileError(`id: glyphs of ${kind}, one character, and an apart`);
+      if (codesOf(seg).some((s) => isNumberCode(s.code)))
+        throw new CompileError(
+          `id: glyphs of ${kind}, and a number standing for a kind`,
+        );
+      return;
+    }
     // A digit is a clue's value, so every value is one, the most a size
     // bounds it by too (Mathrax's givens, to `w`); with a mark between two
     // side by side, a clue is a whole number of any size.

@@ -1,9 +1,10 @@
 /** The run-letter stream, an `id:` entry holding `digits`, `codes` or both:
  * a clue an element, between runs of 1 to 26 elements without one written
- * `a` to `z`. The segment's own kind (`digits`) is written as its number;
- * every other kind by its code (`codes`, `code-said.ts`). Upstream's Mosaic,
- * Light Up, Range, Bricks, Sticks, Mathrax and Boats write theirs so, and
- * each one's difference is a property here. */
+ * `a` to `z`. The segment's own kind (`digits`) is written as its number,
+ * or as the board draws it (`glyphs`); every other kind by its code
+ * (`codes`, `code-said.ts`). Upstream's Mosaic, Light Up, Range, Bricks,
+ * Sticks, Mathrax, Boats and Salad write theirs so, and each one's
+ * difference is a property here. */
 
 import {
   DESC_MALFORMED,
@@ -26,6 +27,7 @@ import {
   partitionOfKind,
   type Universe,
 } from "../game-id.ts";
+import type { ValueGlyphs } from "../glyphs.ts";
 import { type CodeSaid, codeSaid, isNumberCode } from "./code-said.ts";
 import { type Decoding, maxOf, type SegmentKind, universeOf } from "./segment.ts";
 
@@ -48,7 +50,68 @@ export type StreamSegment = {
   readonly always?: true;
   /** A last run is left off, but for its whole 26s (upstream Boats'). */
   readonly lastRun?: false;
+  /** Written after the segment, wherever it is written (Salad's `,`). */
+  readonly after?: string;
+  /** `digits`' number written as the board draws it, one character (Salad's
+   * letters, numerals and `X`). */
+  readonly glyphs?: true;
+  /** On slots, the sides in the order written (Salad's top, left, bottom,
+   * right), each side's slots in the space's order. */
+  readonly sides?: readonly Side[];
 };
+
+/** A side of the board, whose slots are beyond its lines' ends. */
+type Side = "top" | "bottom" | "left" | "right";
+
+/** The elements of place `u` in the order the segment writes them: the
+ * space's, or on slots its sides in the order `sides` gives. */
+function streamOrder(
+  sp: GridSpace,
+  u: Universe,
+  sides?: readonly Side[],
+): readonly number[] {
+  if (sides === undefined) return sp[u];
+  if (u !== "slots") throw new Error("id: sides, on a stream not at slots");
+  const { w, h } = sp;
+  // The space numbers them above each column, below each, left of each row
+  // and right of each.
+  const first: Record<Side, number> = {
+    top: 0,
+    bottom: w,
+    left: 2 * w,
+    right: 2 * w + h,
+  };
+  const count: Record<Side, number> = { top: w, bottom: w, left: h, right: h };
+  return sides.flatMap((s) => Array.from({ length: count[s] }, (_, i) => first[s] + i));
+}
+
+/** How the segment's own number is written and read: as the board's glyph
+ * where it writes glyphs, else in decimal. */
+interface NumberText {
+  readonly write: (v: number) => string;
+  /** The value of glyph `c`, of at most `max`, or `null`. */
+  readonly read: ((c: string, max: number) => number | null) | null;
+}
+
+/** The segment's own number's text, the board's glyphs `glyphs`. */
+function numberTextOf(seg: StreamSegment, glyphs: ValueGlyphs | null): NumberText {
+  if (seg.glyphs !== true) return { write: String, read: null };
+  if (glyphs === null) throw new Error("id: glyphs, on a board that draws none");
+  return {
+    write: (v) => {
+      const g = glyphs.draw(v);
+      if (g.length !== 1 || (g >= "a" && g <= "z") || seg.codes?.[g] !== undefined)
+        throw new Error(
+          `id: the glyph ${g} is no one character apart from a run or code`,
+        );
+      return g;
+    },
+    read: (c, max) => {
+      for (let v = 1; v <= max; v++) if (glyphs.draw(v) === c) return v;
+      return null;
+    },
+  };
+}
 
 /** A code, with what it stands for. */
 type Code = CodeSaid & { readonly code: string };
@@ -193,13 +256,14 @@ function readStream<C extends Clues<C>>(
   seg: StreamSegment,
   cl: Partial<C>,
   off: ReadonlySet<string>,
+  text: NumberText,
 ): Map<string, ClueList> {
   const u = placeOf(deal, seg);
   const all = sp[u].length;
   if (seg.before !== undefined && !r.accept(seg.before))
     return new Read(kindsOf(seg)).lists(all);
   const onBoard = onBoardOf(deal, sp, u);
-  const elements = sp[u].filter(onBoard);
+  const elements = streamOrder(sp, u, seg.sides).filter(onBoard);
   // A hexagon's outside kind, a one-valued marker, holds every cell the
   // stream leaves out.
   const outside = u === "cells" ? (deal.hexagon?.outside ?? null) : null;
@@ -247,7 +311,18 @@ function readStream<C extends Clues<C>>(
       afterClue = true;
       continue;
     }
-    const startsNumber = (x: string) => isDigit(x) || (afterClue && x === seg.apart);
+    const { read: glyph } = text;
+    if (own !== undefined && glyph !== null) {
+      // A glyph is one character, a value of the kind's at its element.
+      const max = maxOf(clueMax, own, sp, e, cl);
+      if (r.peekIs((x) => glyph(x, max) !== null)) {
+        read.push(String(own), e, glyph(r.char(), max) as number);
+        pos++;
+        continue;
+      }
+    }
+    const startsNumber = (x: string) =>
+      glyph === null && (isDigit(x) || (afterClue && x === seg.apart));
     if (own === undefined || !r.peekIs(startsNumber)) {
       if (seg.lastRun === false) break;
       // Refused: a character no code begins with, or the end of the desc.
@@ -267,12 +342,14 @@ function readStream<C extends Clues<C>>(
     if (v > ownMax) r.fail(DESC_OUT_OF_RANGE);
     read.push(String(own), e, v);
   }
+  if (seg.after !== undefined) r.expect(seg.after);
   return read.lists(all);
 }
 
 export const stream: SegmentKind<StreamSegment> = {
-  encode(seg, { deal, sp, dealt, listOf }) {
+  encode(seg, { deal, sp, dealt, listOf, glyphs }) {
     const u = placeOf(deal, seg);
+    const text = numberTextOf(seg, glyphs);
     // A kind at parts is written at each part's first cell.
     const own =
       seg.digits === undefined
@@ -307,7 +384,7 @@ export const stream: SegmentKind<StreamSegment> = {
      * where it holds no clue. */
     const clueAt = (e: number): { s: string; number: boolean } | null => {
       const v = own?.valueAt[e] ?? -1;
-      if (v >= 0) return { s: String(v), number: true };
+      if (v >= 0) return { s: text.write(v), number: true };
       const n = numbers.find(([, l]) => l.valueAt[e] >= 0)?.[0];
       if (n !== undefined) return { s: String(n), number: true };
       const here = read.filter((c) => c.list.valueAt[e] >= 0);
@@ -341,7 +418,7 @@ export const stream: SegmentKind<StreamSegment> = {
     // Whether the element before was written, so a number here has no run
     // before it, and `apart` is written there.
     let afterClue = false;
-    for (const e of sp[u]) {
+    for (const e of streamOrder(sp, u, seg.sides)) {
       // A cell off the board is never written, and ends a run of letters
       // (upstream bricks.c).
       if (!onBoard(e)) {
@@ -361,10 +438,11 @@ export const stream: SegmentKind<StreamSegment> = {
     }
     if (seg.lastRun !== false) flush();
     else for (; run >= 26; run -= 26) out += "z";
-    return out;
+    return out + (seg.after ?? "");
   },
   decode<C extends Clues<C>>(seg: StreamSegment, cx: Decoding<C>) {
     const { r, deal, sp, clueMax, out } = cx;
+    const text = numberTextOf(seg, cx.glyphs);
     if (seg.digits === undefined || deal.universes[seg.digits] !== "parts") {
       for (const [k, list] of readStream(
         r,
@@ -374,6 +452,7 @@ export const stream: SegmentKind<StreamSegment> = {
         seg,
         out as Partial<C>,
         cx.off,
+        text,
       ))
         out[k as keyof C] = list;
       return;
@@ -393,9 +472,16 @@ export const stream: SegmentKind<StreamSegment> = {
       [kind]: (s: GridSpace, c: number, cl: C) =>
         maxOf(clueMax, kind, s, parts.of[c], cl),
     } as ClueMax<C>;
-    const cells = readStream(r, deal, sp, atCell, seg, out as Partial<C>, cx.off).get(
-      seg.digits,
-    );
+    const cells = readStream(
+      r,
+      deal,
+      sp,
+      atCell,
+      seg,
+      out as Partial<C>,
+      cx.off,
+      text,
+    ).get(seg.digits);
     const list = cells === undefined ? null : atParts(cells, parts);
     if (list === null) r.fail(DESC_MALFORMED);
     out[kind] = list as ClueList;

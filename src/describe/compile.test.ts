@@ -1162,6 +1162,57 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/two codes of one value of wall/);
   });
 
+  it("refuses glyphs where a board does not draw them, and sides off the slots", () => {
+    const source = "src/engine/testing/fixtures/emptying/emptying.description.yaml";
+    const emptying = sources.get(source);
+    if (emptying === undefined || !isFormal(emptying)) throw new Error("no emptying");
+    type Json = {
+      clues: Record<string, Record<string, unknown>>;
+      id: Record<string, unknown>[];
+      play: Record<string, unknown> & { numbers: Record<string, unknown> };
+      settings: Record<string, { choices?: Record<string, unknown>[] }>;
+    };
+    const compileEmptying = (edit: (j: Json) => void) => {
+      const j = structuredClone(emptying) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const plain = compileEmptying(() => {});
+    expect(plain).toContain('export const glyphClues = ["sees"]');
+    expect(plain).toContain('"letters":true');
+    expect(() =>
+      compileEmptying((j) => {
+        j.play.numbers = { ...j.play.numbers, letters: true };
+      }),
+    ).toThrow(/settings mode: letters, on no board of numbers drawn flat in numerals/);
+    expect(() =>
+      compileEmptying((j) => {
+        j.clues["ball"] = { ...j.clues["ball"], glyph: true };
+      }),
+    ).toThrow(/clue ball: a glyph, not at a slot of a board of numbers/);
+    expect(() =>
+      compileEmptying((j) => {
+        j.clues["sees"] = { ...j.clues["sees"], glyph: undefined };
+      }),
+    ).toThrow(/id: glyphs of sees, which is no given and no clue with `glyph`/);
+    expect(() =>
+      compileEmptying((j) => {
+        j.id[1] = { ...j.id[1], sides: ["top", "left", "bottom", "right"] };
+      }),
+    ).toThrow(/id: sides, on digits of given, which is not at a slot/);
+    expect(() =>
+      compileEmptying((j) => {
+        j.id[1] = { ...j.id[1], apart: "_" };
+      }),
+    ).toThrow(/id: glyphs of given, one character, and an apart/);
+  });
+
   it("refuses a clue at a slot beside a line's clue, and writes a stream behind a mark with another kind", () => {
     const source = "src/engine/testing/fixtures/flanking/flanking.description.yaml";
     const flanking = sources.get(source);

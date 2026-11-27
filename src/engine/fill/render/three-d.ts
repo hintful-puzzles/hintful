@@ -36,8 +36,9 @@ import {
 /**
  * The raised value of the cell whose tile is `tile`: its sides and its top,
  * in the cell's surface and its selection's wash, edged in ink; on the top
- * its numeral, the hatch of a striped line and Check & Save's outline. The
- * clip is the caller's: a neighbor's tile, where its top reaches in.
+ * its numeral, its board's `glyph`, the hatch of a striped line and Check &
+ * Save's outline. The clip is the caller's: a neighbor's tile, where its
+ * top reaches in.
  */
 export function paintRaised<C extends Clues<C>>(
   cx: FillSetup<C>,
@@ -45,6 +46,7 @@ export function paintRaised<C extends Clues<C>>(
   dr: GameDrawing,
   tile: Rect,
   { word, hintWord, noteWord }: Omit<RaisedAt, "tile">,
+  glyph: (v: number) => string,
 ): void {
   const { COL_GIVEN, COL_HIGHLIGHT, COL_ENTRY } = cx.pal;
   const ts = tile.w;
@@ -67,7 +69,7 @@ export function paintRaised<C extends Clues<C>>(
     COL_INK,
   );
   const { origin, options } = numberText(ts, face.x, face.y);
-  dr.drawText(origin, options, numeralInk(word, COL_ENTRY), cx.glyph(v));
+  dr.drawText(origin, options, numeralInk(word, COL_ENTRY), glyph(v));
   if (word & MISTAKE) drawMistake(dr, ts, face.x, face.y);
 }
 
@@ -149,7 +151,8 @@ export function repaintMargins<C extends Clues<C>>(
     const box = { x: lay.coord(x, ts), y: lay.coord(y, ts), w: ts, h: ts };
     dr.clip(box);
     dr.drawRect(box, COL_BACKGROUND);
-    for (const r of raisedInto(x, y)) paintRaised(cx, lay.f.top, dr, r.tile, r);
+    for (const r of raisedInto(x, y))
+      paintRaised(cx, lay.f.top, dr, r.tile, r, cx.glyphOf(b));
     dr.unclip();
     dr.drawUpdate(box);
     if (

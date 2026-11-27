@@ -45,7 +45,9 @@ describe("a hexagon's store and ID", () => {
 
   it("writes the hexagon's cells alone", () => {
     const b = game.newState(P, DESC);
-    expect(encodeDesc(shearing.deal, spaceOf(shearing, b), b.dealt)).toBe(DESC);
+    expect(encodeDesc(shearing, shearing.deal, spaceOf(shearing, b), b.dealt)).toBe(
+      DESC,
+    );
   });
 });
 

@@ -804,6 +804,10 @@
           "complete": {
             "type": "boolean",
             "description": "Every place carries one, so an absent clue is a fact."
+          },
+          "glyph": {
+            "const": true,
+            "description": "Its number is one of the answer's values, drawn and printed as that value's glyph on a board of numbers (`play.numbers`): Salad's border letters. A clue at a slot."
           }
         }
       }
@@ -1770,6 +1774,23 @@
                   "always": {
                     "const": true,
                     "description": "With `before`, the segment is written where no clue of its kinds is dealt too, as its runs of blanks (Seismic's `,zj`, Mathrax's `,`)."
+                  },
+                  "after": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Written after the segment, wherever the segment is written (Salad's `,` after its border letters, on a board that deals them)."
+                  },
+                  "glyphs": {
+                    "const": true,
+                    "description": "`digits`' number written as the board draws it, one character (`engine/fill/glyphs.ts`): a numeral or by the ruleset a letter, the empty square `X` (Salad's). The kind is `given`, or a clue with `glyph`."
+                  },
+                  "sides": {
+                    "type": "array",
+                    "description": "On slots, the four sides in the order written, each side's slots left to right or top to bottom (Salad's top, left, bottom, right); absent, the space's order, top, bottom, left, right.",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "uniqueItems": true,
+                    "items": { "enum": ["top", "bottom", "left", "right"] }
                   }
                 }
               },
@@ -3028,6 +3049,10 @@
                       "type": "string"
                     },
                     "description": "A size's ruleset's clue kinds dealt only on its boards: a kind a choice names is dealt, drawn and written in the ID on a board of a choice naming it alone, and one no choice names on every board (Salad's border clues under Letters, its balls under Numbers)."
+                  },
+                  "letters": {
+                    "const": true,
+                    "description": "A size's ruleset whose boards of numbers (`play.numbers`) draw, say and write their values as letters from A, where every other ruleset's draw numerals (Salad's Letters); a letter types the value at its place on every board of the game, and so does a digit (`engine/fill/glyphs.ts`)."
                   },
                   "bounds": {
                     "type": "object",

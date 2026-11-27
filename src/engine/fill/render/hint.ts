@@ -86,21 +86,22 @@ function cellText<C extends Clues<C>>(
     avoid,
   });
   const v = b.values[at];
+  const glyph = cx.glyphOf(b);
   if (lay.f.threeD && v !== 0) {
     const face = topFace({ x: tile[0], y: tile[1], w: ts, h: ts }, v, lay.f.top);
     const t = numberText(ts, face.x, face.y);
-    return enclosing([textBox(t.origin, t.options, cx.glyph(v))]);
+    return enclosing([textBox(t.origin, t.options, glyph(v))]);
   }
   if (cx.typed && v !== 0) {
     const t = lay.valueText(ts, [x, y, h], walls, ...tile);
-    return enclosing([textBox(t.origin, t.options, cx.glyph(v))]);
+    return enclosing([textBox(t.origin, t.options, glyph(v))]);
   }
   const noted = notesIn(b.pencil?.[at] ?? 0);
   if (noted.length > 0)
     return enclosing(
       lay
         .noteSlots(ts, [x, y, h], walls, noted.length)
-        .map(({ origin, options }, j) => textBox(origin, options, cx.glyph(noted[j]))),
+        .map(({ origin, options }, j) => textBox(origin, options, glyph(noted[j]))),
     );
   const n = cx.numberAt(b, at);
   if (n === null) return avoid.length === 0 ? NOTHING_TO_CLEAR : enclosing([]);

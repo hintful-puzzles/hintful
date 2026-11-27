@@ -14,7 +14,7 @@ import { type RandomState, randomUpto } from "../../random/index.ts";
 import { dealUnreasonable } from "../../solve/answer-search.ts";
 import type { ClueList, GridSpace } from "../../solve/describe-runtime.ts";
 import { encodeAnswer } from "../answer.ts";
-import { type Clues, type FillBoard, perValuesOf, solveBoard } from "../board.ts";
+import { type Clues, type FillBoard, solveBoard } from "../board.ts";
 import { encodeDesc } from "../desc.ts";
 import type { FillDeal, FillParams, givenOf } from "../game-id.ts";
 import { type ScatterSample, sampleAnswer } from "../sample.ts";
@@ -101,7 +101,7 @@ export function climbFill<C extends Clues<C>>(
       },
     });
     return {
-      desc: encodeDesc(deal, sp, clues, perValuesOf(module, sp, clues)),
+      desc: encodeDesc(module, deal, sp, clues),
       aux: encodeAnswer(answer),
     };
   }
@@ -117,7 +117,7 @@ export function climbFill<C extends Clues<C>>(
     position.set(got.values);
     if (got.verdict === "solved")
       return {
-        desc: encodeDesc(deal, sp, clues, perValuesOf(module, sp, clues)),
+        desc: encodeDesc(module, deal, sp, clues),
         aux: encodeAnswer(got.values),
       };
   }

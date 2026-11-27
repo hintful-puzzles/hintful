@@ -18,10 +18,9 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../hint/candidate-hint.ts";
 import type { PointerAction } from "../input/hint-gesture.ts";
-import { clearKey, digitKeyCode } from "../input/key-labels.ts";
+import { clearKey } from "../input/key-labels.ts";
 import {
   CURSOR_SELECT2,
-  digitOf,
   isCursorMove,
   isEraseKey,
   isMouseDrag,
@@ -53,6 +52,7 @@ import {
 } from "./board.ts";
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { FillParams } from "./game-id.ts";
+import { boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
@@ -116,79 +116,9 @@ function noteTaking(ui: FillUi): NoteTakingUi {
   };
 }
 
-/** The glyph value `v` is drawn and typed as: a digit, and past nine a
- * letter, as the keypad's keys are labeled. No key draws a value past `z`'s:
- * one is a count or a clue, said `{numeral …}` in a hint. */
-const numeral = (v: number): string => {
-  if (!Number.isInteger(v) || v < 1 || v > 35)
-    throw new Error(`no key draws the value ${v}: say a count as {numeral …}`);
-  return String.fromCharCode(digitKeyCode(v));
-};
-
-/** How a board of numbers' values are drawn, said and typed. */
-export interface ValueGlyphs {
-  /** The glyph value `v` is drawn and said as. */
-  readonly draw: (v: number) => string;
-  /** The key that types value `v`. */
-  readonly keyCode: (v: number) => number;
-  /** The value key `button` types, 0 for one that clears, or `null`. */
-  readonly typed: (button: number) => number | null;
-  /** The last value with a glyph, within a cell's domain mask. */
-  readonly top: number;
-}
-
-const NUMERALS: ValueGlyphs = {
-  draw: numeral,
-  keyCode: digitKeyCode,
-  typed: digitOf,
-  top: 31,
-};
-
-const A = "A".charCodeAt(0);
-const a = "a".charCodeAt(0);
-
-/** The letter value `v` is drawn as, from A. */
-const letter = (v: number): string => {
-  if (!Number.isInteger(v) || v < 1 || v > 26)
-    throw new Error(`no letter draws the value ${v}: say a count as {numeral …}`);
-  return String.fromCharCode(A + v - 1);
-};
-
-/** Letters from A, typed by either case, or by a value's place as a digit
- * (ABCD's keys, upstream's too). */
-const LETTERS: ValueGlyphs = {
-  draw: letter,
-  keyCode: (v) => A + v - 1,
-  typed: (button) => {
-    const base = stripModifiers(button);
-    if (base >= A && base < A + 26) return base - A + 1;
-    if (base >= a && base < a + 26) return base - a + 1;
-    return digitOf(button);
-  },
-  top: 26,
-};
-
-/** The glyphs of a board whose `play` is `play`: letters where it says
- * `numbers.letters`, else numerals. */
-export const glyphsOf = (play?: FillPlay): ValueGlyphs =>
-  play?.numbers?.letters === true ? LETTERS : NUMERALS;
-
 /** The empty square's keys (upstream Salad's), and the ball's. */
 const EMPTY_KEYS = ["X", "x", "-", "_"].map((k) => k.charCodeAt(0));
 const BALL_KEYS = ["O", "o", "+", "="].map((k) => k.charCodeAt(0));
-
-/** On a board whose answer repeats a value in a unit as its empty square
- * (`play.numbers.empty`), that value, on the space `sp` dealt `dealt` (or
- * the params' sizes, which give it); `null` on any other board. */
-export function emptyOf<C>(
-  module: FillModule<C>,
-  sp: GridSpace,
-  dealt: C,
-): number | null {
-  if (module.play?.numbers?.empty === undefined || module.repeatOf === undefined)
-    return null;
-  return module.repeatOf(sp, dealt).value;
-}
 
 /** The note move `O` makes on open cell `c` of a board `w` wide, whose notes
  * are `noted`, empty square `empty` and domain `all`: the empty square
@@ -245,7 +175,6 @@ export function numberInput<
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
-  const glyphs = glyphsOf(module.play);
   const done =
     module.play === undefined
       ? null
@@ -342,7 +271,9 @@ export function numberInput<
           ? 0
           : emptyKey
             ? empty
-            : glyphs.typed(button);
+            : glyphsOf(module, b.dealt as Readonly<Record<string, unknown>>).typed(
+                button,
+              );
       // The empty square's glyph's key types nothing: it is drawn a cross.
       if (n === null || (n === empty && !emptyKey)) return null;
       // A number the cell cannot hold is not typed (Seismic's past its area).
@@ -366,7 +297,9 @@ export function numberInput<
       // divides (upstream Seismic's areas of six): its keypad reaches it.
       const n =
         board === undefined ? top : Math.max(top, topValue(module, sp, board.dealt));
-      const empty = emptyOf(module, sp, (board?.dealt ?? p.sizes ?? {}) as C);
+      const dealt = (board?.dealt ?? p.sizes ?? {}) as C;
+      const empty = emptyOf(module, sp, dealt);
+      const glyphs = glyphsOf(module, dealt as Readonly<Record<string, unknown>>);
       const keys = Array.from({ length: n }, (_, i) => i + 1)
         .filter((v) => v !== empty)
         .map((v) => ({ button: glyphs.keyCode(v), label: glyphs.draw(v) }));
@@ -379,8 +312,7 @@ export function numberInput<
       const ui = noteTaking(fillUi);
       const pointAt = (x: number, y: number) =>
         geometry.pointAt(b, ds, { x, y }, fillUi);
-      const empty = emptyOf(module, spaceOf(module, b), b.dealt);
-      const keyCode = (v: number) => (v === empty ? EMPTY_KEYS[0] : glyphs.keyCode(v));
+      const { keyCode } = boardGlyphs(module, spaceOf(module, b), b.dealt);
       if (isCandidateMove(move))
         return candidateGesture(
           move,

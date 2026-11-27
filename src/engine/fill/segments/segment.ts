@@ -17,6 +17,7 @@ import {
 } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
 import type { ClueMax, FillDeal, Universe } from "../game-id.ts";
+import type { ValueGlyphs } from "../glyphs.ts";
 import type { GrowSizes } from "../grow.ts";
 
 /** What a segment writes from: the deal, the space, and the clues dealt. */
@@ -29,6 +30,8 @@ export interface Encoding<C> {
   /** The values an element holds a clue for, from 1, of a kind one a value
    * (`FillDeal.perValue`): the top of the board's domain. */
   readonly values: number;
+  /** How the board draws its values, on a board of numbers; else `null`. */
+  readonly glyphs: ValueGlyphs | null;
 }
 
 /** What a segment reads into: `out`, the clues read so far, which a later
@@ -49,6 +52,8 @@ export interface Decoding<C> {
   /** The kinds the board is not dealt, by its ruleset, which a segment
    * reads no clue of. */
   readonly off: ReadonlySet<string>;
+  /** As {@link Encoding.glyphs}. */
+  readonly glyphs: ValueGlyphs | null;
 }
 
 /** The places kind `kind` is written at, in the order a segment writes them

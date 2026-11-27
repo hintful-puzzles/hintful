@@ -56,7 +56,7 @@ export const slots: FillSite = {
           { x: box.x + Math.floor(ts / 2), y: box.y + Math.floor(ts / 2) },
           glyphFont(Math.floor(ts / 2)),
           err ? COL_ERROR : done ? cx.pal.COL_DONE : COL_INK,
-          String(clue.v),
+          cx.glyphClues.includes(clue.kind) ? cx.glyphOf(b)(clue.v) : String(clue.v),
         );
       if (key & 8) {
         const thick = Math.max(2, Math.floor(ts / 16));
@@ -65,7 +65,8 @@ export const slots: FillSite = {
       const raised = raisedInto(p.x, p.y);
       if (raised.length > 0) {
         dr.clip(box);
-        for (const r of raised) paintRaised(cx, lay.f.top, dr, r.tile, r);
+        for (const r of raised)
+          paintRaised(cx, lay.f.top, dr, r.tile, r, cx.glyphOf(b));
         dr.unclip();
       }
       dr.drawUpdate(box);

@@ -65,7 +65,7 @@ describe("a board of numbers' deal", () => {
       for (let c = 0; c < 16; c++) expect(b.fixed[c]).toBe(given.byAt[c] >= 0 ? 1 : 0);
       expect([...given.at].map((c) => b.values[c])).toEqual([...given.v]);
       // The ID writes the givens, and reads back the same board.
-      const desc = encodeDesc(squaring.deal, spaceOf(squaring, b), b.dealt);
+      const desc = encodeDesc(squaring, squaring.deal, spaceOf(squaring, b), b.dealt);
       expect([...game.newState(P, desc).values]).toEqual([...b.values]);
     }
   });
