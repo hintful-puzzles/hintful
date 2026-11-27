@@ -77,6 +77,13 @@ export const LABEL_DONE = 1 << 17;
  * the cell's value is raised. */
 export const THREE_D = 1 << 18;
 export const RAISED = 1 << 19;
+/** On a board with an empty square (`play.numbers.empty`): the cell is in a
+ * ball, the clue's where `BALL_GIVEN`, else the player's (its notes lack the
+ * empty square); and its notes are every other value, which the ball says
+ * and none is drawn. */
+export const BALL = 1 << 20;
+export const BALL_GIVEN = 1 << 21;
+export const BALL_BARE = 1 << 22;
 
 // --- the edge word: on an answer on the edges, the tile's four sides --------
 /** Side `d`'s value (up, right, down, left), {@link EDGE_VALUE_BITS} a side

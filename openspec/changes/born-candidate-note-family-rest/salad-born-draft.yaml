@@ -40,7 +40,7 @@ clues:
   ball: { at: cell, value: "range(0, 0)", means: "value(at) != n + 1" }
 freedom: { kind: fill }
 play:
-  numbers: { letters: true }
+  numbers: { letters: true, empty: { ball: ball } }
   boards: [4x4n3L, 5x5n3L, 5x5n4L, 6x6n4L, 7x7n4L, 8x8n5L, 5x5n3B, 5x5n4B, 6x6n3B, 6x6n4B, 7x7n4B, 8x8n5B]
   default: 4x4n3L
   hintMarks:

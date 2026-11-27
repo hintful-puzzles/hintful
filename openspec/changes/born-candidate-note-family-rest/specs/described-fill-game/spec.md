@@ -366,3 +366,43 @@ default too, unless the code is empty.
   `4k3S` desc read whose squares hold `O`
 - **THEN** the first holds balls and no clue at a line's end, and its desc
   writes no slots; the params read `4k3S`; the desc is refused
+
+### Requirement: A born board of numbers may have an empty square
+
+A board of numbers whose answer repeats a value in a unit MAY declare it
+the empty square (`play.numbers.empty`). It SHALL be typed by `X`, `-` and
+`_`, never by its glyph's key, drawn as the engine's cross, and noted as an
+X. The keypad SHALL offer the other values, then `X`, `O` and clear. A
+placed empty square SHALL strike itself from its unit's notes only once the
+unit holds every copy of it.
+
+#### Scenario: The emptying fixture's empty square
+
+- **WHEN** on a `5k3B` board `X` is typed into an open square, and `4` into
+  another
+- **THEN** the first holds the empty square drawn as a cross, and the
+  second is unchanged
+
+#### Scenario: The empty square's reach
+
+- **WHEN** the empty square is placed with auto-pencil in an empty row of
+  five whose units hold it twice, then placed again in the same row
+- **THEN** the first placement strikes nothing from the row, and the second
+  strikes it from the row's other three squares
+
+### Requirement: A ball is the empty square struck from a square's notes
+
+On a board with an empty square, `O`, `+` and `=` SHALL strike it from an
+open square's notes, from every value where the square has none, and SHALL
+put it back where it is struck, a square left noted every other value then
+holding no notes. A square whose notes lack it, and a square holding the
+clue kind `play.numbers.empty` names, SHALL be drawn in a ball, the clue's
+in ink and the player's in the entry color; a square noted every other
+value SHALL show no notes inside it.
+
+#### Scenario: A ball typed and taken back
+
+- **WHEN** on a `5k3B` board `O` is typed twice into an open square with no
+  notes
+- **THEN** after the first it is noted 1 to 3 and drawn as a bare ball, and
+  after the second it holds no notes and no ball

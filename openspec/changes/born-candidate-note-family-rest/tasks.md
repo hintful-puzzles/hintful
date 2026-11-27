@@ -1,8 +1,7 @@
 ## Next
 
-Salad (2.3): 2.3c, the empty value and `O` in play, then 2.3d to the
-flip, a capability a fixture each; `emptying` already has the empty
-value (`k + 1`) and a ball under its `B` ruleset to build 2.3c on.
+Salad (2.3): 2.3d, the ID, then 2.3e and the flip, a capability a
+fixture each, built on `emptying`.
 Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
@@ -48,12 +47,9 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.3b A clue kind dealt only on a ruleset's boards, its ID segment
         neither written nor read elsewhere; a ruleset's code written at its
         default (Salad's `L`).
-  - [ ] 2.3c The empty value (the repeated one): typed by `X`, `-` and
-        `_`, drawn as a cross, given or placed; its note an X. `O` (`+`,
-        `=`): a square known to hold a value, not which, drawn as the ball
-        a given ball is. Mark-all's and auto-pencil's reach of a placed
-        empty square: nothing by its line until the line holds all its
-        empty squares (`notes.ts` `reachOf` strikes every peer).
+  - [x] 2.3c The empty value (`play.numbers.empty`): typed by `X`, drawn
+        as a cross, noted as an X; `O` strikes it from the notes, drawn as
+        a ball; its reach waits for a line's every copy.
   - [ ] 2.3d The ID: Letters' `<border>,<grid>` and Numbers' `<grid>`;
         slots in the ID's order (top, left, bottom, right), a stream over
         slots; values written as the board draws them, letters under
@@ -61,7 +57,9 @@ changed for a player" gets its line. In the order task 1.1 set.
         and said so too); the empty value's code `X` and the ball's `O`.
         The draft's grid stream has no `,` before it, so a 6x6 or 7x7
         Letters desc whose last slot is blank does not load (2026-11-27),
-        and a Numbers desc writes `_` after an `O`.
+        and a Numbers desc writes `_` after an `O`. The text format prints
+        the empty square as its glyph (`AnswerReading.glyphs` is one per
+        value, not per board): `X`, as upstream's.
   - [ ] 2.3e The deal: no givens on a Letters board below 8x8; a given
         weakened to a ball before it goes (Numbers'); a board refused
         where a named part of the ladder finishes it (Numbers' empty
@@ -74,7 +72,14 @@ changed for a player" gets its line. In the order task 1.1 set.
         Salad's steps as `says` (a line with all its empty squares or all
         its symbols, a square with only the X left or no X, the border
         clue's two arms, a set holding a line's empties); soundness, tests
-        to `cases.yaml`, spec deltas, the app run.
+        to `cases.yaml`, spec deltas, the app run. In the app, look at a
+        ball holding notes (the note grid is the square's, not fitted
+        inside the ring as upstream's). What 2.3c changed for a player, for
+        design.md: the cross is the engine's, half a square wide, where
+        upstream's spans it; a ball is a ring, unfilled; `O` on a square
+        holding a value types nothing, where upstream empties it into a
+        ball; a ball is a note, so Undo, Clear and mistakes treat it as
+        one; a placed number is drawn without a ball round it.
 - [ ] 2.4 Group born, after the owner's answer (design.md § "Open
       Questions"): the letters relabeled about the identity, `i` after the
       tier, the hide's keep-set, an answer from shipped data.

@@ -1248,6 +1248,18 @@
                 "letters": {
                   "const": true,
                   "description": "Each value is drawn, said and typed as a letter from A, which either case types, and a digit types the letter at its place (ABCD's). Not raised."
+                },
+                "empty": {
+                  "type": "object",
+                  "description": "The value the answer repeats in a unit is the empty square (Salad's): drawn as a cross and noted as an X, and typed by `X`, `-` or `_`, its glyph's key typing nothing. `O`, `+` or `=` strikes it from a square's notes, all of them the rest where it has none, or puts it back: a square whose notes lack it is drawn in a ball, bare where they are every other value.",
+                  "additionalProperties": false,
+                  "required": ["ball"],
+                  "properties": {
+                    "ball": {
+                      "type": "string",
+                      "description": "The clue kind at a square that holds no value, whose square is not empty: drawn as the ball the player's `O` draws."
+                    }
+                  }
                 }
               }
             },

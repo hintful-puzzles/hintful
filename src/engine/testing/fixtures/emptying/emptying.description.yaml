@@ -6,9 +6,9 @@
 # first number seen from it past the empty squares. For the fill engine's
 # tests of an answer with a value a unit holds more than once, a Latin square
 # folded to the domain as its sample, a derived clue whose meaning reads a
-# size, and a ruleset choosing which kind of clue its boards are dealt (the
-# clues at a line's end, or a ball on a square that is not empty), on a
-# description that names no game.
+# size, a ruleset choosing which kind of clue its boards are dealt (the
+# clues at a line's end, or a ball on a square that is not empty), and the
+# empty square typed, noted and drawn, on a description that names no game.
 game: emptying
 produces: latin
 sizes:
@@ -42,7 +42,9 @@ clues:
   ball: { at: cell, value: "range(0, 0)", means: "value(at) != k + 1" }
 freedom: { kind: fill }
 play:
-  numbers: {}
+  # The empty square is drawn as a cross and typed by X; O strikes it from a
+  # square's notes, drawn as the ball a clue's is.
+  numbers: { empty: { ball: ball } }
   boards: [4x4k3S, 5x5k3S, 5x5k4S, 5x5k3B]
   hintMarks:
     ring: the square the step fills in.

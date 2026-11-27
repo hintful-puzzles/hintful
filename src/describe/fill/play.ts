@@ -141,6 +141,21 @@ export function playOf(
   // A block as tall as its value is a number's.
   if (p.numbers?.raised === true && p.numbers.letters === true)
     throw new CompileError("play numbers: raised letters");
+  // The empty square is the value a line holds more than once; its ball is
+  // a clue at a square ruling that value out of it, and holds none itself.
+  const empty = p.numbers?.empty;
+  if (empty !== undefined) {
+    if (d.repeat === null)
+      throw new CompileError("play numbers empty: the answer declares no `repeat`");
+    // A raised block is as tall as its number, and a cross has none.
+    if (p.numbers?.raised === true)
+      throw new CompileError("play numbers: raised, with an empty square");
+    const ball = json.clues?.[empty.ball];
+    if (ball?.at !== "cell" || ball.value !== "range(0, 0)")
+      throw new CompileError(
+        `play numbers empty: ${empty.ball} is not a clue at a square holding no value`,
+      );
+  }
   if (p.links !== undefined && p.links !== env.cellMark?.name)
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,

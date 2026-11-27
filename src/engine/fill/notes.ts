@@ -112,23 +112,29 @@ function encodingOf<C>(
 /** The cells a value placed at `c` rules out of their notes: those sharing a
  * unit with it, which no value repeats in, and those the techniques run on
  * placing strike it from where every cell could hold anything (a `zoning`
- * area and its neighbors). The one reach auto-pencil, Mark-all's clean and
- * the candidate walk (`candidates.ts`) read; asked once a cell and value. */
+ * area and its neighbors). A value a unit holds more than once (Salad's
+ * empty square) is struck from the rest of a unit only once the unit holds
+ * every copy, the board's copies counted. The one reach auto-pencil,
+ * Mark-all's clean and the candidate walk (`candidates.ts`) read; asked once
+ * a cell and value. */
 export function reachOf<C>(module: LadderedFillModule<C>, board: FillBoard<C>): Reach {
   const sp = spaceOf(module, board);
   const { placing } = ladderOf(module, board);
+  const repeat = module.repeatOf?.(sp, board.dealt) ?? null;
   const reached = new Map<number, readonly number[]>();
   return (c, n) => {
     const key = c * 32 + n;
     const known = reached.get(key);
     if (known !== undefined) return known;
+    const repeats = n === repeat?.value;
     const grid = new Uint8Array(board.values.length);
+    if (repeats) for (const p of sp.cells) if (board.values[p] === n) grid[p] = n;
     grid[c] = n;
-    const m = new CellMarks(sp, ~0, grid);
+    const m = new CellMarks(sp, ~0, grid, repeat);
     m.cands.fill(~0);
-    m.cands[c] = 1 << n;
+    for (const p of sp.cells) if (grid[p] !== 0) m.cands[p] = 1 << n;
     for (const run of placing) run(m, c);
-    const out = new Set(sp.peers[c]);
+    const out = new Set(repeats ? [] : sp.peers[c]);
     for (const p of sp.cells) if (p !== c && ((m.cands[p] >> n) & 1) === 0) out.add(p);
     // The peers in the space's order, as a hint's marks list them.
     const cells = [...out];

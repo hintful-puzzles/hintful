@@ -184,7 +184,10 @@ regions".
 
 Exemplar: [`fill/notes.ts`](../src/engine/fill/notes.ts)'s `reachOf`, a
 born board's reach: the units' peers and what its placing techniques strike
-(Seismic's `cull`), asked once a cell and value. A born board may have no
+(Seismic's `cull`), asked once a cell and value. A value its units hold
+more than once (Salad's empty square) reaches no peer by itself: the
+library's `placed` strikes it from a unit once the unit holds every copy,
+the board's copies counted. A born board may have no
 unit at all (ABCD's, whose lines count rather than forbid a repeat): its
 reach is then its techniques' alone, it has no hidden single, and its
 description words the walk's steps (`WALK_STEPS`), as the `counting`
@@ -768,7 +771,10 @@ Requirement: "A game's placing technique may lead". Exemplar:
 Where a conclusion settles a cell with a marker (this square is empty, this
 square is not), it is a move the canonical shapes have no room for, and the
 game handles it at four sites. Exemplar:
-[`salad/hint.ts`](../src/games/salad/hint.ts).
+[`salad/hint.ts`](../src/games/salad/hint.ts). A born board takes the
+uniform view below and needs none of the four: its empty square is a value
+of the domain, placed and noted like any (`play.numbers.empty`), and its
+ball is that value struck from the notes, a state of the candidates.
 
 - **The plan takes it as a `step` leg** from a rung of the game's own, with
   its own `apply`, and overrides `singles` and `placeable` where a lone note

@@ -20,6 +20,7 @@ import {
   paintEdgeCursor,
   paintEdgeValues,
 } from "./layers/edge-values.ts";
+import { ballsOf, emptyIn, paintEmpty } from "./layers/empty.ts";
 import type { TileFrame } from "./layers/layer.ts";
 import { paintLinkHalves } from "./layers/links.ts";
 import { paintBars, paintDiamonds } from "./layers/live-errors.ts";
@@ -40,11 +41,13 @@ import type { FillSetup } from "./setup.ts";
 import { paintRaised, repainted } from "./three-d.ts";
 import {
   ARMED,
+  BALL_BARE,
   CURSOR,
   FIXED,
   JOIN_SHIFT,
   LABEL_DONE,
   MISTAKE,
+  NOTES_MODE,
   NUMBER_UNDER,
   RAISED,
   type RaisedAt,
@@ -88,6 +91,7 @@ export function tileWordsOf<C extends Clues<C>>(
   const joins = joinsOf(cx, shown);
   const washes = washesOf(cx, shown, ui);
   const labels = labelsOf(cx, state);
+  const balls = ballsOf(cx, shown, emptyIn(cx, shown));
   const { parts } = ds;
   const tiles: (TileWords | null)[] = new Array(w * h).fill(null);
   for (let y = 0; y < h; y++)
@@ -109,6 +113,7 @@ export function tileWordsOf<C extends Clues<C>>(
         ((joins[i] & 0xf) << JOIN_SHIFT) |
         (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
         washes[i] |
+        balls[i] |
         (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
       const n = shownNumber(cx, state, i, v, ui.hiddenShown);
       if (n >= 0 && v === cx.play.covers?.value) lk |= NUMBER_UNDER;
@@ -122,7 +127,9 @@ export function tileWordsOf<C extends Clues<C>>(
               diagonal: parts.diagonal[i],
             };
       if (lay.f.threeD) lk |= THREE_D | (v !== 0 ? RAISED : 0);
-      const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
+      const noted = noteKey(shown, i, (k & CURSOR) !== 0, ui);
+      // A bare ball says its notes: every value but the empty square.
+      const nk = lk & BALL_BARE ? noted & NOTES_MODE : noted;
       const ek = words.edgeWord[i] | (cx.onEdges ? edgeCursorBits(ui.cursor, x, y) : 0);
       // A growing piece is no key's: its tile is drawn every frame.
       const grows = before !== null && before[i] !== v;
@@ -156,6 +163,7 @@ function drawTile<C extends Clues<C>>(
   struck: number,
   spill: readonly RaisedAt[],
   crossed: boolean,
+  empty: number,
 ): void {
   const { pal, typed, play } = cx;
   const { k: word, hk: hintWord, lk: lineWord, nk: noteWord, ek: edgeWord, part } = t;
@@ -191,8 +199,10 @@ function drawTile<C extends Clues<C>>(
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;
   if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord });
-  else if (typed) paintNumeral(pal.COL_ENTRY, cx.glyph, frame);
-  paintNotes(pal.COL_PENCIL, cx.glyph, frame);
+  else if (typed && v !== empty) paintNumeral(pal.COL_ENTRY, cx.glyph, frame);
+  paintEmpty(pal.COL_ENTRY, empty, frame);
+  // The empty square's note is an X (upstream Salad's).
+  paintNotes(pal.COL_PENCIL, (n) => (n === empty ? "X" : cx.glyph(n)), frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);
   paintLinkHalves(frame);
@@ -235,6 +245,7 @@ export function paintTiles<C extends Clues<C>>(
   const repaint = repainted(lay.f.threeD, w, h, tiles);
   const cross = cx.play.cornerCrosses;
   const crossed = cross !== undefined && b.variations.includes(cross);
+  const empty = emptyIn(cx, b);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -250,6 +261,7 @@ export function paintTiles<C extends Clues<C>>(
         ds.struck.struck[i],
         raisedInto(x, y),
         crossed,
+        empty,
       );
     }
 }

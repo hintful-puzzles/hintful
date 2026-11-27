@@ -6,6 +6,8 @@
 
 import { CLEAR, CLEAR_MARK, RULED_OUT, SHADED } from "../../color/palette.ts";
 import { COL_BACKGROUND, COL_ERROR } from "../../color/roles.ts";
+import type { GameDrawing } from "../../contract/game.ts";
+import type { Rect } from "../../contract/types.ts";
 import { drawPiece, drawPiecePart, drawRuledOutCross, SHADED_SHAPE } from "../piece.ts";
 import { type Painter, surfaceOf } from "./painter.ts";
 
@@ -59,20 +61,22 @@ export const ring: Painter = {
   paint(dr, tile, slot, error, _grown, occupied = false) {
     const cell = surfaceOf(tile);
     const color = error ? COL_ERROR : slot[0];
-    if (!occupied) {
-      drawRuledOutCross(dr, cell, color);
-      return;
-    }
-    const c = { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
-    const r =
-      (cell.w - 1) / 2 -
-      Math.max(Math.max(2, cell.w >> 4) + 1, Math.round(cell.w / 10));
-    const weight = Math.max(2, Math.round(cell.w / 24));
-    // Half-pixel steps: one-pixel strokes a whole pixel apart leave specks of
-    // surface between them.
-    for (let i = 0; i < 2 * weight - 1; i++) dr.drawCircle(c, r - i / 2, -1, color);
+    if (occupied) drawRingIn(dr, cell, color);
+    else drawRuledOutCross(dr, cell, color);
   },
 };
+
+/** The ring round what `cell` holds, in `color`: Singles' kept number's,
+ * and Salad's ball, a square known to hold a symbol. */
+export function drawRingIn(dr: GameDrawing, cell: Rect, color: number): void {
+  const c = { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
+  const r =
+    (cell.w - 1) / 2 - Math.max(Math.max(2, cell.w >> 4) + 1, Math.round(cell.w / 10));
+  const weight = Math.max(2, Math.round(cell.w / 24));
+  // Half-pixel steps: one-pixel strokes a whole pixel apart leave specks of
+  // surface between them.
+  for (let i = 0; i < 2 * weight - 1; i++) dr.drawCircle(c, r - i / 2, -1, color);
+}
 
 /** A cell the player has ruled out: the engine's cross, none where a number
  * takes the middle (a numbered square dealt clear, Range's). */

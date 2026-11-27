@@ -134,8 +134,15 @@ export interface FillPlay {
    * and no buttons. `raised`: each value drawn as a block as tall as it,
    * leaning up and right (`render/raised.ts`), or flat by the player's
    * appearance preference. `letters`: each value drawn, said and typed as
-   * a letter from A, a digit typing the letter at its place. */
-  readonly numbers?: { readonly raised?: true; readonly letters?: true };
+   * a letter from A, a digit typing the letter at its place. `empty`: the
+   * value the answer repeats in a unit is the empty square, drawn as a
+   * cross, and a square whose notes lack it is drawn in the ball the clue
+   * kind `ball` is drawn as (`numbers.ts`'s `emptyOf`). */
+  readonly numbers?: {
+    readonly raised?: true;
+    readonly letters?: true;
+    readonly empty?: { readonly ball: string };
+  };
   /** Whether a board of numbers keeps the player's candidate notes, a set of
    * values an open cell (`notes.ts`): the description's mark of them. */
   readonly notes?: true;

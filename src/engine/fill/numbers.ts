@@ -173,6 +173,49 @@ const LETTERS: ValueGlyphs = {
 export const glyphsOf = (play?: FillPlay): ValueGlyphs =>
   play?.numbers?.letters === true ? LETTERS : NUMERALS;
 
+/** The empty square's keys (upstream Salad's), and the ball's. */
+const EMPTY_KEYS = ["X", "x", "-", "_"].map((k) => k.charCodeAt(0));
+const BALL_KEYS = ["O", "o", "+", "="].map((k) => k.charCodeAt(0));
+
+/** On a board whose answer repeats a value in a unit as its empty square
+ * (`play.numbers.empty`), that value, on the space `sp` dealt `dealt` (or
+ * the params' sizes, which give it); `null` on any other board. */
+export function emptyOf<C>(
+  module: FillModule<C>,
+  sp: GridSpace,
+  dealt: C,
+): number | null {
+  if (module.play?.numbers?.empty === undefined || module.repeatOf === undefined)
+    return null;
+  return module.repeatOf(sp, dealt).value;
+}
+
+/** The note move `O` makes on open cell `c` of a board `w` wide, whose notes
+ * are `noted`, empty square `empty` and domain `all`: the empty square
+ * struck, from every value where the cell has no notes; or, where it is
+ * struck already, put back, which leaves a cell noted every other value with
+ * none. */
+function ballMove(
+  c: number,
+  w: number,
+  noted: number,
+  empty: number,
+  all: number,
+): CandidateMove {
+  const at = (n: number) => ({ x: c % w, y: Math.floor(c / w), n });
+  const values = (mask: number) => {
+    const out = [];
+    for (let n = 1; n < 32; n++) if (mask & (1 << n)) out.push(at(n));
+    return out;
+  };
+  const bit = 1 << empty;
+  const rest = all & ~bit;
+  if (noted === 0) return { type: "pencilAdd", marks: values(rest) };
+  if (noted & bit) return { type: "pencilStrike", marks: [at(empty)] };
+  if (noted === rest) return { type: "pencilStrike", marks: values(rest) };
+  return { type: "pencilAdd", marks: [at(empty)] };
+}
+
 /** A board of numbers' input: `interpretMove`, the keypad, and the taps and
  * keys that make a move, which a hint's gesture shows. */
 export interface NumberInput<C, D> {
@@ -283,14 +326,27 @@ export function numberInput<
         if (toggled !== null) return toggled;
       }
       if (!ui.cursor.visible) return null;
-      const n =
-        button === CURSOR_SELECT2 || isEraseKey(button) ? 0 : glyphs.typed(button);
-      if (n === null) return null;
       const { x, y } = ui.cursor;
       const c = y * b.w + x;
+      const sp = spaceOf(module, b);
+      const empty = emptyOf(module, sp, b.dealt);
+      if (empty !== null && BALL_KEYS.includes(button)) {
+        // A ball is a state of the notes, on an open square holding nothing.
+        if (b.fixed[c] || b.values[c] !== 0 || b.pencil === null) return null;
+        releaseHighlightAfterEntry(ui);
+        return ballMove(c, b.w, b.pencil[c], empty, module.domainOf(sp, b.dealt, c));
+      }
+      const emptyKey = empty !== null && EMPTY_KEYS.includes(button);
+      const n =
+        button === CURSOR_SELECT2 || isEraseKey(button)
+          ? 0
+          : emptyKey
+            ? empty
+            : glyphs.typed(button);
+      // The empty square's glyph's key types nothing: it is drawn a cross.
+      if (n === null || (n === empty && !emptyKey)) return null;
       // A number the cell cannot hold is not typed (Seismic's past its area).
-      if (n > 0 && (module.domainOf(spaceOf(module, b), b.dealt, c) & (1 << n)) === 0)
-        return null;
+      if (n > 0 && (module.domainOf(sp, b.dealt, c) & (1 << n)) === 0) return null;
       if (b.fixed[c]) return null;
       // A note goes on an empty cell alone.
       if (ui.pencilMode && b.values[c] !== 0) return null;
@@ -310,24 +366,27 @@ export function numberInput<
       // divides (upstream Seismic's areas of six): its keypad reaches it.
       const n =
         board === undefined ? top : Math.max(top, topValue(module, sp, board.dealt));
-      return [
-        ...Array.from({ length: n }, (_, i) => ({
-          button: glyphs.keyCode(i + 1),
-          label: glyphs.draw(i + 1),
-        })),
-        clearKey,
-      ];
+      const empty = emptyOf(module, sp, (board?.dealt ?? p.sizes ?? {}) as C);
+      const keys = Array.from({ length: n }, (_, i) => i + 1)
+        .filter((v) => v !== empty)
+        .map((v) => ({ button: glyphs.keyCode(v), label: glyphs.draw(v) }));
+      // Upstream Salad's: the symbols, then X, O and clear.
+      if (empty !== null)
+        keys.push(...["X", "O"].map((k) => ({ button: k.charCodeAt(0), label: k })));
+      return [...keys, clearKey];
     },
     gesture(b, fillUi, ds, move) {
       const ui = noteTaking(fillUi);
       const pointAt = (x: number, y: number) =>
         geometry.pointAt(b, ds, { x, y }, fillUi);
+      const empty = emptyOf(module, spaceOf(module, b), b.dealt);
+      const keyCode = (v: number) => (v === empty ? EMPTY_KEYS[0] : glyphs.keyCode(v));
       if (isCandidateMove(move))
         return candidateGesture(
           move,
           ui,
           pointAt,
-          glyphs.keyCode,
+          keyCode,
           undefined,
           markAll(module, b),
         );
@@ -340,7 +399,7 @@ export function numberInput<
         entries.push({
           x: c % b.w,
           y: Math.floor(c / b.w),
-          code: glyphs.keyCode(set[i + 1]),
+          code: keyCode(set[i + 1]),
           pencil: false,
         });
       }
