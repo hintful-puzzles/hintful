@@ -19,7 +19,10 @@
  * technique's terms and the squares its step marks. Nothing here is about a
  * puzzle.
  *
- * Cell games only: a fact is a placement of a value on a cell.
+ * A fact is a placement of a value on an element of the answer: a square, or
+ * where the spec's `elements` says, another element named by a point (an edge
+ * by its half-grid point). `described-edge-hint.ts` is the shape of a game
+ * whose step is made from what its facts did to the edges' marks.
  */
 
 import type {
@@ -31,7 +34,12 @@ import type {
 } from "../contract/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../contract/hint-refusal.ts";
 import { changedCells, trackLeg, trackTargets } from "../contract/hint-track.ts";
-import { CELL, type MarkKind, type Sentence } from "../contract/hint-words.ts";
+import {
+  CELL,
+  type MarkKind,
+  type Noun,
+  type Sentence,
+} from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import type { PairIndex } from "../render/piece.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
@@ -197,10 +205,15 @@ interface FiringShape<
   rulesOut?: DescribedRulesOut;
   /** The width of the board, to name a cell's point. */
   width(state: State): number;
-  /** How many cells the board has. */
+  /** Where the answer's elements are not the board's squares (an answer on
+   * the edges): the point a target names element `e` by, the element at a
+   * target's point, and the kind and noun its ring is drawn and said on,
+   * keyed by that point. The marks the step reasons from stay squares. */
+  elements?: AnswerElements<State, Target>;
+  /** How many elements the answer has. */
   size(state: State): number;
-  /** The value a cell holds as the description reads it, 0 for none. */
-  valueAt(state: State, cell: number): number;
+  /** The value an element holds as the description reads it, 0 for none. */
+  valueAt(state: State, e: number): number;
   /** The state after a move. */
   execute(state: State, move: Move): State;
   /** Whether a move can be no part of a step (a solve). */
@@ -251,6 +264,15 @@ interface FiringShape<
       state: State,
     ) => Sentence;
   };
+}
+
+/** An answer's elements by the points its targets name them by, where they
+ * are not the board's squares (`FiringShape.elements`). */
+interface AnswerElements<State, Target extends Point> {
+  point(state: State, e: number): Point;
+  index(state: State, at: Point): number;
+  readonly ringKind: MarkKind<Target>;
+  readonly ringNoun: Noun;
 }
 
 /** What a game supplies for a hint whose step is a firing: the move that makes
@@ -323,11 +345,16 @@ export function describedFiringHint<
   const stated = spec.stated ?? {};
   const { shows, marks } = spec;
   const isMark = (t: Target): boolean => marks?.isMark(t) === true;
-  // What a step asks is followed by slot: a square's value at its cell's
-  // index, and its mark past every square.
+  // The element a target names: a square by its point, unless the answer's
+  // elements are named otherwise. A mark is a square's.
+  const { elements } = spec;
+  const elementOf = (t: Point, state: State): number =>
+    elements?.index(state, t) ?? t.y * spec.width(state) + t.x;
+  // What a step asks is followed by slot: an element's value at its index,
+  // and a square's mark past every element.
   const slots = (state: State): number => spec.size(state) * (marks ? 2 : 1);
   const slotOf = (t: Target, state: State): number =>
-    t.y * spec.width(state) + t.x + (isMark(t) ? spec.size(state) : 0);
+    isMark(t) ? t.y * spec.width(state) + t.x + spec.size(state) : elementOf(t, state);
   const slotValue = (state: State, s: number): number => {
     const n = spec.size(state);
     return s < n ? spec.valueAt(state, s) : (marks?.markAt(state, s - n) ?? -1);
@@ -348,7 +375,12 @@ export function describedFiringHint<
     const { marks: m, entries, settle, fallback, writes } = walked;
     const w = spec.width(state);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
-    const index = (t: Point): number => t.y * w + t.x;
+    const elementAt = (e: number): Point => elements?.point(state, e) ?? pointOf(e);
+    const index = (t: Point): number => elementOf(t, state);
+    // The squares a step reasons from are kept apart from the elements it
+    // decides only where those are squares too.
+    const squaresOf = (es: Iterable<number>): Set<number> =>
+      new Set(elements === undefined ? es : []);
     m.budget = stepBudget(spec.name);
     const caps = spec.caps?.(cap) ?? { [TIERS]: cap };
     const walk = ladderWalk(m, entries, caps, premiseOf, {
@@ -383,14 +415,21 @@ export function describedFiringHint<
       const kind = (
         says.arm === undefined ? technique : `${technique}.${says.arm}`
       ) as Kind;
-      const { decided, seen, own } = decidedBy(f.facts, says, before, markedBefore, w);
+      const { decided, seen, own } = decidedBy(
+        f.facts,
+        says,
+        before,
+        markedBefore,
+        pointOf,
+        elementAt,
+      );
       // The squares its placing techniques went on to decide.
       const followed: Target[] = [];
       if (spec.consequences !== false)
         for (let c = 0; c < m.grid.length; c++)
           if (before[c] === 0 && m.grid[c] !== 0 && !seen.has(c))
-            followed.push(spec.target(pointOf(c), m.grid[c]));
-      const followedCells = new Set(followed.map((t) => t.y * w + t.x));
+            followed.push(spec.target(elementAt(c), m.grid[c]));
+      const followedCells = squaresOf(followed.map(index));
       // A step for the firing, or one for each square it decides, which is then
       // the only square the evidence is taken less.
       const each = spec.each?.includes(technique) === true;
@@ -404,7 +443,7 @@ export function describedFiringHint<
         // The squares it decides, and apart from them the marks it sets.
         const cells = group.filter((t) => !isMark(t));
         const setMarks = group.filter(isMark);
-        const fills = new Set(each ? cells.map(index) : filledBy(f));
+        const fills = squaresOf(each ? cells.map(index) : filledBy(f));
         // What the squares of this step have of their own joins the firing's.
         const squares = cells.map(index);
         const marksOf = (role: "outline" | "stripes" | "strand"): number[] => [
@@ -419,6 +458,9 @@ export function describedFiringHint<
           (c) => !fills.has(c) && !strand.includes(c),
         );
         const bare = (t: Point): Point => ({ x: t.x, y: t.y });
+        // A ring of the answer's own elements keeps the value it asks, which
+        // its mark draws inside it.
+        const ringed = (t: Target): Point => (elements === undefined ? bare(t) : t);
         // A kind states its step, or what each square it decides has of its
         // own (a fact), which only a step for one square can speak.
         const factClauses = stated[kind]?.fact;
@@ -439,13 +481,19 @@ export function describedFiringHint<
           clauses !== undefined
             ? statedSentence(clauses, {
                 kind: CELL,
+                ...(elements === undefined
+                  ? {}
+                  : {
+                      ringKind: elements.ringKind as MarkKind<Point>,
+                      ringNoun: elements.ringNoun,
+                    }),
                 later: continued && leg > 0,
                 ...(spec.termKinds === undefined ? {} : { termKinds: spec.termKinds }),
                 at: pointOf,
-                ring: cells.map(bare),
+                ring: cells.map(ringed),
                 placing: (n: number) =>
-                  cells.filter((t) => spec.want(t) === n).map(bare),
-                consequences: followed.map(bare),
+                  cells.filter((t) => spec.want(t) === n).map(ringed),
+                consequences: followed.map(ringed),
                 ...(marks === undefined || setMarks.length === 0
                   ? {}
                   : {
@@ -566,8 +614,7 @@ export function describedFiringHint<
       const hl = step.highlights;
       if (spec.foreign(m) || !hl) return "off";
       const after = spec.execute(state, m);
-      const w = spec.width(state);
-      const index = (t: Point): number => t.y * w + t.x;
+      const index = (t: Point): number => elementOf(t, state);
       if (spec.journey !== undefined)
         return trackLeg({
           targets: spec.journey.legTargets(step.move, hl.targets),
@@ -618,9 +665,9 @@ export function describedFiringHint<
     says: SaysOf,
     before: ArrayLike<number>,
     markedBefore: ArrayLike<number> | null,
-    w: number,
+    pointOf: (cell: number) => Point,
+    elementAt: (e: number) => Point,
   ) {
-    const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     const decided: Target[] = [];
     const seen = new Set<number>();
     const own = new Map<
@@ -641,7 +688,7 @@ export function describedFiringHint<
       }
       if (facts[i] !== PLACE || before[c] !== 0 || seen.has(c)) continue;
       seen.add(c);
-      decided.push(spec.target(pointOf(c), n));
+      decided.push(spec.target(elementAt(c), n));
       const fact = says.facts?.[i / 3];
       if (fact !== undefined) own.set(c, fact);
     }
@@ -661,7 +708,8 @@ export function describedFiringHint<
       highlights: { ...(step.highlights as H), targets: left },
     };
     if (!step.words) return { ...narrowed, explanation: step.explanation };
-    const kept = new Set(left.filter((t) => !isMark(t)).map((t) => CELL.key(t)));
+    const ringKind: MarkKind<Target> = elements?.ringKind ?? CELL;
+    const kept = new Set(left.filter((t) => !isMark(t)).map((t) => ringKind.key(t)));
     const markKind = marks?.ring.kind;
     const keptMarks = new Set(
       left.filter(isMark).map((t) => markKind?.key(marks?.ring.of(t, state)) ?? ""),
@@ -669,7 +717,7 @@ export function describedFiringHint<
     const words = step.words.narrow((role, kind, key) =>
       role !== "ring"
         ? true
-        : kind === CELL.name
+        : kind === ringKind.name
           ? kept.has(key)
           : kind === markKind?.name
             ? keptMarks.has(key)

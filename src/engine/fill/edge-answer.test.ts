@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as lacing from "../../generated/engine/testing/fixtures/lacing/lacing.compiled.ts";
-import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
+import { COL_CURSOR, COL_ERROR, COL_HINT_OUTLINE } from "../color/roles.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
@@ -22,6 +22,7 @@ import {
 } from "../input/pointer.ts";
 import { sweepPending } from "../input/target-verb.ts";
 import { randomNew } from "../random/index.ts";
+import { walkHints } from "../testing/hint-walk.ts";
 import type { DrawOp } from "../testing/recording-drawing.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
 import { type AnswerReading, edgeTextOf, encodeAnswer, textFormat } from "./answer.ts";
@@ -337,6 +338,80 @@ describe("an answer on the edges", () => {
         expect(square).toHaveLength(8);
         expect(near(middle(square), discs[1])).toBe(true);
       });
+    });
+  });
+
+  describe("is hinted", () => {
+    const game = fillGame("lacing", lacing);
+    const sp = paramSpaceOf(lacing, { w: 3, h: 3 });
+    const id = `3x3:${dealtOn(ring).board.dealt.number.v.join("")}`;
+    const shown = () => renderScenario({ game, id, showHint: true });
+
+    it("by a step that names each edge it decides at its half-grid point", () => {
+      const step = shown().hint;
+      const set =
+        step?.move !== undefined && "set" in step.move ? (step.move.set ?? []) : [];
+      const asked = (step?.highlights as { targets: { x: number; y: number }[] })
+        .targets;
+      expect(set.length).toBeGreaterThan(0);
+      expect(asked.map((t) => elementAtPoint(sp, t))).toEqual(
+        set.filter((_, i) => i % 2 === 0),
+      );
+      // Its words ring edges, not squares.
+      expect(step?.explanation).toMatch(/ringed edges?\b/);
+      expect(step?.explanation).not.toMatch(/square/);
+    });
+
+    it("with a ring across each edge's side, between its squares' numbers", () => {
+      const { recording, hint } = shown();
+      const asked = (hint?.highlights as { targets: { x: number; y: number }[] })
+        .targets;
+      const rings = recording.ops.flatMap((o) => (o.op === "ring" ? [o] : []));
+      const discs = recording.ops.flatMap((o) =>
+        o.op === "circle" && o.fill === COL_CELL ? [o] : [],
+      );
+      expect(rings).toHaveLength(asked.length);
+      for (const t of asked) {
+        // The side's middle, halfway between its two squares' discs.
+        const [a, b] = [sp.edgeEnds, sp.edgeEnds].map(
+          (ends, i) => discs[ends[2 * elementAtPoint(sp, t) + i]],
+        );
+        const at = { x: (a.cx + b.cx) / 2, y: (a.cy + b.cy) / 2 };
+        expect(
+          rings.some(
+            (r) =>
+              Math.abs(r.x + r.w / 2 - at.x) <= 1 &&
+              Math.abs(r.y + r.h / 2 - at.y) <= 1,
+          ),
+        ).toBe(true);
+      }
+    });
+
+    it("with the number it reasons from circled, and no squares outlined", () => {
+      // A number's block is its edges, which are no squares to outline.
+      const outlined = shown().recording.ops.filter(
+        (o) => "color" in o && o.color === COL_HINT_OUTLINE,
+      );
+      expect(outlined).toEqual([]);
+    });
+
+    it("whose gestures, played as Hint plays them, finish the board", () => {
+      let solved = 0;
+      const { boards, steps } = walkHints(
+        game,
+        { steps: 200 },
+        {
+          board: (b) => {
+            b.observed.notes.length = 0;
+          },
+          played: (_step, _i, b) => {
+            if (b.observed.last("game-state-change")?.status === "solved") solved++;
+          },
+        },
+      );
+      expect(boards).toBeGreaterThan(0);
+      expect(steps).toBeGreaterThan(boards);
+      expect(solved).toBe(boards);
     });
   });
 

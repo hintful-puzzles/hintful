@@ -37,14 +37,17 @@ import {
   type LadderedFillModule,
   marksOf,
   solveBoard,
+  spaceOf,
 } from "./board.ts";
 import type { CandidateFillHint } from "./candidates.ts";
-import { type FillLink, LINK } from "./marks.ts";
+import { elementAtPoint, pointOfElement } from "./edge-target.ts";
+import { ASKED_EDGE, type FillLink, LINK } from "./marks.ts";
 import { applyMove, type FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
 
 /** A square a step decides, and the value it asks; or, as a `mark`, the
- * element it asks the square's mark to name. */
+ * element it asks the square's mark to name. On an answer on the edges, the
+ * point is the edge's half-grid point (`edge-target.ts`). */
 export interface FillTarget extends Point {
   readonly value: number;
   readonly mark?: true;
@@ -201,6 +204,19 @@ export function fillHint<C extends object>(
     ...(module.SAYS_LEGS === undefined ? {} : { legs: module.SAYS_LEGS }),
     ...(module.RULES_OUT === undefined ? {} : { rulesOut: module.RULES_OUT }),
     width: (b) => b.w,
+    // On the edges a step names an edge by its half-grid point, where the
+    // gesture clicks, and rings it there.
+    ...(module.answerSort !== "edge"
+      ? {}
+      : {
+          elements: {
+            point: (b: FillBoard<C>, e: number) =>
+              pointOfElement(spaceOf(module, b), e),
+            index: (b: FillBoard<C>, p: Point) => elementAtPoint(spaceOf(module, b), p),
+            ringKind: ASKED_EDGE,
+            ringNoun: "edge",
+          },
+        }),
     size: (b) => b.values.length,
     valueAt: (b, c) => b.values[c],
     execute: (b, m) => applyMove(module, b, m),
@@ -230,9 +246,13 @@ export function fillHint<C extends object>(
           },
         }),
     move: (targets, b) => {
-      const at = (t: FillTarget) => [t.y * b.w + t.x, t.value];
-      const set = targets.filter((t) => t.mark !== true).flatMap(at);
-      const mark = targets.filter((t) => t.mark === true).flatMap(at);
+      const cell = (t: FillTarget) => [t.y * b.w + t.x, t.value];
+      const element = (t: FillTarget) =>
+        module.answerSort === "edge"
+          ? [elementAtPoint(spaceOf(module, b), t), t.value]
+          : cell(t);
+      const set = targets.filter((t) => t.mark !== true).flatMap(element);
+      const mark = targets.filter((t) => t.mark === true).flatMap(cell);
       return {
         ...(set.length > 0 ? { set } : {}),
         ...(mark.length > 0 ? { mark } : {}),

@@ -51,6 +51,7 @@ import { cornerKindsOf, cornerRange } from "./corners.ts";
 import type { DealtFillModule } from "./deal/context.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc } from "./desc.ts";
+import { pointOfElement } from "./edge-target.ts";
 import type { Edit } from "./edit.ts";
 import {
   type ClueMax,
@@ -516,11 +517,16 @@ export function fillGame<C extends Clues<C> & object>(
     // The squares the secondary value rules out go first: a placement
     // may bring that value onto them (`rulesOut`), and a click after
     // would take it off again.
+    // An edge is clicked at its half-grid point, the target its input aims.
+    const targetOf = (e: number): Point =>
+      module.answerSort === "edge"
+        ? pointOfElement(spaceOf(module, b), e)
+        : { x: e % b.w, y: Math.floor(e / b.w) };
     const clicks: Point[] = [];
     for (const ruling of [true, false])
       for (let i = 0; i < set.length; i += 2)
         if (!linked.has(set[i]) && (set[i + 1] === play.secondary) === ruling)
-          clicks.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
+          clicks.push(targetOf(set[i]));
     const drags: PointerAction[] = [];
     if (play.links !== undefined)
       for (let i = 0; i < marks.length; i += 2)

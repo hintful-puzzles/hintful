@@ -41,6 +41,16 @@ function edgeAt(p: Point): BorderEdge {
   return e;
 }
 
+/** The two squares either side of the edge at half-grid point `p`, the one
+ * left of it or above it first. */
+export function squaresOfEdge(p: Point): readonly [Point, Point] {
+  const { x, y, dir } = edgeAt(p);
+  return [
+    { x, y },
+    { x: x + DX[dir], y: y + DY[dir] },
+  ];
+}
+
 /** The space's edge at half-grid point `p`, `-1` where none is. */
 export function elementAtPoint(sp: GridSpace, p: Point): number {
   const e = edgeOfPoint(p);

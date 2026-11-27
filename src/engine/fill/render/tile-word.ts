@@ -33,8 +33,9 @@ export const NOTES_MODE = 1;
 // The ring and outline sides (`MarkOutlines.packed`) in the low byte.
 /** The cell lies on the line a step stripes. */
 export const HINT_LINE = 1 << 8;
-/** The link a step asks for from this cell, a bit a direction: the ring round
- * it lies over the tile, which repaints when it moves. */
+/** The link a step asks for from this cell, or on an answer on the edges the
+ * edge it asks a value of on this side, a bit a direction: the ring round it
+ * lies over the tile, which repaints when it moves. */
 export const HINT_LINK_SHIFT = 9;
 /** The sides of the outline of a number's cells a step reasons from, its
  * block, which lies inside the tile: each number's whole, so two that

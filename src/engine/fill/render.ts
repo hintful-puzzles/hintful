@@ -35,6 +35,7 @@ import { partClueBox } from "./render/layers/part-clues.ts";
 import { partsOf } from "./render/layers/surface.ts";
 import { type FillRenderModule, fillSetup } from "./render/setup.ts";
 import { corners } from "./render/sites/corners.ts";
+import { edgeRings } from "./render/sites/edge-rings.ts";
 import { gaps } from "./render/sites/gaps.ts";
 import { hintRings } from "./render/sites/hint-rings.ts";
 import { lineClues } from "./render/sites/line-clues.ts";
@@ -145,6 +146,7 @@ const SITES: readonly FillSite[] = [
   hintRings,
   corners,
   linkRings,
+  edgeRings,
   tally,
   lists,
   lineClues,

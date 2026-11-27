@@ -46,9 +46,12 @@ export interface RulesOutSpec<State, Move, Target extends Point> {
     cap: number,
   ): { marks: CellMarks; entries: readonly LadderEntry[] } | null;
   width(state: State): number;
+  /** The point a target names element `e` by, where the answer's elements
+   * are not the board's squares. */
+  elements?: { point(state: State, e: number): Point };
   size(state: State): number;
-  /** The value a cell holds as the description reads it, 0 for none. */
-  valueAt(state: State, cell: number): number;
+  /** The value an element holds as the description reads it, 0 for none. */
+  valueAt(state: State, e: number): number;
   target(at: Point, n: number): Target;
   move(targets: readonly Target[], state: State): Move;
 }
@@ -96,8 +99,11 @@ export function describedRulesOut<State, Move, Target extends Point>(
       const w = spec.width(after);
       const targets = [...brought]
         .sort(([a], [b]) => a - b)
-        .map(([cell, value]) =>
-          spec.target({ x: cell % w, y: Math.floor(cell / w) }, value),
+        .map(([e, value]) =>
+          spec.target(
+            spec.elements?.point(after, e) ?? { x: e % w, y: Math.floor(e / w) },
+            value,
+          ),
         );
       return spec.move(targets, after);
     },

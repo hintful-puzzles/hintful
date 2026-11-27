@@ -1,10 +1,11 @@
 /**
  * The hint pass: what a step's marks put in the tiles' hint words, and what
  * it draws over the tiles. A ring round each cell it decides, a link's two
- * cells one pill with the link inside, an outline round the cells it reasons
- * from, the line it counts along striped, and the clue it counts with
- * recolored. Its rings and the link rings are sites (`sites/hint-rings.ts`,
- * `sites/link-rings.ts`), after the tiles.
+ * cells one pill with the link inside, an edge's pill with its value inside,
+ * an outline round the cells it reasons from, the line it counts along
+ * striped, and the clue it counts with recolored. Its rings, the link rings
+ * and the edge rings are sites (`sites/hint-rings.ts`, `sites/link-rings.ts`,
+ * `sites/edge-rings.ts`), after the tiles.
  */
 
 import { COL_HINT_OUTLINE } from "../../color/roles.ts";
@@ -18,7 +19,8 @@ import {
 import { topFace } from "../../render/raised.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../render/ring.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
-import { type FillLink, LINK } from "../marks.ts";
+import { squaresOfEdge } from "../edge-target.ts";
+import { ASKED_EDGE, type AskedEdge, type FillLink, LINK } from "../marks.ts";
 import { numeral } from "../numbers.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import type { CellLayout } from "./cell-text.ts";
@@ -50,6 +52,8 @@ export interface HintPass {
    * its cells. */
   readonly askedLinks: readonly FillLink[];
   whole(l: FillLink): boolean;
+  /** On an answer on the edges, the edges a step asks a value of. */
+  readonly askedEdges: readonly AskedEdge[];
 }
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep inside it: on a
@@ -146,7 +150,15 @@ export function hintPass<C extends Clues<C>>(
   // A game without links has no step that rings one.
   const askedLinks = linkClues === null ? [] : marks.of("ring", LINK);
   const hintWord = new Int32Array(w * h);
-  for (const l of askedLinks) {
+  const askedEdges = cx.onEdges ? marks.of("ring", ASKED_EDGE) : [];
+  const rung = [
+    ...askedLinks,
+    ...askedEdges.map((e) => {
+      const ends = squaresOfEdge(e);
+      return { cell: ends[0].y * w + ends[0].x, to: ends[1].y * w + ends[1].x };
+    }),
+  ];
+  for (const l of rung) {
     const d = dirTo(w, l.cell, l.to);
     hintWord[l.cell] |= 1 << (HINT_LINK_SHIFT + d);
     hintWord[l.to] |= 1 << (HINT_LINK_SHIFT + ((d + 2) % 4));
@@ -157,6 +169,9 @@ export function hintPass<C extends Clues<C>>(
       const at = c.y * w + c.x;
       const { kind } = cx.numberAt(state, at) as { kind: keyof C & string };
       hintWord[at] |= HINT_NUMBER;
+      // On an answer on the edges a number counts edges, not cells: the
+      // circle round it is all its mark.
+      if (cx.onEdges) continue;
       // A hexagon's corners are no cells a number counts on the board.
       const cells = (clueCells[kind] ?? (() => []))(sp, at).filter((d) =>
         lay.m.drawn(state, d % w, Math.floor(d / w)),
@@ -213,5 +228,6 @@ export function hintPass<C extends Clues<C>>(
     markStyle,
     askedLinks,
     whole,
+    askedEdges,
   };
 }

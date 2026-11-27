@@ -105,13 +105,18 @@ earlier:
    (`border-grid.ts`'s `pointerEdge`), and the cursor moves on the half
    grid (`moveBorderCursor`); each button places its value there as on a
    cell, and a sweep runs along edges.
-6. **The hint**: a record names an edge, and the step rings it as
-   `mechanics/edge-hint.ts` rings one (a pill on the side); the words'
-   `outline`/`stripes` name cells as they do now. Its gesture clicks the
-   edge's middle.
+6. **The hint**: a record names an edge by its half-grid point, and the
+   step rings it as `mechanics/edge-hint.ts` rings one (a pill on the
+   side, the value inside); the words' `outline`/`stripes` name cells as
+   they do now, and a number reasoned from is circled with no block, its
+   `clueCells` being edges. Its gesture clicks the edge's middle. The fill
+   hint stays `describedFiringHint`'s, which takes the elements' points,
+   not `describedEdgeHint`'s: its keep-track and refresh work on any
+   element once a target names one.
 7. **The refusals**: the compiler refuses on an edge answer what assumes a
    cell, each by name: notes, `numbers`, `links`, `wash`, `covers`,
-   `given`, `dealt`, `hexagon`, `straight`.
+   `given`, `dealt`, `hexagon`, `straight`, and `rulesOut`, whose premise
+   is squares.
 
 ### The fixtures
 

@@ -1611,7 +1611,11 @@ game gives the walk, how a fact is its highlights' target and the move that
 makes some, and a sentence a technique, which an `arms` technique reads by
 `spoken.arm`. It returns the hint's part (`plan`, `judgeMove`, `keepTrack`,
 `refreshStep`) as `hint`, which the game spreads, and `rulesOut` beside it.
-Exemplar: `engine/fill/hint.ts`.
+Where the answer's elements are not squares, `elements` names each by a point
+and gives the kind its ring is drawn on: the fill engine names an edge by its
+half-grid point, rings it as `ASKED_EDGE` (`fill/marks.ts`, drawn by
+`fill/render/sites/edge-rings.ts`) and clicks it there; the marks a step
+reasons from stay squares. Exemplar: `engine/fill/hint.ts`.
 
 ### `glance.ts` — marks a board shows at a glance, and asking for a deeper one
 
