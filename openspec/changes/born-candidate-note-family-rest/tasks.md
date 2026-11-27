@@ -1,9 +1,9 @@
 ## Next
 
-3.1, the family's figures; 3.4 done.
-Open: Group's header
-drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
-2.4 waits for the answer.
+3.1, the family's figures for Solo, ABCD and Salad, its cost run against
+the baseline in a worktree carrying this tree's lockfile (the baseline's
+differs by a dev-only type generator); then 2.4a. Group's controls are
+answered: keep them, as engine capabilities (design.md § "Decisions" 2).
 
 ## 1. Design
 
@@ -51,9 +51,14 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.3f The flip, its words, tests and specs, a ball's notes inside
         its ring, and the walk's hidden single in a line holding the empty
         square more than once: the commit that ticks 2.3f.
-- [ ] 2.4 Group born, after the owner's answer (design.md § "Open
-      Questions"): the letters relabeled about the identity, `i` after the
-      tier, the hide's keep-set, an answer from shipped data.
+- [ ] 2.4 Group born: the letters relabeled about the identity, `i` after
+      the tier, the hide's keep-set, an answer from shipped data, and its
+      three controls kept (design.md § "Decisions" 2).
+  - [ ] 2.4a A selection a drag makes in a shape, typed once as one move.
+  - [ ] 2.4b A player's divider between two lines, saved as `done` is.
+  - [ ] 2.4c A display order of a square's lines, dragged by a header;
+        first, trace whether `Layout` and the target lookup carry it.
+  - [ ] 2.4d Group's deal, letters and ruleset; then its flip.
 
 ## 3. Finish
 

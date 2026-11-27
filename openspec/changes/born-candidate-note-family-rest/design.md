@@ -203,6 +203,34 @@ whole-part moves and marks (Magnets), and a space of parts (Map). Their
 successor, filed when this change is archived, takes Undead, Rome,
 Magnets, Crossing and then Map.
 
+### 2. Group's controls, each built as an engine capability (2.4)
+
+The owner kept all three (§ "Open Questions"). Read 2026-11-27 against
+`31416a549`, each against what the engine has; built in this order, the
+widest use first:
+
+- **A selection typed once** (multifill). `Edit.set` is already a list of
+  cells, so one move setting several needs nothing new in the save. What is
+  missing is a selection on a typed board (`FillUi`'s `drag` and `path` are
+  the button boards'), its highlight, and a walk and a judge that take a set
+  of several cells. Stated as a shape a drag selects, `diagonal` for Group;
+  any typed board can adopt a shape of its own (a free selection is what
+  sudoku apps offer). A typed value passes over a given that already holds
+  it, as Group's does.
+- **A player's divider between two lines**, saved and undone as `done`
+  marks are (`engine/fill/done.ts`), drawn as a rule across the board. Any
+  board can offer it for marking a block the player has seen; that Group's
+  is keyed by the pair of values on either side, and goes when they part,
+  belongs to the display order below.
+- **A display order of a square's lines**, rows and columns moved together
+  by dragging a header (or Shift and an arrow), saved as a move. Nothing in
+  the engine draws a cell anywhere but at its place, and the order reaches
+  geometry, the cursor, target lookup, the hint's gestures and every layer.
+  2.4 starts by tracing whether one remap in `render/geometry.ts`'s
+  `Layout` and the target lookup carries it; where it cannot, the sites are
+  the plan. Its users are the boards whose lines are symbols, not places (a
+  clue at a line's end fixes the order).
+
 ## What each flip changed for a player
 
 For the family's figures (task 3.1) and its debrief; what each flip added
@@ -273,7 +301,9 @@ to the engine is in its commit.
   cells as one move. Recommended: keep them. The drag is how a player finds
   a group's structure (its subgroups line up as blocks), so dropping it
   makes Group significantly worse, which the rules refuse.
-  Asked 2026-11-23 at 1.1.
+  Asked 2026-11-23 at 1.1. **Answered 2026-11-27: keep all three**, and
+  first look for engine controls they can be built on, so other games gain
+  them or there is less to maintain (§ "Decisions" 2).
 
 ## Risks / Trade-offs
 
