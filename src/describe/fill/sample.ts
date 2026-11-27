@@ -13,7 +13,8 @@ import {
   type SampleJson,
   sampleOf,
 } from "../description.ts";
-import { type SettingOut, sizeSettings } from "./settings.ts";
+import type { SettingOut } from "./settings.ts";
+import { sizeSettings } from "./sizes.ts";
 
 /** The value a sample lays, 0 where it lays no one value: it builds the
  * answer, draws a Latin square, or searches one. */

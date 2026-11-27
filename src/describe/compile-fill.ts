@@ -43,12 +43,8 @@ import {
 } from "./fill/partitions.ts";
 import { markWhileOf, playOf } from "./fill/play.ts";
 import { checkFirst, checkSample, dealtSample, sampledValue } from "./fill/sample.ts";
-import {
-  dealFlag,
-  type SettingOut,
-  settingsOf,
-  sizeSettings,
-} from "./fill/settings.ts";
+import { dealFlag, type SettingOut, settingsOf } from "./fill/settings.ts";
+import { sizeSettings } from "./fill/sizes.ts";
 import { flagKind, markerKind } from "./fill/values.ts";
 
 /** The fill board's part of a game's module, in the order it is written. */

@@ -17,6 +17,7 @@ import type {
 import { tierIndex } from "./emit.ts";
 import type { Letters } from "./letters.ts";
 import { blocksOf, fillBlocksOf } from "./partitions.ts";
+import { sizeSettings } from "./sizes.ts";
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
 
@@ -330,16 +331,3 @@ export function dealFlag(
     throw new CompileError(`${where}: ${id} is no flag of the deal's`);
   return id;
 }
-
-/** The sizes the settings give, each with its least and its count of
- * values. */
-export const sizeSettings = (
-  settings: readonly SettingOut[],
-): { id: string; from: number; values: number }[] =>
-  settings.flatMap((s) =>
-    s.kind === "choice" && s.gives === "size"
-      ? [{ id: s.id, from: s.from, values: s.choices.length }]
-      : s.kind === "number" && s.gives === "size"
-        ? [{ id: s.id, from: s.min, values: s.max - s.min + 1 }]
-        : [],
-  );

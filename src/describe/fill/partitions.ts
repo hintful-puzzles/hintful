@@ -17,7 +17,7 @@ import { parse } from "../expr.ts";
 import { answerEnv, param } from "./emit.ts";
 import { sampledValue } from "./sample.ts";
 
-/** The sizes the settings give (`settings.ts`' `sizeSettings`). */
+/** The sizes the settings give (`sizes.ts`' `sizeSettings`). */
 type SizeSettings = readonly { id: string; from: number; values: number }[];
 
 /** The partitions the board deals, by name: a partition among the units
