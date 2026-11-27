@@ -84,7 +84,7 @@ import {
   spaceOf,
 } from "./board.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
-import { numeral } from "./numbers.ts";
+import { glyphsOf } from "./numbers.ts";
 import { variationFlags } from "./params/settings.ts";
 import { slotPoint } from "./slots.ts";
 import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
@@ -292,9 +292,10 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       throw new Error(`a step of ${kind}, which the description names nothing`);
   const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
+  const value = glyphsOf(module.play).draw;
   const vocab: LatinVocab = {
     noun: module.WORDS?.value ?? "number",
-    value: numeral,
+    value,
     cell: module.WORDS?.cell ?? "square",
     ...(module.WORDS?.alongside === undefined
       ? {}
@@ -350,7 +351,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           ring: ring.map(({ x, y }) => ({ x, y })),
           marks,
           terms: { ...says.terms, ...fact?.terms },
-          value: numeral,
+          value,
           noun: vocab.cell,
           valueNoun: vocab.noun,
           unit: (els: readonly Point[]) =>
@@ -474,7 +475,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         if (!isOwn(reason))
           return words !== null && reason.kind === "dup"
             ? {
-                premise: placedRulesOut(reason, numeral, words.cull(reason.n)),
+                premise: placedRulesOut(reason, value, words.cull(reason.n)),
                 where: `from the other ${vocab.cell}s`,
               }
             : latinPremise(reason, marks, vocab);
@@ -486,7 +487,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           ...(reason.reads === undefined ? {} : { reads: reason.reads }),
         };
       },
-      conclude: candidateConclusions({ value: numeral, cell: vocab.cell }),
+      conclude: candidateConclusions({ value, cell: vocab.cell }),
       notes: {
         populate: populateText(vocab.noun, vocab.cell),
         cleanObvious:
@@ -495,7 +496,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         note: (at, values, every) =>
           words !== null
             ? words.note(at, values, every)
-            : noteText(at, values.map(numeral), every, {
+            : noteText(at, values.map(value), every, {
                 noun: vocab.noun,
                 placedVerb: "standing",
                 regions: "row or column",
@@ -574,7 +575,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     // description to.
     const voice = stepVoice<Readonly<Record<string, StepType>>, Point>(
       walkSteps as unknown as StepTable<Readonly<Record<string, StepType>>>,
-      { kind: CELL, value: numeral, noun: vocab.cell, valueNoun: vocab.noun },
+      { kind: CELL, value, noun: vocab.cell, valueNoun: vocab.noun },
     );
     const dealt = board.dealt as Readonly<Record<string, unknown>>;
     const sizes = Object.fromEntries(

@@ -1,15 +1,17 @@
 # yaml-language-server: $schema=../../../../describe/description.schema.json
 
-# A fixture, not a game: a board of the numbers 1 to `k`, `k` a size the
-# params give, no two alike side by side, with a number beside each row and
-# column for each value saying how many of it the line holds; no unit holds
-# a value once, so a placed number reaches only as far as its technique
-# strikes. For the fill engine's tests of a size that is a number, a clue
-# one a value derived, written and read, an answer built on no clue, and the
-# walk of notes on a board with no unit, on a description that names no
-# game.
+# A fixture, not a game: a board of the letters A to the `k`-th, `k` a size
+# the params give, no two alike side by side, with a number beside each row
+# and column for each letter saying how many of it the line holds; no unit
+# holds a value once, so a placed letter reaches only as far as its
+# technique strikes. For the fill engine's tests of a size that is a number,
+# a clue one a value derived, written and read, an answer built on no clue,
+# the walk of notes on a board with no unit, and values drawn, typed and
+# said as letters, on a description that names no game.
 game: counting
 produces: numbers
+words:
+  value: letter
 sizes:
   w: { min: 2, max: 6 }
   h: { min: 2, max: 6 }
@@ -34,7 +36,7 @@ clues:
     means: "holds(at, per) = v"
 freedom: { kind: fill }
 play:
-  numbers: {}
+  numbers: { letters: true }
   boards: [4x4k3]
   hintMarks:
     ring: the square the step fills in.
@@ -42,8 +44,8 @@ play:
     outline: the squares the step reasons from.
     stripes: the row or column the step is about.
 deal:
-  answer: a number a square, none beside its twin, built at random
-  count: every number
+  answer: a letter a square, none beside its twin, built at random
+  count: every letter
   tier: the one tier
   sample: { build: true }
 settings:
@@ -53,7 +55,7 @@ settings:
     letter: k
     kw: values
     name: Values
-    doc: The numbers each square may hold, from 1.
+    doc: The letters each square may hold, from A.
     min: 2
     max: 4
     default: 3
@@ -64,23 +66,23 @@ id:
     closed: true
 tiers: [Easy]
 names:
-  dup: "a placed number's neighbors"
-  single: "the only number left in a square"
-  regionsFull: "every other number beside it"
-  full: "a line with all of a number"
-  room: "a line with just enough room for a number"
-# How far a placed number reaches, which no unit says: the squares beside
+  dup: "a placed letter's neighbors"
+  single: "the only letter left in a square"
+  regionsFull: "every other letter beside it"
+  full: "a line with all of a letter"
+  room: "a line with just enough room for a letter"
+# How far a placed letter reaches, which no unit says: the squares beside
 # it.
 steps:
   clean:
     ring: cell
-    move: "any number already beside its square"
+    move: "any letter already beside its square"
   note:
     ring: cell
     terms: { vs: values, unruled: flag }
     wordings:
       - when: unruled
-        look: "No number stands beside {ring} yet"
+        look: "No letter stands beside {ring} yet"
         move: "pencil in every one"
       - look: "Only {vs} {vs: isn't | aren't} already beside {ring}"
         move: "pencil {vs: it | them} in"
@@ -91,7 +93,7 @@ steps:
   regionsFull:
     ring: cell
     terms: { n: number }
-    look: "Every other number is already beside {ring}"
+    look: "Every other letter is already beside {ring}"
     move: "it can only be {n}"
 techniques:
   - kind: peer.placed
@@ -102,7 +104,7 @@ techniques:
   - kind: one.cell
     as: single
     tier: Easy
-  # A line holding all of a number it counts has room for no more.
+  # A line holding all of a letter it counts has room for no more.
   - id: full
     tier: Easy
     for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) >= v"
@@ -111,7 +113,7 @@ techniques:
       terms: { L: L, d: d, v: v }
       marks: { stripes: "cells(L)" }
       look: "{stripes: this {unit}} already holds all {numeral v} of its {d}s"
-  # A line with just as many squares left for a number as it still needs.
+  # A line with just as many squares left for a letter as it still needs.
   - id: room
     tier: Easy
     for: >-

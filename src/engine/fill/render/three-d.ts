@@ -15,7 +15,6 @@ import { pencilIndicatorBox } from "../../render/pencil-indicator.ts";
 import { drawSides, RECEIVED_FROM, topFace } from "../../render/raised.ts";
 import { type WinTone, winSlot } from "../../render/win-wave.ts";
 import type { Clues, FillBoard } from "../board.ts";
-import { numeral } from "../numbers.ts";
 import type { FillDrawState } from "../render.ts";
 import { slotAt } from "../slots.ts";
 import { type Layout, numberText } from "./geometry.ts";
@@ -68,7 +67,7 @@ export function paintRaised<C extends Clues<C>>(
     COL_INK,
   );
   const { origin, options } = numberText(ts, face.x, face.y);
-  dr.drawText(origin, options, numeralInk(word, COL_ENTRY), numeral(v));
+  dr.drawText(origin, options, numeralInk(word, COL_ENTRY), cx.glyph(v));
   if (word & MISTAKE) drawMistake(dr, ts, face.x, face.y);
 }
 

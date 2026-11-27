@@ -274,3 +274,16 @@ first SHALL be built on no clue.
 - **THEN** each row and column holds one clue for each value, the count of
   it the answer holds, written rows then columns, each line's values from 1
   in turn; and a desc with a clue too many or too few is refused
+
+### Requirement: A board of numbers may play its values as letters
+
+A born board of numbers with `play.numbers.letters` SHALL draw each value,
+its notes and a hint's word for it as a letter from A, offer a key a
+letter, and take a letter of either case, or a digit, as the letter at its
+place. A count SHALL still be said in digits.
+
+#### Scenario: Typing B three ways
+
+- **WHEN** a square of a `counting` board of three letters is selected and
+  `b`, `B` or `2` is pressed
+- **THEN** each enters B, and `d` or `4` enters nothing

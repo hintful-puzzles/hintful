@@ -11,6 +11,7 @@ import { type Clues, type FillBoard, listOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
 import { type ClueMax, partKindsOf } from "../game-id.ts";
 import { gapKindsOf } from "../gaps.ts";
+import { glyphsOf } from "../numbers.ts";
 import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
 import type { FillLook } from "../render.ts";
@@ -71,8 +72,9 @@ export function fillSetup<C extends Clues<C>>(
   const gapped = gapKinds.length > 0;
   const hexagon = module.hexagon !== undefined;
   /** On a board of numbers (`play.numbers`), each value is drawn as its
-   * numeral. */
+   * glyph. */
   const typed = play.numbers !== undefined;
+  const glyph = glyphsOf(play).draw;
   const notes = play.notes === true;
   /** Where the board draws its values raised (`play.numbers.raised`). */
   const raises = play.numbers?.raised === true;
@@ -172,6 +174,7 @@ export function fillSetup<C extends Clues<C>>(
     gapped,
     hexagon,
     typed,
+    glyph,
     notes,
     raises,
     linkClues,

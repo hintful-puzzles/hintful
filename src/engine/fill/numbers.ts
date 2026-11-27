@@ -18,7 +18,7 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../hint/candidate-hint.ts";
 import type { PointerAction } from "../input/hint-gesture.ts";
-import { digitKeyCode, digitKeys } from "../input/key-labels.ts";
+import { clearKey, digitKeyCode } from "../input/key-labels.ts";
 import {
   CURSOR_SELECT2,
   digitOf,
@@ -71,7 +71,9 @@ function keypadTop<C>(
   const divide = module.deal?.divide?.find((d) => "sizes" in d);
   if (divide === undefined || !("sizes" in divide))
     // The compiler refuses any other domain that differs from cell to cell.
-    return topValue(module, sp, {} as C);
+    // A domain read off a size reads it among the clues, where a deal keeps
+    // the sizes the params give.
+    return topValue(module, sp, sizes as unknown as C);
   const { by } = divide;
   const list = divide.sizes[by === undefined ? 0 : (sizes[by.size] ?? by.min) - by.min];
   return Math.max(...(list ?? []));
@@ -117,11 +119,59 @@ function noteTaking(ui: FillUi): NoteTakingUi {
 /** The glyph value `v` is drawn and typed as: a digit, and past nine a
  * letter, as the keypad's keys are labeled. No key draws a value past `z`'s:
  * one is a count or a clue, said `{numeral …}` in a hint. */
-export const numeral = (v: number): string => {
+const numeral = (v: number): string => {
   if (!Number.isInteger(v) || v < 1 || v > 35)
     throw new Error(`no key draws the value ${v}: say a count as {numeral …}`);
   return String.fromCharCode(digitKeyCode(v));
 };
+
+/** How a board of numbers' values are drawn, said and typed. */
+export interface ValueGlyphs {
+  /** The glyph value `v` is drawn and said as. */
+  readonly draw: (v: number) => string;
+  /** The key that types value `v`. */
+  readonly keyCode: (v: number) => number;
+  /** The value key `button` types, 0 for one that clears, or `null`. */
+  readonly typed: (button: number) => number | null;
+  /** The last value with a glyph, within a cell's domain mask. */
+  readonly top: number;
+}
+
+const NUMERALS: ValueGlyphs = {
+  draw: numeral,
+  keyCode: digitKeyCode,
+  typed: digitOf,
+  top: 31,
+};
+
+const A = "A".charCodeAt(0);
+const a = "a".charCodeAt(0);
+
+/** The letter value `v` is drawn as, from A. */
+const letter = (v: number): string => {
+  if (!Number.isInteger(v) || v < 1 || v > 26)
+    throw new Error(`no letter draws the value ${v}: say a count as {numeral …}`);
+  return String.fromCharCode(A + v - 1);
+};
+
+/** Letters from A, typed by either case, or by a value's place as a digit
+ * (ABCD's keys, upstream's too). */
+const LETTERS: ValueGlyphs = {
+  draw: letter,
+  keyCode: (v) => A + v - 1,
+  typed: (button) => {
+    const base = stripModifiers(button);
+    if (base >= A && base < A + 26) return base - A + 1;
+    if (base >= a && base < a + 26) return base - a + 1;
+    return digitOf(button);
+  },
+  top: 26,
+};
+
+/** The glyphs of a board whose `play` is `play`: letters where it says
+ * `numbers.letters`, else numerals. */
+export const glyphsOf = (play?: FillPlay): ValueGlyphs =>
+  play?.numbers?.letters === true ? LETTERS : NUMERALS;
 
 /** A board of numbers' input: `interpretMove`, the keypad, and the taps and
  * keys that make a move, which a hint's gesture shows. */
@@ -153,6 +203,7 @@ export function numberInput<
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
+  const glyphs = glyphsOf(module.play);
   const done =
     module.play === undefined
       ? null
@@ -233,7 +284,8 @@ export function numberInput<
         if (toggled !== null) return toggled;
       }
       if (!ui.cursor.visible) return null;
-      const n = button === CURSOR_SELECT2 || isEraseKey(button) ? 0 : digitOf(button);
+      const n =
+        button === CURSOR_SELECT2 || isEraseKey(button) ? 0 : glyphs.typed(button);
       if (n === null) return null;
       const { x, y } = ui.cursor;
       const c = y * b.w + x;
@@ -257,9 +309,15 @@ export function numberInput<
       const top = keypadTop(module, sp, p.sizes ?? {});
       // A board from another ID may hold a part larger than any the deal
       // divides (upstream Seismic's areas of six): its keypad reaches it.
-      return digitKeys(
-        board === undefined ? top : Math.max(top, topValue(module, sp, board.dealt)),
-      );
+      const n =
+        board === undefined ? top : Math.max(top, topValue(module, sp, board.dealt));
+      return [
+        ...Array.from({ length: n }, (_, i) => ({
+          button: glyphs.keyCode(i + 1),
+          label: glyphs.draw(i + 1),
+        })),
+        clearKey,
+      ];
     },
     gesture(b, fillUi, ds, move) {
       const ui = noteTaking(fillUi);
@@ -270,7 +328,7 @@ export function numberInput<
           move,
           ui,
           pointAt,
-          digitKeyCode,
+          glyphs.keyCode,
           undefined,
           markAll(module, b),
         );
@@ -283,7 +341,7 @@ export function numberInput<
         entries.push({
           x: c % b.w,
           y: Math.floor(c / b.w),
-          code: digitKeyCode(set[i + 1]),
+          code: glyphs.keyCode(set[i + 1]),
           pencil: false,
         });
       }

@@ -1,6 +1,6 @@
 ## Next
 
-2.2b, ABCD's letters, then 2.2c, 2.2e and the flip (2.2f). Open: Group's header drag,
+2.2c, ABCD's margin, then 2.2e and the flip (2.2f). Open: Group's header drag,
 dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
@@ -38,8 +38,7 @@ changed for a player" gets its line. In the order task 1.1 set.
       sub-task.
   - [x] 2.2a A number size and a clue one a value dealt, written and read,
         on the `counting` fixture.
-  - [ ] 2.2b Letters: values drawn, typed and said as letters from A,
-        digits their aliases (`play.numbers.letters`).
+  - [x] 2.2b Letters (`play.numbers.letters`), on the `counting` fixture.
   - [ ] 2.2c A clue one a value drawn in a margin as deep as the values,
         each heading a value, marked done, struck as a hint reads it, and
         in the text format.

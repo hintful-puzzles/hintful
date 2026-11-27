@@ -189,8 +189,8 @@ function drawTile<C extends Clues<C>>(
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;
   if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord });
-  else if (typed) paintNumeral(pal.COL_ENTRY, frame);
-  paintNotes(pal.COL_PENCIL, frame);
+  else if (typed) paintNumeral(pal.COL_ENTRY, cx.glyph, frame);
+  paintNotes(pal.COL_PENCIL, cx.glyph, frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);
   paintLinkHalves(frame);

@@ -21,7 +21,6 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../render/ring.ts"
 import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
 import { squaresOfEdge } from "../edge-target.ts";
 import { ASKED_EDGE, type AskedEdge, type FillLink, LINK } from "../marks.ts";
-import { numeral } from "../numbers.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import type { CellLayout } from "./cell-text.ts";
 import { numberText } from "./geometry.ts";
@@ -90,18 +89,18 @@ function cellText<C extends Clues<C>>(
   if (lay.f.threeD && v !== 0) {
     const face = topFace({ x: tile[0], y: tile[1], w: ts, h: ts }, v, lay.f.top);
     const t = numberText(ts, face.x, face.y);
-    return enclosing([textBox(t.origin, t.options, numeral(v))]);
+    return enclosing([textBox(t.origin, t.options, cx.glyph(v))]);
   }
   if (cx.typed && v !== 0) {
     const t = lay.valueText(ts, [x, y, h], walls, ...tile);
-    return enclosing([textBox(t.origin, t.options, numeral(v))]);
+    return enclosing([textBox(t.origin, t.options, cx.glyph(v))]);
   }
   const noted = notesIn(b.pencil?.[at] ?? 0);
   if (noted.length > 0)
     return enclosing(
       lay
         .noteSlots(ts, [x, y, h], walls, noted.length)
-        .map(({ origin, options }, j) => textBox(origin, options, numeral(noted[j]))),
+        .map(({ origin, options }, j) => textBox(origin, options, cx.glyph(noted[j]))),
     );
   const n = cx.numberAt(b, at);
   if (n === null) return avoid.length === 0 ? NOTHING_TO_CLEAR : enclosing([]);

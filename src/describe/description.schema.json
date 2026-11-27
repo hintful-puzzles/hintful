@@ -1244,6 +1244,10 @@
                 "raised": {
                   "const": true,
                   "description": "Each value is drawn as a block as tall as it, its top up and right of its square with the numeral on it (upstream towers.c's 3D towers, `engine/render/raised.ts`): a press on a top is its square's, and the player's appearance preference draws them flat. On a board with no gaps and no clues at parts."
+                },
+                "letters": {
+                  "const": true,
+                  "description": "Each value is drawn, said and typed as a letter from A, which either case types, and a digit types the letter at its place (ABCD's). Not raised."
                 }
               }
             },

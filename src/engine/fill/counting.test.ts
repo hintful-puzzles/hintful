@@ -13,6 +13,7 @@ import type { HintStep } from "../contract/game.ts";
 import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { randomNew } from "../random/index.ts";
 import { perPlace } from "../solve/describe-runtime.ts";
+import { renderScenario } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import type { FillHint } from "./hint.ts";
@@ -25,6 +26,8 @@ const dealt = (id: string, seed: string): Board => {
   const p = game.decodeParams(id);
   return game.newState(p, game.newDesc(p, randomNew(seed)).desc);
 };
+
+const code = (key: string): number => key.charCodeAt(0);
 
 /** How many of `d` the cells `cells` of `g` hold. */
 const holding = (g: ArrayLike<number>, cells: readonly number[], d: number) =>
@@ -103,6 +106,66 @@ describe("a clue one a value", () => {
   });
 });
 
+describe("values as letters", () => {
+  it("are keyed as letters from A", () => {
+    const keys = game.requestKeys?.(game.decodeParams("4x4k3")) ?? [];
+    expect(keys.map((k) => k.label)).toEqual(["A", "B", "C", "Clear"]);
+    expect(keys.slice(0, 3).map((k) => k.button)).toEqual(["A", "B", "C"].map(code));
+  });
+
+  it("are typed by either case of a letter, or by a digit for the letter at its place", () => {
+    const b = dealt("4x4k3", "w");
+    const ds = game.newDrawState(b, 32);
+    const typed = (key: string) => {
+      const ui = game.newUi(b);
+      ui.cursor.x = 2;
+      ui.cursor.y = 1;
+      ui.cursor.visible = true;
+      return game.interpretMove(b, ui, ds, { x: 0, y: 0 }, code(key));
+    };
+    for (const key of ["b", "B", "2"])
+      expect(typed(key)).toMatchObject({ type: "set", x: 2, y: 1, n: 2 });
+    // Past the board's letters, and past the alphabet's first `k`.
+    expect(typed("d")).toBeNull();
+    expect(typed("4")).toBeNull();
+  });
+
+  it("are drawn, noted and said as letters", () => {
+    const id = "4x4k3";
+    const b = dealt(id, "w");
+    const g = solveBoard(counting, b, 0).values;
+    const letter = String.fromCharCode(64 + g[0]);
+    const { recording } = renderScenario({
+      game,
+      id: `${id}:${game.newDesc(game.decodeParams(id), randomNew("w")).desc}`,
+      moves: [
+        { type: "set", x: 0, y: 0, n: g[0], pencil: false },
+        { type: "set", x: 1, y: 0, n: 1, pencil: true },
+        { type: "set", x: 1, y: 0, n: 3, pencil: true },
+      ],
+    });
+    const texts = recording.ops.flatMap((o) => (o.op === "text" ? [o.text] : []));
+    // The placed letter and the two notes; the clues beside the lines stay
+    // numbers.
+    expect(texts.filter((t) => /^[A-Z]$/.test(t)).sort()).toEqual(
+      [letter, "A", "C"].sort(),
+    );
+    expect(texts.filter((t) => /^[0-9]$/.test(t)).length).toBeGreaterThan(0);
+    // The hint names a letter by its glyph, a count by its digits.
+    const said = new Set<string>();
+    let at = b;
+    for (let k = 0; game.status(at) !== "solved" && k < 200; k++) {
+      const got = game.hint.plan(at, undefined, game.newUi(at));
+      if (!got.ok) throw new Error("no plan");
+      said.add(got.steps[0].explanation);
+      at = game.executeMove(at, got.steps[0].move);
+    }
+    const words = [...said].join("\n");
+    expect(words).toMatch(/must be [ABC]\b|can only be [ABC]\b/);
+    expect(words).not.toMatch(/must be [1-9]\b|can only be [1-9]\b/);
+  });
+});
+
 describe("the walk of notes on a board with no unit", () => {
   const plan = (
     b: Board,
@@ -142,7 +205,7 @@ describe("the walk of notes on a board with no unit", () => {
     const placed = game.executeMove(b, { type: "set", x: 1, y: 1, n, pencil: false });
     const steps = plan(placed, "populate");
     expect(steps.find((s) => s.rung === "clean")?.explanation).toBe(
-      "Now clear the easy ones: cross out any number already beside its square.",
+      "Now clear the easy ones: cross out any letter already beside its square.",
     );
   });
 });

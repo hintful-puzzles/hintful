@@ -133,8 +133,9 @@ export interface FillPlay {
    * typed into a selected cell (`numbers.ts`): such a board has no `values`
    * and no buttons. `raised`: each value drawn as a block as tall as it,
    * leaning up and right (`render/raised.ts`), or flat by the player's
-   * appearance preference. */
-  readonly numbers?: { readonly raised?: true };
+   * appearance preference. `letters`: each value drawn, said and typed as
+   * a letter from A, a digit typing the letter at its place. */
+  readonly numbers?: { readonly raised?: true; readonly letters?: true };
   /** Whether a board of numbers keeps the player's candidate notes, a set of
    * values an open cell (`notes.ts`): the description's mark of them. */
   readonly notes?: true;

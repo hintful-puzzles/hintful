@@ -137,6 +137,9 @@ export function playOf(
   // at a part's first square would be.
   if (p.numbers?.raised === true && (p.gaps !== undefined || p.signs !== undefined))
     throw new CompileError("play numbers: raised, on a board with gaps or part clues");
+  // A block as tall as its value is a number's.
+  if (p.numbers?.raised === true && p.numbers.letters === true)
+    throw new CompileError("play numbers: raised letters");
   if (p.links !== undefined && p.links !== env.cellMark?.name)
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,

@@ -75,7 +75,7 @@ import {
   tierOfBoard,
 } from "./hint.ts";
 import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
-import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
+import { glyphsOf, type NumberInput, numberInput, typedUi } from "./numbers.ts";
 import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
@@ -270,9 +270,12 @@ export function fillGame<C extends Clues<C> & object>(
               ([v, { glyph }]) => (glyph === undefined ? [] : [[Number(v), glyph]]),
             ),
           )
-        : // Every value a cell's domain mask can hold.
+        : // Every value a cell's domain mask can hold that has a glyph.
           Object.fromEntries(
-            Array.from({ length: 31 }, (_, i) => [i + 1, ` ${numeral(i + 1)} `]),
+            Array.from({ length: glyphsOf(play).top }, (_, i) => [
+              i + 1,
+              ` ${glyphsOf(play).draw(i + 1)} `,
+            ]),
           ),
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
