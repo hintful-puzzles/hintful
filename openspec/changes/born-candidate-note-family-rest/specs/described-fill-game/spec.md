@@ -517,3 +517,67 @@ square of the answer holding that value SHALL be drawn again.
 - **WHEN** a `5k3B` board shows every number, or is hidden from at its tier
 - **THEN** the first is refused, as its empty squares fall with no number
   placed, and a board hidden from is kept
+
+### Requirement: The hint walks a value a unit holds more than once
+
+On a board whose answer repeats a value in a unit, the candidate walk SHALL
+count a unit as holding every value where its cells' domains, with the
+repeated value's copies, are as many as its cells, so a value with one
+square left in a line is a hidden single there. The repeated value SHALL
+never be placed as a single, naked or hidden: the description's techniques
+place it.
+
+#### Scenario: The emptying fixture's walk
+
+- **WHEN** six `5k3B` boards are dealt and each hint plan is followed
+- **THEN** every board is solved, some step is a hidden single, and the
+  empty square is placed only by the description's techniques
+
+### Requirement: The cull of a value a unit holds more than once is said as the unit's last
+
+A placement of a value a unit holds more than once SHALL strike it from the
+unit's notes only where it is the last copy the unit needs, said in the
+words of the description's `steps.last` step, which the compiler requires of
+a description whose answer repeats a value. A set whose values include it
+SHALL say its cells account for every copy their line still needs.
+
+#### Scenario: The emptying fixture's last empty square
+
+- **WHEN** a `5k3B` board's plan places a line's last empty square while
+  another square of the line still notes it
+- **THEN** the next step strikes it there, in the `last` step's words
+
+### Requirement: A hint calls a value as the ruleset draws it
+
+Where the description's `words` does not name a value, the hint SHALL call
+it a letter on a board whose ruleset draws letters, and a number elsewhere.
+
+#### Scenario: The emptying fixture's two rulesets
+
+- **WHEN** a hint is asked on a `5k3S` board and on a `5k3B` board
+- **THEN** the first's opening speaks of every candidate letter, the
+  second's of every candidate number
+
+### Requirement: A ball's notes are drawn inside its ring
+
+A square drawn in a ball that holds notes SHALL draw them inside the ball's
+ring, clear of its stroke, and a hint's ring round them SHALL go round them
+where they are drawn. Squares without a ball keep their notes' size.
+
+#### Scenario: A given ball holding notes
+
+- **WHEN** a Number Ball board's notes are filled in
+- **THEN** a square whose clue is a ball shows its notes inside the ring, and
+  the other squares' notes are as large as before
+
+### Requirement: A born board's text prints its ball and its ruleset's clues alone
+
+The text format SHALL print an open square holding the clue kind
+`play.numbers.empty` names as `O`, and SHALL print no rim for slot clue kinds
+the board's ruleset does not deal.
+
+#### Scenario: A Number Ball board
+
+- **WHEN** `5n3Bde:d1cO32b3aXa1d2b` is printed as text
+- **THEN** its ball's square reads `O`, its cross `X`, and the grid has no
+  rim of border clues

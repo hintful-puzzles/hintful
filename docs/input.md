@@ -203,7 +203,7 @@ Backspace, Delete and Clear, never upstream's `'\b'` (8).
   `index.ts`.
 - **An arm of the game's own calls `isEraseKey` where it decides what the
   key means**, and passes the decision on, never the button. Exemplar:
-  `isClear` in [`salad/index.ts`](../src/games/salad/index.ts).
+  `interpretMove` in [`filling/index.ts`](../src/games/filling/index.ts).
 - **Do not `switch` on a button that may be an erase key.** A `case` cannot
   call a predicate, so a gate that calls `isEraseKey` in front of a `switch`
   with `case 8:` alone is dead at the last step. Where a `switch` is kept, it

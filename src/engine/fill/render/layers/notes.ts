@@ -7,7 +7,7 @@
 import { drawStrike } from "../../../render/draw.ts";
 import type { FillBoard } from "../../board.ts";
 import type { FillUi } from "../../play.ts";
-import { NOTES_MODE } from "../tile-word.ts";
+import { BALL, NOTES_MODE } from "../tile-word.ts";
 import type { TileFrame } from "./layer.ts";
 
 /** The values a note word holds, least first. */
@@ -30,12 +30,12 @@ export const noteKey = <C>(
 export function paintNotes(
   COL_PENCIL: number,
   glyph: (v: number) => string,
-  { dr, ts, at, tile, word, noteWord, part, struck, lay }: TileFrame,
+  { dr, ts, at, tile, word, lineWord, noteWord, part, struck, lay }: TileFrame,
 ): void {
   if ((word & 0xff) !== 0) return;
   const shown = notesIn(noteWord);
   lay
-    .noteSlots(ts, at, part?.walls ?? null, shown.length)
+    .noteSlots(ts, at, part?.walls ?? null, shown.length, (lineWord & BALL) !== 0)
     .forEach(({ origin, options }, j) => {
       dr.drawText(origin, options, COL_PENCIL, glyph(shown[j]));
       if (struck & (1 << shown[j]))

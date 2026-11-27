@@ -258,7 +258,7 @@ interface Side {
   deal: number[];
   steps: number;
   tries: number | null;
-  unsolved: number;
+  unsolved: readonly string[];
 }
 
 /** A line's comparison of one figure: the medians, and the change unless it
@@ -323,7 +323,7 @@ async function main(): Promise<void> {
         deal: [],
         steps: 0,
         tries: null,
-        unsolved: 0,
+        unsolved: [],
       },
       working: {
         walk: [],
@@ -331,7 +331,7 @@ async function main(): Promise<void> {
         deal: [],
         steps: 0,
         tries: null,
-        unsolved: 0,
+        unsolved: [],
       },
     };
     for (let r = 0; r < rounds; r++) {
@@ -350,7 +350,7 @@ async function main(): Promise<void> {
         side.deal.push(deal.instructions - none.instructions);
         side.steps = walk.out.steps ?? 0;
         side.tries = walk.out.tries ?? null;
-        side.unsolved = walk.out.unsolved?.length ?? 0;
+        side.unsolved = walk.out.unsolved ?? [];
       }
     }
     const { baseline: b, working: w } = sides;
@@ -362,10 +362,13 @@ async function main(): Promise<void> {
         `  walk cycles       ${compared(b.walkCycles, w.walkCycles)}`,
         `  deal instructions ${compared(b.deal, w.deal)}`,
         `  steps ${b.steps} / ${w.steps}, technique tries ${tries(b.tries)} / ${tries(w.tries)}` +
-          (b.unsolved + w.unsolved > 0
-            ? `, unsolved ${b.unsolved} / ${w.unsolved}`
+          (b.unsolved.length + w.unsolved.length > 0
+            ? `, unsolved ${b.unsolved.length} / ${w.unsolved.length}`
             : ""),
         ...[...refused].map(([id, why]) => `  refused ${id}: ${why}`),
+        // A walk left unsolved is a defect to open, so each is named.
+        ...b.unsolved.map((id) => `  unsolved in the baseline: ${id}`),
+        ...w.unsolved.map((id) => `  unsolved in the working tree: ${id}`),
       ].join("\n"),
     );
     console.error(lines.at(-1));

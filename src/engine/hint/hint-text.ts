@@ -442,7 +442,7 @@ export function latinPremise(
         return {
           premise: confinedPremise(reason.lines, reason.cells, marks[0].n, v, cell),
         };
-      const { look } = statedParts(LATIN_STATED.set.step[0], {
+      const { look } = statedParts(LATIN_STATED.set.step[reason.wording], {
         kind: CELL,
         at: (i): Point => ({ x: i % reason.w, y: (i / reason.w) | 0 }),
         ring: [],

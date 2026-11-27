@@ -4,7 +4,7 @@
  * a step of the walk to be named.
  */
 
-import { WALK_STEPS } from "../../engine/fill/walk-steps.ts";
+import { REPEAT_STEPS, WALK_STEPS } from "../../engine/fill/walk-steps.ts";
 import { CompileError, type Env } from "../compile-sorts.ts";
 import { concludes } from "../compile-technique.ts";
 import { type Description, type DescriptionJson, noteMarkOf } from "../description.ts";
@@ -107,7 +107,8 @@ function distinctPartsOf(json: DescriptionJson, env: Env): string[] {
  * of more than a row and a column, or of none (a board with no unit, whose
  * placements reach as far as its techniques strike, ABCD's neighbors), the
  * description words the walk's steps that say how far (`WALK_STEPS`), each
- * over the terms the walk supplies and the board's sizes.
+ * over the terms the walk supplies and the board's sizes; and where a unit
+ * holds a value more than once, the step its cull says (`REPEAT_STEPS`).
  */
 function checkWalkSteps(
   json: DescriptionJson,
@@ -117,35 +118,61 @@ function checkWalkSteps(
   // Every variation's units, as the compiled module lists them.
   const { units } = d.json.space;
   const lines = units.every((u) => u === "rows" || u === "cols" || u === "lines");
-  if (units.length > 0 && lines && distinctParts.length === 0) return;
   const sizes = Object.keys(json.sizes ?? {}).filter((s) => s !== "w" && s !== "h");
   // A variation the player switches on is a flag by its name: Solo's X adds
   // the diagonals to how far a placed value reaches.
   const flags = Object.entries(json.settings ?? {})
     .filter(([, s]) => s.gives === "variation")
     .map(([id]) => id);
-  for (const [id, supplied] of Object.entries(WALK_STEPS)) {
-    const step = d.steps.find((s) => s.id === id);
-    if (step === undefined)
+  const check = (
+    table: Readonly<Record<string, Readonly<Record<string, string>>>>,
+    why: string,
+    marks: readonly string[],
+  ): void => {
+    for (const [id, supplied] of Object.entries(table))
+      checkWalkStep(d, id, supplied, why, marks, sizes, flags);
+  };
+  if (units.length === 0 || !lines || distinctParts.length > 0)
+    check(WALK_STEPS, "the notes' reach is no row and column", []);
+  if (json.answer?.value?.repeat !== undefined)
+    check(REPEAT_STEPS, "a unit holds a value more than once", ["outline"]);
+}
+
+/** Holds the description's step `id` to the terms the walk `supplied` it
+ * beside the sizes and the variations' flags, and to the roles of `marks`,
+ * each of a cell, where it is required because `why`. */
+function checkWalkStep(
+  d: Description,
+  id: string,
+  supplied: Readonly<Record<string, string>>,
+  why: string,
+  marks: readonly string[],
+  sizes: readonly string[],
+  flags: readonly string[],
+): void {
+  const step = d.steps.find((s) => s.id === id);
+  if (step === undefined)
+    throw new CompileError(`steps: ${id} is unworded, and ${why}`);
+  if (step.ring !== "cell")
+    throw new CompileError(`steps ${id}: the walk rings a cell`);
+  for (const m of step.marks)
+    if (!marks.includes(m.role) || m.sort !== "cell")
       throw new CompileError(
-        `steps: ${id} is unworded, and the notes' reach is no row and column`,
+        `steps ${id}: the walk marks ${marks.length === 0 ? "nothing" : `a cell, as ${marks.join(", ")}`}`,
       );
-    if (step.ring !== "cell")
-      throw new CompileError(`steps ${id}: the walk rings a cell`);
-    for (const t of step.terms) {
-      const kind = Object.hasOwn(supplied, t.name)
-        ? (supplied as Readonly<Record<string, string>>)[t.name]
-        : sizes.includes(t.name)
-          ? "number"
-          : flags.includes(t.name)
-            ? "flag"
-            : null;
-      if (kind === null)
-        throw new CompileError(
-          `steps ${id}: the walk supplies no term ${t.name} (${[...Object.keys(supplied), ...sizes, ...flags].join(", ")})`,
-        );
-      if (t.kind !== kind)
-        throw new CompileError(`steps ${id}: term ${t.name} is a ${kind}`);
-    }
+  for (const t of step.terms) {
+    const kind = Object.hasOwn(supplied, t.name)
+      ? supplied[t.name]
+      : sizes.includes(t.name)
+        ? "number"
+        : flags.includes(t.name)
+          ? "flag"
+          : null;
+    if (kind === null)
+      throw new CompileError(
+        `steps ${id}: the walk supplies no term ${t.name} (${[...Object.keys(supplied), ...sizes, ...flags].join(", ")})`,
+      );
+    if (t.kind !== kind)
+      throw new CompileError(`steps ${id}: term ${t.name} is a ${kind}`);
   }
 }

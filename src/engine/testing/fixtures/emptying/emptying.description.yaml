@@ -194,3 +194,11 @@ techniques:
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   - { use: latin.set, tier: Normal, rung: set }
+# The cull of an empty square just placed, which clears a line once it has
+# all its empty squares.
+steps:
+  last:
+    ring: cell
+    terms: { n: number, axis: unit, both: flag }
+    marks: { outline: [cell] }
+    look: "{outline cell: The {n} just placed} fills {if both: its row's and its column's | its {axis}'s} empty squares"

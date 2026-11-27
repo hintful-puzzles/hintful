@@ -40,6 +40,7 @@ import {
 } from "./board.ts";
 import { cornerClueAt, signedText } from "./corners.ts";
 import type { Edit } from "./edit.ts";
+import { BALL_GLYPH } from "./glyphs.ts";
 import type { FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
@@ -72,6 +73,9 @@ export interface AnswerReading<C> {
   readonly lineLists?: readonly (keyof C)[];
   /** The clue kinds at slots, printed in a rim round the grid. */
   readonly slotClues?: readonly (keyof C)[];
+  /** The clue kinds `board`'s ruleset does not deal, which print no rim
+   * (Salad's border on a Numbers board). */
+  readonly off?: (board: FillBoard<C>) => ReadonlySet<string>;
   /** The clue kinds at lines one a value, printed before each line's start
    * a value a column, and the values a board's margin heads. */
   readonly valueMargins?: {
@@ -81,6 +85,9 @@ export interface AnswerReading<C> {
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
   readonly numbers?: readonly (keyof C)[];
+  /** The clue kind that is the empty square's ball (`play.numbers.empty`),
+   * printed on an open cell as the ball's letter. */
+  readonly ball?: keyof C;
   /** Where the board has gaps between its cells (`play.gaps`), the clue in
    * the one between cells `a` and `z` as one character, a space for none:
    * printed in place of the wall between them. */
@@ -435,7 +442,8 @@ function withSlotClues<C extends Clues<C>>(
   board: FillBoard<C>,
   grid: string,
 ): string {
-  const kinds = reading.slotClues ?? [];
+  const off = reading.off?.(board) ?? new Set();
+  const kinds = (reading.slotClues ?? []).filter((k) => !off.has(String(k)));
   if (kinds.length === 0) return grid;
   const { w, h } = board;
   const glyphs = reading.glyphs(board);
@@ -630,6 +638,9 @@ function gridFormat<C extends Clues<C>>(
         return g?.[1] === " " && n < 10 ? `${g[0]}${n}${g[2]}` : ` ${n} `;
       }
       const v = values[y * w + x];
+      if (v === 0 && reading.ball !== undefined)
+        if (listOf(dealt, reading.ball).valueAt[y * w + x] >= 0)
+          return ` ${BALL_GLYPH} `;
       return v === 0 ? " . " : (glyphs[v] ?? " ? ");
     },
   });

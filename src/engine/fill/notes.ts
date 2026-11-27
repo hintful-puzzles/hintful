@@ -114,21 +114,26 @@ function encodingOf<C>(
  * placing strike it from where every cell could hold anything (a `zoning`
  * area and its neighbors). A value a unit holds more than once (Salad's
  * empty square) is struck from the rest of a unit only once the unit holds
- * every copy, the board's copies counted. The one reach auto-pencil,
- * Mark-all's clean and the candidate walk (`candidates.ts`) read; asked once
- * a cell and value. */
-export function reachOf<C>(module: LadderedFillModule<C>, board: FillBoard<C>): Reach {
+ * every copy, the copies `values` holds counted: the board's, or the
+ * working grid of a walk that places them as it goes. The one reach
+ * auto-pencil, Mark-all's clean and the candidate walk (`candidates.ts`)
+ * read; asked once a cell and value, but for that value. */
+export function reachOf<C>(
+  module: LadderedFillModule<C>,
+  board: FillBoard<C>,
+  values: ArrayLike<number> = board.values,
+): Reach {
   const sp = spaceOf(module, board);
   const { placing } = ladderOf(module, board);
   const repeat = module.repeatOf?.(sp, board.dealt) ?? null;
   const reached = new Map<number, readonly number[]>();
   return (c, n) => {
-    const key = c * 32 + n;
-    const known = reached.get(key);
-    if (known !== undefined) return known;
     const repeats = n === repeat?.value;
-    const grid = new Uint8Array(board.values.length);
-    if (repeats) for (const p of sp.cells) if (board.values[p] === n) grid[p] = n;
+    const key = c * 32 + n;
+    const known = repeats ? undefined : reached.get(key);
+    if (known !== undefined) return known;
+    const grid = new Uint8Array(values.length);
+    if (repeats) for (const p of sp.cells) if (values[p] === n) grid[p] = n;
     grid[c] = n;
     const m = new CellMarks(sp, ~0, grid, repeat);
     m.cands.fill(~0);

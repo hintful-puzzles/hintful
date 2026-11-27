@@ -24,10 +24,12 @@ import { ASKED_EDGE, type AskedEdge, type FillLink, LINK } from "../marks.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import type { CellLayout } from "./cell-text.ts";
 import { numberText } from "./geometry.ts";
+import { ballsOf, emptyIn } from "./layers/empty.ts";
 import { notesIn } from "./layers/notes.ts";
 import { labelsOf } from "./layers/part-clues.ts";
 import type { FillSetup } from "./setup.ts";
 import {
+  BALL,
   BLOCK_SHIFT,
   dirTo,
   HINT_LINE,
@@ -100,7 +102,13 @@ function cellText<C extends Clues<C>>(
   if (noted.length > 0)
     return enclosing(
       lay
-        .noteSlots(ts, [x, y, h], walls, noted.length)
+        .noteSlots(
+          ts,
+          [x, y, h],
+          walls,
+          noted.length,
+          (ballsOf(cx, b, emptyIn(cx, b))[at] & BALL) !== 0,
+        )
         .map(({ origin, options }, j) => textBox(origin, options, glyph(noted[j]))),
     );
   const n = cx.numberAt(b, at);

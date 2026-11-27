@@ -380,7 +380,6 @@ export class CandidateWalk<
     const grid = this.plan.grid.slice();
     const pencil = this.plan.pencil.slice();
     const graph = new FactGraph();
-    const asBegun = this.plan.ownState?.save() ?? null;
     const marks = this.marksShown(grid, pencil);
     marks.graph = graph;
     const walked: TracedFiring[] = [];
@@ -435,8 +434,7 @@ export class CandidateWalk<
             entry: {
               id,
               run: {
-                firings:
-                  r === undefined ? offersNone : this.offerOf(r, folded, asBegun),
+                firings: r === undefined ? offersNone : this.offerOf(r, folded),
               },
             },
           },
@@ -451,22 +449,19 @@ export class CandidateWalk<
   /**
    * What rung `r` of the ladder offers on a replay's marks `m`, each firing
    * as its facts. The walk's board and notes are set to `m` while the rung is
-   * asked, and the game's own state to `asBegun`'s; all are put back after. A
+   * asked, and put back after. A
    * strike that leaves one of `folded` a single value places it, as the
    * walked firing's fold did.
    */
   private offerOf(
     r: number,
     folded: readonly number[],
-    asBegun: (() => void) | null,
   ): (m: CellMarks) => LadderFiring[] {
     return (m) => {
       const { grid, pencil } = this.plan;
       const was = { grid: grid.slice(), pencil: pencil.slice(), shown: this.shown };
-      const own = this.plan.ownState?.save() ?? null;
       const values = this.valuesIn(~0);
       try {
-        asBegun?.();
         for (let i = 0; i < grid.length; i++) {
           grid[i] = m.grid[i];
           let notes = 0;
@@ -498,7 +493,6 @@ export class CandidateWalk<
       } finally {
         grid.set(was.grid);
         pencil.set(was.pencil);
-        own?.();
         this.shown = was.shown;
         this.replaying = false;
       }
@@ -566,7 +560,9 @@ export class CandidateWalk<
   private singles(): Firing<M, H, Reason>[] {
     const { plan } = this;
     const notes = this.implicit ? this.shown : plan.pencil;
-    const marks = plan.singles?.() ?? nakedSingles(plan.grid, notes, plan.w, plan.enc);
+    const marks = nakedSingles(plan.grid, notes, plan.w, plan.enc).filter(
+      (m) => plan.placeable?.(m) ?? true,
+    );
     const out = marks.map((m) =>
       this.single(m, {
         kind: plan.pencil[m.y * plan.w + m.x] === 0 ? "regionsFull" : "naked",
@@ -624,13 +620,6 @@ export class CandidateWalk<
    * available before it was.
    */
   private single(m: Mark, why: SingleWhy<WholeRegion<Reg>>): Firing<M, H, Reason> {
-    // A plan with a setup of its own types its steps without this rung
-    // (`OwnSetUp`). Under the populate reading the walk reads no single in a
-    // cell with no notes, so only a game's own `singles` can name one.
-    if (why.kind === "regionsFull" && this.plan.setUp)
-      throw new Error(
-        `${this.plan.label}: a single in a cell with no notes, on a plan that sets its own notes up`,
-      );
     const f = this.placing(m, this.plan.singleReason(m.n, why));
     const { grid, pencil, w } = this.plan;
     const i = m.y * w + m.x;
@@ -1018,7 +1007,6 @@ export class CandidateWalk<
     const { grid, pencil, w } = plan;
     grid[y * w + x] = n;
     pencil[y * w + x] = 0;
-    plan.onPlace?.(x, y, n);
     const dup = regionDuplicateMarks(
       grid,
       pencil,

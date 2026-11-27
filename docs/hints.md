@@ -885,8 +885,8 @@ On the candidate walk the game writes no stamp
 - **A plan with a `setUp` of its own is on the populate reading alone and
   says so in its types**: `runLatinCandidatePlan<…, "populate">`, steps of
   `PlanRung<Reason, "populate">`, a reason union of
-  `SingleReasonUnder<"populate">`, and a list that spreads
-  `LATIN_POPULATE_RUNGS`. The argument does not compile without a `setUp`,
+  `SingleReasonUnder<"populate">`, and a rung list without `note` and
+  `regionsFull`. The argument does not compile without a `setUp`,
   and a plan on both readings does not compile with one. The walk throws
   before it reads a single with no notes on such a plan.
 - **A candidate game's pin scan gives `ui` a rule that splits its boards
@@ -1316,11 +1316,10 @@ formula scanned, so it is the narrow read the ladder walks lack; leaving
 every earlier firing a candidate instead named fewer starts and some wrong
 ones, since a replay of every firing asks each for all its facts, those the
 move does not need included. The replay asks the firing's rung again with
-the walk's board and notes set to the replay's marks, and a game's own state
-beside them (`ownState`, Salad's holes) as the walk began. The setup is no firing
+the walk's board and notes set to the replay's marks. The setup is no firing
 it replays: the obvious clean is made before each one (`Traced.between`,
 which only the plan uses). A step of
-the game's own (Salad's markers) makes no fact, so a firing that rests on
+the game's own makes no fact, so a firing that rests on
 one is not offered again and its chain names no start. Test:
 `move-judge.test.ts`, "names a notes game's start".
 

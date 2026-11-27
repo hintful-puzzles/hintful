@@ -9,6 +9,8 @@ import type { DrawTextOptions, Point } from "../../contract/types.ts";
 import { type NoteSlot, noteGrid } from "../../mechanics/note-taking-cell.ts";
 import { glyphFont } from "../../render/draw.ts";
 import { type MarkBand, ringTextBox, ringThickness } from "../../render/hint-mark.ts";
+import { surfaceOf } from "../../render/pieces/painter.ts";
+import { ringInterior } from "../../render/pieces/stock.ts";
 import { clearOfRises } from "../../render/raised.ts";
 import { ringFits, textBox } from "../../render/ring.ts";
 import { type Layout, numberText } from "./geometry.ts";
@@ -107,12 +109,17 @@ export function cellLayoutOf(
 
   /** Where `count` notes go in cell `(x, y)`, in order: the box a hint's
    * ring goes round, so it encloses them all, below a clue's line on a board
-   * of clues at parts. */
+   * of clues at parts. In a cell holding a ball (`ringed`, Salad's), inside
+   * the ball's ring, as upstream salad.c fits them: smaller than the other
+   * cells' notes, against `noteGrid`'s one size a board, since a ball is a
+   * mark the player makes and the rule kept would shrink every note on the
+   * board to its size. */
   const noteSlots = (
     ts: number,
     at: readonly [number, number, number],
     walls: number | null,
     count: number,
+    ringed = false,
   ): NoteSlot[] => {
     const band = markBand(ts, at, walls);
     // In 3D, clear of where the tallest value next door reaches in.
@@ -120,7 +127,9 @@ export function cellLayoutOf(
       ? belowClue(ts, at, walls)
       : threeD
         ? ringTextBox(band, { within: clearOfRises(band.box, top) })
-        : ringTextBox(band);
+        : ringed
+          ? ringTextBox(band, { within: ringInterior(surfaceOf(band.box)) })
+          : ringTextBox(band);
     return noteGrid(area, count);
   };
 

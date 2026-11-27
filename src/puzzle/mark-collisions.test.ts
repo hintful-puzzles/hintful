@@ -21,7 +21,6 @@ import * as ballsort from "../games/ballsort/render.ts";
 import * as dominosa from "../games/dominosa/render.ts";
 import * as galaxies from "../games/galaxies/render.ts";
 import * as path from "../games/path/render.ts";
-import * as salad from "../games/salad/render.ts";
 import * as untangle from "../games/untangle/render.ts";
 import * as wordtrail from "../games/wordtrail/render.ts";
 import * as boats from "../generated/games/boats/boats.compiled.ts";
@@ -103,13 +102,6 @@ const DECLARED: Record<string, Declared[]> = {
     {
       among: [path.COL_TEXT, ...family(path.COL_PAIR_TEXT, path.PAIRS)],
       why: "one number, in ink on an open disc or on a pale filled one, whose color says which pair it is",
-    },
-  ],
-  salad: [
-    {
-      among: [salad.COL_BORDERCLUE],
-      against: [salad.COL_I_NUM],
-      why: "a letter, as a clue outside the grid and as a given inside it: the clue's place says it is one",
     },
   ],
   sticks: [

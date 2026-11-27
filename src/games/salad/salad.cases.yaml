@@ -1,0 +1,241 @@
+# Salad's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): its IDs read and written back, its
+# params, the rules broken, its keys, and a position for every rung its hint
+# takes in each ruleset.
+
+tiers:
+  absent: []
+  # The first Letters size that may show a symbol on the grid at Normal, the
+  # Easy size rare enough to have set the border-only bound, and a 4x4 of
+  # three letters at Normal, whose boards need a wing.
+  dealt: [8n2Ldx, 7n2Lde, 4n3Ldx]
+
+ids:
+  # Boards the hand-written game dealt, read and written back: four letters
+  # on the border alone, and Number Ball's digits, ball and cross.
+  - {id: "4n3Lde:CaCbAfBaAa,p", writesBack: true}
+  - {id: "5n3Bde:d1cO32b3aXa1d2b", writesBack: true}
+  # A clue too many, a stray character, a letter past the symbols, a blank
+  # run past the border or the grid, the border cut short, a section left
+  # out, a digit or a ball where only letters go, and the separator replaced.
+  - {id: "4n3Lde:CaCbAfBaAaA,p", refused: "This game ID has \"A\" where it can't have one."}
+  - {id: "4n3Lde:C!aCbAfBaAa,p", refused: "This game ID has \"!\" where it can't have one."}
+  - {id: "4n3Lde:IaCbAfBaAa,p", refused: "This game ID has \"I\" where it can't have one."}
+  - {id: "4n3Lde:CaCbAfBaAb,p", refused: DESC_TOO_LONG}
+  - {id: "4n3Lde:CaCbAfBaAa,q", refused: DESC_TOO_LONG}
+  - {id: "4n3Lde:CaCbAfBa,p", refused: "This game ID has \",\" where it can't have one."}
+  - {id: "4n3Lde:CaCbAfBa", refused: DESC_TOO_SHORT}
+  - {id: "4n3Lde:CaCbAfBaAa,", refused: DESC_TOO_SHORT}
+  - {id: "4n3Lde:3aCbAfBaAa,p", refused: "This game ID has \"3\" where it can't have one."}
+  - {id: "4n3Lde:CaCbAfBaAa,Oo", refused: "This game ID has \"O\" where it can't have one."}
+  - {id: "4n3Lde:CaCbAfBaAa;p", refused: "This game ID has \";\" where it can't have one."}
+  # The same of Number Ball's: a square too many, a stray character, a digit
+  # past the symbols, the grid cut short or run past it, a letter for a
+  # digit.
+  - {id: "5n3Bde:d1cO32b3aXa1d2bX", refused: DESC_TOO_LONG}
+  - {id: "5n3Bde:d1cO32b3aXa1d2!", refused: "This game ID has \"!\" where it can't have one."}
+  - {id: "5n3Bde:d9", refused: "This game ID has \"9\" where it can't have one."}
+  - {id: "5n3Bde:d1cO32b3aXa1d", refused: DESC_TOO_SHORT}
+  - {id: "5n3Bde:d1cO32b3aXa1d2c", refused: DESC_TOO_LONG}
+  - {id: "5n3Bde:", refused: DESC_TOO_SHORT}
+  - {id: "5n3Bde:dAcO32b3aXa1d2b", refused: "This game ID has \"A\" where it can't have one."}
+  # A board with no clue at all, which no deduction finishes.
+  - {id: "5n3Bde:y", refused: "This game ID's puzzle needs trial and error, and only puzzles that deduction alone solves can be played here."}
+
+params:
+  # The size, the symbols, the ruleset's letter and the tier; the brief form
+  # drops the tier. A size alone is Letters at Easy.
+  - {read: "4n3Lde", full: "4n3Lde", brief: "4n3L", label: "Letters: 4x4 Easy, 3 symbols"}
+  - {read: "8n5Bdx", full: "8n5Bdx", brief: "8n5B", label: "Numbers: 8x8 Normal, 5 symbols"}
+  - {read: "5n3", full: "5n3Lde"}
+  - {read: "5n1L", refused: "Symbols must be at least 2."}
+  - {read: "5n5L", refused: "Symbols must be less than the grid size."}
+  - {read: "2n2L", refused: "Grid size must be at least 3."}
+  - {read: "11n10L", refused: "Grid size must be at most 10."}
+  - {read: "3n2L", refused: false}
+  - {read: "5n3Xde", refused: "The parameters 5n3Xde have a \"X\" where this puzzle reads none."}
+  # Two symbols at Normal: a Letters board clued on its border alone, and
+  # the smallest Numbers boards, have none.
+  - {read: "3n2Ldx", refused: "No 3x3 Letters puzzle with 2 symbols is Normal."}
+  - {read: "6n2Ldx", refused: "No 6x6 Letters puzzle with 2 symbols is Normal."}
+  - {read: "8n2Ldx", refused: false}
+  - {read: "3n2Bdx", refused: "No 3x3 Numbers puzzle with 2 symbols is Normal."}
+  - {read: "4n2Bdx", refused: "No 4x4 Numbers puzzle with 2 symbols is Normal."}
+  - {read: "5n2Bdx", refused: false}
+
+positions:
+  - id: "4n3Lde:CaCbAfBaAa,p"
+    solve: true
+    status: solved
+  - id: "5n3Bde:d1cO32b3aXa1d2b"
+    solve: true
+    status: solved
+  # The border clues round the grid, each on its side, the bottom's row
+  # blank.
+  - id: "4n3Lde:CaCbAfBaAa,p"
+    text: |2+
+          C       C
+        +---+---+---+---+
+        | . | . | . | . | B
+        +---+---+---+---+
+      A | . | . | . | . |
+        +---+---+---+---+
+        | . | . | . | . | A
+        +---+---+---+---+
+        | . | . | . | . |
+        +---+---+---+---+
+
+  # Number Ball's digits, its cross and its ball, the ball's letter O.
+  - id: "5n3Bde:d1cO32b3aXa1d2b"
+    text: |
+      +---+---+---+---+---+
+      | . | . | . | . | 1 |
+      +---+---+---+---+---+
+      | . | . | . | O | 3 |
+      +---+---+---+---+---+
+      | 2 | . | . | 3 | . |
+      +---+---+---+---+---+
+      | X | . | 1 | . | . |
+      +---+---+---+---+---+
+      | . | . | 2 | . | . |
+      +---+---+---+---+---+
+  # A border clue its line's first symbol disagrees with: the C above the
+  # first column sees a B.
+  - id: "4n3Lde:CaCbAfBaAa,p"
+    moves: [{set: [0, 2]}]
+    breaks: [clue.border]
+  # Two empty squares in a row of four that has room for one.
+  - id: "4n3Lde:CaCbAfBaAa,p"
+    moves: [{set: [1, 4]}, {set: [2, 4]}]
+    breaks: [shape.0]
+  # A ball's square left empty.
+  - id: "5n3Bde:d1cO32b3aXa1d2b"
+    moves: [{set: [8, 4]}]
+    breaks: [clue.ball]
+
+input:
+  # A letter typed by its letter or its digit, the empty square by X, and
+  # each cleared by Backspace, on the square the cursor moves to.
+  - id: "4n3Lde:CaCbAfBaAa,p"
+    events:
+      - {key: down}
+      - {key: "b", holds: {values.4: 2}}
+      - {key: "3", holds: {values.4: 3}}
+      - {key: "x", holds: {values.4: 4}}
+      - {key: "\b", holds: {values.4: 0}}
+  # Number Ball's digits, typed by digit or by letter.
+  - id: "5n3Bde:d1cO32b3aXa1d2b"
+    events:
+      - {key: down}
+      - {key: "2", holds: {values.5: 2}}
+      - {key: "c", holds: {values.5: 3}}
+      - {key: "X", holds: {values.5: 4}}
+      - {key: "\b", holds: {values.5: 0}}
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0, sizes: {n: 3, mode: 0}}
+    - {w: 5, h: 5, diff: 1, sizes: {n: 3, mode: 0}}
+    - {w: 6, h: 6, diff: 1, sizes: {n: 4, mode: 0}}
+    - {w: 5, h: 5, diff: 0, sizes: {n: 3, mode: 1}}
+    - {w: 5, h: 5, diff: 1, sizes: {n: 4, mode: 1}}
+  unreached:
+    note: >-
+      spoken under the reading that pencils in only as needed, and Salad's hint starts on the one that pencils every candidate in first (play.hintNotes)
+    regionsFull: >-
+      spoken under the reading that pencils in only as needed: where every candidate is penciled in first, a square every other symbol is ruled out of is a single
+  pins:
+    # Held on 60 of 3332 positions walked.
+    populate: "4n3Lde:cACaAbBCe,p"
+    # Held on 749 of 3332 positions walked.
+    clean:
+      id: "5n3Bde:aO3bO1bOe1b2Ob2Xa"
+      moves:
+        - {type: pencilAll}
+    # Held on 2867 of 3332 positions walked.
+    dup: "4n3Lde:cACaAbBCe,p"
+    # Held on 2591 of 3332 positions walked.
+    single:
+      id: "5n3Bde:2a1bX3aXaXfXc1aXa"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 2}, {x: 1, y: 0, n: 3}, {x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 4}, {x: 4, y: 0, n: 1}, {x: 4, y: 0, n: 2}, {x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}, {x: 4, y: 1, n: 3}, {x: 4, y: 1, n: 4}, {x: 1, y: 2, n: 1}, {x: 1, y: 2, n: 3}, {x: 2, y: 2, n: 1}, {x: 3, y: 2, n: 4}, {x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 4}, {x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 3}, {x: 3, y: 3, n: 4}, {x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 4}, {x: 2, y: 4, n: 1}, {x: 4, y: 4, n: 1}]}
+    # Held on 3011 of 3332 positions walked.
+    hiddenSingle:
+      id: "5n4Bdx:1a2f3O1a3d4bXc"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 2}, {x: 1, y: 0, n: 5}, {x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 4}, {x: 4, y: 0, n: 1}, {x: 4, y: 0, n: 2}, {x: 4, y: 0, n: 3}, {x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 3}, {x: 1, y: 1, n: 1}, {x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 5}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}, {x: 0, y: 2, n: 1}, {x: 0, y: 2, n: 3}, {x: 2, y: 2, n: 1}, {x: 2, y: 2, n: 2}, {x: 2, y: 2, n: 3}, {x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 3}, {x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 4}, {x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 4}, {x: 1, y: 3, n: 5}, {x: 2, y: 3, n: 2}, {x: 2, y: 3, n: 4}, {x: 4, y: 3, n: 3}, {x: 4, y: 3, n: 4}, {x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 5}, {x: 2, y: 4, n: 2}, {x: 2, y: 4, n: 5}, {x: 3, y: 4, n: 3}, {x: 3, y: 4, n: 4}, {x: 3, y: 4, n: 5}, {x: 4, y: 4, n: 3}, {x: 4, y: 4, n: 5}]}
+    # Held on 1350 of 3332 positions walked.
+    set:
+      id: "5n4Bdx:bOb3b4c4Xb4b1a2Ob"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 3}, {x: 1, y: 0, n: 2}, {x: 1, y: 0, n: 4}, {x: 2, y: 0, n: 4}, {x: 3, y: 0, n: 4}, {x: 3, y: 0, n: 5}, {x: 4, y: 0, n: 1}, {x: 1, y: 1, n: 2}, {x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 4}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}, {x: 4, y: 1, n: 1}, {x: 4, y: 1, n: 3}, {x: 4, y: 1, n: 4}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 4}, {x: 0, y: 2, n: 5}, {x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 4}, {x: 1, y: 2, n: 5}, {x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 4}, {x: 4, y: 2, n: 5}, {x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 3}, {x: 0, y: 3, n: 4}, {x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 4}, {x: 3, y: 3, n: 1}, {x: 3, y: 3, n: 4}, {x: 3, y: 3, n: 5}, {x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 2, y: 4, n: 2}, {x: 2, y: 4, n: 4}, {x: 3, y: 4, n: 2}, {x: 3, y: 4, n: 4}, {x: 3, y: 4, n: 5}, {x: 4, y: 4, n: 1}, {x: 4, y: 4, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 4, n: 5}]}
+    # Held on 179 of 3332 positions walked.
+    wing:
+      id: "5n4Bdx:a1c4c2b3XcObXa2a1"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 4}, {x: 0, y: 0, n: 5}, {x: 2, y: 0, n: 1}, {x: 2, y: 0, n: 2}, {x: 2, y: 0, n: 3}, {x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 5}, {x: 4, y: 0, n: 1}, {x: 4, y: 0, n: 2}, {x: 1, y: 1, n: 1}, {x: 1, y: 1, n: 2}, {x: 1, y: 1, n: 4}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}, {x: 3, y: 1, n: 2}, {x: 3, y: 1, n: 4}, {x: 3, y: 1, n: 5}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 4}, {x: 0, y: 2, n: 5}, {x: 1, y: 2, n: 1}, {x: 1, y: 2, n: 3}, {x: 1, y: 2, n: 5}, {x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 2}, {x: 4, y: 2, n: 3}, {x: 4, y: 2, n: 5}, {x: 0, y: 3, n: 4}, {x: 0, y: 3, n: 5}, {x: 1, y: 3, n: 1}, {x: 2, y: 3, n: 2}, {x: 2, y: 3, n: 3}, {x: 3, y: 3, n: 5}, {x: 4, y: 3, n: 1}, {x: 4, y: 3, n: 2}, {x: 1, y: 4, n: 1}, {x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 5}, {x: 3, y: 4, n: 1}, {x: 3, y: 4, n: 2}, {x: 3, y: 4, n: 5}]}
+        - {type: set, x: 4, y: 2, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 4, y: 0, n: 4}, {x: 1, y: 2, n: 4}, {x: 4, y: 3, n: 4}]}
+        - {type: set, x: 1, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 2}, {x: 1, y: 3, n: 2}]}
+        - {type: set, x: 0, y: 2, n: 1, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 3}, {x: 3, y: 0, n: 3}, {x: 3, y: 3, n: 3}]}
+    # Held on 1653 of 3332 positions walked.
+    borderNear:
+      id: "4n3Lde:cACaAbBCe,p"
+      moves:
+        - {type: pencilAll}
+    # Held on 1684 of 3332 positions walked.
+    borderFar:
+      id: "4n3Lde:dCcCeAa,p"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 3}]}
+    # Held on 235 of 3332 positions walked.
+    ball:
+      id: "5n3Bde:aO3bO1bOe1b2Ob2Xa"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 3}, {x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 3}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 4, y: 0, n: 3}, {x: 0, y: 1, n: 1}, {x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 3, y: 1, n: 1}, {x: 3, y: 1, n: 2}, {x: 4, y: 1, n: 1}, {x: 0, y: 2, n: 1}, {x: 1, y: 2, n: 1}, {x: 2, y: 2, n: 2}, {x: 2, y: 2, n: 3}, {x: 3, y: 2, n: 2}, {x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 2}, {x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 2}, {x: 2, y: 3, n: 3}, {x: 4, y: 3, n: 1}, {x: 4, y: 3, n: 2}, {x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 2}, {x: 1, y: 4, n: 1}, {x: 1, y: 4, n: 2}, {x: 4, y: 4, n: 2}]}
+    # Held on 3332 of 3332 positions walked.
+    emptyLine:
+      id: "5n3Bde:bXa1a3a2dOaXcX2d"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 2}, {x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 3}, {x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 2}, {x: 0, y: 1, n: 2}, {x: 0, y: 1, n: 3}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 4, y: 1, n: 1}, {x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 3}, {x: 0, y: 2, n: 2}, {x: 1, y: 2, n: 3}, {x: 3, y: 2, n: 2}, {x: 4, y: 2, n: 1}, {x: 1, y: 3, n: 3}, {x: 1, y: 3, n: 4}, {x: 2, y: 3, n: 4}, {x: 3, y: 3, n: 2}, {x: 3, y: 3, n: 4}, {x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 3}, {x: 2, y: 4, n: 2}, {x: 3, y: 4, n: 2}, {x: 4, y: 4, n: 1}, {x: 4, y: 4, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 4}]}
+    # Held on 1400 of 3332 positions walked.
+    emptySquare:
+      id: "5n3Ldx:BBbBfCfBC,y"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 4, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 4, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 4, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 4, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 2}, {x: 0, y: 4, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 4, n: 3}, {x: 0, y: 4, n: 3}]}

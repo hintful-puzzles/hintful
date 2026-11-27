@@ -1,0 +1,11 @@
+ok  salad n=2 mode=0 borderNear                     3  sound    (want sound   )    12 queries    0.1s
+ok  salad n=2 mode=0 borderNear (planted)           3  unsound  (want unsound )     1 queries    0.0s   at clue border 0
+ok  salad n=2 mode=1 borderNear                     3  sound    (want sound   )    12 queries    0.1s
+ok  src/games/salad/salad.description.yaml#borderNear: recorded sound, proved whole on all 2 boards
+ok  salad n=2 mode=0 borderFar                      3  sound    (want sound   )    12 queries    0.1s
+ok  salad n=2 mode=0 borderFar (planted)            3  unsound  (want unsound )     1 queries    0.0s   at clue border 0
+ok  salad n=2 mode=1 borderFar                      3  sound    (want sound   )    12 queries    0.1s
+ok  src/games/salad/salad.description.yaml#borderFar: recorded sound, proved whole on all 2 boards
+ok  salad      ball                           current: recorded src/games/salad/salad.description.yaml#ball de956b872dafc38f
+ok  salad      emptyLine                      current: recorded src/games/salad/salad.description.yaml#emptyLine c8293c5405349b90
+ok  salad      emptySquare                    current: recorded src/games/salad/salad.description.yaml#emptySquare 402d13571d66366d

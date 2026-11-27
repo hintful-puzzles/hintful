@@ -234,6 +234,28 @@ to the engine is in its commit.
   one step, "so the As must go"; the opening says "candidate letter".
   Against the hand-written game (`compare-cost --quick`, 11 boards): the
   same 618 steps, the walk 17% dearer in instructions, the deal 5%.
+- **Salad** (2.3f): saves break (pre-approved); IDs read and write back as
+  before, and every board the hand-written game dealt is finished by the
+  born hint. The cross is the engine's, half a square wide, where upstream's
+  spans the square; a ball is an unfilled ring, a given one in ink, a
+  player's in the entry color; a placed number has no ball round it. A ball
+  is a note, the empty square struck from the square's notes, so Undo,
+  Clear and the mistake check treat it as one; `O` on a square holding a
+  value types nothing, where upstream empties the square into a ball. A
+  ball's notes sit inside its ring, as upstream fits them, smaller than the
+  other squares' (against `noteGrid`'s one size a board: kept, it would
+  shrink every note on the board to the ring's). A label reads "Letters: 5x5
+  Easy, 3 symbols" for "Letters: 5x5 A~C Easy", and the status bar no
+  longer shows the range of symbols, as no born game's does. The copied
+  text prints a ball as `O`, and a Numbers board prints no border rim. The
+  hint's words are the description's: the border clue in two arms (what is
+  nearest it, and how far in its letter can sit), a line's empty squares
+  and a square every symbol is ruled out of placing the empty square, a
+  given ball striking its X, and a placed X that fills its line said as its
+  line's last; the hint no longer marks a square as holding a symbol, which
+  its notes say. Against the hand-written game (`compare-cost --quick`, 15
+  boards): 1141 steps for 996, the walk 31% dearer in instructions, the
+  deal 2.5 times (10.0 G instructions for 15 deals, some 50 ms each).
 
 ## Open Questions
 

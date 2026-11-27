@@ -1,7 +1,6 @@
 ## Next
 
-Salad (2.3): 2.3f, the flip, on the draft as 2.3e left it (its deal
-deals every menu board at its tiers, 2026-11-27).
+3.1, the family's figures, with 3.4 beside it; Salad flipped (2.3f).
 Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
@@ -33,15 +32,9 @@ changed for a player" gets its line. In the order task 1.1 set.
 - [x] 2.2 ABCD born: e9a8e85bb, d67aebdd0, ddad4fa63, 0da94ca05; the
       flip, the commit that ticks 2.2 (design.md § "What each flip changed
       for a player").
-- [ ] 2.3 Salad born: a ruleset that chooses kinds and segments, the
-      folded Latin square, the empty value and `O`, the ball weakened
-      before it goes, the ID's slot order. A draft of its born description
-      (`salad-born-draft.yaml` here, game `saladborn`, compiled as a
-      fixture under `src/engine/testing/fixtures/saladborn/` while it is
-      worked on, and removed at the flip) compiled 2026-11-27 and, after
-      2.3a, deals every menu board; what it refused or dealt wrong is each
-      sub-task. The ruleset stays a size the params give (`mode`, Seismic's
-      way), which the rules may read.
+- [x] 2.3 Salad born: a ruleset choosing kinds, the folded Latin square,
+      the empty value and `O`, the ball weakened before it goes, the ID's
+      slot order (design.md § "What each flip changed for a player").
   - [x] 2.3a A value a unit holds more than once, counted by the marks; a
         Latin sample folded to the domain; a derived clue reading a size.
   - [x] 2.3b A clue kind dealt only on a ruleset's boards, its ID segment
@@ -55,21 +48,9 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.3e The deal: givens whole by ruleset, a ball after its number,
         `refuse` on the empty squares, Normal bounded by ruleset and size,
         the menu's tiers: the commit that ticks 2.3e, with its figures.
-  - [ ] 2.3f The flip: the value's word by ruleset (letter, number);
-        the words of the draft's `emptyLine` and `emptySquare`, which 2.3e
-        added for its `refuse`, and the hint's order with them before the
-        Latin singles;
-        Salad's steps as `says` (a line with all its empty squares or all
-        its symbols, a square with only the X left or no X, the border
-        clue's two arms, a set holding a line's empties); soundness, tests
-        to `cases.yaml`, spec deltas, the app run. In the app, look at a
-        ball holding notes (the note grid is the square's, not fitted
-        inside the ring as upstream's). What 2.3c changed for a player, for
-        design.md: the cross is the engine's, half a square wide, where
-        upstream's spans it; a ball is a ring, unfilled; `O` on a square
-        holding a value types nothing, where upstream empties it into a
-        ball; a ball is a note, so Undo, Clear and mistakes treat it as
-        one; a placed number is drawn without a ball round it.
+  - [x] 2.3f The flip, its words, tests and specs, a ball's notes inside
+        its ring, and the walk's hidden single in a line holding the empty
+        square more than once: the commit that ticks 2.3f.
 - [ ] 2.4 Group born, after the owner's answer (design.md § "Open
       Questions"): the letters relabeled about the identity, `i` after the
       tier, the hide's keep-set, an answer from shipped data.
@@ -83,3 +64,6 @@ changed for a player" gets its line. In the order task 1.1 set.
 - [ ] 3.2 Update the guides for what the family added.
 - [ ] 3.3 Commit, push, archive; mark the route's task 1.2 done, or file
       the next part beneath it.
+- [ ] 3.4 Retire the candidate plan's own setup (`setUp`, `OwnSetUp`, the
+      populate-only typing and its tests): no plan has had one since
+      Salad's flip, which also retired `onPlace` and `ownState`.

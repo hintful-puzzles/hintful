@@ -22,3 +22,15 @@ export const WALK_STEPS = {
 
 /** A step of the walk's that a description words. */
 export type WalkStep = keyof typeof WALK_STEPS;
+
+/**
+ * The step of the walk a description words where a unit holds a value more
+ * than once (`answer.value.repeat`, Salad's empty square): a placement of it
+ * rules it out of the rest of a unit only once that unit holds every copy,
+ * so its cull says the unit is full, never that the value cannot repeat.
+ */
+export const REPEAT_STEPS = {
+  /** `n` just placed, outlined, is the last its unit `axis` holds; `both`
+   * where its row and its column fill at once. */
+  last: { n: "number", axis: "unit", both: "flag" },
+} as const satisfies Readonly<Record<string, Readonly<Record<string, string>>>>;

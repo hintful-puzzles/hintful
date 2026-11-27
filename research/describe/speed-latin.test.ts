@@ -10,16 +10,16 @@ import type { PresetMenu } from "../../src/engine/contract/game.ts";
 import { presetMenu } from "../../src/engine/game-id/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { groupGame } from "../../src/games/group/index.ts";
-import { saladGame } from "../../src/games/salad/index.ts";
 import { game as adjacentGame } from "../../src/generated/games/adjacent/adjacent.game.ts";
 import { game as keenGame } from "../../src/generated/games/keen/keen.game.ts";
 import { game as mathraxGame } from "../../src/generated/games/mathrax/mathrax.game.ts";
+import { game as saladGame } from "../../src/generated/games/salad/salad.game.ts";
 import { game as seismicGame } from "../../src/generated/games/seismic/seismic.game.ts";
 import { game as soloGame } from "../../src/generated/games/solo/solo.game.ts";
 import { game as towersGame } from "../../src/generated/games/towers/towers.game.ts";
 import { game as unequalGame } from "../../src/generated/games/unequal/unequal.game.ts";
 import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
-import { progress } from "./pilot.ts";
+import { say } from "../progress.ts";
 
 const SEEDS = Number(process.env["SEEDS"] ?? 4);
 
@@ -64,7 +64,5 @@ it("time per deal", () => {
   const only = process.env["SPEED_GAMES"]?.split(",") ?? null;
   for (const [name, g] of GAMES.filter(([n]) => only === null || only.includes(n)))
     for (const p of presets(g))
-      progress(
-        `${name} ${g.encodeParams(p, true)}: ${perDeal(g, p, name).toFixed(1)} ms`,
-      );
+      say(`${name} ${g.encodeParams(p, true)}: ${perDeal(g, p, name).toFixed(1)} ms`);
 }, 7_200_000);

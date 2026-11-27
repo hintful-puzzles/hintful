@@ -68,7 +68,7 @@ import {
 } from "../hint/latin-notes.ts";
 import { type Clauses, statedParts, statedSentence } from "../hint/stated.ts";
 import { type StepTable, type StepType, stepVoice } from "../hint/step-voice.ts";
-import { CellMarks } from "../solve/cell-marks.ts";
+import { CellMarks, type DupReason } from "../solve/cell-marks.ts";
 import {
   type GridSpace,
   type Partition,
@@ -84,7 +84,7 @@ import {
   listOf,
   spaceOf,
 } from "./board.ts";
-import { boardGlyphs } from "./glyphs.ts";
+import { boardGlyphs, emptyOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { variationFlags } from "./params/settings.ts";
 import { slotPoint } from "./slots.ts";
@@ -300,15 +300,18 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
   /** The words a hint on `board` says its values and squares by: each value
-   * its glyph, by the board's ruleset. */
-  const vocabOf = (board: FillBoard<C>): LatinVocab => ({
-    noun: module.WORDS?.value ?? "number",
-    value: boardGlyphs(module, spaceOf(module, board), board.dealt).draw,
-    cell: module.WORDS?.cell ?? "square",
-    ...(module.WORDS?.alongside === undefined
-      ? {}
-      : { beside: module.WORDS.alongside }),
-  });
+   * its glyph, and what a value is called, by the board's ruleset. */
+  const vocabOf = (board: FillBoard<C>): LatinVocab => {
+    const glyphs = boardGlyphs(module, spaceOf(module, board), board.dealt);
+    return {
+      noun: module.WORDS?.value ?? glyphs.noun,
+      value: glyphs.draw,
+      cell: module.WORDS?.cell ?? "square",
+      ...(module.WORDS?.alongside === undefined
+        ? {}
+        : { beside: module.WORDS.alongside }),
+    };
+  };
 
   /**
    * A firing of the description's own technique `id` as legs, as the walk
@@ -445,6 +448,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     for (const c of sp.cells) domain |= module.domainOf(sp, board.dealt, c);
     const ladder = ladderOf(module, board);
     const repeat = module.repeatOf?.(sp, board.dealt) ?? null;
+    const empty = emptyOf(module, sp, board.dealt);
     const on: NotesLadder = {
       ladder,
       caps: capsOf(module, tierOf(board)),
@@ -459,6 +463,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     const out: HintStep<FillMove, CandidateFillHint, PlanRung<Reason>>[] = [];
     const regions = regionsOf(board, sp);
     const words = walkWords(board);
+    const last = lastWords(board);
     runCandidatePlan<FillMove, CandidateFillHint, Reason, FillRegion>({
       w,
       steps: out,
@@ -466,7 +471,10 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       pencil,
       enc: { values: on.enc.values, all: (c) => module.domainOf(sp, board.dealt, c) },
       moves: FILL_CANDIDATE_MOVES,
-      reach: reachOf(module, board),
+      reach: reachOf(module, board, grid),
+      // The empty square is placed by the description's techniques, which
+      // say why a square is empty; a single would call it a value.
+      ...(empty === null ? {} : { placeable: (m: Mark) => m.n !== empty }),
       autoClean,
       reading,
       ...(judging === undefined ? {} : { judging }),
@@ -499,13 +507,14 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         return { words: reason.say(continues) };
       },
       strikeWords: (marks, reason) => {
-        if (!isOwn(reason))
+        if (!isOwn(reason)) {
+          const where = `from the other ${vocab.cell}s`;
+          if (reason.kind === "dup" && last !== null && reason.n === repeat?.value)
+            return { premise: last(reason, marks), where };
           return words !== null && reason.kind === "dup"
-            ? {
-                premise: placedRulesOut(reason, value, words.cull(reason.n)),
-                where: `from the other ${vocab.cell}s`,
-              }
+            ? { premise: placedRulesOut(reason, value, words.cull(reason.n)), where }
             : latinPremise(reason, marks, vocab);
+        }
         if (reason.premise === undefined)
           throw new Error(`${reason.kind} places, and strikes nothing`);
         return {
@@ -558,12 +567,16 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   /** Each cell's regions, in the order a hidden single is named by: its
    * units in the description's order, then its part of each partition the
    * rules hold distinct. A region holds every value where its cells' domains
-   * hold as many as it has cells. */
+   * hold as many as it has cells, a value a line holds more than once
+   * counted as its copies (Salad's empty square). */
   function regionsOf(board: FillBoard<C>, sp: GridSpace): FillRegion[][] {
+    const repeat = module.repeatOf?.(sp, board.dealt) ?? null;
     const holdsEvery = (cells: readonly number[]): boolean => {
       let held = 0;
       for (const c of cells) held |= module.domainOf(sp, board.dealt, c);
-      return popcount(held) === cells.length;
+      const copies =
+        repeat !== null && held & (1 << repeat.value) ? repeat.times - 1 : 0;
+      return popcount(held) + copies === cells.length;
     };
     const box = module.units.find((u) => !LINE_UNITS.has(u)) ?? "";
     const units = sp.units.map((L): FillRegion => {
@@ -598,13 +611,50 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
    * the walk says a row and a column. */
   function walkWords(board: FillBoard<C>) {
     if (walkSteps === null) return null;
+    const { voice, said } = stepsOn(board, walkSteps);
+    const sentence = (id: WalkStep, ring: readonly Point[], terms: object): Sentence =>
+      voice.sentence(id, said(ring, terms));
+    const move = (id: WalkStep, terms: object): string =>
+      voice.part(id, "move", said([], terms)).text;
+    return {
+      clean: cleanStruckText(move("clean", {})),
+      note: (at: Point, values: number[], every: boolean): Sentence =>
+        sentence("note", [at], { vs: values, unruled: every }),
+      cull: (n: number): string => move("cull", { n }),
+      regionsFull: (m: Mark): Sentence => sentence("regionsFull", [m], { n: m.n }),
+    };
+  }
+
+  /** What the cull of a value a unit holds more than once says on `board`
+   * (`REPEAT_STEPS`): the value just placed, at the cell `placed`, is the
+   * last its row or column holds, and so leaves the `struck` notes; `null`
+   * where the description words none. */
+  function lastWords(board: FillBoard<C>) {
+    const steps = module.STEPS;
+    if (steps === undefined || !Object.hasOwn(steps, "last")) return null;
+    const { voice, said } = stepsOn(board, steps);
+    return (reason: DupReason, struck: readonly Mark[]): Narration => {
+      const row = struck.some((m) => m.y === reason.py);
+      const col = struck.some((m) => m.x === reason.px);
+      if (struck.some((m) => m.y !== reason.py && m.x !== reason.px))
+        throw new Error("a repeated value's cull reaches past its row and column");
+      const at = { x: reason.px, y: reason.py };
+      return voice.premise("last", {
+        ...said([], { n: reason.n, axis: row ? "row" : "column", both: row && col }),
+        marks: { outline: { cell: [at] } },
+      });
+    };
+  }
+
+  /** The description's `steps` spoken on `board`, each told the board's
+   * sizes and its variations beside its own terms. Their terms are what the
+   * walk gives each (`walk-steps.ts`), which the compiler held the
+   * description to. */
+  function stepsOn(board: FillBoard<C>, steps: NonNullable<typeof module.STEPS>) {
     const vocab = vocabOf(board);
-    const { value } = vocab;
-    // Its terms are what `WALK_STEPS` gives each, which the compiler held the
-    // description to.
     const voice = stepVoice<Readonly<Record<string, StepType>>, Point>(
-      walkSteps as unknown as StepTable<Readonly<Record<string, StepType>>>,
-      { kind: CELL, value, noun: vocab.cell, valueNoun: vocab.noun },
+      steps as unknown as StepTable<Readonly<Record<string, StepType>>>,
+      { kind: CELL, value: vocab.value, noun: vocab.cell, valueNoun: vocab.noun },
     );
     const dealt = board.dealt as Readonly<Record<string, unknown>>;
     const sizes = Object.fromEntries(
@@ -623,17 +673,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       ring,
       terms: { ...sizes, ...flags, ...terms },
     });
-    const sentence = (id: WalkStep, ring: readonly Point[], terms: object): Sentence =>
-      voice.sentence(id, said(ring, terms));
-    const move = (id: WalkStep, terms: object): string =>
-      voice.part(id, "move", said([], terms)).text;
-    return {
-      clean: cleanStruckText(move("clean", {})),
-      note: (at: Point, values: number[], every: boolean): Sentence =>
-        sentence("note", [at], { vs: values, unruled: every }),
-      cull: (n: number): string => move("cull", { n }),
-      regionsFull: (m: Mark): Sentence => sentence("regionsFull", [m], { n: m.n }),
-    };
+    return { voice, said };
   }
 
   const names = (module.NAMES ?? {}) as RungNames<string>;

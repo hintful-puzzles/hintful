@@ -113,18 +113,12 @@ export interface LatinWingReason {
  * them. One value confined across lines is `cells`, the ones of the lines
  * it can still take, and the `lines`. */
 export type LatinSetReason =
-  | { kind: "set"; said: compiled.SetSays["terms"]; w: number }
+  | { kind: "set"; said: compiled.SetSays["terms"]; wording: number; w: number }
   | {
       kind: "set";
       cells: readonly { x: number; y: number }[];
       lines: ConfinedLines;
     };
-
-/** The cells a set elimination outlines: the subset, or where one value is
- * confined across lines, the ones of those lines it can still take. */
-export function setCells(reason: LatinSetReason): readonly { x: number; y: number }[] {
-  return "lines" in reason ? reason.cells : reason.said.S.map(cellAt(reason.w));
-}
 
 /** The parallel lines one value is confined in, where a set is that and not a
  * set within one line: `count` whole rows or columns, whose `cells` are every
@@ -138,7 +132,7 @@ export interface ConfinedLines {
 }
 
 /** `indices` of the board's rows or columns, as {@link ConfinedLines}. */
-export function confinedLines(
+function confinedLines(
   axis: "row" | "col",
   indices: readonly number[],
   o: number,
@@ -331,9 +325,10 @@ export const LATIN_RUNGS = {
   "latin.single": uncluedRung(compiled.single, (): LatinReason => ({ kind: "single" })),
   "latin.set": uncluedRung(
     compiled.set,
-    (_b, _c, _n, m, { terms }): LatinReason => ({
+    (_b, _c, _n, m, { terms, wording }): LatinReason => ({
       kind: "set",
       said: terms,
+      wording,
       w: m.sp.w,
     }),
   ),

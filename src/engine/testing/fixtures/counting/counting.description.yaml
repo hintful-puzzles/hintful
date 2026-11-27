@@ -10,8 +10,6 @@
 # said as letters, on a description that names no game.
 game: counting
 produces: numbers
-words:
-  value: letter
 sizes:
   w: { min: 2, max: 6 }
   h: { min: 2, max: 6 }

@@ -309,21 +309,10 @@ export interface CandidatePlan<
   setUp?: "implicit" extends Reading ? never : PlanSetUp;
   /** The game's rungs, tried after the singles, in the note-free opening too. */
   rungs?: readonly CandidateRung<M, H, Reason>[];
-  /** The naked singles, where the game's differ from `nakedSingles` (Salad's
-   * lone "might be empty" note is a marker, not a value). */
-  singles?: () => readonly Mark[];
-  /** Whether a hidden single the notes show is one the plan places (Salad's
-   * hole symbol is settled by a marker instead). Default: all of them. */
+  /** Whether a single the notes show, naked or hidden, is one the plan places:
+   * the empty square of a board whose lines hold it more than once is the
+   * game's own techniques' to place. Default: all of them. */
   placeable?: (m: Mark) => boolean;
-  /** Called after a placement is written to the working board: where a game
-   * keeps state of its own beside `grid` that a placement also settles
-   * (Salad marks the square as no hole). */
-  onPlace?: (x: number, y: number, n: number) => void;
-  /** A game's state beside `grid` and `pencil` that its rungs read (Salad's
-   * holes): `save` returns what puts it back as it is now. A judge's replay
-   * asks a rung with it as the walk began, since the replay makes only the
-   * firings' facts. */
-  ownState?: { save(): () => void };
 }
 
 /**
@@ -403,14 +392,6 @@ export const LATIN_RUNGS = [
   "set",
   "wing",
 ] as const;
-
-/** {@link LATIN_RUNGS} for a plan on the populate reading alone
- * ({@link OwnSetUp}): without the note leg, and without the single read off a
- * cell that has no notes. */
-export const LATIN_POPULATE_RUNGS = LATIN_RUNGS.filter(
-  (rung): rung is Exclude<(typeof LATIN_RUNGS)[number], "note" | "regionsFull"> =>
-    rung !== "note" && rung !== "regionsFull",
-);
 
 /**
  * The plain row/column Latin square's {@link runCandidatePlan}: a preset over

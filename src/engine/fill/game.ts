@@ -80,6 +80,7 @@ import { type NumberInput, numberInput, typedUi } from "./numbers.ts";
 import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
+import { offKinds } from "./params/settings.ts";
 import {
   type FillInput,
   type FillPlay,
@@ -274,6 +275,9 @@ export function fillGame<C extends Clues<C> & object>(
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
+    ...(play.numbers?.empty?.ball === undefined
+      ? {}
+      : { ball: play.numbers.empty.ball as keyof C }),
     glyphs:
       play.numbers === undefined
         ? () => valueGlyphs
@@ -288,6 +292,7 @@ export function fillGame<C extends Clues<C> & object>(
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+    off: (b) => offKinds(deal, b.dealt as Readonly<Record<string, number>>),
     ...(module.valueMargins === undefined
       ? {}
       : {

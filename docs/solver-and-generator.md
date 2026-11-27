@@ -1581,8 +1581,8 @@ for one born from its description, its clues between the cells, which the
 fill board deals and solves with no solver of its own;
 [`towers.description.yaml`](../src/games/towers/towers.description.yaml)
 for clues beside the grid, born too; [`keen.description.yaml`](../src/games/keen/keen.description.yaml)
-for per-cage arithmetic, born too; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
-symbol.
+for per-cage arithmetic, born too; [`salad.description.yaml`](../src/games/salad/salad.description.yaml)
+for a repeated symbol, born too.
 
 - **Read a candidate as `has(c, n)` or `cubeGet(x, y, n)`.** Where
   upstream works in a transposed index space with dense flat reads, port the

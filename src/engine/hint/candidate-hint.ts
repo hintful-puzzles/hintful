@@ -47,14 +47,10 @@ export interface Mark {
  * values start at 1 and 0 means "no note"), and Salad's note alphabet (`nums`
  * symbols + one "might be empty" mark) is *shorter* than its grid order.
  *
- * **Deliberately no many-to-one arm** for Salad's `order − nums`
- * interchangeable hole symbols, which all collapse onto one player note: a
- * helper here only ever asks "which note bit does this *placed* value occupy?"
- * or "is this cell's note set down to one?", and on Salad's board no hole
- * symbol is ever placed (holes live in a separate marker array) nor ever
- * singled (which hole symbol sits where is undecidable, and immaterial). The
- * collapse lives in Salad's own step emission, where it *is* the game's sync
- * deduction; see `docs/hints-candidates.md` § "A cell decided without a value in the grid".
+ * **Deliberately no many-to-one arm**: a value a line holds more than once
+ * (Salad's empty square) is one value of the domain, noted by one bit, and
+ * never several interchangeable symbols collapsing onto a note; see
+ * `docs/hints-candidates.md` § "A cell decided without a value in the grid".
  */
 export interface NoteEncoding {
   /** The pencil-mask bit for candidate `n`. Default `1 << n`. */

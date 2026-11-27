@@ -52,7 +52,7 @@ import {
 } from "./board.ts";
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { FillParams } from "./game-id.ts";
-import { boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
+import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
@@ -305,7 +305,9 @@ export function numberInput<
         .map((v) => ({ button: glyphs.keyCode(v), label: glyphs.draw(v) }));
       // Upstream Salad's: the symbols, then X, O and clear.
       if (empty !== null)
-        keys.push(...["X", "O"].map((k) => ({ button: k.charCodeAt(0), label: k })));
+        keys.push(
+          ...["X", BALL_GLYPH].map((k) => ({ button: k.charCodeAt(0), label: k })),
+        );
       return [...keys, clearKey];
     },
     gesture(b, fillUi, ds, move) {

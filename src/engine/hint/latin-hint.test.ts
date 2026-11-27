@@ -64,12 +64,22 @@ describe("narrateLatinReason and latinPremise (shared row/column-game narration)
       {
         kind: "set",
         said: { u: 0, S: [0, 1] },
+        wording: 1,
         w: 3,
       },
       struck(3, 2, 3),
     );
     expect(set.premise.text).toBe(
       "The outlined squares already account for 2 and 3 between them",
+    );
+    // Where the values struck are a repeated one's copies, the cells hold
+    // every copy the line still needs (the set's first wording).
+    const copies = latinPremise(
+      { kind: "set", said: { u: 0, S: [0, 1] }, wording: 0, w: 3 },
+      struck(3),
+    );
+    expect(copies.premise.text).toBe(
+      "The outlined squares already account for every 3 their line still needs",
     );
     // A wing in a 3-wide grid: middle 1, ends 0 and 5, struck cell 8 (the
     // marks' own), `self` where the middle may be the value itself.

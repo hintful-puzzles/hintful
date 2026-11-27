@@ -1,27 +1,21 @@
 # Building from a description
 
 A development tool, never part of the app: an interpreter that reads a
-game's rules and techniques from its description and runs them, to compare
-what they say with what the game's code does. It was the pilot
-(`openspec/changes/archive/2026-10-29-build-a-game-from-its-description/`);
+game's rules and techniques from its description and runs them. It was the
+pilot (`openspec/changes/archive/2026-10-29-build-a-game-from-its-description/`);
 the app now runs the techniques and the rules compiled
-([`docs/descriptions.md`](../../docs/descriptions.md)), and this is the
-reference they are compared against.
+([`docs/descriptions.md`](../../docs/descriptions.md)), and the soundness
+checks under `research/technique-check/` read a description through it.
 
-It is run by hand and not by the gate, which compiles it
-(`tsconfig.node.json`) and runs none of its tests:
+The runs here are by hand and not by the gate, which compiles them
+(`tsconfig.node.json`) and runs none of their tests:
 
 ```sh
 npx vitest run -c research/describe/vitest.config.ts [file filter]
 ```
 
-`PILOT_SEEDS=n` sets the boards dealt per params. A run prints a line of
-progress per board as it goes, and `PILOT_LOG=<file>` writes the lines to a
-file too.
-
 | Run | What it does |
 | --- | --- |
-| `answer-check` | each description's answer check on dealt boards, against the game's `status()` and `findMistakes`, and a planted defect in each clue's meaning; writes `results-answer.txt` |
 | `speed-latin` | the generator's time per deal on every described game's presets (`SPEED_GAMES` narrows it), each run twice and the second kept: run it on two builds and compare the lines |
 | `trace-latin` | every Latin game's deals and hint walks, step by step, to `TRACE_OUT`: run it on two builds of the compiled modules and diff the files |
 
@@ -36,10 +30,8 @@ schema are in `src/describe/`.
 
 | File | What it holds |
 | --- | --- |
-| `bindings.ts` | each game's binding: its state read as an instance of its description |
 | `evaluate.ts`, `space.ts` | a formula's meaning on a board, and the library's spaces |
 | `description.ts` | reading a description, and one instantiated on a dealt board |
-| `answer-check.ts` | the rules on a full board, and a search for every answer that knows only the rules |
 
 ## What the interpreter reads beyond the compiler
 

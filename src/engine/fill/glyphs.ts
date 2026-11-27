@@ -22,6 +22,9 @@ export interface ValueGlyphs {
   readonly typed: (button: number) => number | null;
   /** The last value with a glyph, within a cell's domain mask. */
   readonly top: number;
+  /** What a hint calls a value so drawn, where the description's `words`
+   * does not say. */
+  readonly noun: string;
 }
 
 /** The glyph value `v` is drawn and typed as: a digit, and past nine a
@@ -38,6 +41,7 @@ const NUMERALS: ValueGlyphs = {
   keyCode: digitKeyCode,
   typed: digitOf,
   top: 31,
+  noun: "number",
 };
 
 const A = "A".charCodeAt(0);
@@ -65,6 +69,7 @@ const LETTERS: ValueGlyphs = {
   keyCode: (v) => A + v - 1,
   typed: typedLetter,
   top: 26,
+  noun: "letter",
 };
 
 /** Numerals typed as letters are too: a board whose game draws letters
@@ -117,6 +122,10 @@ export function emptyOf<C>(
 
 /** The empty square's glyph and key (upstream Salad's). */
 const EMPTY_GLYPH = "X";
+
+/** The ball's key and the letter a ball's square is written as, where the
+ * empty square has one (`play.numbers.empty.ball`; upstream Salad's). */
+export const BALL_GLYPH = "O";
 
 /** The glyphs a board of `module` on the space `sp` dealt `dealt` draws,
  * says and writes its values by, its empty square as {@link EMPTY_GLYPH}

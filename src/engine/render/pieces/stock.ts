@@ -7,7 +7,7 @@
 import { CLEAR, CLEAR_MARK, RULED_OUT, SHADED } from "../../color/palette.ts";
 import { COL_BACKGROUND, COL_ERROR } from "../../color/roles.ts";
 import type { GameDrawing } from "../../contract/game.ts";
-import type { Rect } from "../../contract/types.ts";
+import type { Point, Rect } from "../../contract/types.ts";
 import { drawPiece, drawPiecePart, drawRuledOutCross, SHADED_SHAPE } from "../piece.ts";
 import { type Painter, surfaceOf } from "./painter.ts";
 
@@ -69,13 +69,28 @@ export const ring: Painter = {
 /** The ring round what `cell` holds, in `color`: Singles' kept number's,
  * and Salad's ball, a square known to hold a symbol. */
 export function drawRingIn(dr: GameDrawing, cell: Rect, color: number): void {
-  const c = { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
-  const r =
-    (cell.w - 1) / 2 - Math.max(Math.max(2, cell.w >> 4) + 1, Math.round(cell.w / 10));
-  const weight = Math.max(2, Math.round(cell.w / 24));
+  const { c, r, weight } = ringOf(cell);
   // Half-pixel steps: one-pixel strokes a whole pixel apart leave specks of
   // surface between them.
   for (let i = 0; i < 2 * weight - 1; i++) dr.drawCircle(c, r - i / 2, -1, color);
+}
+
+/** {@link drawRingIn}'s ring in `cell`: its center, its outer radius and its
+ * stroke's weight. */
+function ringOf(cell: Rect): { c: Point; r: number; weight: number } {
+  const c = { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
+  const r =
+    (cell.w - 1) / 2 - Math.max(Math.max(2, cell.w >> 4) + 1, Math.round(cell.w / 10));
+  return { c, r, weight: Math.max(2, Math.round(cell.w / 24)) };
+}
+
+/** The square inside {@link drawRingIn}'s ring in `cell`, a pixel clear of
+ * its stroke: where what the ring holds is written (Salad's notes in a
+ * ball, as upstream salad.c fits them). */
+export function ringInterior(cell: Rect): Rect {
+  const { c, r, weight } = ringOf(cell);
+  const side = Math.floor((r - weight) * Math.SQRT2);
+  return { x: c.x - side / 2, y: c.y - side / 2, w: side, h: side };
 }
 
 /** A cell the player has ruled out: the engine's cross, none where a number

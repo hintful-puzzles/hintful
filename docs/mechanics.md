@@ -39,7 +39,7 @@ the section that says more.
    size is `numberItem` with `label: { slot: "size", words: squareSize(field) }`,
    its codec segment is `size(paramConfig, kw)`, and `index.ts` writes
    `notApplicable: { transposeParams: SQUARE_GRID }`. Exemplar:
-   [`salad/state.ts`](../src/games/salad/state.ts).
+   [`group/index.ts`](../src/games/group/index.ts).
 6. **The desc**: one `parseDesc` built on `readDesc`, and a `newState` that
    builds from `descValue(parseDesc(p, desc))`. See "Read a desc once".
 7. **`executeMove`**: clone the state, apply the move, and end the dispatch

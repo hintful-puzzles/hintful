@@ -500,20 +500,6 @@ describe("runCandidatePlan", () => {
     });
   });
 
-  it("reads no single off a cell with no notes on a plan that sets its own notes up", () => {
-    // The plan's step type has no `regionsFull` to stamp one with. The single
-    // is the game's own, as Salad's are, and names a cell it has no note in.
-    expect(() =>
-      walk({
-        w: 3,
-        steps: [],
-        grid: new Uint8Array(9),
-        pencil: new Int32Array(9),
-        singles: () => [{ x: 0, y: 0, n: 1 }],
-      }),
-    ).toThrow(/sets its own notes up/);
-  });
-
   it("continues from the evidence a firing shades, not only the cells it acts on", () => {
     // After the first placement, at (0,0), two firings compete. The rung order
     // prefers "far"; "near" acts on a cell as distant, but shades (0,0).

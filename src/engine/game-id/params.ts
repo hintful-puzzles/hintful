@@ -272,9 +272,6 @@ export function squareSize<P>(field: PlainNumberKey<P>): (p: P) => string {
  */
 export const MAX_BOARD_AREA = 10_000;
 
-/** The longest side of a square board within {@link MAX_BOARD_AREA}. */
-export const MAX_SQUARE_SIDE = Math.floor(Math.sqrt(MAX_BOARD_AREA));
-
 /** The sentence refusing, and stating, the most `a` times `b` may be. */
 export function areaSentence(a: string, b: string, max: number): string {
   return `${a} times ${b.toLowerCase()} must be at most ${max}.`;

@@ -1,10 +1,15 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Salad's two rulesets, and the game's help page. ABC End View deals border
-# letters and Number Ball deals balls; one description holds both clue kinds,
-# and a board holds the one its ruleset deals. `npm run describe` compiles the
-# techniques to salad.compiled.ts, which solver.ts runs.
+# Salad's two rulesets: ABC End View deals border letters, Number Ball deals
+# balls, and a board holds the clues its ruleset deals.
 game: salad
+catalog:
+  name: Salad
+  description: Pseudo-Latin square puzzle
+  objective: Place each character once per row and column, leaving some empty.
+  collection: unreleased
+  family: latin
+  similar: ABC End View, Nanbaboru (ナンバーボール), Number Ball
 help:
   rules: |-
     Put characters from A (or 1) up to a given maximum in some of the squares, so each character appears exactly once in each row and column.
@@ -13,245 +18,267 @@ help:
 
     {{rulesets}}
   controls: |-
-    Left-click to select a cell, then type a letter or number on your keyboard to enter it. Press Backspace or Space to clear a cell.
+    Left-click to select a square, then type a letter or number on your keyboard to enter it. Press Backspace or Space to clear a square.
 
-    Press 'X' to mark a cell as empty, or press 'O' to mark a cell as "definitely not empty"; '-' and '_' do what 'X' does, and '+' and '=' what 'O' does. 0 clears a cell as well. A letter and its number are the same key to the game, whichever the board shows: A is 1, B is 2, and so on.
+    Press 'X' to mark a square as empty. A letter and its number are the same key to the game, whichever the board shows: A is 1, B is 2, and so on.
 
-    Right-click a cell, then type a letter or number to add a pencil mark. Pencil marks can be used for any purpose. The letter 'X' can also be used to indicate a cell that might be empty. {{sticky-pencil}}
+    Right-click a square, then type a letter or number to add a pencil mark. Pencil marks can be used for any purpose. The letter 'X' can also be used to indicate a square that might be empty, and 'O' to draw a ball, a note that the square is not empty: it crosses out the square's 'X' mark. {{sticky-pencil}}
 
-    You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering letters/numbers and entering pencil marks.
+    You can also use the arrow keys to move the selected square around. Press Enter to toggle between entering letters/numbers and entering pencil marks.
 
-    {{mark-all}} Once every empty cell has marks, the press crosses out of each what is already placed in its row and column.
+    {{mark-all}} Once every empty square has marks, the press crosses out of each what is already placed in its row and column.
   origins: |-
     {{choice:ruleset:0}} is the puzzle called ABC End View, whose designer is unknown. {{choice:ruleset:1}} is the puzzle called Number Ball, invented by Inaba Naoki; the original puzzles are available here: http://www.janko.at/Raetsel/Nanbaboru/index.htm
   hints: |-
-    **Hint** explains the next step rather than simply making it. When a step needs pencil marks, it starts by filling in every candidate, 'X' included, in each empty square that has none yet (the same as pressing **Fill marks**), then works from your own marks, so it carries on from wherever you are. If a letter, 'X' or 'O' you've entered is wrong, or a square's pencil marks have crossed out its answer, it asks you to fix the highlighted mistakes first.
+    **Hint** explains the next step rather than simply making it. When a step needs pencil marks, it starts by filling in every candidate, 'X' included, in each empty square that has none yet (the same as pressing **Fill marks**), then works from your own marks, so it carries on from wherever you are. If a letter or 'X' you've entered is wrong, or a square's pencil marks have crossed out its answer, it asks you to fix the highlighted mistakes first.
 
     {{hint-marks}}
 
-    The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*, and a sentence that lists what a square can still be writes it as X. It is crossed out like any other pencil mark: a square left with only that mark must be empty, and a square that has lost it must hold a letter. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In {{choice:ruleset:1}}, where every symbol is a number, the hint says "number" wherever this says "letter".
+    The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is crossed out like any other pencil mark: a square left with only that mark must be empty. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has room for only as many empty squares as it still needs, they must all be empty. In {{choice:ruleset:1}}, where every symbol is a number, the hint says "number" wherever this says "letter".
 
     {{wing}}
-
 produces: latin
-words:
-  cell: square
 sizes:
-  order: { min: 3, max: 10 }
-  nums: { min: 2, max: 9 }
+  w: { min: 3, max: 10 }
+  # The symbols each line holds; the rest of it is empty.
+  n: { min: 2, max: 9 }
+  # 0 ABC End View's letters, 1 Number Ball's numbers.
+  mode: { min: 0, max: 1 }
 space:
-  grid: { w: "order", h: "order" }
+  grid: { w: "w", h: "w" }
   slots: true
   units: [rows, cols]
 answer:
-  # nums + 1 is the empty square, which fills the rest of each line.
+  # n + 1 is the empty square, which fills the rest of each line.
   value:
     sort: cell
-    domain: "range(1, nums + 1)"
-    repeat: { value: "nums + 1", times: "order - nums" }
-# A given cross is the empty square given.
+    domain: "range(1, n + 1)"
+    repeat: { value: "n + 1", times: "w - n" }
 given: [value]
 marks:
-  # The empty-square mark is nums + 1.
-  cand: { sort: cell, notation: "set of range(1, nums + 1)" }
+  cand: { sort: cell, notation: "set of range(1, n + 1)" }
 shape:
   - "latin(value, lines)"
 clues:
   # ABC End View: the first square from the clue that is not empty holds it.
   border:
     at: slot
-    value: "range(1, nums)"
+    glyph: true
+    value: "range(1, n)"
     means: >-
       exists c in sight(at):
-      value(c) = v and (forall c2 in before(c, sight(at)): value(c2) = nums + 1)
-  # Number Ball: a ball's square is not empty, the value it names.
-  ball: { at: cell, value: "{nums + 1}", means: "value(at) != v" }
+      value(c) = v and (forall c2 in before(c, sight(at)): value(c2) = n + 1)
+  # Number Ball: a ball's square is not empty.
+  ball: { at: cell, value: "range(0, 0)", means: "value(at) != n + 1" }
 freedom: { kind: fill }
+play:
+  numbers: { empty: { ball: ball } }
+  boards: [4x4n3L, 5x5n3L, 5x5n4L, 6x6n4L, 7x7n4L, 8x8n5L, 5x5n3B, 5x5n4B, 6x6n3B, 6x6n4B, 7x7n4B, 8x8n5B]
+  default: 4x4n3L
+  # Normal where its deal is quick: forty deals each took at most 0.2 s on a
+  # loaded machine. Every other Numbers shape took seconds at Normal.
+  boardTiers:
+    4x4n3L: [Easy, Easy]
+    7x7n4L: [Easy, Easy]
+    8x8n5L: [Easy, Easy]
+    5x5n3B: [Easy, Easy]
+    5x5n4B: [Normal, Normal]
+    6x6n3B: [Easy, Easy]
+    6x6n4B: [Easy, Easy]
+    7x7n4B: [Easy, Easy]
+    8x8n5B: [Easy, Easy]
+  hintMarks:
+    ring: the square the step fills in.
+    strike: the pencil marks the step crosses out.
+    outline: what the step reasons from.
+    stripes: the row or column the sentence names.
 deal:
-  clues: which border letters show, or which balls, and their numbers
-  givens: which letters, numbers and crosses
+  answer: a Latin square of o symbols, those past n read as empty
+  border: every clue the answer shows, then each hidden while the board still finishes
+  ball: every square's ball, then each weakened, then hidden
+  given: every square, then each hidden while the board still finishes
   tier: one of the tiers
+  sample: { latin: true }
+  # A board whose empty squares all fall out with no symbol placed never asks
+  # where a symbol goes.
+  refuse: { by: [ball, emptyLine, emptySquare], places: "n + 1" }
+  hide:
+    # A Letters board below 8x8 is clued on its border alone.
+    given: { whole: { with: Letters, shorter: { max: 7 } } }
+    border:
+    # A number given is weakened to its ball before the ball goes.
+    ball: { after: given }
+settings:
+  n:
+    kind: number
+    gives: size
+    letter: n
+    kw: symbols
+    name: Symbols
+    doc: The amount of different symbols that appear in each row.
+    min: 2
+    max: 9
+    default: 3
+    words: "{n} symbols"
+    under: w
+  mode:
+    kind: choice
+    gives: size
+    choices:
+      - name: Letters
+        code: L
+        rule: The letters on the edge show which letter appears first when 'looking' into the grid.
+        deals: [border]
+        letters: true
+        # No board of two letters is Normal clued on its border alone.
+        bounds: { tiers: { Normal: { sizes: { n: 2 }, shorter: { min: 8 } } } }
+      - name: Numbers
+        code: B
+        rule: Squares with a ball must contain a number. Squares with a cross must remain empty.
+        deals: [ball]
+        bounds: { tiers: { Normal: { sizes: { n: 2 }, shorter: { min: 5 } } } }
+id:
+  - { digits: border, glyphs: true, sides: [top, left, bottom, right], after: "," }
+  - { digits: given, glyphs: true, codes: { O: "ball 0" } }
+tierLetters: ex
 tiers: [Easy, Normal]
 names:
-  dup: "a placed letter's row and column"
-  single: "the only letter left in a square"
-  hiddenSingle: "the only square left for a letter"
-  set: "letters already accounted for"
+  dup: "a placed symbol's row and column"
+  single: "the only symbol left in a square"
+  hiddenSingle: "the only square left for a symbol"
+  set: "symbols already accounted for"
   wing: "a wing"
   borderNear: "the letter a clue sees first"
   borderFar: "how far in a clue's letter sits"
-  countHolesDone: "a line with all its empty squares"
-  countLettersDone: "a line with all its letters"
-  crossNaked: "a square with no letter left"
-  xNoteGone: "a square with no empty-square mark"
-  circleXNote: "clearing empty-square marks"
+  ball: "a ball's square"
+  emptyLine: "a line's last squares that can be empty"
+  emptySquare: "a square that can hold no symbol"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Upstream's salad_letters_solver_dir, one clue a binding, square by
-  # square from the clue: near it, every square up to the first not known
+  # square from the clue. Near it, every square up to the first not known
   # empty holds no letter but the clue's, since the empties before its
-  # letter are all the clue looks across. And the clue's letter sits no
-  # further in than the line's empties reach, less those known empty beyond
-  # anywhere it could sit, nor past the first square known to hold a letter.
-  - id: border
+  # letter are all the clue looks across.
+  - id: borderNear
     tier: Easy
-    rung: [borderNear, borderFar]
+    rung: borderNear
     for: >-
       k in clues(border),
       L = sight(at(k)),
-      H = order - nums,
-      f = index(first({c in L where not (known(c) and value(c) = nums + 1)}), L),
-      reach = H - count(c in L where index(c, L) >= H and known(c) and value(c) = nums + 1),
-      stop = index(first({c in L where nums + 1 not in cand(c)}), L)
+      f = index(first({c in L where not (known(c) and value(c) = n + 1)}), L)
+      where f >= 0
     conclude: >-
-      forall c in L, i = index(c, L):
-      ((f < 0 or i <= f) implies (forall e in domain where e != v(k) and e <= nums: strike(c, e)))
-      and (((stop >= 0 and i > stop) or i > reach) implies strike(c, v(k)))
-    # The hint names the clue, and for its own letter how far in the line's
-    # empties let it sit and where a square holding a letter stops it.
+      forall c in L where index(c, L) <= f:
+      forall e in domain where e != v(k) and e <= n: strike(c, e)
+    # The empty squares the clue sees past outlined, where there are any.
     says:
-      terms: { k: k, L: L, H: H, reach: reach, stop: stop }
+      shown: value
+      terms: { k: k, v: "v(k)", f: f }
+      marks:
+        outline: "{c in L where index(c, L) < f}"
+      wordings:
+        - when: "f = 0"
+          look: "{outline k: This clue} sees {v} first, and the {noun} nearest it can only be {v} or empty"
+        - look: >-
+            {outline k: This clue} sees {v} first past {outline: the outlined empty {noun} |
+            the {numeral f} outlined empty {nouns}}, and the next {noun} can only be {v} or empty
+  # And the clue's letter sits no further in than the line's empties reach,
+  # less those known empty beyond anywhere it could sit, nor past the first
+  # square known to hold a letter.
+  - id: borderFar
+    tier: Easy
+    rung: borderFar
+    for: >-
+      k in clues(border),
+      L = sight(at(k)),
+      H = w - n,
+      reach = H - count(c in L where index(c, L) >= H and known(c) and value(c) = n + 1),
+      stop = index(first({c in L where n + 1 not in cand(c)}), L)
+    conclude: >-
+      forall c in L where (stop >= 0 and index(c, L) > stop) or index(c, L) > reach:
+      strike(c, v(k))
+    # The square that stops it outlined, where one does.
+    says:
+      shown: value
+      terms: { k: k, v: "v(k)", reach: reach, stop: stop }
+      marks:
+        outline: "{c in L where stop >= 0 and stop < reach and index(c, L) = stop}"
+      wordings:
+        - when: "stop >= 0 and stop < reach"
+          look: >-
+            {outline k: This clue} sees {v} first, and cannot see past {outline: the
+            outlined {noun}}, which holds a {valueNoun}
+        - when: "reach = 0"
+          look: "{outline k: This clue} sees {v} first, with no empty {noun} left to come before it"
+        - when: "reach = 1"
+          look: "{outline k: This clue} sees {v} first, after at most one empty {noun}"
+        - look: "{outline k: This clue} sees {v} first, after at most {numeral reach} empty {nouns}"
+  # A ball's square is struck the empty square.
+  - id: ball
+    tier: Easy
+    rung: ball
+    for: "c in cells where clue(ball, c) != none"
+    conclude: "strike(c, n + 1)"
+    says:
+      terms:
+        at: c
       marks: {}
+      look: "{outline at: The outlined ball} means its square holds a {valueNoun}"
+  # A line with only as many squares left that may be empty as it has empty
+  # squares to place has one in each.
+  - id: emptyLine
+    tier: Easy
+    rung: emptyLine
+    for: >-
+      L in units,
+      E = {c in cells(L) where not known(c) and n + 1 in cand(c)},
+      k = w - n - count(c in cells(L) where known(c) and value(c) = n + 1)
+      where |E| > 0 and |E| = k
+    conclude: "forall c in E: place(c, n + 1)"
+    # Said as the line holding all its symbols, where it does, else as the
+    # empty squares it still needs and has room for.
+    says:
+      shown: legs
+      terms:
+        L: L
+        k: k
+        s: n
+        full: "count(c in cells(L) where known(c) and value(c) <= n) = n"
+      marks:
+        stripes: "cells(L)"
+      again: "{stripes: the same {unit}}"
+      later: "{ring} must be empty too"
+      move: "{ring} must be empty"
+      wordings:
+        - when: "full"
+          look: "All {numeral s} {valueNoun}s of {stripes: this {unit}} are already placed"
+        - when: "k = 1"
+          look: "{stripes: this {unit}} still needs one empty {noun}, and no other {noun} of it can be empty"
+        - look: >-
+            {stripes: this {unit}} still needs {numeral k} empty {nouns}, and only
+            {numeral k} of its {nouns} can be empty
+  # A square that can hold no symbol is empty.
+  - id: emptySquare
+    tier: Easy
+    rung: emptySquare
+    for: "c in cells where not known(c) and |cand(c)| = 1 and n + 1 in cand(c)"
+    conclude: "place(c, n + 1)"
+    says:
+      terms: { at: c }
+      marks: {}
+      look: "Every {valueNoun} is ruled out of {ring}"
+      move: "it must be empty"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   - { use: latin.set, tier: Normal, rung: set }
   - { use: latin.fish, tier: Normal, rung: set }
   - { use: latin.wing, tier: Normal, rung: wing }
-# A line's empty squares, `k` of them, told apart by count.
-phrases:
-  empties: >-
-    {if one: the one empty {noun} | {if two: both empty {nouns} | all {numeral k}
-    empty {nouns}}}
-# What the hint says where no technique's firing states it. The planner supplies
-# each step's terms and marks. A line is "this row" or "this column", striped
-# whole, and a border clue is outlined by lighting its letter. The value noun
-# is the mode's: "letter" or "number".
+# What the walk says where an empty square just placed rules itself out of
+# the rest of a line, which it does only once the line has all its empty
+# squares.
 steps:
-  # The opener, whose words the plan speaks as it pencils every candidate in.
-  populate:
+  last:
     ring: cell
-    look: "Start by penciling every candidate {valueNoun} into each empty {noun} that has none yet."
-  # A line already has all its empty squares, so the rest of it holds a symbol:
-  # `one` and `two` say its count in words, `k` otherwise.
-  countHolesDone:
-    ring: cell
-    terms: { axis: unit, one: flag, two: flag, k: number }
-    marks: { stripes: [line] }
-    move: "{ring} and the rest of it must hold a {valueNoun}"
-    wordings:
-      - again: "{stripes line: the same {axis}}"
-        later: "{ring} must hold a {valueNoun} too"
-        look: >-
-          {stripes line: this {axis}} already has {if one: its
-          one empty {noun} | {if two: both of its empty {nouns} | all {numeral k}
-          of its empty {nouns}}}
-  # A line has all its symbols, written in (`allPlaced`) or only known by their
-  # squares, so the rest of it is empty.
-  countLettersDone:
-    ring: cell
-    terms: { axis: unit, allPlaced: flag, one: flag, two: flag, nums: number }
-    marks: { stripes: [line] }
-    move: "{ring} and the rest of it must be empty"
-    wordings:
-      - when: "allPlaced"
-        again: "{stripes line: the same {axis}}"
-        later: "{ring} must be empty too"
-        look: >-
-          {if one: The one {valueNoun} | {if two: Both {valueNoun}s | All
-          {numeral nums} {valueNoun}s}} of {stripes line: this {axis}} {if one:
-          is | are} already placed
-      - again: "{stripes line: the same {axis}}"
-        later: "{ring} must be empty too"
-        look: >-
-          We already know which {if one: {noun} | {numeral nums} {nouns}} of
-          {stripes line: this {axis}} {if one: holds its
-          {valueNoun} | hold its {valueNoun}s}
-  # A square whose notes are down to the empty-square mark alone.
-  crossNaked:
-    ring: cell
-    look: "Every {valueNoun} is ruled out in {ring}"
-    follows: "the empty-square mark is the only one left"
-    move: "the square must be empty"
-  # A square with notes, none of them the empty-square mark.
-  xNoteGone:
-    ring: cell
-    look: "{ring}'s pencil marks have no empty-square mark among them"
-    move: "it must hold a {valueNoun}"
-  # A clue sees `clueV` first. `skipped`: empty squares lie before the square
-  # it decides, outlined as `between`; else that square, `at`, is the nearest.
-  borderNear:
-    ring: cell
-    terms: { clueV: number, skipped: flag, k: number, one: flag }
-    marks: { outline: [clue, between, at] }
-    wordings:
-      - when: "not skipped"
-        look: >-
-          {outline clue: This clue} sees {clueV} first, and {outline at} nearest
-          it can hold only {clueV}
-      - look: >-
-          {outline clue: This clue} sees {clueV} first past {outline between:
-          {numeral k} empty {if one: {noun} | {nouns}}}, which leaves only
-          {clueV} for {ring}
-  # A clue's own symbol cannot sit this far in: cut off at the square `blocked`,
-  # known to hold a symbol; else past what the line's empties allow, `room` of
-  # them after it (`roomNone`: the rest are marked later), `n` the squares of
-  # `run` it is kept to (`near`: the one nearest it).
-  borderFar:
-    ring: cell
-    terms:
-      clueV: number
-      blocked: flag
-      axis: unit
-      near: flag
-      n: number
-      roomNone: flag
-      holesOne: flag
-      room: number
-      roomOne: flag
-    marks: { outline: [clue, blockedAt, run] }
-    wordings:
-      - when: "blocked"
-        look: >-
-          {outline clue: This clue} sees {clueV} first, and {outline blockedAt}
-          furthest from it holds a {valueNoun}
-      - when: "roomNone"
-        look: >-
-          {outline clue: This clue} sees {clueV} first, and the {axis}'s {if
-          holesOne: empty {noun} is | empty {nouns} are} marked
-          later, keeping it {outline run: {if near: in the {noun} nearest it |
-          in the first {numeral n}}}
-      - look: >-
-          {outline clue: This clue} sees {clueV} first, after at most {numeral
-          room} empty {if roomOne: {noun} | {nouns}}, keeping it {outline run:
-          {if near: in the {noun} nearest it | in the first {numeral n}}}
-  # Where a far strike crosses the clue's symbol out. This and the two kinds
-  # below are fragments the strike's sentence joins to its own words, so each
-  # is a `move`, which is not capitalized as a `look` is.
-  borderFarWhere:
-    ring: cell
-    terms: { blocked: flag }
-    move: "{if blocked: past it | beyond that}"
-  # A set rules a square out as empty: the outlined `set` hold all `k` empty
-  # squares of their line, and `any` says the symbols struck with the mark.
-  setHoles:
-    ring: cell
-    terms: { any: flag, one: flag, two: flag, k: number, axis: unit }
-    marks: { outline: [set] }
-    look: >-
-      {outline set} account for {if any: {struck} and {empties} | {empties}}
-      of their {axis}
-  # What that strike calls the notes it crosses out of a square.
-  setHolesStruck:
-    ring: cell
-    terms: { any: flag }
-    move: "{if any: {struck} and the X | the X}"
-  # Squares just settled as holding a symbol.
-  circleXNote:
-    ring: cell
-    terms: { one: flag }
-    look: "{ring} {if one: is | are} now known to hold a {valueNoun}"
-  # What a strike of the empty-square mark calls it.
-  emptyMarks:
-    ring: cell
-    terms: { one: flag }
-    move: "{if one: its empty-square mark | their empty-square marks}"
+    terms: { n: number, axis: unit, both: flag }
+    marks: { outline: [cell] }
+    look: "{outline cell: The {n} just placed} is the last empty {noun} {if both: of its row and its column | of its {axis}}"

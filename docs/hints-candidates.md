@@ -76,7 +76,7 @@ each of these the shared way is
 | Re-derive a placement's why | a placement is narrated as a single |
 | Solve the way a human does | you split a firing into legs, add auto-pencil, or a clue forces cells with no notes needed |
 | Placements lead when the deductions are placements | your game's signature deductions place values and strike none |
-| A cell decided without a value in the grid | a conclusion of your game is a marker, or one note stands for a solver value that is never placed |
+| A cell decided without a value in the grid | a conclusion of your game is a marker, or a value a line holds more than once |
 | Candidates that are not values | your candidates are directions, colors or anything but `1..n` |
 | A solver that sweeps | your solver's techniques apply everything they find in one call |
 | One deduction body, several clues | one solver routine intersects several clues at a cell |
@@ -187,7 +187,10 @@ born board's reach: the units' peers and what its placing techniques strike
 (Seismic's `cull`), asked once a cell and value. A value its units hold
 more than once (Salad's empty square) reaches no peer by itself: the
 library's `placed` strikes it from a unit once the unit holds every copy,
-the board's copies counted. A born board may have no
+the walk's working board's copies counted, and the description words that
+strike as the unit's last (`steps.last`, `REPEAT_STEPS`). A unit holds every
+value for a hidden single where its domain's values, the repeated one's
+copies counted, are as many as its cells. A born board may have no
 unit at all (ABCD's, whose lines count rather than forbid a repeat): its
 reach is then its techniques' alone, it has no hidden single, and its
 description words the walk's steps (`WALK_STEPS`), as the `counting`
@@ -358,9 +361,7 @@ could take now, and the frontier chooses. Its duties:
 - **A strike that rides as a later leg is also offered by itself.** The board
   can reach the state the leg tidies without the leg (the player makes the
   first move, or takes the first leg and goes their own way), and the plan
-  recomputes there. `circledEmptyNotes` in
-  [`salad/hint.ts`](../src/games/salad/hint.ts) is such a strike as a rung;
-  `salad-hint.test.ts` pins both routes.
+  recomputes there.
 - **A placement-first game marks its placing techniques `leads`** (§
   "Placements lead when the deductions are placements").
 - **Classify a trial rung by what its rejection can be, not by the fact that
@@ -482,8 +483,8 @@ check vouches for them".
 
 Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts), every
 born game's walk (Seismic's areas, and ABCD's board with no unit, among
-them), [`rome/hint.ts`](../src/games/rome/hint.ts),
-[`salad/hint.ts`](../src/games/salad/hint.ts) (a Latin game). Outside the
+them, and Salad's, whose empty square a line holds more than once),
+[`rome/hint.ts`](../src/games/rome/hint.ts). Outside the
 shared walk, Undead reads its ladder's firings off the notes the same way
 (`undeadFirings` in [`undead/solver.ts`](../src/games/undead/solver.ts)).
 
@@ -629,8 +630,7 @@ both readings, so the continuity bound holds whichever is the default.
 **A game with a `setUp` of its own walks the populate reading only**, and
 the walk refuses it the implicit one ("A plan's setup declares the reading
 it walks"). Its rung list leaves out `note` and `regionsFull`
-(`LATIN_POPULATE_RUNGS`; [`hints.md`](./hints.md) § "Name the rung a step
-speaks"). So does a game where no region rules a candidate out, whose
+([`hints.md`](./hints.md) § "Name the rung a step speaks"). So does a game where no region rules a candidate out, whose
 implicit reading would be a populate done one cell at a time.
 
 ### What the walk folds, and what a step owes it
@@ -769,41 +769,27 @@ Requirement: "A game's placing technique may lead". Exemplar:
 ## A cell decided without a value in the grid
 
 Where a conclusion settles a cell with a marker (this square is empty, this
-square is not), it is a move the canonical shapes have no room for, and the
-game handles it at four sites. Exemplar:
-[`salad/hint.ts`](../src/games/salad/hint.ts). A born board takes the
-uniform view below and needs none of the four: its empty square is a value
-of the domain, placed and noted like any (`play.numbers.empty`), and its
-ball is that value struck from the notes, a state of the candidates.
+square is not), make the marker a value of the domain, not a second kind of
+move: Salad's empty square is placed, noted and typed like any value
+(`play.numbers.empty`), and its ball is that value struck from the notes, a
+state of the candidates. The walk then needs no step of a game's own, no
+adapter reading a move as `null`, and no state beside `grid`.
 
-- **The plan takes it as a `step` leg** from a rung of the game's own, with
-  its own `apply`, and overrides `singles` and `placeable` where a lone note
-  or a hidden single is a marker and not a value.
-- **The adapter reads the marker move as `null`**, and the game's
-  `hint.keepTrack` and `hint.refreshStep` judge it before delegating.
-  `hint.refreshStep` resolves a marker step from the marker array: the shared
-  refresh keeps any step whose move its adapter reads as `null`, so it would
-  never resolve one.
-- **A marker is seeded on the technique's marks** where the game builds
-  them (Salad's cross is the hole symbol placed): a marker is an entry the
-  mistake check flags when wrong, so a technique may assume it.
-- **`onPlace` keeps the game's own state beside `grid`** when a placement
-  also settles it (Salad marks the square as no hole).
-
-Three rules that go with it:
-
-- **Find where the game's values are uniform, and put the collapse only at
-  the edge.** In the solver's cube the marker's value is a symbol like any
-  other; only the player-facing projection differs (one note while
-  undecided, a marker once settled, never a grid entry). Look for that
-  uniform view before widening a shared helper: a helper only asks which
-  note bit a placed value occupies.
-- **Re-derive a marker's why from the visible board, cheapest first, with no
-  weak arm to fall back on**: a line's counts, then the cell's own notes.
+- **A value a line holds more than once is the game's techniques' to
+  place.** The walk's naked and hidden singles skip it (`placeable`), since
+  a lone note of it is not a single, and a description's own rungs (Salad's
+  `emptyLine` and `emptySquare`) place it with words of their own.
+- **Its copies are counted from the walk's working board**, never the
+  player's (`reachOf`): a set's line still needs as many as are not yet
+  placed there.
+- **A placed copy strikes its line's notes only where it was the last one
+  the line needs.** The walk's "can't repeat" is false while the line needs
+  another, so it speaks a step the description words (`steps.last`, checked
+  by `REPEAT_STEPS`).
 - **Leave a technique's strike out only for the rung that says the same
-  thing, and name that rung.** A strike no step of the game's own teaches stays a
-  strike of the note, or the note stays on the board and a later single
-  never shows as one.
+  thing, and name that rung.** A strike no step teaches stays a strike of
+  the note, or the note stays on the board and a later single never shows
+  as one.
 
 A sweep that finds a fallback unused covers only the tiers it dealt: deal
 the tiers only the Custom dialog offers before retiring an arm on it.

@@ -9,6 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as emptying from "../../generated/engine/testing/fixtures/emptying/emptying.compiled.ts";
+import type { CandidateMove } from "../hint/candidate-hint.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
@@ -25,7 +26,7 @@ import { dealContext } from "./deal/context.ts";
 import { hideOf } from "./deal/hide.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import { applyMove, type FillMove } from "./notes.ts";
+import { applyMove, type FillMove, isCandidateMove } from "./notes.ts";
 import { numberInput } from "./numbers.ts";
 import { newFillUi } from "./play.ts";
 import { fillRender } from "./render.ts";
@@ -226,6 +227,76 @@ describe("the empty square", () => {
     );
     // Its column holds it once, and loses nothing.
     expect(notesOf(twice, 5)).toEqual([1, 2, 3, 4]);
+  });
+
+  describe("in the hint", () => {
+    // Each board's whole plan: where one firing places a line's two empty
+    // squares, the second's cull counts the first, which only the plan's
+    // working board holds.
+    const plans = Array.from({ length: 6 }, (_, i) => {
+      const b = game.newState(p, game.newDesc(p, randomNew(`walk-${i}`)).desc);
+      const plan = game.hint.plan(b);
+      if (!plan.ok) throw new Error(`no plan: ${JSON.stringify(plan)}`);
+      return { b, steps: plan.steps };
+    });
+    const placesEmpty = (m: FillMove): m is CandidateMove & { type: "set" } =>
+      isCandidateMove(m) && m.type === "set" && !m.pencil && m.n === EMPTY;
+
+    it("is placed by the description's techniques, never as a single", () => {
+      const rungs = plans.flatMap(({ steps }) =>
+        steps.filter((s) => placesEmpty(s.move)).map((s) => s.rung),
+      );
+      expect(rungs.length).toBeGreaterThan(0);
+      for (const r of rungs) expect(["emptyLine", "emptySquare"]).toContain(r);
+    });
+
+    it("is struck from a line its plan has just filled, said as the line's last", () => {
+      // Each whole plan replayed: a placement that gives its row or column
+      // every empty square it holds, the line's other squares still noting
+      // one, is followed by the cull, in the description's `last` words.
+      let culls = 0;
+      for (const plan of plans) culls += lastCulls(plan);
+      expect(culls).toBeGreaterThan(0);
+    });
+
+    function lastCulls(plan: (typeof plans)[number]): number {
+      let b = plan.b;
+      let culls = 0;
+      for (const [i, s] of plan.steps.entries()) {
+        b = applyMove(emptying, b, s.move);
+        if (!placesEmpty(s.move)) continue;
+        const { x, y } = s.move;
+        const lines = [
+          [0, 1, 2, 3, 4].map((j) => y * 5 + j),
+          [0, 1, 2, 3, 4].map((j) => j * 5 + x),
+        ];
+        const full = lines.filter(
+          (L) =>
+            L.filter((c) => b.values[c] === EMPTY).length === 2 &&
+            L.some((c) => b.values[c] === 0 && notesOf(b, c).includes(EMPTY)),
+        );
+        if (full.length === 0) continue;
+        const next = plan.steps[i + 1];
+        expect(next?.rung, `after step ${i}`).toBe("dup");
+        expect(next?.explanation).toMatch(/^The X just placed fills its (row|column)/);
+        culls++;
+      }
+      return culls;
+    }
+
+    it("finishes each board, a value's only square in a line a single", () => {
+      // A line holds each value once beside its empty squares, so a value
+      // with one square left in it is placed there: without that, a board the
+      // ladder finishes stalls in the walk with nothing placed.
+      let hidden = 0;
+      for (const { b, steps } of plans) {
+        let s = b;
+        for (const step of steps) s = applyMove(emptying, s, step.move);
+        expect(game.status(s)).toBe("solved");
+        hidden += steps.filter((st) => st.rung === "hiddenSingle").length;
+      }
+      expect(hidden).toBeGreaterThan(0);
+    });
   });
 
   describe("drawn", () => {
@@ -576,5 +647,16 @@ describe("values as a ruleset draws them", () => {
       }
     }
     expect(said).toBeGreaterThan(0);
+  });
+
+  it("calls a value a letter where the ruleset draws letters, else a number", () => {
+    for (const [id, noun] of [
+      ["5k3S", "letter"],
+      ["5k3B", "number"],
+    ] as const) {
+      const got = game.hint.plan(dealt(id, "noun").b);
+      if (!got.ok) throw new Error(`no plan: ${got.error}`);
+      expect(got.steps[0]?.explanation, id).toContain(`every candidate ${noun}`);
+    }
   });
 });

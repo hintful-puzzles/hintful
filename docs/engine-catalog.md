@@ -1773,7 +1773,7 @@ declares them, a blank cell's spelling (`empty`), the cells it cannot
 change (`fixed`) and `at`, which places a cell in its own mistake shape
 (`gridCell(w)` for a row-major grid). A game with further marks of its own
 checks those in its own loop and asks `entryMistake(board, i)` for the rest
-(`salad/solver.ts`). **The note half is what makes a candidate hint
+(the fill board's, in `engine/fill/answer.ts`). **The note half is what makes a candidate hint
 sound**: the hint reasons from the marks, so it must refuse on a mark set
 without its cell's answer. Exemplar: `src/skeleton/grid/index.ts`.
 
@@ -1794,7 +1794,7 @@ supplies its rungs, regions and words; the walk itself is
   populate, and a firing first writes the notes of every note-less cell its
   premise reads.
 - **A plan with a `setUp` of its own walks the populate reading alone** and
-  is typed so (`PlanRung<Reason, "populate">`, `LATIN_POPULATE_RUNGS`). See
+  is typed so (`PlanRung<Reason, "populate">`). See
   [`hints.md`](./hints.md) § "Name the rung a step speaks".
 - **A plain row/column square calls `runLatinCandidatePlan`** and supplies
   its rungs and words alone. A game whose singles narrate otherwise
@@ -1829,9 +1829,8 @@ library's set, fish and wing rungs of the plan, so the game writes legs
 only for its own techniques; `byCell` cuts a firing a leg a cell, for a
 game whose sentence names one cell's notes, and `byWrittenCell` a leg each
 only for the cells with no notes written, the rest in one, for a walk
-under the implicit reading. Exemplars:
-`src/games/salad/hint.ts`; a born board's walk builds its rungs so from its
-description (`src/engine/fill/candidates.ts`).
+under the implicit reading. Exemplar: a born board's walk builds its rungs
+so from its description (`src/engine/fill/candidates.ts`).
 
 ### `stated.ts` — a step's words as its description states them
 

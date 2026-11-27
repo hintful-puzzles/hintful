@@ -44,7 +44,6 @@ help:
 produces: numbers
 words:
   cell: cell
-  value: letter
 sizes:
   # Unbounded but by the time a board takes to deal.
   w: { min: 2 }

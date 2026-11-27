@@ -4,11 +4,28 @@
 # unsound.
 
 techniques:
+  # The square past the first not known empty taken to see the clue too.
+  borderNear:
+    conclude: >-
+      forall c in L where index(c, L) <= f + 1:
+      forall e in domain where e != v(k) and e <= n: strike(c, e)
   # The clue's letter given one square less reach than the empties
   # allow.
-  border:
+  borderFar:
     for: >-
-      k in clues(border), L = sight(at(k)), H = order - nums, f = index(first({c
-      in L where not (known(c) and value(c) = nums + 1)}), L), reach = H - 1 -
-      count(c in L where index(c, L) >= H and known(c) and value(c) = nums + 1),
-      stop = index(first({c in L where nums + 1 not in cand(c)}), L)
+      k in clues(border), L = sight(at(k)), H = w - n,
+      reach = H - 1 - count(c in L where index(c, L) >= H and known(c) and value(c) = n + 1),
+      stop = index(first({c in L where n + 1 not in cand(c)}), L)
+  # The ball's square struck its first symbol, not the empty square.
+  ball:
+    conclude: "strike(c, 1)"
+  # A line's empty squares placed with one place left over.
+  emptyLine:
+    for: >-
+      L in units,
+      E = {c in cells(L) where not known(c) and n + 1 in cand(c)},
+      k = w - n - count(c in cells(L) where known(c) and value(c) = n + 1)
+      where |E| > 0 and |E| = k + 1
+  # A square with the empty square and one symbol left taken to be empty.
+  emptySquare:
+    for: "c in cells where not known(c) and |cand(c)| = 2 and n + 1 in cand(c)"
