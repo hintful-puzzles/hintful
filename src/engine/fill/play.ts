@@ -63,6 +63,7 @@ import {
 } from "./board.ts";
 import { edgeGeometry, edgeReach, elementAtPoint } from "./edge-target.ts";
 import { applyEdit, type Edit } from "./edit.ts";
+import type { ReorderDrag } from "./order.ts";
 import type { SelectShape } from "./select.ts";
 
 /** Whether the painter named `paint` draws one of a pair of alike pieces. */
@@ -200,6 +201,10 @@ export interface FillPlay {
   /** On a square board of numbers with line labels, whether the player may
    * rule a divider between two lines (`dividers.ts`). */
   readonly dividers?: true;
+  /** On a square board of numbers with line labels, whether the player may
+   * order the lines, a row and the same column together, by dragging a
+   * label or with Shift and an arrow (`order.ts`). */
+  readonly order?: true;
   /** Where the open cells a definition holds of are washed (`washed`), the
    * preference that draws the secondary piece on one, on by default. */
   readonly wash?: { readonly pref?: { readonly kw: string; readonly name: string } };
@@ -261,6 +266,9 @@ export interface FillUi {
    * the cells it selected, the cursor's first; empty where the selection is
    * the cursor's cell alone. */
   selected?: number[];
+  /** On a board whose lines the player orders (`FillPlay.order`), the
+   * header drag under way, `null` where none is. */
+  reorder?: ReorderDrag | null;
   /** On a board that keeps notes, how its hint reads a cell with none (the
    * `hint-notes` preference). */
   candidateReading?: CandidateReading;

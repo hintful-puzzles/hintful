@@ -229,7 +229,13 @@ widest use first:
   2.4 starts by tracing whether one remap in `render/geometry.ts`'s
   `Layout` and the target lookup carries it; where it cannot, the sites are
   the plan. Its users are the boards whose lines are symbols, not places (a
-  clue at a line's end fixes the order).
+  clue at a line's end fixes the order). Built (2.4c) as a view, not a
+  remap: thirteen `render/` modules take a cell's board neighbor as the one
+  drawn beside it, so the renderer and the input are given the board
+  permuted into its order (`engine/fill/order.ts`), and what the board says
+  of its cells (live errors, mistakes, a hint's marks and gestures) is taken
+  across, with each move taken back. No layer learns of the order; the cost
+  is one permuted copy a frame and a press, a few dozen cells.
 
 ## What each flip changed for a player
 

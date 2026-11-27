@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square, some of its squares given, typed
+# into with notes, its lines labeled and divided, for the fill engine's
+# tests of a display order of the lines (`play.order`): a label dragged
+# along its margin, or Shift and an arrow, moves a row and the same column
+# together, on a description that names no game.
+game: reordering
+produces: latin
+sizes:
+  w: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "w" }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+shape:
+  - "latin(value, lines)"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  labels: { start: "i + 1" }
+  dividers: true
+  order: true
+  select: diagonal
+  boards: [4x4]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: a Latin square
+  given: every square's number, then each hidden while the board still finishes
+  tier: the one tier
+  sample: { latin: true }
+  hide: given
+id:
+  - digits: given
+    apart: _
+tiers: [Easy]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a square"
+  hiddenSingle: "the only square left for a number"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }

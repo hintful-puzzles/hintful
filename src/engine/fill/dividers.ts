@@ -45,7 +45,8 @@ export function applyDivider<C>(board: FillBoard<C>, move: DividerMove): FillBoa
   return { ...board, dividers: next };
 }
 
-/** The line after line `a` in the order the board is drawn in. */
+/** The line drawn after line `a`: the next, since a board in an order is
+ * drawn and pressed as its view, each line at its place (`order.ts`). */
 const following = (a: number): number => a + 1;
 
 /** Whether a divider is drawn after line `a` of `board`. */

@@ -302,6 +302,20 @@ export class Narration {
     );
   }
 
+  /** The same words, each mark drawn at the element `at` gives for the one
+   * it names: for a board drawn elsewhere than it is stored (a fill board's
+   * display order, `engine/fill/order.ts`). The words are still said of the
+   * elements named, so a later narrow keeps them as they are. */
+  drawnAt(at: (e: unknown) => unknown): this {
+    return this.remade(
+      this.parts.map((p) => {
+        if (!isReference(p)) return p;
+        const said = p.words(p.elements);
+        return { ...p, elements: p.elements.map(at), words: () => said };
+      }),
+    );
+  }
+
   /** The same words drawing one mark only: where on the board to look for the
    * step, without giving its answer away. That is the smallest piece of
    * evidence the words name, an outline before stripes because an outline is

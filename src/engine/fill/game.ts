@@ -7,7 +7,13 @@
  */
 
 import { descValue } from "../contract/desc-error.ts";
-import type { Game, GamePref, HintStep, PresetBoards } from "../contract/game.ts";
+import {
+  type Game,
+  type GamePref,
+  type HintStep,
+  type PresetBoards,
+  UI_UPDATE,
+} from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
 import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
@@ -77,6 +83,14 @@ import {
 } from "./hint.ts";
 import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
 import { type NumberInput, numberInput, typedUi } from "./numbers.ts";
+import {
+  boardCellOf,
+  followedCursor,
+  fromView,
+  orderOf,
+  toView,
+  viewOf,
+} from "./order.ts";
 import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
@@ -229,6 +243,7 @@ export function fillGame<C extends Clues<C> & object>(
     },
   });
   const notes = play.notes === true;
+  const ordered = play.order === true;
   // A board that keeps notes has these fields on its Ui (`typedUi`).
   const noted = <U>(pref: GamePref<U>): GamePref<FillUi> =>
     pref as unknown as GamePref<FillUi>;
@@ -392,11 +407,35 @@ export function fillGame<C extends Clues<C> & object>(
         });
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
+  /** The typed board's input, given the view of a board in an order
+   * (`order.ts`), each move it makes taken back to the board's lines. */
+  const typedMove = (
+    input: NumberInput<C, FillDrawState>,
+    b: FillBoard<C>,
+    ui: FillUi,
+    ds: FillDrawState,
+    p: Point,
+    button: number,
+  ) => {
+    const lines = orderOf(b, ui);
+    if (lines === null) return input.interpretMove(b, ui, ds, p, button);
+    const made = input.interpretMove(viewOf(b, lines), ui, ds, p, button);
+    if (made === null || made === UI_UPDATE) return made;
+    // A line put back at its own place moves nothing.
+    if (made.type === "reorder" && b.order?.[made.to] === made.line) return UI_UPDATE;
+    return fromView(b, lines, made);
+  };
   const inputs =
     buttons !== null
       ? { targetVerbs: buttons.targetVerbs, interpretMove: buttons.interpretMove }
       : {
-          interpretMove: (typed as NumberInput<C, FillDrawState>).interpretMove,
+          interpretMove: (
+            b: FillBoard<C>,
+            ui: FillUi,
+            ds: FillDrawState,
+            p: Point,
+            button: number,
+          ) => typedMove(typed as NumberInput<C, FillDrawState>, b, ui, ds, p, button),
           requestKeys: (p: FillParams, board?: FillBoard<C>) =>
             (typed as NumberInput<C, FillDrawState>).requestKeys(p, board),
         };
@@ -447,19 +486,34 @@ export function fillGame<C extends Clues<C> & object>(
     ...inputs,
     ...(typed === null || typed.done === null ? {} : { doneClues: typed.done.verbs }),
     executeMove: (b, m) => applyMove(module, b, fillMoveOf(m, `${id}: executeMove`)),
-    ...(!notes
+    ...(!notes ? {} : { markAll: (b: FillBoard<C>) => markAll(module, b) }),
+    ...(!notes && !ordered
       ? {}
       : {
-          markAll: (b: FillBoard<C>) => markAll(module, b),
-          // A cell selected for notes takes none once a value is on it,
-          // unless the keyboard holds the highlight there.
-          changedState: (ui: FillUi, _old: FillBoard<C> | null, b: FillBoard<C>) => {
+          changedState: (ui: FillUi, old: FillBoard<C> | null, b: FillBoard<C>) => {
             const { cursor } = ui;
+            // The cursor stays on its row and column wherever the order
+            // moved them, and a selection and a header drag end.
+            const before = old?.order ?? null;
+            if (
+              before !== null &&
+              b.order !== null &&
+              before.some((l, i) => l !== b.order?.[i])
+            ) {
+              const { x, y } = followedCursor(before, b.order, cursor);
+              cursor.x = x;
+              cursor.y = y;
+              if (ui.selected !== undefined) ui.selected = [];
+              ui.reorder = null;
+            }
+            // A cell selected for notes takes none once a value is on it,
+            // unless the keyboard holds the highlight there.
+            const at = cursor.y * b.w + cursor.x;
             if (
               cursor.visible &&
               ui.pencilMode === true &&
               ui.cursorFromKeyboard !== true &&
-              b.values[cursor.y * b.w + cursor.x] !== 0
+              b.values[b.order === null ? at : boardCellOf(b.order, b.w, at)] !== 0
             )
               cursor.visible = false;
           },
@@ -499,7 +553,13 @@ export function fillGame<C extends Clues<C> & object>(
       ...(walked ?? hint),
       marks: { roles: module.hintMarks },
       gesture: (b, ui, ds, move, step) => {
-        if (typed !== null) return typed.gesture(b, ui, ds, move);
+        if (typed !== null) {
+          // On a board in an order, the step is shown where its view draws it.
+          const lines = orderOf(b, ui);
+          return lines === null
+            ? typed.gesture(b, ui, ds, move)
+            : typed.gesture(viewOf(b, lines), ui, ds, toView(b, lines, move));
+        }
         // A board of buttons makes edits alone.
         if ("type" in move)
           throw new Error(`${id}: no gesture for ${JSON.stringify(move)}`);

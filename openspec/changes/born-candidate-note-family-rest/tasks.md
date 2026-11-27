@@ -1,7 +1,7 @@
 ## Next
 
-2.4c, then the rest of Group. The figures of 3.1 are taken again at the
-end, after 3.1a's and 3.1b's fixes.
+2.4d, the rest of Group. The figures of 3.1 are taken again at the end,
+after 3.1a's and 3.1b's fixes.
 Group's controls are answered: keep them, as engine capabilities
 (design.md § "Decisions" 2).
 
@@ -58,20 +58,10 @@ changed for a player" gets its line. In the order task 1.1 set.
         `play.select`, on the `selecting` fixture; the commit that ticks
         2.4a. In notes mode it notes each square, or strikes from all.
   - [x] 2.4b A player's divider between two lines: `play.dividers`, on
-        the `ruling` fixture; the commit that ticks 2.4b. 2.4c's order goes
-        in at `dividers.ts`'s `following`.
-  - [ ] 2.4c A display order of a square's lines, dragged by a header;
-        first, trace whether `Layout` and the target lookup carry it.
-        Traced 2026-11-27: thirteen `render/` modules step to a cell's
-        board neighbor as the one drawn beside it (outlines, joins, bars,
-        walls), so a remap in `Layout` alone does not carry it. Try first a
-        board permuted into display order for the renderer, its errors,
-        mistakes and hint cells mapped through the order, and the pointer
-        and cursor mapped back; an order is offered only where no clue sits
-        at a line's end or a part (design.md § "Decisions" 2). A
-        press between two labels toggles a divider on the press today:
-        with a header to drag it moves to the release with no drag, as
-        upstream Group's.
+        the `ruling` fixture; the commit that ticks 2.4b.
+  - [x] 2.4c A display order of a square's lines: `play.order`, on the
+        `reordering` fixture, drawn and played as the board's view in its
+        order (design.md § "Decisions" 2); the commit that ticks 2.4c.
   - [ ] 2.4d Group's deal, letters and ruleset; then its flip. The
         selection's and the dividers' look are checked in the browser
         here, the fixtures having no page.

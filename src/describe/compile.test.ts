@@ -1160,6 +1160,46 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play dividers: a divider rules two rows and two columns alike/);
   });
 
+  it("refuses an order off a square board of numbers with labels, or where a place is fixed", () => {
+    const fixture = (name: string) =>
+      `src/engine/testing/fixtures/${name}/${name}.description.yaml`;
+    type Edited = {
+      play: { order?: boolean; dividers?: boolean; labels?: { start: string } };
+      space: { grid: { h: string } };
+    };
+    const order = (j: Edited) => {
+      j.play.order = true;
+      return j;
+    };
+    const labeled = (j: Edited) => {
+      j.play.labels = { start: "i + 1" };
+      return order(j);
+    };
+    expect(compileEdited(fixture("reordering"), (j) => j)).toContain('"order":true');
+    expect(() => compileEdited(fixture("playing"), order)).toThrow(
+      /play order: an order is a board of numbers', and play has no `numbers`/,
+    );
+    expect(() => compileEdited(fixture("selecting"), order)).toThrow(
+      /play order: a line is dragged by its label/,
+    );
+    expect(() =>
+      compileEdited(fixture("reordering"), (j: Edited) => {
+        j.space.grid.h = "w + 1";
+        delete j.play.dividers;
+        return j;
+      }),
+    ).toThrow(/play order: an order moves a row and the same column together/);
+    expect(() => compileEdited(fixture("boxing"), labeled)).toThrow(
+      /play order: an order keeps the rows and the columns alone, and the space has box/,
+    );
+    expect(() => compileEdited(fixture("ordering"), labeled)).toThrow(
+      /play order: a clue off the cells keeps its place in an order, and greater is one/,
+    );
+    expect(() => compileEdited(fixture("caging"), labeled)).toThrow(
+      /play order: a clue off the cells keeps its place in an order/,
+    );
+  });
+
   it("refuses a stream's codes that could not be read back", () => {
     const source = "src/engine/testing/fixtures/walling/walling.description.yaml";
     const walling = sources.get(source);

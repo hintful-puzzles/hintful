@@ -1385,6 +1385,10 @@
               "const": true,
               "description": "On a square board of `numbers` with `labels`, whose rows and columns stand for the same things, the player may rule a divider between two lines, drawn as a wall across the board between those two rows and those two columns at once (upstream Group's, round a subgroup): a press in the labels' margin toggles the one nearest it, and `|` and `-` the one after the cursor's column or row. It is a move, undone as any, and a restart takes every divider away."
             },
+            "order": {
+              "const": true,
+              "description": "On a square board of `numbers` with `labels`, whose rows and columns stand for the same things, the player may put the lines in an order of their own, a row and the same column moved together, each value staying on its line (upstream Group's, to line up a subgroup): a label dragged along its margin carries its line to where it is let go, and Shift with an arrow moves the cursor's column or row a place. Where `dividers` are on, a press on the labels that does not drag toggles the divider nearest it on its release, and a divider whose two lines an order parts is taken away. It is a move, undone as any, and a restart puts the lines back in their own order. Offered only where nothing else is fixed to a line's place: the space's units are the rows and columns alone, and every clue sits at a cell."
+            },
             "wash": {
               "type": "object",
               "description": "A wash over the open cells where `when` holds of the values, `c` the cell (Light Up's lit squares). An open washed cell reads as the secondary value to the live errors, and a placement's consequences there are what the board shows, so the hint neither makes nor says them. `pref`, where given, is a preference, on by default, that draws the secondary piece on a washed cell; off, it is left out.",

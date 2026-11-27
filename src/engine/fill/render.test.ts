@@ -164,16 +164,9 @@ describe("a fill game's labels", () => {
     expect(render.origin(TS, state)).toBe(TS);
     const p = { w: W, h: W, diff: 0 };
     expect(render.computeSize(p, TS).w).toBe(plain.computeSize(p, TS).w + TS - 1);
-    expect(texts(ops).slice(0, 2 * W)).toEqual([
-      "1",
-      "2",
-      "3",
-      "4",
-      "1",
-      "2",
-      "3",
-      "4",
-    ]);
+    // The texts in the margin, the rows' labels first.
+    const margin = ops.filter((o) => o.op === "text" && (o.x < TS || o.y < TS));
+    expect(texts(margin)).toEqual(["1", "2", "3", "4", "1", "2", "3", "4"]);
   });
 });
 

@@ -184,6 +184,9 @@ export function fillSetup<C extends Clues<C>>(
     slotClues,
     slotted,
     labelStart,
+    /** The board is drawn in the order the player gives its lines
+     * (`order.ts`). */
+    ordered: play.order === true,
     walled,
     inset,
     labeledBy,

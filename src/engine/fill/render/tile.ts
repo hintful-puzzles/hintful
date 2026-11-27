@@ -13,6 +13,7 @@ import { sweepStep } from "../../render/win-wave.ts";
 import type { Clues, FillBoard } from "../board.ts";
 import { dividerSides } from "../dividers.ts";
 import { isDone } from "../done.ts";
+import { draggedCells } from "../order.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import { typedCells } from "../select.ts";
 import type { CellLayout } from "./cell-text.ts";
@@ -84,10 +85,12 @@ export function tileWordsOf<C extends Clues<C>>(
   const { w, h } = state;
   const cx0 = ui.cursor.visible ? ui.cursor.x : -1;
   const cy0 = ui.cursor.visible ? ui.cursor.y : -1;
-  // A selection's every cell is highlighted as the cursor's.
-  const selected = new Set(
-    ui.cursor.visible ? typedCells(cy0 * w + cx0, ui.selected) : [],
-  );
+  // A selection's every cell is highlighted as the cursor's, and so is the
+  // line a header drag carries (`order.ts`).
+  const selected = new Set([
+    ...(ui.cursor.visible ? typedCells(cy0 * w + cx0, ui.selected) : []),
+    ...draggedCells(ui, w),
+  ]);
   // On an answer on the edges a cell holds no value: its sides' are in its
   // edge word.
   const valueAt = (i: number): number => (cx.onEdges ? 0 : shown.values[i]);

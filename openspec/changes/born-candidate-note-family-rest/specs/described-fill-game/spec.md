@@ -650,6 +650,50 @@ setting it elsewhere SHALL be refused.
 - **THEN** the divider after column 2 is toggled, and with it the one after
   row 2
 
+### Requirement: A born square board of numbers may let the player order its lines
+
+Where the description's `play.order` is set, on a square board of numbers
+with line labels, a label dragged along its margin SHALL carry its row and
+the same column to where it is let go, and Shift with an arrow SHALL move
+the cursor's column or row a place. The order SHALL be a move a save holds,
+which a restart undoes. A description setting it off such a board, or with
+a unit beyond the lines or a clue off the cells, SHALL be refused.
+
+#### Scenario: A line dragged by its label
+
+- **WHEN** the player drags the label of the first column to the third
+  place
+- **THEN** that column and the same row are drawn third, their labels and
+  values with them
+
+#### Scenario: A line moved from the keyboard
+
+- **WHEN** the cursor is in the second column and the player types
+  Shift+Right
+- **THEN** that column and the same row move to the third place, and the
+  cursor is still on them
+
+### Requirement: A born board in an order is drawn and played where its lines are shown
+
+On a board whose lines the player orders, every value, given, note, live
+error, mistake and hint mark SHALL be drawn at the place its line is shown,
+a square pressed or typed into SHALL be the one drawn there, and a line
+being dragged SHALL be shown as selected. Where dividers are on, a press on
+the labels SHALL toggle its divider on its release, and only where it never
+dragged; a divider whose two lines an order parts SHALL be taken away.
+
+#### Scenario: A broken rule after a reorder
+
+- **WHEN** two squares of a row hold the same number and the lines are
+  reversed
+- **THEN** both numerals are drawn red in the last row, at the places their
+  columns are shown
+
+#### Scenario: A press on the labels that never drags
+
+- **WHEN** the player presses between two labels and lets go there
+- **THEN** the divider there is toggled on the release
+
 ## MODIFIED Requirements
 
 ### Requirement: A born game's answer may be searched under a partition dealt first

@@ -204,6 +204,11 @@ export interface FillBoard<C> {
    * for each line the line its divider waits for, `-1` where it has none;
    * `null` on a board that keeps none. */
   readonly dividers: Int32Array | null;
+  /** On a square board whose lines the player orders (`play.order`,
+   * `order.ts`), the line drawn at each place, rows and columns alike;
+   * `null` on a board that keeps none, and on the view of one drawn in its
+   * order. */
+  readonly order: Int32Array | null;
 }
 
 /** What a board's space is built from: its stored size, its clues, among
@@ -366,11 +371,13 @@ export function newBoard<C>(
       ]),
     ),
     dividers: module.play?.dividers === true ? new Int32Array(w).fill(-1) : null,
+    order:
+      module.play?.order === true ? Int32Array.from({ length: w }, (_, i) => i) : null,
   };
 }
 
-/** The board as dealt: its fixed cells alone, and no marks, notes or clues
- * marked done. */
+/** The board as dealt: its fixed cells alone, and no marks, notes, clues
+ * marked done, dividers or order of the player's. */
 export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
   return {
     ...board,
@@ -384,6 +391,7 @@ export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
       ]),
     ),
     dividers: board.dividers === null ? null : board.dividers.slice().fill(-1),
+    order: board.order === null ? null : board.order.map((_, i) => i),
   };
 }
 

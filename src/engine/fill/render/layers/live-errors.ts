@@ -12,7 +12,7 @@ import { COL_ERROR } from "../../../color/roles.ts";
 import type { GameDrawing } from "../../../contract/game.ts";
 import type { Rect } from "../../../contract/types.ts";
 import { drawThickRectOutline } from "../../../render/draw.ts";
-import { liveErrors } from "../../../render/live-errors.ts";
+import type { LiveErrors } from "../../../render/live-errors.ts";
 import type { Partition } from "../../../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, listOf } from "../../board.ts";
 import { COL_ERRTEXT, COL_INK } from "../palette.ts";
@@ -71,20 +71,18 @@ const DIAMOND_AT: readonly (readonly [number, number])[] = [
 const diamondBit = (hx: number, hy: number): number =>
   1 << (DIAMOND_SHIFT + DIAMOND_AT.findIndex(([x, y]) => x * 2 === hx && y * 2 === hy));
 
-/** The tile words of the board's live errors: a pair's diamond and the
- * cells in error, the bars along a run and across lines, and the line
- * clues broken. */
+/** The tile words of the board's live errors `errors`, read on the board
+ * as the drag would leave it: a pair's diamond and the cells in error, the
+ * bars along a run and across lines, and the line clues broken. */
 export function errorWords<C extends Clues<C>>(
   setup: FillSetup<C>,
   state: FillBoard<C>,
-  shown: FillBoard<C>,
+  errors: LiveErrors,
 ) {
-  const { rules, partRules, gapped, lineClues, lineLists, slotClues, cornerKinds } =
-    setup;
+  const { partRules, gapped, lineClues, lineLists, slotClues, cornerKinds } = setup;
   const { valueMargins } = setup;
   const { partKinds, numbers, labeledBy, play } = setup;
   const { w, h } = state;
-  const errors = liveErrors(rules, shown);
   const word = new Int32Array(w * h);
   // On an answer on the edges a rule breaks at edges, each drawn in error
   // whatever their number or shape.

@@ -264,6 +264,36 @@ export function playOf(
         `play dividers: a divider rules two rows and two columns alike, and the grid is not square (${grid?.w} by ${grid?.h})`,
       );
   }
+  // An order moves a row and the same column together, its labels with
+  // them, so it is offered only where nothing else is fixed to a line's
+  // place: no unit but the lines, and no clue but at a cell.
+  if (p.order === true) {
+    if (p.numbers === undefined)
+      throw new CompileError(
+        "play order: an order is a board of numbers', and play has no `numbers`",
+      );
+    if (labels?.start === undefined)
+      throw new CompileError(
+        "play order: a line is dragged by its label, and play has no `labels.start`",
+      );
+    const grid = json.space.grid;
+    if (grid === undefined || grid.w !== grid.h)
+      throw new CompileError(
+        `play order: an order moves a row and the same column together, and the grid is not square (${grid?.w} by ${grid?.h})`,
+      );
+    const units = json.space.units.filter((u) => u !== "rows" && u !== "cols");
+    if (units.length > 0)
+      throw new CompileError(
+        `play order: an order keeps the rows and the columns alone, and the space has ${units.join(", ")}`,
+      );
+    const offCells = [...d.clueKinds]
+      .filter(([, k]) => k.at !== "cell")
+      .map(([n]) => n);
+    if (offCells.length > 0)
+      throw new CompileError(
+        `play order: a clue off the cells keeps its place in an order, and ${offCells.join(", ")} is one`,
+      );
+  }
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
   const plainPlay = {

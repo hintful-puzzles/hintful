@@ -20,12 +20,16 @@ import {
 import type { PointerAction } from "../input/hint-gesture.ts";
 import { clearKey } from "../input/key-labels.ts";
 import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
   CURSOR_SELECT2,
+  CURSOR_UP,
   isCursorMove,
   isEraseKey,
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
+  MOD_SHFT,
   moveCursor,
   RIGHT_BUTTON,
   stripModifiers,
@@ -67,8 +71,18 @@ import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done
 import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
+import { dragTo, labelAt, type ReorderMove, type Viewed } from "./order.ts";
 import type { FillPlay, FillUi } from "./play.ts";
-import { selectedCells, selectionMove, typedCells } from "./select.ts";
+import {
+  type SelectShape,
+  selectedCells,
+  selectionMove,
+  typedCells,
+} from "./select.ts";
+
+/** What a step of the input answers where the button is not its own, so the
+ * next takes it: `null` is an answer, "nothing happened". */
+const PASS = "pass";
 
 /**
  * The keypad's last value on a board of `size`, which the params alone
@@ -108,6 +122,7 @@ export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi 
   }
   if (play.numbers?.raised === true) ui.raised ??= true;
   if (play.select !== undefined) ui.selected ??= [];
+  if (play.order === true) ui.reorder ??= null;
   return ui;
 }
 
@@ -172,7 +187,14 @@ export interface NumberInput<C, D> {
     ds: D,
     p: Point,
     button: number,
-  ): CandidateMove | SetCellsMove | DoneMove | DividerMove | UiUpdate | null;
+  ):
+    | CandidateMove
+    | SetCellsMove
+    | DoneMove
+    | DividerMove
+    | ReorderMove
+    | UiUpdate
+    | null;
   /** A key a value, then the clear key, for a board of the params `p`, and
    * of `board` where it is in play. */
   requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
@@ -192,6 +214,7 @@ export function numberInput<
   const notes = module.play?.notes === true;
   const select = module.play?.select;
   const dividers = module.play?.dividers === true;
+  const ordered = module.play?.order === true;
   const done =
     module.play === undefined
       ? null
@@ -210,6 +233,94 @@ export function numberInput<
       topValue(module, spaceOf(module, b), b.dealt),
     );
   };
+  /** The line each place of the view `b` shows: an ordered board's input
+   * is given its view (`order.ts`). */
+  const linesOf = (b: FillBoard<C>): Int32Array => {
+    const { lines } = b as Partial<Viewed<C>>;
+    if (lines === undefined) throw new Error("order: the input is given a view");
+    return lines;
+  };
+  /** A selection's input: a press starts it afresh, and a drag from the
+   * cell it selected for typing selects the shape to where the pointer
+   * is. */
+  function selecting(
+    shape: SelectShape,
+    b: FillBoard<C>,
+    fillUi: FillUi,
+    ds: D,
+    p: Point,
+    button: number,
+  ): UiUpdate | null | typeof PASS {
+    const ui = noteTaking(fillUi);
+    if (button === LEFT_BUTTON || button === RIGHT_BUTTON) fillUi.selected = [];
+    if (!isMouseDrag(button) || sweepOpen(fillUi)) return PASS;
+    if (!ui.cursor.visible || ui.pencilMode) return null;
+    const to = geometry.pointerTarget(b, ds, p, ui);
+    fillUi.selected = selectedCells(
+      shape,
+      b.w,
+      ui.cursor.y * b.w + ui.cursor.x,
+      to === null ? null : to.y * b.w + to.x,
+    );
+    return UI_UPDATE;
+  }
+  /** The input of a board in an order: a header drag, and Shift and an
+   * arrow, which moves the cursor's column (left, right) or row (up, down) a
+   * place along the order, rows and columns being one. */
+  function reordering(
+    b: FillBoard<C>,
+    fillUi: FillUi,
+    ds: D,
+    p: Point,
+    raw: number,
+  ): ReorderMove | DividerMove | UiUpdate | null | typeof PASS {
+    const button = stripModifiers(raw);
+    if (!isCursorMove(button) || !(raw & MOD_SHFT))
+      return headerDrag(b, fillUi, ds, p, button);
+    const ui = noteTaking(fillUi);
+    // A hidden cursor is shown first, so the line it moves is seen.
+    if (!ui.cursor.visible) {
+      ui.cursor.visible = true;
+      ui.cursorFromKeyboard = true;
+      return UI_UPDATE;
+    }
+    const rows = button === CURSOR_UP || button === CURSOR_DOWN;
+    const from = rows ? ui.cursor.y : ui.cursor.x;
+    const to = from + (button === CURSOR_LEFT || button === CURSOR_UP ? -1 : 1);
+    if (to < 0 || to >= b.w) return null;
+    return { type: "reorder", line: linesOf(b)[from], to };
+  }
+  /** A header drag: a press on a label starts it, a drag carries the line
+   * along, and its release moves the line there; a release where it never
+   * moved is a press between two labels, which toggles the divider there. */
+  function headerDrag(
+    b: FillBoard<C>,
+    ui: FillUi,
+    ds: D,
+    p: Point,
+    button: number,
+  ): ReorderMove | DividerMove | UiUpdate | null | typeof PASS {
+    const ts = ds.tileSize;
+    const o = origin(ts, b);
+    const pitch = ts + gap(ts);
+    const drag = ui.reorder ?? null;
+    if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+      const label = labelAt(b.w, o, pitch, p);
+      if (label === null) return PASS;
+      const { place, rows } = label;
+      ui.reorder = { line: linesOf(b)[place], rows, to: place, moved: false, press: p };
+      return UI_UPDATE;
+    }
+    if (drag === null) return PASS;
+    if (isMouseDrag(button)) {
+      dragTo(drag, b.w, o, pitch, p);
+      return UI_UPDATE;
+    }
+    if (!isMouseRelease(button)) return PASS;
+    ui.reorder = null;
+    if (drag.moved) return { type: "reorder", line: drag.line, to: drag.to };
+    return (dividers ? dividerAt(b, o, pitch, drag.press) : null) ?? UI_UPDATE;
+  }
   return {
     done,
     interpretMove(b, fillUi, ds, p, raw) {
@@ -221,21 +332,15 @@ export function numberInput<
         fillUi.raised === true && (button === LEFT_BUTTON || button === RIGHT_BUTTON)
           ? raisedPressed(b, ds, p)
           : null;
-      // A press starts a selection afresh, and a drag from the cell it
-      // selected for typing selects the shape to where the pointer is.
+      // A press on a label is a header drag's, and so is the drag after it;
+      // Shift and an arrow moves a line.
+      if (ordered) {
+        const headed = reordering(b, fillUi, ds, p, raw);
+        if (headed !== PASS) return headed;
+      }
       if (select !== undefined) {
-        if (button === LEFT_BUTTON || button === RIGHT_BUTTON) fillUi.selected = [];
-        if (isMouseDrag(button) && !sweepOpen(fillUi)) {
-          if (!ui.cursor.visible || ui.pencilMode) return null;
-          const to = geometry.pointerTarget(b, ds, p, ui);
-          fillUi.selected = selectedCells(
-            select,
-            b.w,
-            ui.cursor.y * b.w + ui.cursor.x,
-            to === null ? null : to.y * b.w + to.x,
-          );
-          return UI_UPDATE;
-        }
+        const selected = selecting(select, b, fillUi, ds, p, button);
+        if (selected !== PASS) return selected;
       }
       if (dividers && (button === LEFT_BUTTON || button === RIGHT_BUTTON)) {
         const ts = ds.tileSize;
