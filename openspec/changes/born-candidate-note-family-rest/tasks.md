@@ -1,7 +1,16 @@
 ## Next
 
 Salad (2.3): 2.3b, a clue kind dealt only on a ruleset's boards, then
-2.3c to the flip, a capability a fixture each. Open: Group's header
+2.3c to the flip, a capability a fixture each. Planned for 2.3b
+(2026-11-27): a `gives: size` choice states the kinds it `deals`; one no
+choice names is dealt on every board. `derive.ts` wraps such a kind's
+derivation in a test of the size (added to the sizes read, so `Dealt`
+holds it); `encodeDesc`/`decodeDesc` skip a segment whose kinds are all
+off the board and a stream reads no code of an off kind (helper beside
+`sizeChoices` in `params/settings.ts`); `choice.ts`'s `codesSegment`
+writes a ruleset's code at its default too (Seismic's is `""`, Solo's
+deal choice stays unwritten). On `emptying`: rulesets of its slot clue
+and a ball. Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
