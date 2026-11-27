@@ -3008,7 +3008,14 @@
                   "code": {
                     "type": "string",
                     "pattern": "^[A-Za-z0-9]*$",
-                    "description": "What the params write for the choice, in a setting with no `letter`; `\"\"`, the default's alone, is written as nothing, and the default is never written (upstream solo.c's `m4`, Seismic's `T`)."
+                    "description": "What the params write for the choice, in a setting with no `letter`; `\"\"`, the default's alone, is written as nothing. A ruleset (a choice that gives a size) is written at its default too (Salad's `L`), a choice of the deal never (upstream solo.c's `m4`, Seismic's `T`)."
+                  },
+                  "deals": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "A size's ruleset's clue kinds dealt only on its boards: a kind a choice names is dealt, drawn and written in the ID on a board of a choice naming it alone, and one no choice names on every board (Salad's border clues under Letters, its balls under Numbers)."
                   },
                   "bounds": {
                     "type": "object",

@@ -46,6 +46,9 @@ export interface Decoding<C> {
   readonly variations: readonly string[];
   /** As {@link Encoding.values}. */
   readonly values: number;
+  /** The kinds the board is not dealt, by its ruleset, which a segment
+   * reads no clue of. */
+  readonly off: ReadonlySet<string>;
 }
 
 /** The places kind `kind` is written at, in the order a segment writes them

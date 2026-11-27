@@ -39,6 +39,9 @@ export interface Choice {
    * answer on. */
   readonly rule?: string;
   readonly least?: number;
+  /** Where it is a ruleset: the clue kinds dealt only on its boards and
+   * another's that names them. */
+  readonly deals?: readonly string[];
 }
 
 /** A choice, its index from `from`. Where it `gives` a size, the size of its
@@ -81,7 +84,9 @@ export function leastWords(settings: readonly ChoiceSetting[]): string {
 }
 
 /** A setting written by its choices' codes, longest first where one begins
- * another; absent, its default. */
+ * another; absent, its default. A ruleset is written at its default too,
+ * unless its code is `""` (Salad's `L`, upstream writing its mode always);
+ * a choice of the deal never is. */
 function codesSegment(s: ChoiceSetting): ParamsSegment<FillParams> {
   const codes = s.choices.map((c, i) => {
     if (c.code === undefined) throw new Error(`settings: ${s.id} has no letter`);
@@ -92,9 +97,9 @@ function codesSegment(s: ChoiceSetting): ParamsSegment<FillParams> {
     .sort(([a], [b]) => b.length - a.length);
   return {
     encode: (p, full) => {
-      if (s.gives !== "size" && !full) return "";
       const v = choiceOf(s, p);
-      return v === s.default ? "" : (codes[v]?.[0] ?? "");
+      if (s.gives === "size") return codes[v]?.[0] ?? "";
+      return !full || v === s.default ? "" : (codes[v]?.[0] ?? "");
     },
     decode: (str, i, p) => {
       const found = longestFirst.find(([code]) => str.startsWith(code, i));

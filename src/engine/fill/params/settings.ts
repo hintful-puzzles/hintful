@@ -106,6 +106,22 @@ export const sizeChoices = (deal: FillDeal): ChoiceSetting[] =>
     (s): s is ChoiceSetting => s.kind === "choice" && s.gives === "size",
   );
 
+/** The clue kinds a board of the sizes `sizes` is not dealt: each a
+ * ruleset names (`Choice.deals`) and the board's does not. A size `sizes`
+ * lacks is its default. */
+export function offKinds(
+  deal: FillDeal,
+  sizes: Readonly<Record<string, number>>,
+): ReadonlySet<string> {
+  const off = new Set<string>();
+  for (const s of sizeChoices(deal)) {
+    const on = s.choices[(sizes[s.id] ?? s.from + s.default) - s.from]?.deals ?? [];
+    for (const c of s.choices)
+      for (const k of c.deals ?? []) if (!on.includes(k)) off.add(k);
+  }
+  return off;
+}
+
 /** The flags that give variations, in their order. */
 export const variationFlags = (deal: FillDeal): FlagSetting[] =>
   deal.settings.filter(

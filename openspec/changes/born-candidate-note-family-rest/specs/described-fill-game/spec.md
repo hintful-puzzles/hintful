@@ -349,3 +349,20 @@ MAY read a size the params give.
 - **WHEN** a `5k3` board is sampled, and its clues derived from the answer
 - **THEN** each line holds 1 to 3 once and the empty square twice, each clue
   is a number up to 3, and the ladder never proves the board impossible
+
+### Requirement: A born board's ruleset may choose the clue kinds it is dealt
+
+A choice of a size (a ruleset) MAY name the clue kinds dealt on its boards
+alone (`deals`). Such a kind SHALL be derived, hidden, drawn and written in
+the ID only on a board of a ruleset naming it; elsewhere it SHALL hold no
+clue, an ID segment of such kinds alone SHALL be neither written nor read,
+and a stream SHALL read no code of it. A kind no choice names SHALL be
+dealt on every board. A ruleset written by a code SHALL be written at its
+default too, unless the code is empty.
+
+#### Scenario: The emptying fixture's two rulesets
+
+- **WHEN** a `5k3B` board is dealt, a `4k3` board's params written, and a
+  `4k3S` desc read whose squares hold `O`
+- **THEN** the first holds balls and no clue at a line's end, and its desc
+  writes no slots; the params read `4k3S`; the desc is refused

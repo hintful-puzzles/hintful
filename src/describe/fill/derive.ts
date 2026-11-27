@@ -29,6 +29,7 @@ import { latinOf } from "./clue-steps.ts";
 import { answerEnv, param } from "./emit.ts";
 import { UNIVERSE } from "./locations.ts";
 import { dealtBy, dealtPartitions } from "./partitions.ts";
+import { ruledKinds } from "./settings.ts";
 
 /** `deal.oneIn`: by clue kind, the cells a clue at `at` is the one of, so
  * the deal shows one in each such group, at a random member. */
@@ -212,7 +213,14 @@ export function derivedClues(
   env: Env,
   measured: (e: Expr) => Expr,
 ): string[] {
-  if (sampleOf(json) === null) return [];
+  if (sampleOf(json) === null) {
+    // Only a derive deals a kind on some boards alone.
+    for (const [kind, { size }] of ruledKinds(json))
+      throw new CompileError(
+        `settings ${size}: deals ${kind}, and the deal samples no answer`,
+      );
+    return [];
+  }
   // The partition the deal grows round the answer, or those it divides apart
   // from it.
   const growing = growOf(json)?.partition;
@@ -243,7 +251,21 @@ export function derivedClues(
   const partKinds = [...d.clueKinds.values()].some(atParts);
   if (partKinds && Object.keys(oneIn).length > 0)
     throw new CompileError("deal oneIn: a kind dealt one a group, and kinds at parts");
+  const ruled = ruledKinds(json);
   for (const [kind, c] of d.clueKinds) {
+    const rule = ruled.get(kind);
+    if (
+      rule !== undefined &&
+      (kind === tally ||
+        kind === outside ||
+        never.includes(kind) ||
+        oneIn[kind] !== undefined ||
+        atParts(c) ||
+        env.clues.get(kind)?.list === true)
+    )
+      throw new CompileError(
+        `settings ${rule.size}: deals ${kind}, which is no clue of one value a sampled deal derives at a cell, a line, a slot, an edge or a corner`,
+      );
     // The tally is the params', as a size is.
     if (kind === tally) {
       dealt.push(`${kind}: sizes.${kind}`);
@@ -353,6 +375,14 @@ export function derivedClues(
     // parts (Solo's cages and their totals, Killer's alone).
     const gated = parts && dealtBy(json, c.at) !== null;
     if (gated) derive.open(`if (cl.${c.at} !== undefined) {`);
+    // A kind a ruleset deals is dealt on its boards alone (Salad's border
+    // clues, Letters' alone): the size is read, so `Dealt` holds it.
+    if (rule !== undefined) {
+      env.sizes.read.add(rule.size);
+      derive.open(
+        `if (${rule.values.map((n) => `sizes.${rule.size} === ${n}`).join(" || ")}) {`,
+      );
+    }
     // A meaning `E = v` is solved for `v`: a value at a time would try 9^6
     // products on a cage of six.
     const solved = solvedFor(measured(c.means));
@@ -402,6 +432,7 @@ export function derivedClues(
       },
     );
     if (gated) derive.close();
+    if (rule !== undefined) derive.close();
     if (per !== null) env.used.add("perPlace");
     dealt.push(
       `${kind}: clueList(${at}, ${vs}, ${parts ? `cl.${c.at}${gated ? "?" : ""}.parts.length${gated ? " ?? 0" : ""}` : per === null ? `sp.${universe}.length` : `perPlace(sp.${universe}.length, 0)`})`,

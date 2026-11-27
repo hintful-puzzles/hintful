@@ -107,6 +107,13 @@ function choiceOut(
       throw new CompileError(`settings ${id}: a letter and codes`);
     letters.claim(s.letter, `settings ${id}`);
   }
+  for (const c of choices)
+    for (const k of c.deals ?? []) {
+      if (!size)
+        throw new CompileError(`settings ${id}: deals ${k}, and is no ruleset`);
+      if (!env.clues.has(k))
+        throw new CompileError(`settings ${id}: deals ${k}, no clue kind`);
+    }
   const symmetries = choices.filter((c) => c.symmetry !== undefined).length;
   if (symmetries > 0 && symmetries !== choices.length)
     throw new CompileError(`settings ${id}: a symmetry on some choices only`);
@@ -241,6 +248,29 @@ function tallyOut(
     counts: s.counts,
     ...(single < 0 ? {} : { single }),
   };
+}
+
+/** The clue kinds a ruleset deals (a choice's `deals`), each with the size
+ * choosing it and the values of the size it is dealt under: a kind no
+ * choice names is dealt on every board, and is not here. */
+export function ruledKinds(
+  json: DescriptionJson,
+): ReadonlyMap<string, { readonly size: string; readonly values: readonly number[] }> {
+  const out = new Map<string, { size: string; values: number[] }>();
+  for (const [id, s] of Object.entries(json.settings ?? {})) {
+    if (s.kind !== "choice" || s.gives !== "size") continue;
+    const from = json.sizes[id]?.min ?? 0;
+    (s.choices ?? []).forEach((c, i) => {
+      for (const k of c.deals ?? []) {
+        const got = out.get(k) ?? { size: id, values: [] };
+        if (got.size !== id)
+          throw new CompileError(`settings: ${k} dealt by ${got.size} and ${id}`);
+        got.values.push(from + i);
+        out.set(k, got);
+      }
+    });
+  }
+  return out;
 }
 
 /** Setting `id` of the description, `s`, as the deal holds it, by its kind. */

@@ -3,6 +3,9 @@
 # unsound.
 
 techniques:
+  # The ball's square struck its first number, not the empty square.
+  ball:
+    conclude: "strike(c, 1)"
   # The clue's number let sit one square further in than the empties reach.
   sees:
     conclude: >-

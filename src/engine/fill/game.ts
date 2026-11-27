@@ -333,7 +333,16 @@ export function fillGame<C extends Clues<C> & object>(
     const grown = module.growBy?.(sp, sizes) ?? null;
     const values = perValuesOf(module, sp, givenOf(deal, p) as C);
     const clues = descValue(
-      decodeDesc<C>(deal, sp, module.clueMax, desc, grown, variationsOf(p), values),
+      decodeDesc<C>(
+        deal,
+        sp,
+        module.clueMax,
+        desc,
+        grown,
+        variationsOf(p),
+        values,
+        sizes,
+      ),
     );
     return newBoard<C>(
       module,

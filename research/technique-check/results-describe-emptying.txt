@@ -1,3 +1,8 @@
-ok  emptying k=2 sees                           3  sound    (want sound   )    12 queries    0.1s
-ok  emptying k=2 sees (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
-ok  src/engine/testing/fixtures/emptying/emptying.description.yaml#sees: recorded sound, proved whole on all 1 boards
+ok  emptying k=2 mode=0 sees                           3  sound    (want sound   )    12 queries    0.1s
+ok  emptying k=2 mode=0 sees (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
+ok  emptying k=2 mode=1 sees                           3  sound    (want sound   )    12 queries    0.1s
+ok  src/engine/testing/fixtures/emptying/emptying.description.yaml#sees: recorded sound, proved whole on all 2 boards
+ok  emptying k=2 mode=0 ball                           3  sound    (want sound   )     9 queries    0.0s
+ok  emptying k=2 mode=0 ball (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  emptying k=2 mode=1 ball                           3  sound    (want sound   )     9 queries    0.0s
+ok  src/engine/testing/fixtures/emptying/emptying.description.yaml#ball: recorded sound, proved whole on all 2 boards

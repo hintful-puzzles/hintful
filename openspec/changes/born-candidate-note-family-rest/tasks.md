@@ -1,16 +1,9 @@
 ## Next
 
-Salad (2.3): 2.3b, a clue kind dealt only on a ruleset's boards, then
-2.3c to the flip, a capability a fixture each. Planned for 2.3b
-(2026-11-27): a `gives: size` choice states the kinds it `deals`; one no
-choice names is dealt on every board. `derive.ts` wraps such a kind's
-derivation in a test of the size (added to the sizes read, so `Dealt`
-holds it); `encodeDesc`/`decodeDesc` skip a segment whose kinds are all
-off the board and a stream reads no code of an off kind (helper beside
-`sizeChoices` in `params/settings.ts`); `choice.ts`'s `codesSegment`
-writes a ruleset's code at its default too (Seismic's is `""`, Solo's
-deal choice stays unwritten). On `emptying`: rulesets of its slot clue
-and a ball. Open: Group's header
+Salad (2.3): 2.3c, the empty value and `O` in play, then 2.3d to the
+flip, a capability a fixture each; `emptying` already has the empty
+value (`k + 1`) and a ball under its `B` ruleset to build 2.3c on.
+Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
@@ -52,11 +45,9 @@ changed for a player" gets its line. In the order task 1.1 set.
       way), which the rules may read.
   - [x] 2.3a A value a unit holds more than once, counted by the marks; a
         Latin sample folded to the domain; a derived clue reading a size.
-  - [ ] 2.3b A clue kind dealt only on a ruleset's boards: dealt, hidden,
-        drawn and written there alone (the draft deals both kinds on every
-        board), its ID segment neither written nor read elsewhere; and a
-        ruleset's code written where the default's code is not `""`
-        (Salad's `L`, which the draft leaves off).
+  - [x] 2.3b A clue kind dealt only on a ruleset's boards, its ID segment
+        neither written nor read elsewhere; a ruleset's code written at its
+        default (Salad's `L`).
   - [ ] 2.3c The empty value (the repeated one): typed by `X`, `-` and
         `_`, drawn as a cross, given or placed; its note an X. `O` (`+`,
         `=`): a square known to hold a value, not which, drawn as the ball
@@ -68,13 +59,17 @@ changed for a player" gets its line. In the order task 1.1 set.
         slots; values written as the board draws them, letters under
         Letters and digits under Numbers (glyphs by ruleset, drawn, typed
         and said so too); the empty value's code `X` and the ball's `O`.
+        The draft's grid stream has no `,` before it, so a 6x6 or 7x7
+        Letters desc whose last slot is blank does not load (2026-11-27),
+        and a Numbers desc writes `_` after an `O`.
   - [ ] 2.3e The deal: no givens on a Letters board below 8x8; a given
         weakened to a ball before it goes (Numbers'); a board refused
         where a named part of the ladder finishes it (Numbers' empty
         squares alone); Normal refused for two symbols by size and
-        ruleset; the menu's tiers by board. The draft's 8x8 rejects some
-        8,000 draws with every clue shown: measure once 2.3b deals one kind
-        a ruleset.
+        ruleset; the menu's tiers by board. The draft's 8x8 rejected some
+        8,000 draws with every clue shown while both kinds were dealt;
+        with one kind a ruleset, ten 8x8 Letters deals take 3 to 20 ms
+        under vitest (2026-11-27), so that is gone.
   - [ ] 2.3f The flip: the value's word by ruleset (letter, number);
         Salad's steps as `says` (a line with all its empty squares or all
         its symbols, a square with only the X left or no X, the border

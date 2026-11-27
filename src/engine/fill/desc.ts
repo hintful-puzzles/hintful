@@ -8,15 +8,17 @@
 
 import type { DescParse } from "../contract/desc-error.ts";
 import { readDesc } from "../game-id/desc-reader.ts";
-import type {
-  ClueList,
-  GridSpace,
-  ListClues,
-  Partition,
+import {
+  type ClueList,
+  clueList,
+  type GridSpace,
+  type ListClues,
+  type Partition,
 } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
 import type { ClueMax, FillDeal } from "./game-id.ts";
 import type { GrowSizes } from "./grow.ts";
+import { offKinds } from "./params/settings.ts";
 import { blocks } from "./segments/blocks.ts";
 import { cells } from "./segments/cells.ts";
 import { dots } from "./segments/dots.ts";
@@ -25,7 +27,7 @@ import { numbers } from "./segments/numbers.ts";
 import { parts } from "./segments/parts.ts";
 import { records } from "./segments/records.ts";
 import { runs } from "./segments/runs.ts";
-import type { SegmentKind } from "./segments/segment.ts";
+import { placeCount, type SegmentKind } from "./segments/segment.ts";
 import { stream } from "./segments/stream.ts";
 import { walls } from "./segments/walls.ts";
 
@@ -70,8 +72,16 @@ function kindOf(seg: IdSegment): SegmentKind<IdSegment> {
   return SEGMENT_KINDS[key] as SegmentKind<IdSegment>;
 }
 
+/** The segments of the deal's `id` a board not dealt the kinds `off` writes:
+ * each but one whose every kind is off (`FillDeal.idKinds`). */
+const segmentsOn = (deal: FillDeal, off: ReadonlySet<string>): readonly IdSegment[] =>
+  off.size === 0
+    ? deal.id
+    : deal.id.filter((_, i) => !(deal.idKinds?.[i] ?? []).every((k) => off.has(k)));
+
 /** The desc of the clues `dealt`, by the deal's `id`; `values`, the top of
- * the board's domain, where a kind is one a value. */
+ * the board's domain, where a kind is one a value. The sizes a ruleset
+ * chooses its kinds by are `dealt`'s, which holds each size the deal reads. */
 export function encodeDesc<C extends Clues<C>>(
   deal: FillDeal,
   sp: GridSpace,
@@ -85,7 +95,10 @@ export function encodeDesc<C extends Clues<C>>(
     listOf: (kind: string): ClueList => dealt[kind as keyof C] as ClueList,
     values,
   };
-  return deal.id.map((seg) => kindOf(seg).encode(seg, cx)).join("");
+  const off = offKinds(deal, dealt as unknown as Readonly<Record<string, number>>);
+  return segmentsOn(deal, off)
+    .map((seg) => kindOf(seg).encode(seg, cx))
+    .join("");
 }
 
 /** The clues `desc` deals, each number read within its kind's largest value
@@ -104,11 +117,17 @@ export function decodeDesc<C extends Clues<C>>(
   variations: readonly string[] = [],
   /** The top of the board's domain, where a kind is one a value. */
   values = 0,
+  /** The sizes the params give, which choose the kinds a ruleset deals. */
+  sizes: Readonly<Record<string, number>> = {},
 ): DescParse<C> {
+  const off = offKinds(deal, sizes);
   return readDesc(desc, (r) => {
     const out: Partial<Record<keyof C, ClueList | ListClues | Partition>> = {};
-    const cx = { r, deal, sp, clueMax, out, grown, variations, values };
-    for (const seg of deal.id) kindOf(seg).decode(seg, cx);
+    const cx = { r, deal, sp, clueMax, out, grown, variations, values, off };
+    for (const seg of segmentsOn(deal, off)) kindOf(seg).decode(seg, cx);
+    // A kind the board is not dealt holds no clue.
+    for (const k of off)
+      out[k as keyof C] ??= clueList([], [], placeCount(deal, sp, k));
     r.end();
     // The compiler holds `id` to naming every kind once.
     return out as C;

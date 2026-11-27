@@ -149,6 +149,10 @@ export interface FillDeal {
    * this order the answer makes there (`deal.oneKind`'s `pick: first`). */
   readonly firstKind?: readonly string[];
   readonly id: readonly IdSegment[];
+  /** Each of `id`'s segments' clue kinds, by its index, where a ruleset
+   * deals a kind (`Choice.deals`): a segment whose every kind the board is
+   * not dealt is neither written nor read. */
+  readonly idKinds?: readonly (readonly string[])[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, ClueUniverse>>;
   /** The kinds dealt one a value at each element (`per: value`), each clue

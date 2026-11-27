@@ -75,9 +75,11 @@ settings:
       - name: Letters
         code: L
         rule: The letters on the edge show which letter appears first when 'looking' into the grid.
+        deals: [border]
       - name: Numbers
         code: B
         rule: Squares with a ball must contain a number. Squares with a cross must remain empty.
+        deals: [ball]
 id:
   - { numbers: border }
   - { digits: given, apart: "_", codes: { O: "ball 0" } }

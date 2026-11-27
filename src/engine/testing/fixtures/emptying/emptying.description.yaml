@@ -5,13 +5,17 @@
 # square, `k + 1`, on the rest of it; a clue beside a line's end says the
 # first number seen from it past the empty squares. For the fill engine's
 # tests of an answer with a value a unit holds more than once, a Latin square
-# folded to the domain as its sample, and a derived clue whose meaning reads a
-# size, on a description that names no game.
+# folded to the domain as its sample, a derived clue whose meaning reads a
+# size, and a ruleset choosing which kind of clue its boards are dealt (the
+# clues at a line's end, or a ball on a square that is not empty), on a
+# description that names no game.
 game: emptying
 produces: latin
 sizes:
   w: { min: 3, max: 6 }
   k: { min: 2, max: 5 }
+  # 0 the clues at a line's end, 1 the balls.
+  mode: { min: 0, max: 1 }
 space:
   grid: { w: "w", h: "w" }
   slots: true
@@ -34,10 +38,12 @@ clues:
     means: >-
       exists c in sight(at):
       value(c) = v and (forall c2 in before(c, sight(at)): value(c2) = k + 1)
+  # A ball's square is not empty.
+  ball: { at: cell, value: "range(0, 0)", means: "value(at) != k + 1" }
 freedom: { kind: fill }
 play:
   numbers: {}
-  boards: [4x4k3, 5x5k3, 5x5k4]
+  boards: [4x4k3S, 5x5k3S, 5x5k4S, 5x5k3B]
   hintMarks:
     ring: the square the step fills in.
     strike: the notes the step crosses out.
@@ -46,10 +52,11 @@ play:
 deal:
   answer: a Latin square, its numbers past k read as the empty square
   sees: every clue the answer shows, then each hidden while the board still finishes
-  given: none
+  ball: every square holding a number
+  given: every square, then each hidden while the board still finishes
   tier: the one tier
   sample: { latin: true }
-  hide: [given, sees]
+  hide: [given, sees, ball]
 settings:
   k:
     kind: number
@@ -62,9 +69,21 @@ settings:
     max: 5
     default: 3
     words: "{n} values"
+  mode:
+    kind: choice
+    gives: size
+    choices:
+      - name: Sight
+        code: S
+        rule: A clue beside a line's end says the first number seen from it.
+        deals: [sees]
+      - name: Balls
+        code: B
+        rule: A square with a ball holds a number.
+        deals: [ball]
 id:
   - { numbers: sees }
-  - { digits: given, apart: "_", before: "," }
+  - { digits: given, apart: "_", before: ",", codes: { O: "ball 0" } }
 tiers: [Easy]
 names:
   dup: "a placed number's row and column"
@@ -72,6 +91,7 @@ names:
   hiddenSingle: "the only square left for a number"
   near: "what a clue sees first"
   far: "how far in a clue's number sits"
+  ball: "a ball's square"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Near a clue, every square up to the first not known empty holds no
@@ -103,5 +123,17 @@ techniques:
         far:
           when: "true"
           look: "{outline q: This clue} sees {v} first, no further in than its line's empty squares reach"
+  # A ball's square is struck the empty square.
+  - id: ball
+    tier: Easy
+    for: "c in cells where clue(ball, c) != none"
+    conclude: "strike(c, k + 1)"
+    says:
+      terms:
+        at: c
+      marks: {}
+      wordings:
+        - when: "true"
+          look: "{outline at: The ball} means its square holds a number"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }

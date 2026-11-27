@@ -228,7 +228,9 @@ description cannot: the rules for writing one, and why.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
-  killer techniques on a board with no cages).
+  killer techniques on a board with no cages). A clue kind a ruleset
+  `deals` is so too: empty on another ruleset's board, whose ID neither
+  writes nor reads it.
 - **A variation's word is read off what it does, never written.** One that
   only `add`s is a modifier, since an added rule only removes answers and
   every sound technique stays sound. One that `replace`s a block is a

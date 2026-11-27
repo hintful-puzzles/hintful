@@ -30,7 +30,12 @@ import { firstKindOf, latinOf, oneKindDeal, suitsOf } from "./fill/clue-steps.ts
 import { derivedClues } from "./fill/derive.ts";
 import { answerEnv, param, present, tierIndex } from "./fill/emit.ts";
 import { hideOf, hideRankOf, symmetricOf } from "./fill/hide.ts";
-import { checkNamed, checkSegments, hexagonOf } from "./fill/id-checks.ts";
+import {
+  checkNamed,
+  checkSegments,
+  hexagonOf,
+  segmentNames,
+} from "./fill/id-checks.ts";
 import { Letters } from "./fill/letters.ts";
 import { partsOfKinds, universesOf } from "./fill/locations.ts";
 import { numbersOf } from "./fill/numbers.ts";
@@ -43,7 +48,7 @@ import {
 } from "./fill/partitions.ts";
 import { markWhileOf, playOf } from "./fill/play.ts";
 import { checkFirst, checkSample, dealtSample, sampledValue } from "./fill/sample.ts";
-import { dealFlag, type SettingOut, settingsOf } from "./fill/settings.ts";
+import { dealFlag, ruledKinds, type SettingOut, settingsOf } from "./fill/settings.ts";
 import { sizeSettings } from "./fill/sizes.ts";
 import { flagKind, markerKind } from "./fill/values.ts";
 
@@ -195,6 +200,7 @@ function dealOf(
     id: id.map((seg) =>
       "records" in seg && flagKind(d, seg.sides) ? { ...seg, both: true } : seg,
     ),
+    ...(ruledKinds(json).size === 0 ? {} : { idKinds: id.map(segmentNames) }),
     universes,
     ...present("perValue", perValue.length === 0 ? null : perValue),
     ...partsOf,

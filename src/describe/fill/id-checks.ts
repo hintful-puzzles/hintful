@@ -324,6 +324,10 @@ function readOf(seg: IdSegment): SegmentRead<IdSegment> {
   return SEGMENTS[key] as SegmentRead<IdSegment>;
 }
 
+/** The clue kinds, or the dealt partition, `seg` writes. */
+export const segmentNames = (seg: IdSegment): readonly string[] =>
+  readOf(seg).names(seg);
+
 /** Refuses an `id:` segment that cannot write the kind it names. */
 export function checkSegments(
   id: readonly IdSegment[],

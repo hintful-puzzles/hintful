@@ -59,7 +59,7 @@ describe("an answer with a value a unit holds more than once", () => {
     let solved = 0;
     for (let i = 0; i < 30; i++) {
       const g = sampleLatin(sp, randomNew(`ladder-${i}`), 4);
-      const sizes = { k: 3 };
+      const sizes = { k: 3, mode: 0 };
       const cl = emptying.deriveClues(g, sp, {}, sizes);
       expect(emptying.isAnswer(g, sp, cl)).toBe(true);
       const got = solveBoard(emptying, newBoard(emptying, 5, 5, cl, []), 0);
@@ -90,5 +90,46 @@ describe("an answer with a value a unit holds more than once", () => {
         expect([...counts].sort()).toEqual([...folded(w, k)].sort());
       expect(emptying.isAnswer(got.values, spaceOf(emptying, b), b.dealt)).toBe(true);
     }
+  });
+});
+
+describe("a clue kind a ruleset deals", () => {
+  it("is dealt and written on its ruleset's boards alone", () => {
+    for (const [id, on, off] of [
+      ["4k3S", "sees", "ball"],
+      ["5k3S", "sees", "ball"],
+      ["5k3B", "ball", "sees"],
+      ["6k3B", "ball", "sees"],
+    ] as const) {
+      const p = game.decodeParams(id);
+      const { desc } = game.newDesc(p, randomNew(id));
+      const b = game.newState(p, desc);
+      expect(b.dealt[on].at.length, id).toBeGreaterThan(0);
+      expect(b.dealt[off].at.length, id).toBe(0);
+      expect(solveBoard(emptying, b, 0).verdict, id).toBe("solved");
+      // The slots' segment is a comma between each two slots, which a board
+      // without them does not write.
+      const commas = desc.split(",").length - 1;
+      expect(commas, id).toBe(on === "sees" ? 4 * p.w : 1);
+      // The other ruleset reads none of it.
+      const other = game.decodeParams(id.replace(/[SB]$/, on === "sees" ? "B" : "S"));
+      expect(() => game.newState(other, desc), id).toThrow();
+    }
+  });
+
+  it("reads no code of a kind its board is not dealt", () => {
+    // Every slot blank, then a ball on the first square and the rest blank.
+    const slots = ",".repeat(15);
+    const read = (id: string, desc: string) =>
+      game.newState(game.decodeParams(id), desc).dealt;
+    expect([...read("4k3B", ",Oo").ball.at]).toEqual([0]);
+    expect(() => read("4k3S", `${slots},Oo`)).toThrow();
+    expect([...read("4k3S", `${slots},1o`).given.at]).toEqual([0]);
+  });
+
+  it("writes the ruleset's code at its default", () => {
+    const p = game.decodeParams("4k3");
+    expect(game.encodeParams(p, false)).toBe("4k3S");
+    expect(game.encodeParams(game.decodeParams("4k3B"), false)).toBe("4k3B");
   });
 });

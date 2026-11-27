@@ -54,15 +54,18 @@ export type StreamSegment = {
 type Code = CodeSaid & { readonly code: string };
 
 /** A segment's codes: those a clue is read by, the longest first as they
- * are read, and those standing in place of a number, by the number. */
-function codesOf(seg: StreamSegment): {
+ * are read, and those standing in place of a number, by the number; none
+ * of a kind in `off`, which the board is not dealt. */
+function codesOf(
+  seg: StreamSegment,
+  off: ReadonlySet<string> = new Set(),
+): {
   readonly read: readonly Code[];
   readonly numbers: ReadonlyMap<number, Code>;
 } {
-  const all = Object.entries(seg.codes ?? {}).map(([code, said]) => ({
-    code,
-    ...codeSaid(said),
-  }));
+  const all = Object.entries(seg.codes ?? {})
+    .map(([code, said]) => ({ code, ...codeSaid(said) }))
+    .filter((c) => !off.has(c.kind));
   return {
     read: all
       .filter((c) => !isNumberCode(c.code))
@@ -189,6 +192,7 @@ function readStream<C extends Clues<C>>(
   clueMax: ClueMax<C>,
   seg: StreamSegment,
   cl: Partial<C>,
+  off: ReadonlySet<string>,
 ): Map<string, ClueList> {
   const u = placeOf(deal, seg);
   const all = sp[u].length;
@@ -202,8 +206,12 @@ function readStream<C extends Clues<C>>(
   const read = new Read([...kindsOf(seg), ...(outside === null ? [] : [outside])]);
   if (outside !== null)
     for (const c of sp.cells) if (!onBoard(c)) read.push(outside, c, 0);
-  const codes = codesOf(seg);
-  const own = seg.digits as keyof C | undefined;
+  const codes = codesOf(seg, off);
+  // A kind the board is not dealt is read nowhere.
+  const own =
+    seg.digits === undefined || off.has(seg.digits)
+      ? undefined
+      : (seg.digits as keyof C);
   const whole = seg.apart !== undefined || own === undefined;
   /** A number of kind `kind` at `e`, of at most `max`. */
   const number = (
@@ -358,7 +366,15 @@ export const stream: SegmentKind<StreamSegment> = {
   decode<C extends Clues<C>>(seg: StreamSegment, cx: Decoding<C>) {
     const { r, deal, sp, clueMax, out } = cx;
     if (seg.digits === undefined || deal.universes[seg.digits] !== "parts") {
-      for (const [k, list] of readStream(r, deal, sp, clueMax, seg, out as Partial<C>))
+      for (const [k, list] of readStream(
+        r,
+        deal,
+        sp,
+        clueMax,
+        seg,
+        out as Partial<C>,
+        cx.off,
+      ))
         out[k as keyof C] = list;
       return;
     }
@@ -377,7 +393,7 @@ export const stream: SegmentKind<StreamSegment> = {
       [kind]: (s: GridSpace, c: number, cl: C) =>
         maxOf(clueMax, kind, s, parts.of[c], cl),
     } as ClueMax<C>;
-    const cells = readStream(r, deal, sp, atCell, seg, out as Partial<C>).get(
+    const cells = readStream(r, deal, sp, atCell, seg, out as Partial<C>, cx.off).get(
       seg.digits,
     );
     const list = cells === undefined ? null : atParts(cells, parts);
