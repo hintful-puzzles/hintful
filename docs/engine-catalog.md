@@ -794,7 +794,8 @@ Exemplar: `path/state.ts`; a born game states its rulesets in
 `settings:`, a choice that `gives: size` (Seismic's), each choice naming
 the clue kinds dealt on its boards alone (`deals`, the `emptying`
 fixture's), and one whose boards draw their values as letters (`letters`,
-`fill/glyphs.ts`).
+`fill/glyphs.ts`): from A, or an alphabet in the values' order (the
+`lettering` fixture's, Group's identity first as `e`).
 
 ### `only.ts` — what one setting leaves of the others
 

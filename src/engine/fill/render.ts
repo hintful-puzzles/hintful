@@ -77,9 +77,14 @@ export interface FillLook<C> {
   /** The clue kinds whose number is one of the answer's values, drawn as
    * its glyph. */
   readonly glyphClues?: readonly (keyof C)[];
-  /** The fixed text before each line's start, by the line's index along its
-   * axis. */
-  readonly labels?: { readonly start?: (i: number) => string };
+  readonly labels?: FillLabels;
+}
+
+/** The fixed label before each line's start, by the line's index along its
+ * axis: its text, or a value drawn as its glyph (`play.labels.glyph`). */
+export interface FillLabels {
+  readonly start?: (i: number) => string;
+  readonly value?: (i: number) => number;
 }
 
 export type FillFrame<C> = Frame<FillBoard<C>, FillUi, FillMove, unknown, FillMistake>;
@@ -286,7 +291,7 @@ export function fillRender<C extends Clues<C>>(
         struck,
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),
-        labels: new TileCache(cx.labelStart === undefined ? 0 : b.w + b.h),
+        labels: new TileCache(cx.labelStart === null ? 0 : b.w + b.h),
         margins: new TileCache(cx.margined ? perPlace(b.w + b.h, 0) : 0),
         gaps: new TileCache(cx.gapped ? spaceOf(module, b).edges.length : 0),
         slots: new TileCache(cx.slotted ? spaceOf(module, b).slots.length : 0),

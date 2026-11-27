@@ -137,6 +137,18 @@
         }
       ]
     },
+    "letters": {
+      "description": "Letters a board of numbers draws its values as: `true`, capitals from A; or an alphabet, value 1 its first letter, 2 its second and on, each letter typed by either case and drawn in the case written, no two alike (Group's `eabcdf…`, its identity first as `e`).",
+      "oneOf": [
+        {
+          "const": true
+        },
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z]{2,26}$"
+        }
+      ]
+    },
     "symmetry": {
       "description": "A symmetry a pattern keeps (`engine/generate/symmetry.ts`): the board turned a half or a quarter, or reflected left to right, top to bottom, in its main diagonal, both ways, in both diagonals, or all eight ways.",
       "enum": [
@@ -1250,8 +1262,8 @@
                   "description": "Each value is drawn as a block as tall as it, its top up and right of its square with the numeral on it (upstream towers.c's 3D towers, `engine/render/raised.ts`): a press on a top is its square's, and the player's appearance preference draws them flat. On a board with no gaps and no clues at parts."
                 },
                 "letters": {
-                  "const": true,
-                  "description": "Each value is drawn, said and typed as a letter from A, which either case types, and a digit types the letter at its place (ABCD's). Not raised."
+                  "$ref": "#/$defs/letters",
+                  "description": "Each value is drawn, said and typed as a letter from A, which either case types, and a digit types the letter at its place (ABCD's); or, an alphabet, the letter at its place in it. Not raised."
                 },
                 "empty": {
                   "type": "object",
@@ -1598,6 +1610,10 @@
               "properties": {
                 "start": {
                   "$ref": "#/$defs/formula"
+                },
+                "glyph": {
+                  "const": true,
+                  "description": "`start` is a value, drawn as the board of numbers draws it (Group's headers, each line's element)."
                 }
               }
             },
@@ -3089,8 +3105,8 @@
                     "description": "A size's ruleset's clue kinds dealt only on its boards: a kind a choice names is dealt, drawn and written in the ID on a board of a choice naming it alone, and one no choice names on every board (Salad's border clues under Letters, its balls under Numbers)."
                   },
                   "letters": {
-                    "const": true,
-                    "description": "A size's ruleset whose boards of numbers (`play.numbers`) draw, say and write their values as letters from A, where every other ruleset's draw numerals (Salad's Letters); a letter types the value at its place on every board of the game, and so does a digit (`engine/fill/glyphs.ts`)."
+                    "$ref": "#/$defs/letters",
+                    "description": "A size's ruleset whose boards of numbers (`play.numbers`) draw, say and write their values as letters from A, or in an alphabet's order, where a ruleset without draws numerals (Salad's Letters; Group's identity first as `e`, or not); a letter types the value it draws, or at its place from A on a board of numerals, and so does a digit (`engine/fill/glyphs.ts`)."
                   },
                   "bounds": {
                     "type": "object",

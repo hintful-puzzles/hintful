@@ -27,6 +27,14 @@ import { boundsOf, menuOf, sizeOf } from "./menu.ts";
 import { notesOf } from "./notes.ts";
 import { partBound } from "./values.ts";
 
+/** Refuses an alphabet (`letters`, a string) that draws two values alike:
+ * a letter of either case types one value. */
+export function checkAlphabet(at: string, letters?: true | string): void {
+  if (typeof letters !== "string") return;
+  if (new Set(letters.toUpperCase()).size !== letters.length)
+    throw new CompileError(`${at}: letters ${letters} draws two values alike`);
+}
+
 /**
  * `markWhile(g, sp, cl, c)`: whether the mark on cell `c` may stand on the
  * values `g`, from the one cell mark's `while`. Nothing where no mark states
@@ -146,8 +154,13 @@ export function playOf(
   if (p.numbers?.raised === true && (p.gaps !== undefined || p.signs !== undefined))
     throw new CompileError("play numbers: raised, on a board with gaps or part clues");
   // A block as tall as its value is a number's.
-  if (p.numbers?.raised === true && p.numbers.letters === true)
+  if (p.numbers?.raised === true && p.numbers.letters !== undefined)
     throw new CompileError("play numbers: raised letters");
+  checkAlphabet("play numbers", p.numbers?.letters);
+  if (p.labels?.glyph === true && p.numbers === undefined)
+    throw new CompileError(
+      "play labels glyph: a label is drawn as a value, and play has no `numbers`",
+    );
   // The empty square is the value a line holds more than once; its ball is
   // a clue at a square ruling that value out of it, and holds none itself.
   const empty = p.numbers?.empty;
@@ -484,18 +497,22 @@ function labelsOf(labels: PlayJson["labels"], env: Env): string[] {
   );
   if (v.sort.k !== "int" && v.sort.k !== "num")
     throw new CompileError(`play labels start: ${start} is not a number`);
+  // A glyph is a value's, drawn as the board draws its values.
+  const glyph = labels?.glyph === true;
   const body = [
     ...scratch.map((s) => `  ${s}`),
     ...out.text(),
-    `  return String(${v.code});`,
+    glyph ? `  return ${v.code};` : `  return String(${v.code});`,
   ];
   if (body.some((l) => /\b(g|sp|cl)\b/.test(l)))
     throw new CompileError(`play labels start: ${start} reads more than \`i\``);
   return [
     "",
-    "/** The fixed text before each line's start, by its index along its axis. */",
+    glyph
+      ? "/** The value before each line's start, drawn as its glyph, by the line's index along its axis. */"
+      : "/** The fixed text before each line's start, by its index along its axis. */",
     "export const labels = {",
-    "  start(i: number): string {",
+    glyph ? "  value(i: number): number {" : "  start(i: number): string {",
     ...body.map((l) => `  ${l}`),
     "  },",
     "};",

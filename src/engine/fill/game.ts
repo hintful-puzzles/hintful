@@ -103,7 +103,12 @@ import {
   newFillUi,
 } from "./play.ts";
 import { PLACE_ANIM_TIME } from "./render/tile.ts";
-import { type FillDrawState, type FillRender, fillRender } from "./render.ts";
+import {
+  type FillDrawState,
+  type FillLabels,
+  type FillRender,
+  fillRender,
+} from "./render.ts";
 import { answerSearched, searches } from "./search.ts";
 import { marginValuesOf } from "./value-margin.ts";
 
@@ -120,7 +125,7 @@ export interface BornModule<C>
   /** The clue kinds whose number is one of the answer's values, drawn and
    * printed as its glyph (a clue's `glyph`). */
   readonly glyphClues?: readonly (keyof C)[];
-  readonly labels?: { readonly start?: (i: number) => string };
+  readonly labels?: FillLabels;
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
   readonly boards: readonly Board[];

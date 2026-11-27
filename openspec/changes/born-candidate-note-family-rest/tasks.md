@@ -62,8 +62,19 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.4c A display order of a square's lines: `play.order`, on the
         `reordering` fixture, drawn and played as the board's view in its
         order (design.md § "Decisions" 2); the commit that ticks 2.4c.
-  - [ ] 2.4d Group's deal, letters and ruleset; then its flip. The
-        selection's and the dividers' look are checked in the browser
+  - [x] 2.4d An alphabet (`letters`, a string) by ruleset, written after
+        the tier (`i`), and a label drawn as a value: on the `lettering`
+        fixture; the commit that ticks 2.4d.
+  - [ ] 2.4e The tiers: by ruleset and size (none Easy with the identity
+        hidden, `sizeLacksTier`'s table), and a tier the menu skips.
+  - [ ] 2.4f The deal: an answer drawn from shipped data (a group's table
+        from its generators, its elements permuted, the identity kept
+        first where shown); the givens on the identity's lines kept; under
+        `i`, the identity's lines and one more blanked before the hide.
+  - [ ] 2.4g A rule's breach labeled at its squares, as Group's
+        associativity draws `(ab)c` and `a(bc)`.
+  - [ ] 2.4h The flip: its words, tests in `cases.yaml`, specs, the help.
+        The selection's and the dividers' look are checked in the browser
         here, the fixtures having no page.
 
 ## 3. Finish

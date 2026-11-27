@@ -17,6 +17,7 @@ import type {
 import { tierIndex } from "./emit.ts";
 import type { Letters } from "./letters.ts";
 import { blocksOf, fillBlocksOf } from "./partitions.ts";
+import { checkAlphabet } from "./play.ts";
 import { sizeSettings } from "./sizes.ts";
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -131,16 +132,21 @@ function choiceOut(
   // A ruleset's letters are a board of numbers' glyphs, which a raised
   // block, as tall as its number, has none of, and which one ruleset alone
   // chooses.
-  if (choices.some((c) => c.letters === true)) {
+  if (choices.some((c) => c.letters !== undefined)) {
     const numbers = json.play?.numbers;
     if (!size) throw new CompileError(`settings ${id}: letters, and is no ruleset`);
-    if (numbers === undefined || numbers.letters === true || numbers.raised === true)
+    if (
+      numbers === undefined ||
+      numbers.letters !== undefined ||
+      numbers.raised === true
+    )
       throw new CompileError(
         `settings ${id}: letters, on no board of numbers drawn flat in numerals`,
       );
     for (const [other, s] of Object.entries(json.settings ?? {}))
-      if (other !== id && (s.choices ?? []).some((c) => c.letters === true))
+      if (other !== id && (s.choices ?? []).some((c) => c.letters !== undefined))
         throw new CompileError(`settings ${id}: letters, and ${other} too`);
+    for (const c of choices) checkAlphabet(`settings ${id} ${c.name}`, c.letters);
   }
   const symmetries = choices.filter((c) => c.symmetry !== undefined).length;
   if (symmetries > 0 && symmetries !== choices.length)

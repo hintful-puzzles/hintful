@@ -44,7 +44,8 @@ export function fillSetup<C extends Clues<C>>(
   const margined = valueMargins.length > 0;
   const slotClues = look.slotClues ?? [];
   const slotted = slotClues.length > 0;
-  const labelStart = labels?.start;
+  const labelValue = labels?.value;
+  const labelText = labels?.start;
   // The partition drawn as walls and fills: the one among the units where
   // the board has one (a Sudoku's blocks), else the first it deals.
   const boxes = module.boxes;
@@ -90,6 +91,14 @@ export function fillSetup<C extends Clues<C>>(
     }
     return got;
   };
+  /** Each line's label on board `b`, by the line's index along its axis: its
+   * text, or the glyph of its value (`labels.glyph`). */
+  const labelStart: ((b: FillBoard<C>, line: number) => string) | null =
+    labelValue !== undefined
+      ? (b, line) => glyphOf(b)(labelValue(line))
+      : labelText === undefined
+        ? null
+        : (_, line) => labelText(line);
   /** The clue kinds whose number is a value, drawn as its glyph. */
   const glyphClues: readonly (keyof C)[] = look.glyphClues ?? [];
   const notes = play.notes === true;
@@ -117,7 +126,7 @@ export function fillSetup<C extends Clues<C>>(
   const metrics: FillMetrics = fillMetrics({
     notes,
     covers: play.covers !== undefined,
-    lineLabels: labelStart !== undefined,
+    lineLabels: labelStart !== null,
     listed: lineLists.length > 0,
     margined,
     lineClued: lineClues.length > 0,

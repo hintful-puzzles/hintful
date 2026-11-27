@@ -7,10 +7,10 @@ import { COL_LABEL } from "../palette.ts";
 import type { FillSite } from "./site.ts";
 
 export const labels: FillSite = {
-  on: (cx) => cx.labelStart !== undefined,
+  on: (cx) => cx.labelStart !== null,
   paint({ dr, ds, cx, lay, state }) {
     const { labelStart } = cx;
-    if (labelStart === undefined) return;
+    if (labelStart === null) return;
     const ts = ds.tileSize;
     const { w, h } = state;
     const font = {
@@ -36,7 +36,7 @@ export const labels: FillSite = {
         row ? { x: at, y: mid } : { x: mid, y: at },
         font,
         COL_LABEL,
-        labelStart(line),
+        labelStart(state, line),
       );
       dr.drawUpdate(box);
     }

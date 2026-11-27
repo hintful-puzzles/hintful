@@ -1,7 +1,8 @@
 /**
  * How a board of numbers' values are drawn, typed, said and written in its
- * game ID: as numerals, or as letters from A (`play.numbers.letters`), or by
- * its ruleset (a choice's `letters`, Salad's Letters); and the empty square,
+ * game ID: as numerals, or as letters from A or in an alphabet's order
+ * (`play.numbers.letters`), or by its ruleset (a choice's `letters`, Salad's
+ * Letters, Group's two alphabets); and the empty square,
  * where the answer has one (`play.numbers.empty`), as an X.
  */
 
@@ -47,48 +48,66 @@ const NUMERALS: ValueGlyphs = {
 const A = "A".charCodeAt(0);
 const a = "a".charCodeAt(0);
 
-/** The letter value `v` is drawn as, from A. */
-const letter = (v: number): string => {
-  if (!Number.isInteger(v) || v < 1 || v > 26)
-    throw new Error(`no letter draws the value ${v}: say a count as {numeral …}`);
-  return String.fromCharCode(A + v - 1);
-};
+/** The alphabet `letters: true` draws: capitals from A, in order. */
+const FROM_A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-/** A letter key of either case as the value at its place, or a digit as
- * its own (ABCD's keys, upstream's too). */
-const typedLetter = (button: number): number | null => {
-  const base = stripModifiers(button);
-  if (base >= A && base < A + 26) return base - A + 1;
-  if (base >= a && base < a + 26) return base - a + 1;
-  return digitOf(button);
-};
+/** The glyphs of an alphabet: value `v` drawn and said as the `v`-th letter
+ * of `alphabet`, and typed by that letter in either case, or by a digit as
+ * the letter at its place from A (ABCD's keys, upstream's too; Group's `e`
+ * typed by 5). */
+function lettersOf(alphabet: string): ValueGlyphs {
+  const upper = alphabet.toUpperCase();
+  const letter = (v: number): string => {
+    if (!Number.isInteger(v) || v < 1 || v > alphabet.length)
+      throw new Error(`no letter draws the value ${v}: say a count as {numeral …}`);
+    return alphabet[v - 1];
+  };
+  /** The value the letter key `code`, of either case, types. */
+  const ofLetter = (code: number): number | null => {
+    const at = upper.indexOf(String.fromCharCode(code).toUpperCase());
+    return at < 0 ? null : at + 1;
+  };
+  return {
+    draw: letter,
+    keyCode: (v) => letter(v).charCodeAt(0),
+    typed: (button) => {
+      const base = stripModifiers(button);
+      if ((base >= A && base < A + 26) || (base >= a && base < a + 26))
+        return ofLetter(base);
+      const d = digitOf(button);
+      return d === null || d === 0 ? d : ofLetter(A + d - 1);
+    },
+    top: alphabet.length,
+    noun: "letter",
+  };
+}
 
 /** Letters from A, typed by either case, or by a value's place as a digit. */
-const LETTERS: ValueGlyphs = {
-  draw: letter,
-  keyCode: (v) => A + v - 1,
-  typed: typedLetter,
-  top: 26,
-  noun: "letter",
-};
+const LETTERS = lettersOf(FROM_A);
 
 /** Numerals typed as letters are too: a board whose game draws letters
  * under another ruleset keeps its keys under this one (Salad's Numbers, A
  * typing 1). */
-const NUMERALS_LETTER_KEYS: ValueGlyphs = { ...NUMERALS, typed: typedLetter };
+const NUMERALS_LETTER_KEYS: ValueGlyphs = { ...NUMERALS, typed: LETTERS.typed };
 
-/** Whether a board of the sizes `sizes` draws letters by its ruleset (a
- * choice's `letters`); `null` where no ruleset says. */
+/** The glyphs `letters` draws: capitals from A where it is `true`, else its
+ * alphabet's letters in order. */
+const alphabetOf = (letters: true | string): ValueGlyphs =>
+  letters === true ? LETTERS : lettersOf(letters);
+
+/** The letters a board of the sizes `sizes` draws by its ruleset (a
+ * choice's `letters`), `false` where its ruleset draws numerals; `null`
+ * where no ruleset says. */
 function rulesetLetters(
   deal: FillDeal,
   sizes: Readonly<Record<string, unknown>>,
-): boolean | null {
+): ValueGlyphs | false | null {
   for (const s of sizeChoices(deal)) {
-    if (!s.choices.some((c) => c.letters === true)) continue;
+    if (!s.choices.some((c) => c.letters !== undefined)) continue;
     const at = sizes[s.id];
     const chosen =
       s.choices[(typeof at === "number" ? at : s.from + s.default) - s.from];
-    return chosen?.letters === true;
+    return chosen?.letters === undefined ? false : alphabetOf(chosen.letters);
   }
   return null;
 }
@@ -101,10 +120,11 @@ export function glyphsOf(
   module: Pick<FillModule<unknown>, "play" | "deal">,
   sizes: Readonly<Record<string, unknown>> = {},
 ): ValueGlyphs {
-  if (module.play?.numbers?.letters === true) return LETTERS;
+  const letters = module.play?.numbers?.letters;
+  if (letters !== undefined) return alphabetOf(letters);
   const by = module.deal === undefined ? null : rulesetLetters(module.deal, sizes);
   if (by === null) return NUMERALS;
-  return by ? LETTERS : NUMERALS_LETTER_KEYS;
+  return by === false ? NUMERALS_LETTER_KEYS : by;
 }
 
 /** On a board whose answer repeats a value in a unit as its empty square
