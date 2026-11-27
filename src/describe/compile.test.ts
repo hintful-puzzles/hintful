@@ -1123,6 +1123,21 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play cornerCrosses: no variation diagonal/);
   });
 
+  it("refuses a selection on a board of buttons, which is never typed into", () => {
+    const fixture = (name: string) =>
+      `src/engine/testing/fixtures/${name}/${name}.description.yaml`;
+    const select = (j: { play: { select?: string } }) => {
+      j.play.select = "diagonal";
+      return j;
+    };
+    expect(compileEdited(fixture("selecting"), (j) => j)).toContain(
+      '"select":"diagonal"',
+    );
+    expect(() => compileEdited(fixture("playing"), select)).toThrow(
+      /play select: a selection is typed into, and play has no `numbers`/,
+    );
+  });
+
   it("refuses a stream's codes that could not be read back", () => {
     const source = "src/engine/testing/fixtures/walling/walling.description.yaml";
     const walling = sources.get(source);

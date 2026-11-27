@@ -28,13 +28,36 @@ import {
 import { applyDone, type DoneMove, isDoneShaped } from "./done.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 
-/** A fill game's move: an edit, on a board of numbers a typed entry or a
- * note move, or a clue marked done. Solve, Clear and Reveal stay edits. */
-export type FillMove = Edit | CandidateMove | DoneMove;
+/** A value typed into several cells of a selection at once (`select.ts`),
+ * each of them open: `autoElim` as a typed cell's. */
+export interface SetCellsMove {
+  readonly type: "setCells";
+  readonly cells: readonly number[];
+  readonly n: number;
+  readonly autoElim?: boolean;
+}
+
+/** A fill game's move: an edit, on a board of numbers a typed entry, one
+ * typed into a selection, or a note move, or a clue marked done. Solve,
+ * Clear and Reveal stay edits. */
+export type FillMove = Edit | CandidateMove | SetCellsMove | DoneMove;
 
 /** Whether `move` is one of the note-taking cell's. */
 export const isCandidateMove = (move: FillMove): move is CandidateMove =>
-  "type" in move && move.type !== "done";
+  "type" in move && move.type !== "done" && move.type !== "setCells";
+
+/** Whether `move` has a typed selection's shape, as a save holds it. */
+function isSetCells(move: unknown): move is SetCellsMove {
+  if (typeof move !== "object" || move === null) return false;
+  const m = move as Partial<Record<keyof SetCellsMove, unknown>>;
+  return (
+    m.type === "setCells" &&
+    Array.isArray(m.cells) &&
+    m.cells.every((c) => Number.isInteger(c)) &&
+    Number.isInteger(m.n) &&
+    (m.autoElim === undefined || typeof m.autoElim === "boolean")
+  );
+}
 
 /** Whether `marks` is a list of notes, as a save holds it. */
 const areMarks = (marks: unknown): boolean =>
@@ -78,7 +101,7 @@ function isCandidate(move: unknown): move is CandidateMove {
 /** `move` as a fill game's move, or refused as `context`'s: a move from a
  * save is read back as whatever it was written as. */
 export function fillMoveOf(move: unknown, context: string): FillMove {
-  if (isDoneShaped(move)) return move;
+  if (isDoneShaped(move) || isSetCells(move)) return move;
   return isCandidate(move) ? move : editOf(move, context);
 }
 
@@ -92,7 +115,29 @@ export const applyMove = <C>(
     ? applyEdit(module, board, move)
     : move.type === "done"
       ? applyDone(board, move)
-      : applyNoteMove(module, board, move);
+      : move.type === "setCells"
+        ? applySetCells(module, board, move)
+        : applyNoteMove(module, board, move);
+
+/** The board after a value typed into a selection: each cell takes it as a
+ * typed cell does (`applyNoteMove`), what each reaches read on the board
+ * before any of them. */
+function applySetCells<C>(
+  module: LadderedFillModule<C>,
+  board: FillBoard<C>,
+  { cells, n, autoElim }: SetCellsMove,
+): FillBoard<C> {
+  const placed = applyEdit(module, board, { set: cells.flatMap((c) => [c, n]) });
+  if (placed.pencil === null) return placed;
+  const pencil = placed.pencil.slice();
+  for (const c of cells) pencil[c] = 0;
+  if (autoElim === true && n > 0) {
+    const reach = reachOf(module, board);
+    for (const c of cells)
+      for (const p of Array.from(reach(c, n))) pencil[p] &= ~(1 << n);
+  }
+  return { ...placed, pencil };
+}
 
 /** What a fill-all writes on a board of `module`'s: each open cell's domain,
  * its values' bits. */

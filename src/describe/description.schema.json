@@ -1377,6 +1377,10 @@
               "enum": ["secondary"],
               "description": "The one button whose drag sweeps; the other's drag acts where it began alone (Light Up's bulbs, a row of which light each other). Both sweep where absent."
             },
+            "select": {
+              "enum": ["diagonal"],
+              "description": "On a board of `numbers`, the shape a drag from the selected square selects, so that a value typed goes into every square of it at once, as one move, passing over a given that already holds it: `diagonal`, the squares from the selected one to the pointer where they lie on a diagonal (upstream Group's, along a table's leading diagonal). A typed note goes on each square of the shape, or comes off each where all hold it."
+            },
             "wash": {
               "type": "object",
               "description": "A wash over the open cells where `when` holds of the values, `c` the cell (Light Up's lit squares). An open washed cell reads as the secondary value to the live errors, and a placement's consequences there are what the board shows, so the hint neither makes nor says them. `pref`, where given, is a preference, on by default, that draws the secondary piece on a washed cell; off, it is left out.",

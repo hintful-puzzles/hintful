@@ -30,7 +30,13 @@ import {
   RIGHT_BUTTON,
   stripModifiers,
 } from "../input/pointer.ts";
-import { beginSweep, endSweep, squareGrid, sweepTo } from "../input/target-verb.ts";
+import {
+  beginSweep,
+  endSweep,
+  squareGrid,
+  sweepOpen,
+  sweepTo,
+} from "../input/target-verb.ts";
 import {
   type NoteTakingUi,
   noOpEntryResult,
@@ -53,8 +59,9 @@ import {
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
-import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
+import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
+import { selectedCells, selectionMove, typedCells } from "./select.ts";
 
 /**
  * The keypad's last value on a board of `size`, which the params alone
@@ -93,6 +100,7 @@ export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi 
     ui.candidateReading ??= play.hintNotes ?? DEFAULT_CANDIDATE_READING;
   }
   if (play.numbers?.raised === true) ui.raised ??= true;
+  if (play.select !== undefined) ui.selected ??= [];
   return ui;
 }
 
@@ -157,7 +165,7 @@ export interface NumberInput<C, D> {
     ds: D,
     p: Point,
     button: number,
-  ): CandidateMove | DoneMove | UiUpdate | null;
+  ): CandidateMove | SetCellsMove | DoneMove | UiUpdate | null;
   /** A key a value, then the clear key, for a board of the params `p`, and
    * of `board` where it is in play. */
   requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
@@ -175,6 +183,7 @@ export function numberInput<
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
+  const select = module.play?.select;
   const done =
     module.play === undefined
       ? null
@@ -204,6 +213,22 @@ export function numberInput<
         fillUi.raised === true && (button === LEFT_BUTTON || button === RIGHT_BUTTON)
           ? raisedPressed(b, ds, p)
           : null;
+      // A press starts a selection afresh, and a drag from the cell it
+      // selected for typing selects the shape to where the pointer is.
+      if (select !== undefined) {
+        if (button === LEFT_BUTTON || button === RIGHT_BUTTON) fillUi.selected = [];
+        if (isMouseDrag(button) && !sweepOpen(fillUi)) {
+          if (!ui.cursor.visible || ui.pencilMode) return null;
+          const to = geometry.pointerTarget(b, ds, p, ui);
+          fillUi.selected = selectedCells(
+            select,
+            b.w,
+            ui.cursor.y * b.w + ui.cursor.x,
+            to === null ? null : to.y * b.w + to.x,
+          );
+          return UI_UPDATE;
+        }
+      }
       if (done !== null && raisedAt === null) {
         // A press on a clue marks it done, and a drag on marks those that
         // looked the same.
@@ -247,6 +272,7 @@ export function numberInput<
         return UI_UPDATE;
       }
       if (isCursorMove(button)) {
+        if (select !== undefined) fillUi.selected = [];
         ui.cursorFromKeyboard = true;
         return moveCursor(ui.cursor, button, b.w, b.h) ? UI_UPDATE : null;
       }
@@ -276,8 +302,25 @@ export function numberInput<
               );
       // The empty square's glyph's key types nothing: it is drawn a cross.
       if (n === null || (n === empty && !emptyKey)) return null;
+      const holds = (cell: number) =>
+        (module.domainOf(sp, b.dealt, cell) & (1 << n)) !== 0;
+      const cells = typedCells(c, fillUi.selected);
+      if (cells.length > 1) {
+        const made = selectionMove(
+          b,
+          cells,
+          n,
+          ui.pencilMode,
+          fillUi.autoPencil ?? false,
+          holds,
+        );
+        if (made === null) return null;
+        if (made === "same") return noOpEntryResult(ui);
+        releaseHighlightAfterEntry(ui);
+        return made;
+      }
       // A number the cell cannot hold is not typed (Seismic's past its area).
-      if (n > 0 && (module.domainOf(sp, b.dealt, c) & (1 << n)) === 0) return null;
+      if (n > 0 && !holds(c)) return null;
       if (b.fixed[c]) return null;
       // A note goes on an empty cell alone.
       if (ui.pencilMode && b.values[c] !== 0) return null;

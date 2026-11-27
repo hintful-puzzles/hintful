@@ -242,6 +242,11 @@ export function playOf(
         `play done: ${k} is marked done on a board of numbers alone, and play has no \`numbers\``,
       );
   }
+  // A selection is the typed board's: a board of buttons drags a sweep.
+  if (p.select !== undefined && p.numbers === undefined)
+    throw new CompileError(
+      "play select: a selection is typed into, and play has no `numbers`",
+    );
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
   const plainPlay = {

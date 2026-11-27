@@ -1,6 +1,6 @@
 ## Next
 
-2.4a, then the rest of Group. The figures of 3.1 are taken again at the
+2.4b, then the rest of Group. The figures of 3.1 are taken again at the
 end, after 3.1a's and 3.1b's fixes.
 Group's controls are answered: keep them, as engine capabilities
 (design.md § "Decisions" 2).
@@ -54,7 +54,9 @@ changed for a player" gets its line. In the order task 1.1 set.
 - [ ] 2.4 Group born: the letters relabeled about the identity, `i` after
       the tier, the hide's keep-set, an answer from shipped data, and its
       three controls kept (design.md § "Decisions" 2).
-  - [ ] 2.4a A selection a drag makes in a shape, typed once as one move.
+  - [x] 2.4a A selection a drag makes in a shape, typed once as one move:
+        `play.select`, on the `selecting` fixture; the commit that ticks
+        2.4a. In notes mode it notes each square, or strikes from all.
   - [ ] 2.4b A player's divider between two lines, saved as `done` is.
   - [ ] 2.4c A display order of a square's lines, dragged by a header;
         first, trace whether `Layout` and the target lookup carry it.

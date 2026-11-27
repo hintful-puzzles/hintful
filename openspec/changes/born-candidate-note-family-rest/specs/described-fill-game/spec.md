@@ -603,6 +603,30 @@ written, and one for each cell without, as the library's strikes are.
   and C
 - **THEN** one step strikes A and C from that square, "so A and C must go"
 
+### Requirement: A born board of numbers may select a shape by a drag
+
+Where the description's `play.select` names a shape, a drag from the square
+selected for typing SHALL select the squares of that shape from it to the
+square under the pointer, each highlighted as the selected square is. A
+value typed SHALL go into every square of the selection as one move, a
+given holding it passed over. A press or an arrow SHALL drop the selection.
+A board of buttons SHALL refuse a selection.
+
+#### Scenario: A diagonal typed at once
+
+- **WHEN** the player selects a square, drags along a diagonal across a
+  given 3 and releases, then types 3
+- **THEN** one move places 3 on every open square of the diagonal, and
+  Undo takes them all off
+
+#### Scenario: A selection refused or noted
+
+- **WHEN** the selection crosses a given 2 and the player types 3
+- **THEN** nothing is placed
+- **WHEN** the player types 3 in notes mode
+- **THEN** 3 is noted on each square of the selection lacking it, or struck
+  from every one where all note it
+
 ## MODIFIED Requirements
 
 ### Requirement: A born game's answer may be searched under a partition dealt first
