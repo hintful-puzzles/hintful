@@ -1415,6 +1415,60 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play values: 1 is on an edge, and tent is no edge painter/);
   });
 
+  it("refuses on an answer on the edges each part that assumes a cell, by name", () => {
+    const lacing = "src/engine/testing/fixtures/lacing/lacing.description.yaml";
+    type Lacing = {
+      play: Partial<
+        Record<
+          | "numbers"
+          | "links"
+          | "wash"
+          | "covers"
+          | "given"
+          | "dealt"
+          | "shape"
+          | "gaps"
+          | "straight"
+          | "wrap",
+          unknown
+        >
+      >;
+      space: { grid: { hexagon?: unknown } };
+      marks?: Record<string, unknown>;
+      given?: string[];
+      rulesOut?: unknown;
+    };
+    const parts: [string, (j: Lacing) => void][] = [
+      [
+        "marks",
+        (j) => (j.marks = { notes: { sort: "edge", notation: "set of range(1, 2)" } }),
+      ],
+      ["play numbers", (j) => (j.play.numbers = {})],
+      ["play links", (j) => (j.play.links = "pair")],
+      ["play wash", (j) => (j.play.wash = { when: "value(c) = 1" })],
+      ["play covers", (j) => (j.play.covers = { value: 1, pref: {} })],
+      ["given", (j) => (j.given = ["value"])],
+      ["play given", (j) => (j.play.given = { 3: { glyph: " o ", paint: "dot" } })],
+      ["play dealt", (j) => (j.play.dealt = "number")],
+      ["play shape", (j) => (j.play.shape = "number")],
+      ["play gaps", (j) => (j.play.gaps = { number: "bar" })],
+      ["space hexagon", (j) => (j.space.grid.hexagon = { outside: "number" })],
+      ["play straight", (j) => (j.play.straight = true)],
+      ["play wrap", (j) => (j.play.wrap = true)],
+      [
+        "rulesOut",
+        (j) => (j.rulesOut = { name: "x", placing: 1, techniques: ["numberCount"] }),
+      ],
+    ];
+    for (const [at, edit] of parts)
+      expect(() =>
+        compileEdited(lacing, (j: Lacing) => {
+          edit(j);
+          return j;
+        }),
+      ).toThrow(new RegExp(`^${at}: the answer is on the edges, and `));
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

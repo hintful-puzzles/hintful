@@ -56,6 +56,7 @@ import {
   withEveryVariation,
 } from "./description.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
+import { refuseCellOnly } from "./fill/cell-only.ts";
 import { blocksOf, boxesDealtBy } from "./fill/partitions.ts";
 
 // --- modules ----------------------------------------------------------------
@@ -275,7 +276,9 @@ export function compileGame(
   stepVoice: string,
 ): string {
   Out.reset();
-  const d = loadDescription(withEveryVariation(json), libraries);
+  const every = withEveryVariation(json);
+  refuseCellOnly(every);
+  const d = loadDescription(every, libraries);
   const used = new Set<string>();
   const clues = new Map<string, ClueKind>();
   const { space } = d.json;

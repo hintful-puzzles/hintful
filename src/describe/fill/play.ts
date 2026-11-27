@@ -111,8 +111,6 @@ export function playOf(
       throw new CompileError(
         `play: the ${button} value ${v} is not one the player places`,
       );
-  if (p.numbers !== undefined && json.answer.value.sort !== "cell")
-    throw new CompileError("play numbers: the answer's value is not at a cell");
   // A value on a cell prints as its glyph; one on an edge, which runs one of
   // two ways, as its edge painter says.
   const onEdges = json.answer.value.sort === "edge";

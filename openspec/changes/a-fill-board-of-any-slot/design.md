@@ -115,8 +115,9 @@ earlier:
    element once a target names one.
 7. **The refusals**: the compiler refuses on an edge answer what assumes a
    cell, each by name: notes, `numbers`, `links`, `wash`, `covers`,
-   `given`, `dealt`, `hexagon`, `straight`, and `rulesOut`, whose premise
-   is squares.
+   `given`, `dealt`, `shape`, `gaps` (a gap between squares is where an
+   edge's value is drawn), `hexagon`, `straight`, `wrap` (the half grid's
+   cursor ignored it), and `rulesOut`, whose premise is squares.
 
 ### The fixtures
 
