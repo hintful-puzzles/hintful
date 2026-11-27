@@ -1,7 +1,6 @@
 ## Next
 
-**Waits** for `describe-the-whole-catalog` § "0. The refactor first"
-(owner, 2026-11-24). Then 1.2, which design.md § "A callout is a narrated
+1.2 (the refactor it waited for is done, 2026-11-27), which design.md § "A callout is a narrated
 step with no move" drafts. Open: design.md § "Open".
 
 ## 1. Design

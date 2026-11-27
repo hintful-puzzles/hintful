@@ -1,6 +1,6 @@
 ## Next
 
-§ 0, the refactor, a change at a time; then 1.2.1. Open: none.
+1.2.1, `born-candidate-note-family-rest`; § 0 is done. Open: none.
 
 ## 0. The refactor first
 
@@ -24,6 +24,8 @@ what is left, and whether the migration is good to proceed.
 - [x] 0.5 `the-compiler-reads-meaning`
 - [x] 0.6 `the-description-documented-once`
 - [x] 0.7 `a-fill-board-of-any-slot`
+- [x] 0.8 The debrief (2026-11-27): go ahead. The owner's still, blocking
+      nothing: the push's fitted plan unasked (0.1's 2.3), the handoff cap.
 
 ## 1. The route
 

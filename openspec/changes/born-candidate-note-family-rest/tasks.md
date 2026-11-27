@@ -1,7 +1,7 @@
 ## Next
 
-**Waits** for `describe-the-whole-catalog` § "0. The refactor first"
-(owner, 2026-11-24). Then 2.2, ABCD born. Open: Group's header drag,
+2.2, ABCD born: the refactor is done, and the owner said go ahead
+(2026-11-27). Open: Group's header drag,
 dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
