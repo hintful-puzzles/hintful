@@ -1506,7 +1506,11 @@ describe("what the fill board reads of a description", () => {
     if (adjacent === undefined || !isFormal(adjacent)) throw new Error("no adjacent");
     type Json = {
       clues: { bar: { complete?: boolean; value: string } };
-      play: { gaps: Record<string, string>; defaultTier?: string };
+      play: {
+        gaps: Record<string, string>;
+        defaultTier?: string;
+        boardSkips?: Record<string, string[]>;
+      };
       deal: { hide: string | string[] };
       unusedLetters: Record<string, string>;
     };
@@ -1556,6 +1560,17 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(
       /play defaultTier: the menu does not offer the default board at Unreasonable/,
     );
+    // A board skips only a tier strictly inside the ones it is offered at.
+    expect(
+      compileAdjacent((j) => {
+        j.play.boardSkips = { "7x7": ["Hard"] };
+      }),
+    ).toContain('"skips":[{"w":7,"h":7,"tiers":[3]}]');
+    expect(
+      edited((j) => {
+        j.play.boardSkips = { "7x7": ["Tricky"] };
+      }),
+    ).toThrow(/play boardSkips: 7x7 skips Tricky, not between its first and last tier/);
   });
 
   it("prints a value on a cell by its glyph, and one on an edge by its edge painter", () => {

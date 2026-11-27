@@ -3,11 +3,16 @@
  * square whose ruleset chooses the alphabet and is written after the tier
  * by its code alone: value 1 drawn as the alphabet's first letter, typed by
  * it in either case or by its place from A as a digit, and the lines'
- * labels drawn as their values' letters (`play.labels.glyph`).
+ * labels drawn as their values' letters (`play.labels.glyph`). Its tiers
+ * are bounded by ruleset and size, `i` taking no Easy at any size (a
+ * choice's `tiers`), and its menu skips a tier on a board
+ * (`play.boardSkips`).
  */
 
 import { describe, expect, it } from "vitest";
 import * as lettering from "../../generated/engine/testing/fixtures/lettering/lettering.compiled.ts";
+import { presetMenu } from "../game-id/param-label.ts";
+import { paramsError } from "../game-id/params.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
@@ -90,6 +95,31 @@ describe("an alphabet", () => {
     const plain = dealt("4i");
     expect(["a", "A", "1"].map((k) => typed(plain, k))).toEqual([1, 1, 1]);
     expect(typed(plain, "e")).toBeNull();
+  });
+
+  it("bounds a tier by ruleset and size, and leaves a ruleset only its tiers", () => {
+    const refusal = (id: string, full = true) =>
+      paramsError(game, game.decodeParams(id), full);
+    expect(refusal("4dn")).toBe("No 4x4 E first puzzle is Normal.");
+    expect(refusal("5dn")).toBeNull();
+    expect(refusal("9dei")).toBe("Difficulty must be Normal or Hard for In order.");
+    expect(refusal("4dni")).toBeNull();
+    expect(refusal("3dni")).toBe("In order: the grid size must be at least 4.");
+    // A brief ID names no tier, so its ruleset's tiers do not hold it.
+    expect(refusal("4i", false)).toBeNull();
+  });
+
+  it("offers each ruleset its section, a board's skipped tier left out", () => {
+    const sections = (presetMenu(game).submenu ?? []).map((s) => [
+      s.title,
+      (s.submenu ?? []).map((m) =>
+        m.params === undefined ? "" : game.encodeParams(m.params, true),
+      ),
+    ]);
+    expect(sections).toEqual([
+      ["E first", ["4de", "5de", "5dh"]],
+      ["In order", ["4dni"]],
+    ]);
   });
 
   it("draws the values and the lines' labels as the alphabet's letters", () => {

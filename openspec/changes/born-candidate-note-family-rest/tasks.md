@@ -1,12 +1,13 @@
 ## Next
 
-2.4e, Group's tiers. Read 2026-11-27 at `a99d7e8bc`: `i` is a ruleset
-choice (the `lettering` fixture's shape), so its hidden board is its own
-menu section, `8x8i` at `boardTiers` Normal; `sizeLacksTier`'s table is
-each choice's `bounds.tiers` minimums. Missing: a ruleset refusing a tier
-whole (no Easy with the identity hidden), and `play.boardSkips` (8x8 skips
-Hard). The figures of 3.1 are taken again at the end, after 3.1a's and
-3.1b's fixes.
+2.4f, Group's deal. Group's tiers, for the flip (2.4e's pieces): the
+identity hidden is a ruleset (`i`, least 4) taking `tiers: [Normal,
+Tricky, Hard, Unreasonable]`, its board its own menu section, `8x8i` at
+`boardTiers` Normal; `sizeLacksTier` (`games/group/state.ts`) becomes each
+choice's `bounds.tiers` (shown: Normal and Unreasonable `shorter` min 5,
+Tricky and Hard min 6; hidden: Hard min 6, Unreasonable min 5); 8x8 is
+`boardSkips` Hard. The figures of 3.1 are taken again at the end, after
+3.1a's and 3.1b's fixes.
 Group's controls are answered: keep them, as engine capabilities
 (design.md § "Decisions" 2).
 
@@ -70,8 +71,9 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.4d An alphabet (`letters`, a string) by ruleset, written after
         the tier (`i`), and a label drawn as a value: on the `lettering`
         fixture; the commit that ticks 2.4d.
-  - [ ] 2.4e The tiers: by ruleset and size (none Easy with the identity
-        hidden, `sizeLacksTier`'s table), and a tier the menu skips.
+  - [x] 2.4e A ruleset's tiers (a choice's `tiers`, its `only`) and a
+        tier a board skips (`play.boardSkips`), on the `lettering`
+        fixture; the commit that ticks 2.4e.
   - [ ] 2.4f The deal: an answer drawn from shipped data (a group's table
         from its generators, its elements permuted, the identity kept
         first where shown); the givens on the identity's lines kept; under

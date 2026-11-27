@@ -5,7 +5,9 @@
 # engine's tests of an alphabet (`letters`, a string): value 1 drawn as the
 # alphabet's first letter, typed by it in either case, the ruleset choosing
 # the alphabet and written after the tier by its code alone (Group's `e`
-# first, or plain under `i`), on a description that names no game.
+# first, or plain under `i`), on a description that names no game. Its
+# tiers are bounded by ruleset, one refused whole (Group's Easy with the
+# identity hidden), and its menu skips a tier on a board (Group's 8x8 Hard).
 game: lettering
 produces: latin
 sizes:
@@ -26,7 +28,9 @@ freedom: { kind: fill }
 play:
   numbers: {}
   labels: { start: "i + 1", glyph: true }
-  boards: [4x4, 4x4i]
+  boards: [4x4, 5x5, 4x4i]
+  boardTiers: { 4x4: [Easy, Easy], 4x4i: [Normal, Normal] }
+  boardSkips: { 5x5: [Normal] }
   hintMarks:
     ring: the square the step decides.
     strike: the notes the step crosses out.
@@ -35,7 +39,7 @@ play:
 deal:
   answer: a Latin square
   given: every square's letter, then each hidden while the board still finishes
-  tier: the one tier
+  tier: one of the tiers
   sample: { latin: true }
   hide: given
 settings:
@@ -47,18 +51,24 @@ settings:
       - name: E first
         code: ""
         letters: eabcdfghijklmnopqrstuvwxyz
+        bounds: { tiers: { Normal: { shorter: { min: 5 } } } }
       - name: In order
         code: i
         letters: abcdefghijklmnopqrstuvwxyz
+        least: 4
+        tiers: [Normal, Hard]
 id:
   - digits: given
     apart: _
-tiers: [Easy]
+tiers: [Easy, Normal, Hard]
 names:
   dup: "a placed letter's row and column"
   single: "the only letter left in a square"
   hiddenSingle: "the only square left for a letter"
+  set: "letters already accounted for"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Normal, rung: set }
+  - { use: latin.fish, tier: Hard, rung: set }

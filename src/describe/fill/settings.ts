@@ -39,15 +39,22 @@ function letterOf(id: string, s: SettingJson, letters: Letters): string {
   return s.letter;
 }
 
-/** `s`'s bounds as the engine holds them, a tier's by its index, the sizes
- * a tier's are kept on each a number setting's that gives a size. */
+/** `s`'s choices as the engine holds them: the tiers each takes, and its
+ * bounds, a tier's by its index, the sizes a tier's are kept on each a
+ * number setting's that gives a size. */
 function choicesOut(
   json: DescriptionJson,
   id: string,
   cs: readonly ChoiceJson[],
   tiers: readonly string[],
 ) {
-  return cs.map(({ bounds, ...bare }) => {
+  return cs.map(({ bounds, tiers: taken, ...rest }) => {
+    const bare = {
+      ...rest,
+      ...(taken === undefined
+        ? {}
+        : { tiers: taken.map((t) => tierIndex(tiers, t, `settings ${id}`)) }),
+    };
     if (bounds === undefined) return bare;
     const { tiers: byTier, ...all } = bounds;
     for (const b of Object.values(byTier ?? {}))

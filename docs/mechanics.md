@@ -342,7 +342,9 @@ headed by those words. Exemplars: `git grep -l modifierItem src/games`.
   deal flag's `offBounds`, a tier's bounds held only while the flag is off
   (ABCD's Unreasonable, refused on nine squares unless clues are hidden),
   and `play.cornerCrosses`, the cue drawn while it is on. The `counting`
-  fixture states each.
+  fixture states each. A ruleset states the tiers it takes at every size
+  as its choice's `tiers`, which is its `only`, and those it refuses at
+  some sizes alone as `bounds.tiers` (the `lettering` fixture's both).
 
 ### A choice's name is typed once
 
@@ -358,6 +360,8 @@ A game names its boards as `Game.menu`, at least three and smallest first,
 and the engine writes each at every tier (`PresetBoards` in
 [`engine/contract/game.ts`](../src/engine/contract/game.ts) says `variants`,
 `title`, `more`, `tiers` and `skips`). Exemplar: the skeleton's [`state.ts`](../src/skeleton/grid/state.ts).
+A born game states them as `play.boards`, `play.boardTiers` and
+`play.boardSkips`.
 A test reads the menu through `leafPresets(game)` or `presetMenu(game)`,
 never a copy of its own, which stays green when the menu moves.
 

@@ -1493,6 +1493,20 @@
                 }
               }
             },
+            "boardSkips": {
+              "type": "object",
+              "description": "The tiers between a board's first and last that the menu leaves out, by the board's name in `boards`: a tier whose deal takes seconds at that size where the tiers around it do not (Group's 8x8 at Hard).",
+              "propertyNames": {
+                "pattern": "^[1-9][0-9]*(x[1-9][0-9]*|[a-z](?![0-9]))([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
             "plain": {
               "type": "array",
               "description": "The clue kinds written as a number on their cell that are drawn plain: a number whose meaning reads no block of cells (Range's, which sees along its row and column), so it has no block to outline, never turns faint, and is not counted in the status bar.",
@@ -3161,6 +3175,14 @@
                   "rule": {
                     "type": "string",
                     "description": "A size's ruleset's rule."
+                  },
+                  "tiers": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "The tiers the choice takes, where not every one, at any size: the Custom dialog offers it only these, a full ID asking another is refused, and the help says so (`engine/game-id/only.ts`; Group's identity hidden, never Easy, where no Latin deduction tells its two blank lines apart). A tier refused at some sizes alone is `bounds.tiers`'."
                   },
                   "least": {
                     "type": "integer",

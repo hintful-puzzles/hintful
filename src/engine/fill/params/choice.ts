@@ -1,7 +1,7 @@
 /** A setting that is one of its choices: a size the rules read, each value
  * a ruleset, or a setting of the deal. */
 
-import { noSuchTier } from "../../contract/difficulty.ts";
+import { DIFFICULTY_KW, noSuchTier } from "../../contract/difficulty.ts";
 import type { ParamConfigItem } from "../../contract/game.ts";
 import { num, type ParamsSegment } from "../../game-id/params-codec.ts";
 import { rulesetItem } from "../../game-id/ruleset.ts";
@@ -37,6 +37,9 @@ export interface Choice {
    * the default's alone, written as nothing. */
   readonly code?: string;
   readonly bounds?: ChoiceBounds;
+  /** The tiers it takes, by index, where not every one: its `only`
+   * (`game-id/only.ts`). */
+  readonly tiers?: readonly number[];
   /** The symmetry it keeps, where the setting is a symmetry. */
   readonly symmetry?: Symmetry;
   /** Where it is a ruleset: its rule, and the narrowest board it has an
@@ -170,17 +173,29 @@ export const choice: SettingKind<ChoiceSetting> = {
   items(s, cx) {
     const get = (p: FillParams) => choiceOf(s, p);
     const set = (p: FillParams, v: number) => setChoice(s, p, v);
+    const onlyOf = (c: Choice) =>
+      c.tiers === undefined ? null : { [DIFFICULTY_KW]: c.tiers };
     if (s.gives === "size")
       return [
         rulesetItem<FillParams>(
-          s.choices.map((c) => ({
-            name: c.name,
-            rule: c.rule ?? "",
-            ...(c.least === undefined ? {} : { least: c.least }),
-          })),
+          s.choices.map((c) => {
+            const only = onlyOf(c);
+            return {
+              name: c.name,
+              rule: c.rule ?? "",
+              ...(c.least === undefined ? {} : { least: c.least }),
+              ...(only === null ? {} : { only }),
+            };
+          }),
           { get, set },
         ),
       ];
+    const only = Object.fromEntries(
+      s.choices.flatMap((c, i) => {
+        const o = onlyOf(c);
+        return o === null ? [] : [[i, o] as const];
+      }),
+    );
     if (s.kw === undefined || s.name === undefined || s.doc === undefined)
       throw new Error(`settings: ${s.id} has no Custom field`);
     const item: ParamConfigItem<FillParams> = {
@@ -188,6 +203,7 @@ export const choice: SettingKind<ChoiceSetting> = {
       name: s.name,
       type: "choices",
       choices: s.choices.map((c) => c.name),
+      ...(Object.keys(only).length === 0 ? {} : { only }),
       doc: s.doc,
       label: {
         slot: "tail",

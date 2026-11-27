@@ -203,6 +203,7 @@ export function playOf(
     default: byDefault,
     defaultTier,
     boardTiers,
+    boardSkips,
     variants,
     bounds,
     plain: _plain,
@@ -377,7 +378,14 @@ export function playOf(
           "/** The preset menu's sizes, smallest first; the first is the default. */",
           `export const boards = ${JSON.stringify(boards.map(sizeOf(json)))} as const;`,
         ]),
-    ...menuOf(json, { boards, byDefault, defaultTier, boardTiers, variants }),
+    ...menuOf(json, {
+      boards,
+      byDefault,
+      defaultTier,
+      boardTiers,
+      boardSkips,
+      variants,
+    }),
     ...boundsOf(json, bounds),
     ...(hintMarks === undefined
       ? []

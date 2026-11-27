@@ -88,22 +88,27 @@ export const sizeOf =
 
 /**
  * `menu`, what the preset menu offers beside its grid of `boards`: the
- * default board where it is not the first, the tiers a board stops at, and
- * the variant boards, a tier by its index. Nothing where the description
- * states none. A default or a board stopping at tiers not in `boards`, a
- * tier not in `tiers` or a variation the description lacks is refused.
+ * default board where it is not the first, the tiers a board stops at and
+ * those it skips between, and the variant boards, a tier by its index.
+ * Nothing where the description states none. A default or a board stopping
+ * at tiers not in `boards`, a tier not in `tiers`, a skip outside its
+ * board's first and last or a variation the description lacks is refused.
  */
 export function menuOf(
   json: DescriptionJson,
-  p: Pick<PlayJson, "boards" | "boardTiers" | "variants" | "defaultTier"> & {
+  p: Pick<
+    PlayJson,
+    "boards" | "boardTiers" | "boardSkips" | "variants" | "defaultTier"
+  > & {
     byDefault?: string;
   },
 ): string[] {
-  const { boards, byDefault, defaultTier, boardTiers, variants } = p;
+  const { boards, byDefault, defaultTier, boardTiers, boardSkips, variants } = p;
   if (
     byDefault === undefined &&
     defaultTier === undefined &&
     boardTiers === undefined &&
+    boardSkips === undefined &&
     variants === undefined
   )
     return [];
@@ -138,6 +143,26 @@ export function menuOf(
       first: tierOf(first, "boardTiers"),
       last: tierOf(last, "boardTiers"),
     })),
+    ...(boardSkips === undefined
+      ? {}
+      : {
+          skips: Object.entries(boardSkips).map(([b, skipped]) => {
+            const [first, last] = (boardTiers?.[b] ?? [tiers[0], tiers.at(-1)]).map(
+              (t) => tierOf(t ?? "", "boardTiers"),
+            );
+            return {
+              ...board(b, "boardSkips"),
+              tiers: skipped.map((t) => {
+                const i = tierOf(t, "boardSkips");
+                if (i <= (first ?? 0) || i >= (last ?? 0))
+                  throw new CompileError(
+                    `play boardSkips: ${b} skips ${t}, not between its first and last tier`,
+                  );
+                return i;
+              }),
+            };
+          }),
+        }),
     variants: (variants ?? []).map((v) => {
       // A flag of the deal's is on by its name, and a variation by its own.
       const flags = v.with.filter((id) => {

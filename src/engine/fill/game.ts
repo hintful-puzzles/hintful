@@ -139,6 +139,8 @@ export interface BornModule<C>
       readonly first: number;
       readonly last: number;
     })[];
+    /** The tiers between a board's first and last the menu leaves out. */
+    readonly skips?: readonly (Board & { readonly tiers: readonly number[] })[];
     readonly variants: readonly (Board & {
       readonly variations: readonly string[];
       readonly diff: number;
@@ -216,6 +218,7 @@ export function fillGame<C extends Clues<C> & object>(
   );
   const boardTiers = module.menu?.tiers ?? [];
   const variants = module.menu?.variants ?? [];
+  const skips = module.menu?.skips ?? [];
   const menu: PresetBoards<FillParams> = {
     boards: boards.map((b) => sized(b)),
     ...(boardTiers.length === 0
@@ -226,6 +229,9 @@ export function fillGame<C extends Clues<C> & object>(
             return got === undefined ? null : [got.first, got.last];
           },
         }),
+    ...(skips.length === 0
+      ? {}
+      : { skips: (p: FillParams) => skips.find((b) => isBoard(p, b))?.tiers ?? [] }),
     ...(variants.length === 0
       ? {}
       : {
