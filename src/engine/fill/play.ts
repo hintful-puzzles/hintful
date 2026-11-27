@@ -197,6 +197,9 @@ export interface FillPlay {
   /** On a board of numbers, the shape a drag from the selected cell selects,
    * which a typed value fills at once (`select.ts`). */
   readonly select?: SelectShape;
+  /** On a square board of numbers with line labels, whether the player may
+   * rule a divider between two lines (`dividers.ts`). */
+  readonly dividers?: true;
   /** Where the open cells a definition holds of are washed (`washed`), the
    * preference that draws the secondary piece on one, on by default. */
   readonly wash?: { readonly pref?: { readonly kw: string; readonly name: string } };

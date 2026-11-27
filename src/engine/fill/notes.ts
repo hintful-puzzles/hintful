@@ -25,6 +25,7 @@ import {
   ladderOf,
   spaceOf,
 } from "./board.ts";
+import { applyDivider, type DividerMove, isDividerShaped } from "./dividers.ts";
 import { applyDone, type DoneMove, isDoneShaped } from "./done.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 
@@ -38,13 +39,16 @@ export interface SetCellsMove {
 }
 
 /** A fill game's move: an edit, on a board of numbers a typed entry, one
- * typed into a selection, or a note move, or a clue marked done. Solve,
- * Clear and Reveal stay edits. */
-export type FillMove = Edit | CandidateMove | SetCellsMove | DoneMove;
+ * typed into a selection, or a note move, or a clue marked done, or a
+ * divider ruled. Solve, Clear and Reveal stay edits. */
+export type FillMove = Edit | CandidateMove | SetCellsMove | DoneMove | DividerMove;
 
 /** Whether `move` is one of the note-taking cell's. */
 export const isCandidateMove = (move: FillMove): move is CandidateMove =>
-  "type" in move && move.type !== "done" && move.type !== "setCells";
+  "type" in move &&
+  move.type !== "done" &&
+  move.type !== "setCells" &&
+  move.type !== "divider";
 
 /** Whether `move` has a typed selection's shape, as a save holds it. */
 function isSetCells(move: unknown): move is SetCellsMove {
@@ -101,7 +105,7 @@ function isCandidate(move: unknown): move is CandidateMove {
 /** `move` as a fill game's move, or refused as `context`'s: a move from a
  * save is read back as whatever it was written as. */
 export function fillMoveOf(move: unknown, context: string): FillMove {
-  if (isDoneShaped(move) || isSetCells(move)) return move;
+  if (isDoneShaped(move) || isSetCells(move) || isDividerShaped(move)) return move;
   return isCandidate(move) ? move : editOf(move, context);
 }
 
@@ -117,7 +121,9 @@ export const applyMove = <C>(
       ? applyDone(board, move)
       : move.type === "setCells"
         ? applySetCells(module, board, move)
-        : applyNoteMove(module, board, move);
+        : move.type === "divider"
+          ? applyDivider(board, move)
+          : applyNoteMove(module, board, move);
 
 /** The board after a value typed into a selection: each cell takes it as a
  * typed cell does (`applyNoteMove`), what each reaches read on the board

@@ -1,5 +1,6 @@
 /**
- * The bottom of a tile: the grid line or the part's walls, and the surface
+ * The bottom of a tile: the grid line or the walls, its part's and the
+ * player's dividers', and the surface
  * inside them, the piece's own, the win flash's, a dealt cell's, a washed
  * cell's, the part's fill or an undecided cell's; under it the selection's
  * wash and a striped line's hatch, and the diagonals the board has as units.
@@ -23,11 +24,14 @@ import {
 import { type WinTone, winSlot } from "../../../render/win-wave.ts";
 import type { Partition } from "../../../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, spaceOf, walledParts } from "../../board.ts";
+import { dividerSides } from "../../dividers.ts";
 import type { FillDrawState } from "../../render.ts";
 import { COL_CELL, COL_GRID, type FillPalette, REGION_SURFACES } from "../palette.ts";
 import type { FillSetup } from "../setup.ts";
 import {
   CURSOR,
+  DIVIDER_SHIFT,
+  DIVIDER_SIDES,
   FIXED,
   HINT_LINE,
   NOTES_MODE,
@@ -65,6 +69,19 @@ export function partsOf<C extends Clues<C>>(
     inset: insetParts === undefined ? null : regionWalls(b.w, b.h, insetParts.of),
     diagonal,
   };
+}
+
+/** Cell `(x, y)`'s walls, its part's and the player's dividers', `null`
+ * where it has neither. */
+export function wallsAt<C>(
+  ds: FillDrawState,
+  b: FillBoard<C>,
+  x: number,
+  y: number,
+): number | null {
+  const ruled = dividerSides(b, x, y);
+  const part = ds.parts?.walls[y * b.w + x];
+  return part === undefined ? (ruled === 0 ? null : ruled) : part | ruled;
 }
 
 /** A cell's selection as drawn: a board of numbers (`typed`) shows it as the
@@ -133,7 +150,9 @@ export function paintSurface(
     if (hintWord & HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
   };
 
-  if (part === null) {
+  // A player's divider is drawn as a wall, a part's or none beside it.
+  const ruled = (lineWord & DIVIDER_SIDES) >> DIVIDER_SHIFT;
+  if (part === null && ruled === 0) {
     dr.drawRect(tile, COL_GRID);
     // A board of lists doubles every fifth line inside it, to count along
     // a list by (upstream pattern.c's `grid_square`).
@@ -147,10 +166,11 @@ export function paintSurface(
       dr,
       ts,
       tile,
-      part.walls,
+      (part?.walls ?? 0) | ruled,
       { grid: COL_GRID, wall: pal.COL_WALL },
       lay,
     );
+    if (part === null) return;
     // The diagonals a board has as units, corner to corner under the
     // content (upstream solo.c's X).
     if (part.diagonal & 1)

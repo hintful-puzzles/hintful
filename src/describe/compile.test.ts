@@ -1138,6 +1138,28 @@ describe("what the fill board reads of a description", () => {
     );
   });
 
+  it("refuses dividers off a square board of numbers with labels", () => {
+    const fixture = (name: string) =>
+      `src/engine/testing/fixtures/${name}/${name}.description.yaml`;
+    const divide = (j: { play: { dividers?: boolean } }) => {
+      j.play.dividers = true;
+      return j;
+    };
+    expect(compileEdited(fixture("ruling"), (j) => j)).toContain('"dividers":true');
+    expect(() => compileEdited(fixture("playing"), divide)).toThrow(
+      /play dividers: dividers are a board of numbers', and play has no `numbers`/,
+    );
+    expect(() => compileEdited(fixture("selecting"), divide)).toThrow(
+      /play dividers: a divider is ruled between two labels/,
+    );
+    expect(() =>
+      compileEdited(fixture("ruling"), (j: { space: { grid: { h: string } } }) => {
+        j.space.grid.h = "w + 1";
+        return j;
+      }),
+    ).toThrow(/play dividers: a divider rules two rows and two columns alike/);
+  });
+
   it("refuses a stream's codes that could not be read back", () => {
     const source = "src/engine/testing/fixtures/walling/walling.description.yaml";
     const walling = sources.get(source);

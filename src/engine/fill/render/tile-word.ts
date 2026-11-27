@@ -84,6 +84,10 @@ export const RAISED = 1 << 19;
 export const BALL = 1 << 20;
 export const BALL_GIVEN = 1 << 21;
 export const BALL_BARE = 1 << 22;
+/** The sides of the cell a player's divider runs along (`play.dividers`), in
+ * `regionWalls`' side bits: drawn as walls. */
+export const DIVIDER_SHIFT = 23;
+export const DIVIDER_SIDES = 0xf << DIVIDER_SHIFT;
 
 // --- the edge word: on an answer on the edges, the tile's four sides --------
 /** Side `d`'s value (up, right, down, left), {@link EDGE_VALUE_BITS} a side

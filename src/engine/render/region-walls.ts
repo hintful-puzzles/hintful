@@ -18,10 +18,10 @@ export const wallHalf = (ts: number): number => Math.max(1, Math.round(ts / 28))
 // The sides of a square that face another region or the edge of the board,
 // and the corners where two other squares' walls meet at a square that has
 // neither.
-const TOP = 1;
-const LEFT = 2;
-const BOTTOM = 4;
-const RIGHT = 8;
+export const TOP = 1;
+export const LEFT = 2;
+export const BOTTOM = 4;
+export const RIGHT = 8;
 const CORNER_SHIFT = 4;
 
 /** The walls of every square of a `w` by `h` board, one byte a square: its

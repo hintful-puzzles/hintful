@@ -247,6 +247,23 @@ export function playOf(
     throw new CompileError(
       "play select: a selection is typed into, and play has no `numbers`",
     );
+  // A divider is toggled by a press between two labels, and keyed by a line
+  // both of rows and of columns, the same two of each.
+  if (p.dividers === true) {
+    if (p.numbers === undefined)
+      throw new CompileError(
+        "play dividers: dividers are a board of numbers', and play has no `numbers`",
+      );
+    if (labels?.start === undefined)
+      throw new CompileError(
+        "play dividers: a divider is ruled between two labels, and play has no `labels.start`",
+      );
+    const grid = json.space.grid;
+    if (grid === undefined || grid.w !== grid.h)
+      throw new CompileError(
+        `play dividers: a divider rules two rows and two columns alike, and the grid is not square (${grid?.w} by ${grid?.h})`,
+      );
+  }
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
   const plainPlay = {

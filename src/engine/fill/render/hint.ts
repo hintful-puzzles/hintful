@@ -27,6 +27,7 @@ import { numberText } from "./geometry.ts";
 import { ballsOf, emptyIn } from "./layers/empty.ts";
 import { notesIn } from "./layers/notes.ts";
 import { labelsOf } from "./layers/part-clues.ts";
+import { wallsAt } from "./layers/surface.ts";
 import type { FillSetup } from "./setup.ts";
 import {
   BALL,
@@ -197,7 +198,7 @@ export function hintPass<C extends Clues<C>>(
   const ringedAt = new Set(targets.map((c) => c.y * w + c.x));
   const markStyle: HintMarkStyle = {
     band: (x, y) => {
-      const band = lay.markBand(ts, [x, y, h], ds.parts?.walls[y * w + x] ?? null);
+      const band = lay.markBand(ts, [x, y, h], wallsAt(ds, state, x, y));
       const v = shown.values[y * w + x];
       return lay.f.threeD && v !== 0 && ringedAt.has(y * w + x)
         ? { ...band, box: topFace(band.box, v, lay.f.top) }

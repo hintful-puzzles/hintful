@@ -1,6 +1,6 @@
 ## Next
 
-2.4b, then the rest of Group. The figures of 3.1 are taken again at the
+2.4c, then the rest of Group. The figures of 3.1 are taken again at the
 end, after 3.1a's and 3.1b's fixes.
 Group's controls are answered: keep them, as engine capabilities
 (design.md § "Decisions" 2).
@@ -57,18 +57,17 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.4a A selection a drag makes in a shape, typed once as one move:
         `play.select`, on the `selecting` fixture; the commit that ticks
         2.4a. In notes mode it notes each square, or strikes from all.
-  - [ ] 2.4b A player's divider between two lines, saved as `done` is.
-        Planned 2026-11-27 from Group's `state.ts` and `render.ts`: key a
-        divider by the pair of lines either side (`dividers[a] = b`, `-1`
-        none), drawn only while `b` follows `a`, so 2.4c's order needs no
-        second key; on a square board one divider rules both a row gap and
-        a column gap, as Group's does. A press in the line-label margin
-        (`play.labels`) between two labels toggles it, and `|` and `-` the
-        one after the cursor's column or row; a move of its own beside
-        `DoneMove`, on a fixture of its own.
+  - [x] 2.4b A player's divider between two lines: `play.dividers`, on
+        the `ruling` fixture; the commit that ticks 2.4b. 2.4c's order goes
+        in at `dividers.ts`'s `following`.
   - [ ] 2.4c A display order of a square's lines, dragged by a header;
-        first, trace whether `Layout` and the target lookup carry it.
-  - [ ] 2.4d Group's deal, letters and ruleset; then its flip.
+        first, trace whether `Layout` and the target lookup carry it. A
+        press between two labels toggles a divider on the press today:
+        with a header to drag it moves to the release with no drag, as
+        upstream Group's.
+  - [ ] 2.4d Group's deal, letters and ruleset; then its flip. The
+        selection's and the dividers' look are checked in the browser
+        here, the fixtures having no page.
 
 ## 3. Finish
 

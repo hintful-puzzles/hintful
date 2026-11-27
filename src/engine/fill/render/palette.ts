@@ -148,14 +148,20 @@ export function fillPalette(
   );
   const COL_NUMBER_LIGHT_DONE = COL_GIVEN + 2;
   const COL_NUMBER_DONE = COL_GIVEN + 3;
-  /** A part's walls, and the first of the fills its cells take: after the
-   * numbers' slots, where the board fills them, so a palette has no hole. */
+  /** A part's walls and the player's dividers (`play.dividers`), and the
+   * first of the fills a part's cells take: after the numbers' slots, where
+   * the board fills them, so a palette has no hole. */
   const COL_WALL = numbered ? COL_GIVEN + 4 : COL_GIVEN + 1;
   const COL_REGION = COL_WALL + 1;
+  const divided = play.dividers === true;
   /** A dealt cell's dot (`play.dotted`): dark on a light piece, light on a
    * dark one, after the walls and the regions' fills where the board has
    * them, so a palette has no hole. */
-  const COL_DOT = !walled ? COL_WALL : COL_REGION + REGION_SURFACES.length;
+  const COL_DOT = walled
+    ? COL_REGION + REGION_SURFACES.length
+    : divided
+      ? COL_REGION
+      : COL_WALL;
   const COL_DOT_LIGHT = COL_DOT + 1;
   /** A washed cell's surface (`play.wash`), after the dots' where the board
    * has them. */
@@ -196,8 +202,8 @@ export function fillPalette(
       out[COL_NUMBER_LIGHT_DONE] = GRAY_WASH;
       out[COL_NUMBER_DONE] = CLEAR_MARK;
     }
+    if (walled || divided) out[COL_WALL] = INK;
     if (walled) {
-      out[COL_WALL] = INK;
       REGION_SURFACES.forEach((fill, k) => {
         out[COL_REGION + k] = fill;
       });

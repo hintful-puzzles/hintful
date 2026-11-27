@@ -200,6 +200,10 @@ export interface FillBoard<C> {
   /** Of each clue kind the player may mark done (`play.done`, `done.ts`),
    * 1 a clue they marked, by its index in the kind's list. */
   readonly done: Readonly<Record<string, Uint8Array>>;
+  /** On a square board the player divides (`play.dividers`, `dividers.ts`),
+   * for each line the line its divider waits for, `-1` where it has none;
+   * `null` on a board that keeps none. */
+  readonly dividers: Int32Array | null;
 }
 
 /** What a board's space is built from: its stored size, its clues, among
@@ -361,6 +365,7 @@ export function newBoard<C>(
         new Uint8Array(listOf(dealt, k as keyof C).at.length),
       ]),
     ),
+    dividers: module.play?.dividers === true ? new Int32Array(w).fill(-1) : null,
   };
 }
 
@@ -378,6 +383,7 @@ export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
         new Uint8Array(flags.length),
       ]),
     ),
+    dividers: board.dividers === null ? null : board.dividers.slice().fill(-1),
   };
 }
 

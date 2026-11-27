@@ -11,6 +11,7 @@ import { JOINED_OPEN } from "../../render/piece.ts";
 import { wallHalf } from "../../render/region-walls.ts";
 import { sweepStep } from "../../render/win-wave.ts";
 import type { Clues, FillBoard } from "../board.ts";
+import { dividerSides } from "../dividers.ts";
 import { isDone } from "../done.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import { typedCells } from "../select.ts";
@@ -44,6 +45,7 @@ import {
   ARMED,
   BALL_BARE,
   CURSOR,
+  DIVIDER_SHIFT,
   FIXED,
   JOIN_SHIFT,
   LABEL_DONE,
@@ -119,7 +121,8 @@ export function tileWordsOf<C extends Clues<C>>(
         (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
         washes[i] |
         balls[i] |
-        (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
+        (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0) |
+        (dividerSides(state, x, y) << DIVIDER_SHIFT);
       const n = shownNumber(cx, state, i, v, ui.hiddenShown);
       if (n >= 0 && v === cx.play.covers?.value) lk |= NUMBER_UNDER;
       const part =
@@ -233,7 +236,12 @@ function drawTile<C extends Clues<C>>(
 
   for (const s of spill) paintRaised(cx, lay.f.top, dr, s.tile, s, glyph);
   dr.unclip();
-  dr.drawUpdate(part === null ? { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 } : tile);
+  // A wall, a part's or a divider's, lies over the grid line the tile owns.
+  dr.drawUpdate(
+    part === null && play.dividers !== true
+      ? { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 }
+      : tile,
+  );
 }
 
 /** Each tile that changed, with the raised values next door over it. */

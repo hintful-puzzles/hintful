@@ -56,6 +56,13 @@ import {
   spaceOf,
   topValue,
 } from "./board.ts";
+import {
+  type DividerMove,
+  dividerAt,
+  dividerKeyed,
+  KEY_BAR,
+  KEY_MINUS,
+} from "./dividers.ts";
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
@@ -165,7 +172,7 @@ export interface NumberInput<C, D> {
     ds: D,
     p: Point,
     button: number,
-  ): CandidateMove | SetCellsMove | DoneMove | UiUpdate | null;
+  ): CandidateMove | SetCellsMove | DoneMove | DividerMove | UiUpdate | null;
   /** A key a value, then the clear key, for a board of the params `p`, and
    * of `board` where it is in play. */
   requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
@@ -184,6 +191,7 @@ export function numberInput<
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
   const select = module.play?.select;
+  const dividers = module.play?.dividers === true;
   const done =
     module.play === undefined
       ? null
@@ -228,6 +236,11 @@ export function numberInput<
           );
           return UI_UPDATE;
         }
+      }
+      if (dividers && (button === LEFT_BUTTON || button === RIGHT_BUTTON)) {
+        const ts = ds.tileSize;
+        const ruled = dividerAt(b, origin(ts, b), ts + gap(ts), p);
+        if (ruled !== null) return ruled;
       }
       if (done !== null && raisedAt === null) {
         // A press on a clue marks it done, and a drag on marks those that
@@ -279,6 +292,16 @@ export function numberInput<
       if (notes) {
         const toggled = toggleNoteTakingMode(ui, button);
         if (toggled !== null) return toggled;
+      }
+      if (dividers && (button === KEY_BAR || button === KEY_MINUS)) {
+        // A hidden cursor is shown first, so the line it divides after is
+        // seen.
+        if (!ui.cursor.visible) {
+          ui.cursor.visible = true;
+          ui.cursorFromKeyboard = true;
+          return UI_UPDATE;
+        }
+        return dividerKeyed(b, ui.cursor, button);
       }
       if (!ui.cursor.visible) return null;
       const { x, y } = ui.cursor;

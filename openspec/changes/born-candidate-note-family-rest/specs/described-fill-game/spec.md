@@ -627,6 +627,29 @@ A board of buttons SHALL refuse a selection.
 - **THEN** 3 is noted on each square of the selection lacking it, or struck
   from every one where all note it
 
+### Requirement: A born square board of numbers may let the player rule dividers
+
+Where the description's `play.dividers` is set, on a square board of numbers
+with line labels, a press in the labels' margin SHALL toggle a divider at
+the gap between two labels nearest it, and `|` and `-` the one after the
+cursor's column or row. A divider SHALL be drawn as a wall between its two
+rows and between the same two columns. It SHALL be a move a save holds,
+undone as any, and a restart SHALL take every divider away. A description
+setting it elsewhere SHALL be refused.
+
+#### Scenario: A divider ruled and taken away
+
+- **WHEN** the player presses between the labels of lines 2 and 3
+- **THEN** a wall is drawn between rows 2 and 3 and between columns 2 and 3
+- **WHEN** the player presses there again, or undoes
+- **THEN** the wall is gone
+
+#### Scenario: A divider keyed
+
+- **WHEN** the cursor is in column 2 and the player types `|`
+- **THEN** the divider after column 2 is toggled, and with it the one after
+  row 2
+
 ## MODIFIED Requirements
 
 ### Requirement: A born game's answer may be searched under a partition dealt first
