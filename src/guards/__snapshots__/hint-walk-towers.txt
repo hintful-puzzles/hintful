@@ -1,4 +1,4 @@
-4x4 Easy #0: 26 steps, solved, cbc5e8364abf00f2 [clean:1 dup:6 facing:1 fullLine:4 lineFull:2 populate:1 single:10 tallestNearest:1]
-4x4 Normal #0: 30 steps, solved, ac07d89c97b545c2 [arrangement:1 clean:1 dup:10 hiddenSingle:1 lineFull:1 lowerBound:2 populate:1 single:13]
-4x4 Tricky #0: 38 steps, solved, e6fbb51807d7136c [arrangement:5 clean:1 dup:10 hiddenSingle:4 lowerBound:4 populate:1 single:11 tallestNearest:1 wing:1]
-4x4 Unreasonable #0: 18 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 81ab786654f88e46 [arrangement:5 dup:2 hiddenSingle:2 lineFull:1 lowerBound:7 populate:1]
+4x4 Easy #0: 26 steps, solved, e744641457b3b83e [clean:1 dup:6 facing:1 fullLine:4 lineFull:2 populate:1 single:10 tallestNearest:1]
+4x4 Normal #0: 30 steps, solved, c73ec77bf32680d1 [arrangement:1 clean:1 dup:10 hiddenSingle:1 lineFull:1 lowerBound:2 populate:1 single:13]
+4x4 Tricky #0: 38 steps, solved, f008b02d07123f93 [arrangement:5 clean:1 dup:10 hiddenSingle:4 lowerBound:4 populate:1 single:11 tallestNearest:1 wing:1]
+4x4 Unreasonable #0: 18 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 86f0b44948fd3615 [arrangement:5 dup:2 hiddenSingle:2 lineFull:1 lowerBound:7 populate:1]

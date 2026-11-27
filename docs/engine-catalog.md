@@ -1411,7 +1411,7 @@ description: the pairing of each technique with its reason, and
 `ladderTechniques` and `runLadder` to run it on the marks capped per scale.
 `withSearch` puts a Search no description states after the ladder, and
 `keptRung` makes a hint rung of the compiled firings that serve another.
-Exemplar: `abcd/solver.ts`; the guide is
+Exemplar: `crossing/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
 
 ### `ladder-walk.ts` — a hint's walk over a compiled ladder
@@ -1795,7 +1795,7 @@ supplies its rungs, regions and words; the walk itself is
 - **A plain row/column square calls `runLatinCandidatePlan`** and supplies
   its rungs and words alone. A game whose singles narrate otherwise
   fails to type-check against it and calls `runCandidatePlan`
-  (`abcd/hint.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
+  (`rome/hint.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
   "The row/column preset".
 - **`buildSteps` hands its plan the prefs' `judging`**, and the game wires
   `judgeMove` as `candidateJudge` over the same `buildSteps`.

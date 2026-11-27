@@ -95,13 +95,14 @@ import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
 export type CandidateFillHint = CandidateHighlights;
 
 /** The rungs a step of the walk can be on every board of notes: the walk's
- * own and the singles. The library's strikes are rungs where the ladder
- * places them. */
-const CANDIDATE_FILL_RUNGS: readonly string[] = [
+ * own and the singles. A hidden single needs a unit, so a board with none
+ * (ABCD's) has no such rung. The library's strikes are rungs where the
+ * ladder places them. */
+const candidateFillRungs = (hasUnit: boolean): readonly string[] => [
   ...CANDIDATE_RUNGS,
   "single",
   "regionsFull",
-  "hiddenSingle",
+  ...(hasUnit ? ["hiddenSingle"] : []),
 ];
 
 /** A fill board's moves as the walk reads and makes them: its note-taking
@@ -648,6 +649,12 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         board.w,
         FILL_CANDIDATE_MOVES,
       ),
-    rungs: [...CANDIDATE_FILL_RUNGS, ...libraryKinds, ...ownKinds],
+    rungs: [
+      ...candidateFillRungs(
+        module.units.length > 0 || (module.distinctParts ?? []).length > 0,
+      ),
+      ...libraryKinds,
+      ...ownKinds,
+    ],
   };
 }

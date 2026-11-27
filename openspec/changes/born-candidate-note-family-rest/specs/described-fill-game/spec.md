@@ -47,6 +47,7 @@ any other formula SHALL be refused.
 - **THEN** the walk strikes a placed value from the notes its placing
   techniques strike it from, finds no hidden single, and finishes a board
   the ladder finishes
+- **AND** its hint lists no hidden-single rung, which no step could take
 
 #### Scenario: A partition by another formula is refused
 

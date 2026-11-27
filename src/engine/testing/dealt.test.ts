@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { abcdGame } from "../../games/abcd/index.ts";
+import { game as abcdGame } from "../../generated/games/abcd/abcd.game.ts";
 import { RetryLimitExceeded } from "../contract/retry-limit.ts";
 import type { RandomState } from "../random/index.ts";
 import { randomUpto } from "../random/index.ts";

@@ -220,6 +220,20 @@ to the engine is in its commit.
   preset's full form is `3x3kdt`, the default symmetry, where it was
   `3x3ka` (Killer hides every given, so no board differs). Solo's sizes are
   named apart from `c`, which `given:` reads as its cell.
+- **ABCD** (2.2f): saves break (pre-approved); IDs read and write back as
+  before. The Custom box is "No diagonal touching", on for the rule, where
+  "Allow diagonal touching" was on without it; 6x9 with 3 letters is on the
+  menu's grid at both tiers, where it was an Easy variant. A label reads
+  "no diagonal, clues hidden" where it read "clues hidden, no diagonal". A
+  clue may be as large as its line is long, where it was refused past half
+  the line and one; such a board still has no answer. The margin's heading
+  letters are the engine's heading color, not upstream's blue. Mark-all
+  strikes a letter beside its twin only, no longer one whose line holds its
+  count (the help says so). The text format is the engine's boxed grid. The
+  hint's words are the description's: a satisfied line strikes its letter in
+  one step, "so the As must go"; the opening says "candidate letter".
+  Against the hand-written game (`compare-cost --quick`, 11 boards): the
+  same 618 steps, the walk 17% dearer in instructions, the deal 5%.
 
 ## Open Questions
 

@@ -189,8 +189,7 @@ the game's solve. Exemplar:
 - **On a ladder whose every rung only removes candidates, the census is the
   half that bites.** The corpus is dealt by a generator gated on the solver
   under test, so a plant that weakens a rung changes the corpus along with
-  the verdicts, and the board comparison stays green
-  ([`abcd-ladder.test.ts`](../src/games/abcd/abcd-ladder.test.ts)).
+  the verdicts, and the board comparison stays green.
 - **A rung's firing count says it runs, not that anything depends on it.**
   Solve with the rung silenced and see whether the board still finishes.
 - **Give a Tricky deduction its own rung where upstream folds it into an

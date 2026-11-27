@@ -11,8 +11,8 @@ techniques:
   # A line one letter short of its number read as holding them all.
   satisfied:
     for: >-
-      L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L,
-      d) + 1 >= v
+      q in clues(count), L = at(q), d = per(q), v = v(q) where holds(L, d) + 1
+      >= v
     conclude: "forall c in cells(L) where not known(c): strike(c, d)"
   # A stretch of even length read as having one shape too.
   runs:

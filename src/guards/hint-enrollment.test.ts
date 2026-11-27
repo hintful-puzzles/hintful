@@ -342,7 +342,9 @@ describe("every choice the Custom dialog offers is dealt", () => {
       "no Guess board allowing blanks",
     ).toBe(true);
     expect(
-      dealtFor("abcd").some((p) => p["diag"] === true),
+      dealtFor("abcd").some(
+        (p) => Array.isArray(p["variations"]) && p["variations"].includes("noDiagonal"),
+      ),
       "no ABCD board without diagonal touching",
     ).toBe(true);
   });

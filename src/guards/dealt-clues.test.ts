@@ -16,6 +16,7 @@ import {
   type Clues,
   type FillBoard,
   type FillModule,
+  perValuesOf,
   spaceOf,
 } from "../engine/fill/board.ts";
 import { paramsError } from "../engine/game-id/params.ts";
@@ -107,9 +108,13 @@ describe("a deal's clues are as its description says", () => {
           const universe = universes[flag.kind];
           if (universe === undefined)
             throw new Error(`${born.id}: ${flag.kind} sits nowhere`);
-          const places = (spaceOf(module, b) as unknown as Record<string, unknown[]>)[
-            universe
-          ].length;
+          const sp = spaceOf(module, b);
+          // A clue one a value (ABCD's counts) sits once a value at each place.
+          const perValue = (module.deal?.perValue ?? []).includes(flag.kind)
+            ? perValuesOf(module, sp, b.dealt)
+            : 1;
+          const places =
+            (sp as unknown as Record<string, unknown[]>)[universe].length * perValue;
           const shown = list(flag.kind).at.length;
           if (p.settings?.[flag.when] === 1) {
             flagged++;

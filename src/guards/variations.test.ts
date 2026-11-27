@@ -47,11 +47,21 @@ const texts = import.meta.glob<string>("../**/*.description.yaml", {
   import: "default",
 });
 
+// A born game's variation is switched by the setting of its name, which
+// states the words its title and the dialog say it by; a hand-written game's
+// variation is named by those words.
 const varied = Object.entries(texts).flatMap(([path, text]) => {
   const d = loadDescriptionFile(text, path);
-  return !isLibrary(d) && (isFormal(d) || isPlanning(d)) && d.variations !== undefined
-    ? [{ path, game: d.game, variations: d.variations }]
-    : [];
+  if (isLibrary(d) || !(isFormal(d) || isPlanning(d)) || d.variations === undefined)
+    return [];
+  const settings = isFormal(d) ? (d.settings ?? {}) : {};
+  const wordOf = (name: string): string => {
+    const s = settings[name];
+    return s !== undefined && "words" in s && typeof s.words === "string"
+      ? s.words
+      : name;
+  };
+  return [{ path, game: d.game, variations: d.variations, wordOf }];
 });
 
 /** How the game offers a variation by `name`: as a ruleset by its name, as
@@ -71,10 +81,10 @@ describe("a stated variation is offered under the word its shape gives", () => {
     expect(varied.length).toBeGreaterThan(0);
   });
 
-  for (const { path, game, variations } of varied)
+  for (const { path, game, variations, wordOf } of varied)
     for (const [name, v] of Object.entries(variations))
       it(`${path}: ${name}`, () => {
-        expect(offered(game, name)).toEqual([variationWord(v)]);
+        expect(offered(game, wordOf(name))).toEqual([variationWord(v)]);
       });
 });
 
@@ -117,8 +127,8 @@ function switchedBoards(
 }
 
 describe("a board is played with each variation off and on", () => {
-  for (const { path, game: id, variations } of varied)
-    for (const name of Object.keys(variations))
+  for (const { path, game: id, variations, wordOf } of varied)
+    for (const name of Object.keys(variations).map(wordOf))
       it(`${id}: ${name}, from ${path}`, () => {
         const game = gameOf(id);
         if (game === null) throw new Error(`no game ${id}`);

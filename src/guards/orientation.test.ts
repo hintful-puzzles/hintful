@@ -55,7 +55,6 @@ const WIDE_BY_NATURE: Record<string, { reason: string; params: string[] }> = {
  * exactly, because something is drawn along one side only. Turning them is
  * still sound: the midend compares the real tile size of each orientation. */
 const UNEVEN_FRAME: Record<string, string> = {
-  abcd: "One pixel of tile-background allowance is added to the width only.",
   boats: "The fleet is drawn in a panel below the grid.",
   crossing: "The list of numbers to place is drawn below the grid.",
   undead: "The monster counts are drawn in a band above the grid.",

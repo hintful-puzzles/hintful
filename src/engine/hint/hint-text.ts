@@ -203,7 +203,8 @@ export interface Conclusions {
 }
 
 /** The {@link Conclusions} of a game whose values print one way everywhere, in
- * its value vocabulary. A value struck in several cells is named once. `be`
+ * its value vocabulary. A value struck in several cells is named once, in
+ * its plural where it is the only one ("the 3s"). `be`
  * is the verb a cell takes a value by (Rome's arrows "point"), and `note`
  * what a struck value is called where its word alone would not say it is a
  * note: "the up marks in it", and with no `where` "this square's up mark",
@@ -225,7 +226,16 @@ export function candidateConclusions(vocab: {
         const ns = distinct([...values]);
         if (note !== undefined)
           return `${where ? "the" : `this ${cell}'s`} ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
-        return ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v));
+        // One value struck from several cells is several notes: "the As".
+        // A lower-case letter (Group's elements) has no plural that reads
+        // as the letter, so it stays "the a".
+        if (ns.length === 1) {
+          const word = v(ns[0]);
+          return values.length > 1 && !/^[a-z]$/.test(word)
+            ? `the ${word}s`
+            : `the ${word}`;
+        }
+        return joinWith(ns.map(v));
       };
       // "Must go" is the necessity voice in the fewest words. A where that
       // says what they go from follows it; one that picks them out ("beyond

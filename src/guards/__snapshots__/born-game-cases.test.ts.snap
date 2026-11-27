@@ -1,11 +1,22 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`abcd: pinned hint positions > says, at each pin 1`] = `
+{
+  "clean": "Now clear the easy ones: cross out any letter already beside, above or below its cell.",
+  "dup": "The C just placed can't repeat in its four neighbors, so the Cs must go from the other cells.",
+  "packed": "This column needs 3 Bs, and the outlined cells fit only 3 apart, so each stretch is full: this cell must be B.",
+  "populate": "Start by penciling every candidate letter into each empty cell.",
+  "satisfied": "This row must hold no A, so the As must go.",
+  "single": "Every other letter has been ruled out in this cell, so it can only be D.",
+}
+`;
+
 exports[`adjacent: pinned hint positions > says, at each pin 1`] = `
 {
   "adjacent": "No bar joins this cell to the 1 beside it: they can't differ by 1, so the 2 must go.",
   "adjacentSet": "A bar joins this cell to its neighbor with nothing open one away from 1, so the 1 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
-  "dup": "The 2 just placed can't repeat in its row and column, so the 2 must go from the other cells.",
+  "dup": "The 2 just placed can't repeat in its row and column, so the 2s must go from the other cells.",
   "hiddenSingle": "No other cell in this row can be 1, so this cell must be 1.",
   "note": "Only 1, 3, 4 and 5 aren't already standing in this cell's row or column, so pencil them in.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 4.",
@@ -80,7 +91,7 @@ exports[`keen: pinned hint positions > says, at each pin 1`] = `
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
   "hiddenSingle": "No other cell in this column can be 1, so this cell must be 1.",
   "populate": "Start by penciling every candidate number into each empty cell.",
-  "set": "These 3 columns fit 5 only in the outlined cells, taking all 3 rows' 5, so the 5 must go.",
+  "set": "These 3 columns fit 5 only in the outlined cells, taking all 3 rows' 5, so the 5s must go.",
   "single": "Every other number has been ruled out in this cell, so it can only be 3.",
   "wing": "Whatever goes in the middle cell, another outlined cell in line with this cell must have 2, so the 2 must go.",
 }
@@ -249,7 +260,7 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
   "fullLine": "Clue 4 sees every tower in this line, so heights must climb 1, 2, … from the clue: this cell must be 1.",
   "hiddenSingle": "No other cell in this column can be 5, so this cell must be 5.",
   "lineFull": "Clue 2 already sees 1 tower in the line, so the cell nearest it must top all between; height 1 can't, so the 1 must go.",
-  "lowerBound": "Clue 4 sees exactly 4 towers along its line; height 5 so near it would hide too many, so the 5 must go.",
+  "lowerBound": "Clue 4 sees exactly 4 towers along its line; height 5 so near it would hide too many, so the 5s must go.",
   "populate": "Start by penciling every candidate height into each empty cell.",
   "set": "The outlined cells already account for 1 and 2 between them, so 1 and 2 must go.",
   "single": "Every other height has been ruled out in this cell, so it can only be 4.",
@@ -261,7 +272,7 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
 exports[`unequal: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
-  "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
+  "dup": "The 3 just placed can't repeat in its row and column, so the 3s must go from the other cells.",
   "hiddenSingle": "No other cell in this row can be 1, so this cell must be 1.",
   "note": "No number is standing in this cell's row or column yet, so every one must be penciled in.",
   "regionsFull": "This cell's row and column already hold every other number, so it can only be 2.",

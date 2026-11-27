@@ -1,10 +1,9 @@
 ## Next
 
-The flip (2.2f): the draft compiles, but its `satisfied` step states no
-words yet ("satisfied states no words" on the first hint), and
-`guards/variations.test.ts` needs a variation's key to be its title words
-(the draft's `noDiagonal` reads "no diagonal"). Open: Group's header drag,
-dividers and multifill, asked at 1.1 (design.md § "Open Questions");
+Salad (2.3), on Towers' slots and ABCD's number size, letters and walk
+with no unit: a gap list of its own against `compile-fill.ts` first, as
+ABCD's sub-tasks were, a capability a fixture each. Open: Group's header
+drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
 ## 1. Design
@@ -31,31 +30,9 @@ changed for a player" gets its line. In the order task 1.1 set.
 
 - [x] 2.1 Solo born: f40732022, 810b4009e, 96c15ac59, c7522031d,
       6eeebdcc6, 7ac27c7cf, dcb4d60ea; the flip 13f27ca01; 98b5275e2.
-- [ ] 2.2 ABCD born: the number size, letters, the walk with no region, a
-      clue per value derived, written and drawn in a margin, corner
-      crosses, `D` and `R`. A draft of its born description
-      (`abcd-born-draft.yaml` here, game `abcdborn`, compiled as a fixture
-      under `src/engine/testing/fixtures/abcdborn/` while it is worked on,
-      and removed at the flip) compiled 2026-11-27 and, after 2.2a, deals
-      every menu board in upstream's ID format; what it refused is each
-      sub-task.
-  - [x] 2.2a A number size and a clue one a value dealt, written and read,
-        on the `counting` fixture.
-  - [x] 2.2b Letters (`play.numbers.letters`), on the `counting` fixture.
-  - [x] 2.2c A clue one a value in a margin before its line, headed, done,
-        outlined as a hint reads it, printed, on `counting`. Whether ABCD
-        has `play.done` (upstream marks none) is the flip's call.
-  - [x] 2.2d The walk with no unit, on the `counting` fixture; ABCD's
-        `satisfied` and `runs` as `says` are the flip's.
-  - [x] 2.2e A size's `least` under a variation, a flag's `offBounds`,
-        `play.cornerCrosses`; the counting fixture states each, and the
-        draft's refusals read as upstream's.
-  - [ ] 2.2f The flip: `says` restated, soundness, tests to `cases.yaml`,
-        spec deltas, the app run. For the player: the Custom box is "No
-        diagonal touching", on for the rule, where upstream's "Allow
-        diagonal touching" was on without it (consistency with every other
-        modifier); 6x9 with 3 letters is on the menu's grid at both tiers,
-        where it was an Easy variant.
+- [x] 2.2 ABCD born: e9a8e85bb, d67aebdd0, ddad4fa63, 0da94ca05; the
+      flip, the commit that ticks 2.2 (design.md § "What each flip changed
+      for a player").
 - [ ] 2.3 Salad born: a ruleset that chooses kinds and segments, the
       folded Latin square, the empty value and `O`, the ball weakened
       before it goes, the ID's slot order.

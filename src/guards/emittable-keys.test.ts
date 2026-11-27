@@ -245,7 +245,7 @@ describe("no game tests a button this frontend cannot send", () => {
     // `isCancelKey`, since a bare comparison is half-wired whichever half it
     // picks.
     expect(emittableFromKeyMap.has(BACKSPACE)).toBe(false);
-    expect(emittable("src/games/abcd/index.ts").has(BACKSPACE)).toBe(true);
+    expect(emittable("src/games/abcd/abcd.description.yaml").has(BACKSPACE)).toBe(true);
     expect(emittable("src/games/unruly/unruly.description.yaml").has(BACKSPACE)).toBe(
       false,
     );

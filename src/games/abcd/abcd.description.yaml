@@ -1,6 +1,13 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: abcd
+catalog:
+  name: ABCD
+  description: Letter placement puzzle
+  objective: Place letters according to the numbers. Identical letters cannot touch.
+  collection: unreleased
+  family: numbers
+  similar: ABC-Kombi
 help:
   rules: |-
     You're given an empty grid, and several rows of numbers on the side. You have to write a letter in every empty cell, following these rules:
@@ -18,7 +25,7 @@ help:
 
     You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering letters and entering pencil marks.
 
-    {{mark-all}} Once every empty cell has marks, the press crosses out a letter where a neighboring cell already holds it, and where its row or column already has as many as its clue asks for.
+    {{mark-all}} Once every empty cell has marks, the press crosses out a letter where a neighboring cell already holds it.
   origins: |-
     The inventor of this type is unknown. This puzzle is also known under the names *ABCD Puzzle*, *ABC-Kombi* or *ABCD-Rätsel*.
 
@@ -37,6 +44,7 @@ help:
 produces: numbers
 words:
   cell: cell
+  value: letter
 sizes:
   # Unbounded but by the time a board takes to deal.
   w: { min: 2 }
@@ -68,12 +76,69 @@ clues:
     value: "range(0, |cells(at)|)"
     means: "holds(at, per) = v"
 freedom: { kind: fill }
+play:
+  numbers: { letters: true }
+  cornerCrosses: noDiagonal
+  boards: [4x4n4, 5x5n4, 5x7n4, 6x8n4, 6x9n3]
+  default: 5x5n4
+  variants:
+    - { board: 5x5n4, with: [removeClues], tier: Easy }
+    - { board: 6x6n5, with: [noDiagonal], tier: Easy }
+  hintMarks:
+    ring: the cell the step fills in with a letter.
+    strike: the pencil marks the step crosses out.
+    outline: >-
+      the particular cells the reason rests on: "this cell", whose pencil
+      marks it crosses out, the letters a row already holds, the cells that
+      can still take a letter, or the letter just placed. The number the
+      sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint
+      color among the clues.
+    stripes: 'the row or column the step reasons from: "this row", "this column".'
 deal:
   answer: a letter a square, at random, none beside its twin
   count: every number, or as many hidden as the answer stays unique without
   tier: one of the tiers
+  sample: { build: true }
+  hide: { count: { when: removeClues } }
+settings:
+  n:
+    kind: number
+    gives: size
+    letter: n
+    kw: letters
+    name: Letters
+    doc: The amount of different letters that can appear in the puzzle. Without diagonal touching there must be at least 5.
+    min: 3
+    max: 9
+    default: 4
+    words: "{n} letters"
+    # Under 5, diagonal mode can't avoid the no-touch rule in practice.
+    least: { noDiagonal: 5 }
+  noDiagonal:
+    kind: flag
+    gives: variation
+    letter: D
+    kw: no-diagonal-touching
+    name: No diagonal touching
+    words: no diagonal
+    rule: identical letters cannot be diagonally adjacent either.
+    note: Counter-intuitively this <em>raises</em> the size limit described above rather than lowering it, the extra restriction gives you more to reason from, so larger boards still work out to a single solution.
+  removeClues:
+    kind: flag
+    letter: R
+    kw: remove-clues
+    name: Remove clues
+    doc: When enabled, some of the number clues are hidden, as many as can go while the puzzle still has one solution at its difficulty. An Easy puzzle stays one the rules alone finish, with less to read them from.
+    words: { on: clues hidden, off: every clue showing }
+    # Every clue showing, a board of nine squares or fewer is never
+    # Unreasonable (upstream abcd.c's `validate_params`).
+    offBounds: { tiers: { Unreasonable: { area: { min: 10 } } } }
+id:
+  - numbers: count
+    hidden: "-"
+    closed: true
 variations:
-  no diagonal:
+  noDiagonal:
     add:
       shape:
         - "forall c in cells, p in adj8(c): value(p) != value(c)"
@@ -99,14 +164,27 @@ techniques:
     with:
       peer: "p in adj4(c) where not known(p)"
   # A line holding as many of a letter as its number says has no room for
-  # another. One holding more makes the marks inconsistent.
+  # another. One holding more makes the marks inconsistent. The number it
+  # reads is outlined in the margin, the letters it holds on the board.
   - id: satisfied
     tier: Easy
-    for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) >= v"
+    for: "q in clues(count), L = at(q), d = per(q), v = v(q) where holds(L, d) >= v"
     conclude: "holds(L, d) = v and (forall c in cells(L) where not known(c): strike(c, d))"
+    # One step strikes the letter from the whole line.
     says:
-      terms: { L: L, d: d, v: v }
-      marks: {}
+      shown: value
+      terms: { L: L, d: d, v: v, q: q }
+      marks:
+        stripes: "cells(L)"
+        outline: "{c in cells(L) where known(c) and value(c) = d}"
+      wordings:
+        - when: "v = 0"
+          look: "{stripes: this {unit}} must hold {outline q: no {d}}"
+        - when: "v = 1"
+          look: "{stripes: this {unit}} already holds {outline q: its one} {outline: {d}}"
+        - when: "v = 2"
+          look: "{stripes: this {unit}} already holds {outline q: both its} {outline: {d}s}"
+        - look: "{stripes: this {unit}} already holds {outline q: all {numeral v} of its} {outline: {d}s}"
   # A square down to one letter holds it. One with none left makes the marks
   # inconsistent.
   - kind: one.cell
@@ -121,36 +199,62 @@ techniques:
     tier: Easy
     rung: packed
     for: >-
-      L in lines, d in domain, v = clue(count, L, d) where v > holds(L, d),
+      q in clues(count), L = at(q), d = per(q), v = v(q) where v > holds(L, d),
       O = {c in cells(L) where not known(c) and d in cand(c)}
       where most(L, O) = v - holds(L, d)
     conclude: >-
       forall c in O where |stretch(L, c, O)| mod 2 = 1 and index(c, stretch(L, c, O)) mod 2 = 0:
       place(c, d)
+    # What the line still needs (`need`; `more` where it holds some), the
+    # squares that can still take the letter outlined. Where there are just
+    # as many of them as it needs, each must; otherwise they fit only that
+    # many apart, each stretch full. A later square of the firing points
+    # back at the line, still striped.
     says:
-      terms: { L: L, d: d, v: v }
-      marks: {}
-# ABCD's own sentences, spoken through the hint's voice (`hint.ts`); the
-# candidate walk's (a lone note, the opening clean, a placement's cull) are
-# every game's. The no-touch rule is the one thing the two modes say
-# differently, so a sentence saying where a letter keeps its twin out of
-# takes `diag`. A line is striped, the letters it holds outlined, and the
-# count it reads drawn in the hint color by the words that state it (`count`,
-# the line's clue for the letter). A number term is a letter; a count of
-# letters is `{numeral …}`.
+      shown: legs
+      terms:
+        L: L
+        d: d
+        q: q
+        need: "v - holds(L, d)"
+        one: "v - holds(L, d) = 1"
+        more: "holds(L, d) > 0"
+      marks:
+        stripes: "cells(L)"
+        outline: "O"
+      again: "{stripes: the same striped {unit}}"
+      later: "{ring} must be {d} too"
+      move: "{ring} must be {d}"
+      wordings:
+        - when: "|O| = 1"
+          look: "{stripes: this {unit}} needs {outline q: {needs}} and no other {noun} in it can take one"
+        - when: "|O| = v - holds(L, d)"
+          look: "{stripes: this {unit}} needs {outline q: {needs}} and only {outline: the outlined {noun} | the outlined {nouns}} can take one"
+        - look: >-
+            {stripes: this {unit}} needs {outline q: {needs}}, and {outline: the outlined {noun} | the outlined {nouns}}
+            fit only {numeral need} apart
+          follows: "each stretch is full"
+# The candidate walk's own steps (a note, the opening clean, a cell every
+# other letter is beside, a placement's cull), said as ABCD's. The no-touch
+# rule is the one thing the two modes say differently, so a sentence saying
+# where a letter keeps its twin out of reads `noDiagonal`. A number term is a
+# letter; a count of letters is `{numeral …}`.
 phrases:
-  around: "{if diag: touching {ring}, even at a corner | beside, above or below {ring}}"
-  line: "{stripes cells: This {axis}}"
-  # What a line still needs of letter `n`: "one A", "2 more As".
-  needs: "{if one: one {if more: more {n} | {n}} | {numeral need} {if more: more {n}s | {n}s}}"
+  around: "{if noDiagonal: touching {ring}, even at a corner | beside, above or below {ring}}"
+  # What a line still needs of letter `d`: "one A", "2 more As".
+  needs: "{if one: one {if more: more {d} | {d}} | {numeral need} {if more: more {d}s | {d}s}}"
 steps:
   # A note-less cell's candidates, written because a deduction rests on them;
-  # `every` where nothing next to it rules any out yet.
+  # `unruled` where nothing next to it rules any out yet.
+  clean:
+    ring: cell
+    terms: { noDiagonal: flag }
+    move: "any letter already {if noDiagonal: touching its cell, even at a corner | beside, above or below its cell}"
   note:
     ring: cell
-    terms: { diag: flag, every: flag, vs: values }
+    terms: { noDiagonal: flag, unruled: flag, vs: values }
     wordings:
-      - when: every
+      - when: unruled
         look: "No letter stands next to {ring} yet"
         move: "pencil in every one"
       - look: "Only {vs} {vs: isn't | aren't} already {around}"
@@ -158,60 +262,12 @@ steps:
   # A note-less cell every other letter is ruled out of.
   regionsFull:
     ring: cell
-    terms: { diag: flag, n: number }
+    terms: { noDiagonal: flag, n: number }
     look: "Every other letter is already {around}"
     move: "it can only be {n}"
   # Where a letter just placed rules itself out, after "its" (the
-  # `peer.placed` kind's sentence), and what that strikes.
+  # `peer.placed` kind's sentence).
   cull:
     ring: cell
-    terms: { diag: flag }
-    move: "{if diag: eight neighbors | four neighbors}"
-  culled:
-    ring: cell
-    terms: { n: number }
-    move: "those {n}s"
-  # A line whose clue for `n` is already met, or is 0: worded as what the
-  # line holds, and its move as the rest of the line's `n` notes.
-  satisfied:
-    ring: cell
-    terms: { axis: unit, n: number, clue: number, one: flag }
-    marks: { stripes: [cells], outline: [count, placed] }
-    move: "{if one: the other {n} in it | the other {n}s in it}"
-    wordings:
-      - when: "clue = 0"
-        look: "{line} must hold {outline count: no {n}}"
-        move: "{if one: the {n} in it | the {n}s in it}"
-      - when: "clue = 1"
-        look: "{line} already holds {outline count: its one} {outline placed: {n}}"
-      - when: "clue = 2"
-        look: "{line} already holds {outline count: both its} {outline placed: {n}s}"
-      - look: "{line} already holds {outline count: all {numeral clue} of its} {outline placed: {n}s}"
-  # The runs technique when every cell that can still take `n` must: as many
-  # cells left as the line still needs (`need`; `more` where some are placed),
-  # those cells outlined when there are several.
-  onlyHomes:
-    ring: cell
-    terms: { axis: unit, n: number, need: number, one: flag, more: flag }
-    marks: { stripes: [cells], outline: [count, open] }
-    move: "{ring} must be {n}"
-    wordings:
-      - when: one
-        look: "{line} needs {outline count: {needs}} and no other cell in it can take one"
-      - look: "{line} needs {outline count: {needs}} and only {outline open: the outlined cell | the outlined cells} can take one"
-  # The runs technique proper: the outlined cells, split into stretches by
-  # the cells that cannot take `n`, fit only `need` of it with no two touching
-  # (a stretch of L cells fits ⌈L/2⌉), and the line needs exactly that many,
-  # so every stretch is packed full and an odd one packs only one way. A
-  # later cell of the same firing points back at the line, still striped.
-  packed:
-    again: "{stripes cells: the same striped {axis}}"
-    later: "{ring} must be {n} too"
-    ring: cell
-    terms: { axis: unit, n: number, need: number, one: flag, more: flag }
-    marks: { stripes: [cells], outline: [count, open] }
-    look: >-
-      {line} needs {outline count: {needs}}, and {outline open: the outlined cell | the outlined cells}
-      fit only {numeral need} apart
-    follows: "each stretch is full"
-    move: "{ring} must be {n}"
+    terms: { noDiagonal: flag, n: number }
+    move: "{if noDiagonal: eight neighbors | four neighbors}"

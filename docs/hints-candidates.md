@@ -478,9 +478,8 @@ check vouches for them".
   ([`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts)).
 
 Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts), every
-born game's walk (Seismic's areas among them),
-[`abcd/hint.ts`](../src/games/abcd/hint.ts),
-[`rome/hint.ts`](../src/games/rome/hint.ts),
+born game's walk (Seismic's areas, and ABCD's board with no unit, among
+them), [`rome/hint.ts`](../src/games/rome/hint.ts),
 [`salad/hint.ts`](../src/games/salad/hint.ts) (a Latin game). Outside the
 shared walk, Undead reads its ladder's firings off the notes the same way
 (`undeadFirings` in [`undead/solver.ts`](../src/games/undead/solver.ts)).
@@ -734,12 +733,11 @@ within that:
   cell, the shaded region constant across the journey, and a list of values
   within a leg is fine. A firing whose premise names one digit across cells
   is one multi-cell step. Exemplars: a cell a leg, or a value a leg where
-  the description says `shown: value` (Towers' heights), in
+  the description says `shown: value` (Towers' heights, and ABCD's
+  `satisfied`, one letter struck from a whole line in one step), in
   [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts), which
-  walks a born game's own techniques, Keen's cages among them; guards
-  `engine/fill/own-steps.test.ts` "strikes one number a step",
-  `solo-hint.test.ts` "a deductive strike step's marks all lie in one cell
-  or all share one digit".
+  walks a born game's own techniques, Keen's cages among them; guard
+  `engine/fill/own-steps.test.ts` "strikes one number a step".
 
 ## Placements lead when the deductions are placements
 
@@ -828,8 +826,11 @@ the hint a finder that yields one line's firing at a time
 ([`hints.md`](./hints.md) § "A rung is not a premise, so return per
 premise"). The plan owns the order: a rung returns every firing it can take
 now and the frontier chooses, so the order a solver sweeps in never reaches
-the player and nothing about ordering is added to the walk. Exemplar:
-`lineFiring` in [`abcd/hint.ts`](../src/games/abcd/hint.ts).
+the player and nothing about ordering is added to the walk. A compiled
+technique fires one binding at a time, so a born game owes nothing here:
+ABCD's `satisfied` and `runs`
+([`abcd.description.yaml`](../src/games/abcd/abcd.description.yaml)) are a
+line and a letter a firing.
 
 - **A counting argument fits one step when the picture carries the parts.**
   Hatch the line through its clue, draw the count the sentence reads in the

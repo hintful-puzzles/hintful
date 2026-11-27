@@ -9,13 +9,13 @@ preset:5x7 Easy, 4 letters  full=5x7n4de  brief=5x7n4
 preset:5x7 Unreasonable, 4 letters  full=5x7n4du  brief=5x7n4
 preset:6x8 Easy, 4 letters  full=6x8n4de  brief=6x8n4
 preset:6x8 Unreasonable, 4 letters  full=6x8n4du  brief=6x8n4
+preset:6x9 Easy, 3 letters  full=6x9n3de  brief=6x9n3
+preset:6x9 Unreasonable, 3 letters  full=6x9n3du  brief=6x9n3
 preset:5x5 Easy, 4 letters, clues hidden  full=5x5n4Rde  brief=5x5n4
 preset:6x6 Easy, 5 letters, no diagonal  full=6x6n5Dde  brief=6x6n5D
-preset:6x9 Easy, 3 letters  full=6x9n3de  brief=6x9n3
 bump:w  full=6x5n4de  brief=6x5n4
 bump:h  full=5x6n4de  brief=5x6n4
-bump:n  full=5x5n5de  brief=5x5n5
-flip:diag  full=5x5n4Dde  brief=5x5n4D"
+bump:sizes.n  full=5x5n5de  brief=5x5n5"
 `;
 
 exports[`encoded params are byte-stable > adjacent 1`] = `

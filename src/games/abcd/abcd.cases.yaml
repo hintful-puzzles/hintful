@@ -1,0 +1,206 @@
+# ABCD's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes in each mode, its IDs read and written back, its params, and the
+# rules broken.
+
+tiers:
+  # Every clue showing, no fill of nine squares or fewer needs search: the
+  # bound `removeClues` holds while off.
+  absent:
+    - {cell: 3x3n3du, exhaustive: true}
+    - {cell: 2x4n3du, exhaustive: true}
+    - {cell: 2x4n4du, exhaustive: true}
+    - {cell: 2x2n3du, exhaustive: true}
+  # With clues hidden the smallest boards reach it.
+  dealt: [3x3n3Rdu, 2x2n3Rdu]
+
+ids:
+  # Boards the hand-written game dealt, read and written back: four letters
+  # every clue showing, and five without diagonal touching, some hidden.
+  - {id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,", writesBack: true}
+  - {id: "5x5n5DRde:1,-,1,-,-,-,-,-,0,2,0,1,-,-,-,-,-,-,-,1,-,-,1,-,-,0,-,-,0,-,-,-,-,-,0,-,-,3,-,1,-,-,-,-,-,0,-,-,0,0,", writesBack: true}
+  # A clue too few or too many, a letter for a clue, a clue with no comma
+  # after it, and a stray comma.
+  - {id: "3x3n3:1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,", refused: DESC_TOO_SHORT}
+  - {id: "3x3n3:1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,", refused: DESC_TOO_LONG}
+  - {id: "3x3n3:1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,Z,", refused: "This game ID has \"Z\" where it can't have one."}
+  - {id: "3x3n3:-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,", refused: "This game ID has \"1\" where it can't have one."}
+  - {id: "3x3n3:,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,", refused: "This game ID has \",\" where it can't have one."}
+  # A row of three holding a letter four times.
+  - {id: "3x3n3:4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,", refused: DESC_OUT_OF_RANGE}
+  # Clues of many answers.
+  - {id: "10x10n4:3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,3,3,2,2,", refused: DESC_NOT_UNIQUE}
+
+params:
+  # The size, the letters, `D` for no diagonal touching and `R` for clues
+  # hidden, then the tier; the brief form drops `R` and the tier.
+  - {read: "5x5n5DRde", full: "5x5n5DRde", brief: "5x5n5D"}
+  - {read: "5x5n5DRdu", full: "5x5n5DRdu", brief: "5x5n5D"}
+  # An ID written before the game had tiers is Easy; a lone size is square,
+  # with the default letters.
+  - {read: "5x5n5DR", full: "5x5n5DRde"}
+  - {read: "4", full: "4x4n4de"}
+  - {read: "1x5n4", refused: "Width must be at least 2."}
+  - {read: "5x1n4", refused: "Height must be at least 2."}
+  - {read: "5x5n2", refused: "Letters must be at least 3."}
+  - {read: "5x5n10", refused: "Letters must be at most 9."}
+  # Without diagonal touching, at least 5 letters.
+  - {read: "5x5n4D", refused: "Letters must be at least 5 with no diagonal touching."}
+  # Every clue showing, a board of nine squares is never Unreasonable; with
+  # some hidden it may be.
+  - {read: "3x3n3du", refused: "No 3x3 puzzle with every clue showing is Unreasonable."}
+  - {read: "3x3n3Rdu", refused: false}
+  - {read: "4x4n4R", label: "4x4 Easy, 4 letters, clues hidden"}
+  - {read: "6x6n5D", label: "6x6 Easy, 5 letters, no diagonal"}
+  - {read: "6x6n5DRdu", label: "6x6 Unreasonable, 5 letters, no diagonal, clues hidden"}
+
+positions:
+  # A line struck in one step, the letter it holds no more of struck from
+  # each of its cells.
+  - id: "4x4n4de:0,2,1,1,1,1,1,1,0,1,1,2,1,1,2,0,0,0,2,2,1,1,1,1,0,2,1,1,1,2,1,0,"
+    steps:
+      - {rung: populate}
+      - {rung: satisfied, says: "This row must hold no A, so the As must go."}
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    moves: [{set: [0, 1]}]
+    # Each row's numbers before it and each column's above it, a letter a
+    # line of them, and an A placed.
+    text: |2
+            A   1   1   2   1   2
+            B   1   2   0   1   1
+            C   2   2   1   1   0
+      A B C D   1   0   2   2   2
+              +---+---+---+---+---+
+      3 0 1 1 | A | . | . | . | . |
+              +---+---+---+---+---+
+      0 2 1 2 | . | . | . | . | . |
+              +---+---+---+---+---+
+      2 0 2 1 | . | . | . | . | . |
+              +---+---+---+---+---+
+      0 2 2 1 | . | . | . | . | . |
+              +---+---+---+---+---+
+      2 1 0 2 | . | . | . | . | . |
+              +---+---+---+---+---+
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    solve: true
+    status: solved
+  # A row that holds fewer As than its number and can still make it up is
+  # drawn plain; one that holds an A its number forbids is drawn in error.
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    moves: [{set: [0, 1]}]
+    draws: {text error: 0}
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    moves: [{set: [5, 1]}]
+    draws: {text error: "> 0"}
+  # Two As where row 1 must hold none break its number.
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    moves: [{set: [0, 1]}, {set: [6, 1]}]
+    breaks: [clue.count]
+  # Two Bs side by side break the no-touch rule; at a corner, only without
+  # diagonal touching.
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    moves: [{set: [15, 2]}, {set: [16, 2]}]
+    breaks: [shape.0]
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    moves: [{set: [15, 2]}, {set: [21, 2]}]
+    breaks: []
+  - id: "5x5n5DRde:1,-,1,-,-,-,-,-,0,2,0,1,-,-,-,-,-,-,-,1,-,-,1,-,-,0,-,-,0,-,-,-,-,-,0,-,-,3,-,1,-,-,-,-,-,0,-,-,0,0,"
+    moves: [{set: [0, 2]}, {set: [6, 2]}]
+    breaks: [noDiagonal.shape.0]
+
+input:
+  # A letter typed into the square the cursor is on, as its digit too, and
+  # cleared by Backspace, Space (the key map's select2) and 0.
+  - id: "5x5n4de:3,0,1,1,0,2,1,2,2,0,2,1,0,2,2,1,2,1,0,2,1,1,2,1,1,2,2,0,2,0,1,2,1,1,1,2,2,1,0,2,"
+    events:
+      - {key: down}
+      - {key: "b", holds: {values.5: 2}}
+      - {key: "3", holds: {values.5: 3}}
+      - {key: "\b", holds: {values.5: 0}}
+      - {key: "a", holds: {values.5: 1}}
+      - {key: select2, holds: {values.5: 0}}
+      - {key: "d", holds: {values.5: 4}}
+      - {key: "0", holds: {values.5: 0}}
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0, sizes: {n: 4}}
+    - {w: 5, h: 5, diff: 0, sizes: {n: 4}}
+    - {w: 6, h: 8, diff: 0, sizes: {n: 4}}
+    - {w: 6, h: 6, diff: 0, sizes: {n: 5}, variations: [noDiagonal]}
+    - {w: 5, h: 5, diff: 0, sizes: {n: 4}, settings: {removeClues: 1}}
+  unreached:
+    note: >-
+      spoken under the reading that pencils in only as needed, and ABCD's hint starts on the one that pencils every candidate in first (play.hintNotes)
+    regionsFull: >-
+      spoken under the reading that pencils in only as needed: where every candidate is penciled in first, a cell every other letter is beside is a single
+  pins:
+    # Held on 60 of 6356 positions walked.
+    populate: "4x4n4de:0,2,1,1,1,1,1,1,0,1,1,2,1,1,2,0,0,0,2,2,1,1,1,1,0,2,1,1,1,2,1,0,"
+    # Held on 1242 of 6356 positions walked.
+    clean:
+      id: "5x5n4Rde:1,1,1,-,-,2,-,1,-,2,0,2,2,1,-,1,2,1,-,-,-,-,-,2,-,2,1,-,1,-,-,-,-,3,0,0,-,-,-,-,"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 4, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 4, n: 4}]}
+        - {type: set, x: 3, y: 0, n: 2, pencil: false, autoElim: false}
+    # Held on 6158 of 6356 positions walked.
+    dup: "4x4n4de:0,2,1,1,1,1,1,1,0,1,1,2,1,1,2,0,0,0,2,2,1,1,1,1,0,2,1,1,1,2,1,0,"
+    # Held on 6350 of 6356 positions walked.
+    single:
+      id: "4x4n4de:1,1,1,1,1,1,1,1,1,1,1,1,0,2,1,1,1,1,2,0,2,0,0,2,0,2,2,0,0,2,0,2,"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 3}]}
+    # Held on 6150 of 6356 positions walked.
+    satisfied:
+      id: "4x4n4de:0,2,1,1,1,1,1,1,0,1,1,2,1,1,2,0,0,0,2,2,1,1,1,1,0,2,1,1,1,2,1,0,"
+      moves:
+        - {type: pencilAll}
+    # Held on 5424 of 6356 positions walked.
+    packed:
+      id: "5x5n4Rde:1,1,1,-,-,2,-,1,-,2,0,2,2,1,-,1,2,1,-,-,-,-,-,2,-,2,1,-,1,-,-,-,-,3,0,0,-,-,-,-,"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 4, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 4, n: 4}]}

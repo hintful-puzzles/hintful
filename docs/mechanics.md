@@ -698,7 +698,7 @@ read [`hints.md`](./hints.md), and for `reference` "The reference aid".
   the share dialog treat `null` as no text panel for this board. For a
   refinement one game needs, prefer the narrowest change the existing
   consumers already tolerate. Exemplar: `textFormat` in
-  [`abcd/state.ts`](../src/games/abcd/state.ts).
+  [`loopy/state.ts`](../src/games/loopy/state.ts).
 - **A game declares only what the midend needs synchronously and cannot read
   off a method**: `ignoresSecondaryButton`, where the secondary button has
   no action of its own. A touch hold then stays a left press, and a right

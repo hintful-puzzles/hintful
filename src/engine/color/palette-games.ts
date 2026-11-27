@@ -125,17 +125,6 @@ export const guessBoard = (defaultBackground: Color): Color => {
 export const guessAnswerWell = (defaultBackground: Color): Color =>
   token(scale(guessBoard(defaultBackground), 0.3), [0.09, 0.09, 0.09]);
 
-// --- abcd ---------------------------------------------------------------
-
-/** ABCD's **border clue letters** — the letters ringing the grid, in a blue that
- * tracks the board so they stay subordinate to the grid they annotate. Upstream
- * derives all three channels from the background's *green*. */
-export const abcdBorderLetter = (outerBackground: Color): Color => [
-  0,
-  0,
-  0.6 * outerBackground[1],
-];
-
 // --- crossing -----------------------------------------------------------
 
 /** **Not placed yet** — a ghosted word, light enough to read as provisional and

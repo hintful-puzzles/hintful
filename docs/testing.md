@@ -631,7 +631,7 @@ Three treatments for an expensive test, in order of how little they lose:
 1. **Run a deterministic search once.** A loop that scans seeds until a board
    shows a technique finds the same board every time, so write the board
    down. For a hint's rung that is `describeHintPins`, as in
-   [`abcd-hint.test.ts`](../src/games/abcd/abcd-hint.test.ts); a born
+   [`ascent-hint.test.ts`](../src/games/ascent/ascent-hint.test.ts); a born
    game's `hint.pins` are the same, written by `npm run hint-scan`.
 2. **Turn a seed count down** with `seedBudget(gate, full)`
    ([`slow.ts`](../src/engine/testing/slow.ts)), only for a property whose
