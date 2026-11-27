@@ -58,6 +58,14 @@ changed for a player" gets its line. In the order task 1.1 set.
         `play.select`, on the `selecting` fixture; the commit that ticks
         2.4a. In notes mode it notes each square, or strikes from all.
   - [ ] 2.4b A player's divider between two lines, saved as `done` is.
+        Planned 2026-11-27 from Group's `state.ts` and `render.ts`: key a
+        divider by the pair of lines either side (`dividers[a] = b`, `-1`
+        none), drawn only while `b` follows `a`, so 2.4c's order needs no
+        second key; on a square board one divider rules both a row gap and
+        a column gap, as Group's does. A press in the line-label margin
+        (`play.labels`) between two labels toggles it, and `|` and `-` the
+        one after the cursor's column or row; a move of its own beside
+        `DoneMove`, on a fixture of its own.
   - [ ] 2.4c A display order of a square's lines, dragged by a header;
         first, trace whether `Layout` and the target lookup carry it.
   - [ ] 2.4d Group's deal, letters and ruleset; then its flip.
