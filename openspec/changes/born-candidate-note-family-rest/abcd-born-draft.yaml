@@ -76,7 +76,8 @@ clues:
     means: "holds(at, per) = v"
 freedom: { kind: fill }
 play:
-  numbers: {}
+  numbers: { letters: true }
+  cornerCrosses: noDiagonal
   boards: [4x4n4, 5x5n4, 5x7n4, 6x8n4, 6x9n3]
   default: 5x5n4
   variants:
@@ -110,6 +111,8 @@ settings:
     max: 9
     default: 4
     words: "{n} letters"
+    # Under 5, diagonal mode can't avoid the no-touch rule in practice.
+    least: { noDiagonal: 5 }
   noDiagonal:
     kind: flag
     gives: variation
@@ -125,7 +128,10 @@ settings:
     kw: remove-clues
     name: Remove clues
     doc: When enabled, some of the number clues are hidden, as many as can go while the puzzle still has one solution at its difficulty. An Easy puzzle stays one the rules alone finish, with less to read them from.
-    words: clues hidden
+    words: { on: clues hidden, off: every clue showing }
+    # Every clue showing, a board of nine squares or fewer is never
+    # Unreasonable (upstream abcd.c's `validate_params`).
+    offBounds: { tiers: { Unreasonable: { area: { min: 10 } } } }
 id:
   - numbers: count
     hidden: "-"

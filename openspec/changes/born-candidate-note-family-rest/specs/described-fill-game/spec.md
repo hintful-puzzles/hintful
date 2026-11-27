@@ -318,3 +318,19 @@ each headed by its value.
   the cursor on a square holding B
 - **THEN** the pressed count is drawn gray, and the key marks the cursor's
   row's count of B
+
+### Requirement: A born board's modifier bounds a size and lifts a tier's bound
+
+A number size MAY state a `least` under a variation, refused below it while
+the variation is on, naming the variation. A deal flag MAY state
+`offBounds`, a tier's size bounds held only while it is off, a full ID past
+them refused as having no such tier. `play.cornerCrosses` SHALL draw a
+small cross at each corner inside the grid while its variation is on.
+
+#### Scenario: ABCD's bounds on the counting fixture
+
+- **WHEN** `4x4k3D` is read, and a full `2x2k2` ID at Easy with and
+  without remove-clues
+- **THEN** the first is refused, values must be at least 4 with no
+  diagonal touching; the 2x2 is refused as no Easy puzzle with every clue
+  showing, and not with clues hidden

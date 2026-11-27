@@ -1085,7 +1085,10 @@ describe("what the fill board reads of a description", () => {
     const source = "src/engine/testing/fixtures/counting/counting.description.yaml";
     const counting = sources.get(source);
     if (counting === undefined || !isFormal(counting)) throw new Error("no counting");
-    type Json = { play: { labels?: { start: string } } };
+    type Json = {
+      play: { labels?: { start: string }; cornerCrosses?: string };
+      settings: Record<string, { least?: Record<string, number> }>;
+    };
     const compileCounting = (edit: (j: Json) => void) => {
       const j = structuredClone(counting) as unknown as Json;
       edit(j);
@@ -1106,6 +1109,18 @@ describe("what the fill board reads of a description", () => {
         j.play.labels = { start: "i + 1" };
       }),
     ).toThrow(/clue count: a clue one a value is drawn before the lines' start/);
+    // A size's least and the crosses name a variation the description has.
+    expect(plain).toContain('"least":{"touchless":4}');
+    expect(() =>
+      compileCounting((j) => {
+        j.settings["k"] = { ...j.settings["k"], least: { removeClues: 3 } };
+      }),
+    ).toThrow(/settings k: least under removeClues, which no flag gives/);
+    expect(() =>
+      compileCounting((j) => {
+        j.play.cornerCrosses = "diagonal";
+      }),
+    ).toThrow(/play cornerCrosses: no variation diagonal/);
   });
 
   it("refuses a stream's codes that could not be read back", () => {

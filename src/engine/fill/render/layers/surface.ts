@@ -81,6 +81,33 @@ export const highlightOf = (
       ? HIGHLIGHT_NOTES
       : HIGHLIGHT_ENTRY;
 
+/** A sixth of a tile's stroke from each of the tile's corners that lies
+ * inside a grid `boardW` wide, toward its middle: with its three neighbors'
+ * a small cross at every corner inside the grid (`play.cornerCrosses`,
+ * upstream abcd.c's diagonal mode). */
+export function paintCornerCrosses(frame: TileFrame, boardW: number): void {
+  const { dr, ts, tx, ty } = frame;
+  const [x, y, h] = frame.at;
+  const d = Math.floor(ts / 6);
+  for (const [right, down] of [
+    [0, 0],
+    [1, 0],
+    [0, 1],
+    [1, 1],
+  ] as const) {
+    const inside =
+      (right === 0 ? x > 0 : x < boardW - 1) && (down === 0 ? y > 0 : y < h - 1);
+    if (!inside) continue;
+    const corner = { x: tx + right * ts, y: ty + down * ts };
+    dr.drawLine(
+      corner,
+      { x: corner.x + (right === 0 ? d : -d), y: corner.y + (down === 0 ? d : -d) },
+      COL_GRID,
+      1,
+    );
+  }
+}
+
 export function paintSurface(
   pal: FillPalette,
   frame: TileFrame,
@@ -88,7 +115,8 @@ export function paintSurface(
 ): void {
   const { dr, ts, tile, tx, ty, word, hintWord, lineWord, part, piece } = frame;
   const [x, y, h] = frame.at;
-  const { depth, boardW } = frame.lay.f;
+  const { boardW } = frame.lay.f;
+  const { listed } = frame.lay.m;
   const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
   const ground = tone
     ? winSlot(tone)
@@ -110,7 +138,7 @@ export function paintSurface(
     // A board of lists doubles every fifth line inside it, to count along
     // a list by (upstream pattern.c's `grid_square`).
     const ruled = (i: number, n: number, at: 0 | 4) =>
-      depth > 0 && i % 5 === at && (at === 0 ? i > 0 : i < n - 1) ? 1 : 0;
+      listed && i % 5 === at && (at === 0 ? i > 0 : i < n - 1) ? 1 : 0;
     const [l, t] = [ruled(x, boardW, 0), ruled(y, h, 0)];
     const [r, b] = [ruled(x, boardW, 4), ruled(y, h, 4)];
     lay({ x: tx + 1 + l, y: ty + 1 + t, w: ts - 1 - l - r, h: ts - 1 - t - b });

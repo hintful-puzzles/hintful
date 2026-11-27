@@ -127,6 +127,7 @@ export function fillMetrics(shape: FillShape) {
   return {
     hexagon,
     gapped,
+    listed,
     depthOf,
     startAt,
     end,

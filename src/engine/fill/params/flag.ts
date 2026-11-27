@@ -1,6 +1,7 @@
 /** A setting on or off: a variation the player switches on, or a setting of
  * the deal. */
 
+import { noSuchTier } from "../../contract/difficulty.ts";
 import type { ParamConfigItem } from "../../contract/game.ts";
 import { modifierItem } from "../../game-id/modifier.ts";
 import { flag as flagSegment, num } from "../../game-id/params-codec.ts";
@@ -9,6 +10,7 @@ import { beyond, type SizeBounds } from "./bounds.ts";
 import {
   dealValue,
   type SettingBase,
+  type SettingContext,
   type SettingField,
   type SettingKind,
   setDealValue,
@@ -36,6 +38,11 @@ export interface FlagSetting extends SettingBase, SettingField {
   readonly most?: readonly number[];
   /** What a board with the variation on is held to. */
   readonly bounds?: SizeBounds;
+  /** Of a flag the deal reads, what a board of each tier, by its index, is
+   * held to where the flag is off. */
+  readonly offBounds?: {
+    readonly tiers: readonly (SizeBounds & { readonly tier: number })[];
+  };
 }
 
 /** The variations `p` has on. */
@@ -58,10 +65,25 @@ function dealWords(s: FlagSetting, p: FillParams): string | null {
   return on === (flagDefault(s, p.w) === 1) ? null : on ? words.on : words.off;
 }
 
-/** Why board `p` cannot have flag `s` on: the bounds of the variation it
- * gives. */
-export function flagRefusal(s: FlagSetting, p: FillParams): string | null {
-  if (s.gives !== "variation" || !variationsOf(p).includes(s.id)) return null;
+/** Why board `p` cannot have flag `s` as it is: the bounds of the variation
+ * it gives, on; or, of one the deal reads, its tier's bounds off, which only
+ * a full ID's tier names. */
+export function flagRefusal(
+  s: FlagSetting,
+  p: FillParams,
+  full: boolean,
+  cx: SettingContext,
+): string | null {
+  if (s.gives !== "variation") {
+    if (!full || s.offBounds === undefined || dealOn(s, p)) return null;
+    const off =
+      typeof s.words === "object" ? s.words.off : `no ${s.name.toLowerCase()}`;
+    for (const { tier, ...b } of s.offBounds.tiers)
+      if (tier === p.diff && beyond(b, p) !== null)
+        return noSuchTier(`${p.w}x${p.h} puzzle with ${off}`, cx.tiers[tier]);
+    return null;
+  }
+  if (!variationsOf(p).includes(s.id)) return null;
   const past = s.bounds === undefined ? null : beyond(s.bounds, p);
   if (past !== null) return `${s.name}: ${past[0].toLowerCase()}${past.slice(1)}.`;
   const { most } = s;

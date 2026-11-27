@@ -1,8 +1,31 @@
-ok  counting   placed                         current: recorded src/engine/testing/fixtures/counting/counting.description.yaml#placed a94d1f83d53e442b
-ok  counting   single                         current: recorded src/engine/testing/fixtures/counting/counting.description.yaml#single 8919b8a4191d34e8
+--  counting +touchless k=2: no board of order 3 has an answer, so nothing is checked there
+--  counting +touchless k=3: no board of order 3 has an answer, so nothing is checked there
+--  counting +touchless k=2: no board of order 4 has an answer, so nothing is checked there
+--  counting +touchless k=3: no board of order 4 has an answer, so nothing is checked there
+ok  counting k=2 placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  counting k=2 placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  counting k=3 placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  counting k=4 placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  counting +touchless k=4 placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#placed: recorded sound, proved whole on all 4 boards
+ok  counting k=2 single                         3  sound    (want sound   )     9 queries    0.0s
+ok  counting k=2 single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  counting k=3 single                         3  sound    (want sound   )     9 queries    0.0s
+ok  counting k=4 single                         3  sound    (want sound   )     9 queries    0.0s
+ok  counting +touchless k=4 single                         3  sound    (want sound   )     9 queries    0.0s
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#single: recorded sound, proved whole on all 4 boards
 ok  counting k=2 full                           3  sound    (want sound   )    12 queries    0.0s
 ok  counting k=2 full (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at clue count 0
 ok  counting k=3 full                           3  sound    (want sound   )    18 queries    0.1s
 ok  counting k=4 full                           3  sound    (want sound   )    24 queries    0.1s
-ok  src/engine/testing/fixtures/counting/counting.description.yaml#full: recorded sound, proved whole on all 3 boards
-ok  counting   room                           current: recorded src/engine/testing/fixtures/counting/counting.description.yaml#room 66dd1af017fd1aea
+ok  counting +touchless k=4 full                           3  sound    (want sound   )    24 queries    0.1s
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#full: recorded sound, proved whole on all 4 boards
+ok  counting k=2 room                           3  sound    (want sound   )     6 queries    0.1s
+ok  counting k=2 room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  counting k=3 room                           3  sound    (want sound   )     6 queries    0.2s
+ok  counting k=4 room                           3  sound    (want sound   )     6 queries    0.2s
+ok  counting +touchless k=4 room                           3  sound    (want sound   )     6 queries    0.2s
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#room: recorded sound, proved whole on all 4 boards
+ok  counting +touchless k=4 placedCorner                   3  sound    (want sound   )     9 queries    0.0s
+ok  counting +touchless k=4 placedCorner (planted)         3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#placedCorner: recorded sound, proved whole on all 1 boards

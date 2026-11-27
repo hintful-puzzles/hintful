@@ -38,7 +38,9 @@ freedom: { kind: fill }
 play:
   numbers: { letters: true }
   done: { count: number }
-  boards: [4x4k3]
+  cornerCrosses: touchless
+  # The second takes the touchless rule, which needs four values.
+  boards: [4x4k3, 4x4k4]
   hintMarks:
     ring: the square the step fills in.
     strike: the notes the step crosses out.
@@ -49,6 +51,7 @@ deal:
   count: every letter
   tier: the one tier
   sample: { build: true }
+  hide: { count: { when: removeClues } }
 settings:
   k:
     kind: number
@@ -61,6 +64,36 @@ settings:
     max: 4
     default: 3
     words: "{n} values"
+    # The four squares of any 2 by 2 touch each other.
+    least: { touchless: 4 }
+  touchless:
+    kind: flag
+    gives: variation
+    letter: D
+    kw: touchless
+    name: No diagonal touching
+    words: touchless
+    rule: no two alike corner to corner either.
+  removeClues:
+    kind: flag
+    letter: R
+    kw: remove-clues
+    name: Remove clues
+    doc: Hide as many numbers as the board stays unique without.
+    words: { on: clues hidden, off: every clue showing }
+    # A board of four squares with every number showing is too easy to deal.
+    offBounds: { tiers: { Easy: { area: { min: 5 } } } }
+variations:
+  touchless:
+    add:
+      shape:
+        - "forall c in cells, p in adj8(c): value(p) != value(c)"
+      techniques:
+        - kind: peer.placed
+          as: placedCorner
+          tier: Easy
+          with:
+            peer: "p in adj8(c) where p not in adj4(c) and not known(p)"
 id:
   - numbers: count
     hidden: "-"

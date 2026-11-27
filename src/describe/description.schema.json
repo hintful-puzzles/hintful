@@ -1385,6 +1385,10 @@
                 }
               }
             },
+            "cornerCrosses": {
+              "type": "string",
+              "description": "The variation under which a small cross is drawn at each corner inside the grid, the cue that a rule reaches the squares diagonally beside one (upstream ABCD's no-diagonal mode)."
+            },
             "covers": {
               "type": "object",
               "description": "A value whose piece covers the number on its cell, and a preference, off by default, that shows the number there smaller; a press off the grid flips it (upstream's Singles).",
@@ -2867,6 +2871,35 @@
                   "$ref": "#/$defs/sizeBound"
                 }
               }
+            },
+            "offBounds": {
+              "type": "object",
+              "description": "Of a flag only the deal reads, by a tier's name, the size bounds a board of that tier keeps where the flag is off: a board outside them is refused as having no such tier, named by `words.off` (ABCD's Unreasonable needs more than nine squares unless clues are hidden).",
+              "additionalProperties": false,
+              "required": ["tiers"],
+              "properties": {
+                "tiers": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "sum": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "area": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "shorter": {
+                        "$ref": "#/$defs/sizeBound"
+                      },
+                      "longer": {
+                        "$ref": "#/$defs/sizeBound"
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         },
@@ -2913,6 +2946,14 @@
             "words": {
               "type": "string",
               "description": "`{n}` the number."
+            },
+            "least": {
+              "type": "object",
+              "description": "By a variation's name, the least it may be with the variation on, where that is more than `min` (ABCD's letters under no diagonal touching).",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
             }
           }
         },

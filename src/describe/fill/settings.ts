@@ -137,10 +137,15 @@ function flagOut(
   json: DescriptionJson,
   id: string,
   s: SettingJson,
+  tiers: readonly string[],
   letters: Letters,
 ): SettingOut {
   const letter = letterOf(id, s, letters);
-  const { kind: _kind, letter: _letter, gives, after, ...rest } = s;
+  const { kind: _kind, letter: _letter, gives, after, offBounds, ...rest } = s;
+  if (offBounds !== undefined && gives === "variation")
+    throw new CompileError(
+      `settings ${id}: a variation's bounds hold where it is on, in \`bounds\``,
+    );
   if (gives === "variation") {
     const v = json.variations?.[id];
     if (v === undefined) throw new CompileError(`settings ${id}: no variation ${id}`);
@@ -166,6 +171,16 @@ function flagOut(
     ...(gives === "variation" ? { gives } : {}),
     ...(after === undefined ? {} : { after }),
     ...rest,
+    ...(offBounds === undefined
+      ? {}
+      : {
+          offBounds: {
+            tiers: Object.entries(offBounds.tiers).map(([t, b]) => ({
+              tier: tierIndex(tiers, t, `settings ${id}`),
+              ...b,
+            })),
+          },
+        }),
     ...field,
   };
 }
@@ -242,7 +257,7 @@ function settingOut(
     throw new CompileError(`settings ${id}: a variation is a flag`);
   switch (s.kind) {
     case "flag":
-      return flagOut(json, id, s, letters);
+      return flagOut(json, id, s, tiers, letters);
     case "number": {
       const letter = letterOf(id, s, letters);
       const { min, max } = s;
@@ -261,6 +276,17 @@ function settingOut(
         if (min < range.min || (range.max !== undefined && max > range.max))
           throw new CompileError(`settings ${id}: a range past the size's`);
       }
+      // A least under a variation is one a flag setting gives, within the
+      // range.
+      for (const [v, least] of Object.entries(s.least ?? {})) {
+        const by = json.settings?.[v];
+        if (by?.kind !== "flag" || by.gives !== "variation")
+          throw new CompileError(
+            `settings ${id}: least under ${v}, which no flag gives`,
+          );
+        if (least <= min || least > max)
+          throw new CompileError(`settings ${id}: least under ${v} is past its range`);
+      }
       return {
         kind: "number",
         id,
@@ -272,6 +298,7 @@ function settingOut(
         max,
         default: byDefault,
         ...(typeof s.words === "string" ? { words: s.words } : {}),
+        ...(s.least === undefined ? {} : { least: s.least }),
       };
     }
     case "choice":

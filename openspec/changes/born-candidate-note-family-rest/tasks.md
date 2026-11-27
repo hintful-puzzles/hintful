@@ -1,6 +1,9 @@
 ## Next
 
-2.2e, ABCD's bounds and corner crosses, then the flip (2.2f). Open: Group's header drag,
+The flip (2.2f): the draft compiles, but its `satisfied` step states no
+words yet ("satisfied states no words" on the first hint), and
+`guards/variations.test.ts` needs a variation's key to be its title words
+(the draft's `noDiagonal` reads "no diagonal"). Open: Group's header drag,
 dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
@@ -44,10 +47,9 @@ changed for a player" gets its line. In the order task 1.1 set.
         has `play.done` (upstream marks none) is the flip's call.
   - [x] 2.2d The walk with no unit, on the `counting` fixture; ABCD's
         `satisfied` and `runs` as `says` are the flip's.
-  - [ ] 2.2e Bounds: Unreasonable refused on a board of nine squares or
-        fewer unless `R` hides clues; five letters or more under the
-        no-diagonal rule (a modifier's bound on a size). Corner crosses
-        drawn under the no-diagonal rule.
+  - [x] 2.2e A size's `least` under a variation, a flag's `offBounds`,
+        `play.cornerCrosses`; the counting fixture states each, and the
+        draft's refusals read as upstream's.
   - [ ] 2.2f The flip: `says` restated, soundness, tests to `cases.yaml`,
         spec deltas, the app run. For the player: the Custom box is "No
         diagonal touching", on for the rule, where upstream's "Allow

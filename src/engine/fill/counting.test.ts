@@ -228,6 +228,14 @@ describe("a clue one a value in the margin before its line", () => {
     expect(w - 4 * TS - o).toBe(o - 3 * TS);
   });
 
+  it("leaves every grid line single, where a board of lists doubles each fifth", () => {
+    // Each square's surface inside its grid line: a doubled line narrows it.
+    const narrowed = draw(dealt("6x6k3", "w")).filter(
+      (op) => op.op === "rect" && op.w === TS - 2 && op.h >= TS - 2,
+    );
+    expect(narrowed).toHaveLength(0);
+  });
+
   it("writes each clue in its value's square, its value heading the margin", () => {
     const off = (t: Point) => t.x < o || t.y < o;
     const drawn = texts(draw(b)).filter(off);
@@ -364,6 +372,69 @@ describe("a clue one a value in the margin before its line", () => {
       }
     }
     expect(outlined).toBeGreaterThan(0);
+  });
+});
+
+describe("a size and a tier bounded by a setting", () => {
+  const refusal = (id: string, full: boolean) =>
+    game.validateParams?.(game.decodeParams(id), full) ?? null;
+
+  it("holds a size to its least under a variation, named by the variation", () => {
+    expect(refusal("4x4k3D", false)).toBe(
+      "Values must be at least 4 with no diagonal touching.",
+    );
+    expect(refusal("4x4k4D", false)).toBeNull();
+    expect(refusal("4x4k3", false)).toBeNull();
+  });
+
+  it("refuses a tier past a deal flag's bounds where the flag is off, in a full ID alone", () => {
+    const p = game.decodeParams("2x2k2");
+    const full = game.encodeParams(p, true);
+    expect(refusal(full, true)).toBe("No 2x2 puzzle with every clue showing is Easy.");
+    expect(refusal(full, false)).toBeNull();
+    const hidden = game.encodeParams({ ...p, settings: { removeClues: 1 } }, true);
+    expect(hidden).toContain("R");
+    expect(refusal(hidden, true)).toBeNull();
+    expect(
+      refusal(game.encodeParams(game.decodeParams("3x2k2"), true), true),
+    ).toBeNull();
+  });
+
+  it("hides numbers where the flag is on, and none where it is off", () => {
+    const p = game.decodeParams("4x4k3");
+    const shown = (q: typeof p) =>
+      game.newState(q, game.newDesc(q, randomNew("w")).desc).dealt.count.at.length;
+    expect(shown(p)).toBe(8 * 3);
+    expect(shown({ ...p, settings: { removeClues: 1 } })).toBeLessThan(8 * 3);
+  });
+});
+
+describe("corner crosses under a variation", () => {
+  const TS = 48;
+  const crosses = (id: string): number => {
+    const b = dealt(id, "w");
+    const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+    game.redraw(dr, game.newDrawState(b, TS), {
+      state: b,
+      prev: null,
+      dir: 1,
+      ui: game.newUi(b),
+      animTime: 0,
+      flash: NO_FLASH,
+    } as never);
+    // A stroke a sixth of a tile long, from a corner toward the square's
+    // middle.
+    const d = Math.floor(TS / 6);
+    return dr.ops.filter(
+      (o) =>
+        o.op === "line" && Math.abs(o.x2 - o.x1) === d && Math.abs(o.y2 - o.y1) === d,
+    ).length;
+  };
+
+  it("marks each corner inside the grid with four strokes, and none without it", () => {
+    // A 4 by 4 grid has 3 by 3 corners inside it.
+    expect(crosses("4x4k4D")).toBe(9 * 4);
+    expect(crosses("4x4k4")).toBe(0);
   });
 });
 

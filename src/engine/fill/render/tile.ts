@@ -34,7 +34,7 @@ import {
 import { paintNumeral } from "./layers/numerals.ts";
 import { labelsOf, paintPartClue } from "./layers/part-clues.ts";
 import { joinsOf, paintPiece } from "./layers/piece.ts";
-import { highlightOf, paintSurface } from "./layers/surface.ts";
+import { highlightOf, paintCornerCrosses, paintSurface } from "./layers/surface.ts";
 import { washesOf } from "./layers/wash.ts";
 import type { FillSetup } from "./setup.ts";
 import { paintRaised, repainted } from "./three-d.ts";
@@ -155,6 +155,7 @@ function drawTile<C extends Clues<C>>(
   t: TileWords,
   struck: number,
   spill: readonly RaisedAt[],
+  crossed: boolean,
 ): void {
   const { pal, typed, play } = cx;
   const { k: word, hk: hintWord, lk: lineWord, nk: noteWord, ek: edgeWord, part } = t;
@@ -185,6 +186,7 @@ function drawTile<C extends Clues<C>>(
 
   dr.clip(tile);
   paintSurface(pal, frame, highlightOf(typed, word, noteWord));
+  if (crossed) paintCornerCrosses(frame, lay.f.boardW);
   paintPiece(cx, frame, t.anim);
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;
@@ -231,11 +233,23 @@ export function paintTiles<C extends Clues<C>>(
   const ts = ds.tileSize;
   const { w, h } = b;
   const repaint = repainted(lay.f.threeD, w, h, tiles);
+  const cross = cx.play.cornerCrosses;
+  const crossed = cross !== undefined && b.variations.includes(cross);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       const t = tiles[i];
       if (t === null || !repaint[i]) continue;
-      drawTile(cx, lay, dr, ts, [x, y, h], t, ds.struck.struck[i], raisedInto(x, y));
+      drawTile(
+        cx,
+        lay,
+        dr,
+        ts,
+        [x, y, h],
+        t,
+        ds.struck.struck[i],
+        raisedInto(x, y),
+        crossed,
+      );
     }
 }

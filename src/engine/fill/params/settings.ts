@@ -50,9 +50,9 @@ export function settingRefusal(
 ): string | null {
   switch (s.kind) {
     case "flag":
-      return flagRefusal(s, p);
+      return flagRefusal(s, p, full, cx);
     case "number":
-      return numberRefusal(s, p, full);
+      return numberRefusal(s, p, full, cx);
     case "choice":
       return choiceRefusal(s, p, full, cx);
     case "set":

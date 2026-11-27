@@ -337,6 +337,12 @@ headed by those words. Exemplars: `git grep -l modifierItem src/games`.
   index. The tier gives way to the modifier, and the engine builds what it
   builds for a ruleset's `only`. A field that decides others is narrowed by
   none, and the declaration throws if it is.
+- **On a born board a modifier bounds the rest by what it states**: a size's
+  `least` under it (ABCD's letters, 5 or more with no diagonal touching), a
+  deal flag's `offBounds`, a tier's bounds held only while the flag is off
+  (ABCD's Unreasonable, refused on nine squares unless clues are hidden),
+  and `play.cornerCrosses`, the cue drawn while it is on. The `counting`
+  fixture states each.
 
 ### A choice's name is typed once
 

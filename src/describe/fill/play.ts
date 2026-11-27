@@ -220,6 +220,8 @@ export function playOf(
         `play done: ${k} is marked done on a board of numbers alone, and play has no \`numbers\``,
       );
   }
+  if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
+    throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
   const plainPlay = {
     ...rest,
     ...(notes ? { notes } : {}),

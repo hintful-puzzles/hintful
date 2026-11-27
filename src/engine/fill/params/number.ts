@@ -4,9 +4,11 @@
 import { parseConfigInt } from "../../game-id/params.ts";
 import { num } from "../../game-id/params-codec.ts";
 import type { FillParams } from "../game-id.ts";
+import { type FlagSetting, variationsOf } from "./flag.ts";
 import {
   dealValue,
   type SettingBase,
+  type SettingContext,
   type SettingField,
   type SettingKind,
   setDealValue,
@@ -24,6 +26,8 @@ export interface NumberSetting extends SettingBase, SettingField {
   readonly default: number;
   /** What a board's name says of it, `{n}` the number. */
   readonly words?: string;
+  /** By a variation's id, the least it may be with the variation on. */
+  readonly least?: Readonly<Record<string, number>>;
 }
 
 /** The value `s` has on board `p`. */
@@ -36,17 +40,26 @@ function setNumber(s: NumberSetting, p: FillParams, v: number): void {
   else setDealValue(p, s.id, v);
 }
 
-/** Why board `p` cannot have number `s` as it is: past its range. One only
+/** Why board `p` cannot have number `s` as it is: past its range, or below
+ * its least under a variation on, named by the variation's setting. One only
  * the deal reads is held to it in a full ID alone, which names it. */
 export function numberRefusal(
   s: NumberSetting,
   p: FillParams,
   full: boolean,
+  cx: SettingContext,
 ): string | null {
+  if (!full && s.gives !== "size") return null;
   const v = numberOf(s, p);
-  return (full || s.gives === "size") && (v < s.min || v > s.max)
-    ? `${s.name} must be between ${s.min} and ${s.max}.`
-    : null;
+  if (v < s.min || v > s.max) return `${s.name} must be between ${s.min} and ${s.max}.`;
+  for (const [variation, least] of Object.entries(s.least ?? {}))
+    if (variationsOf(p).includes(variation) && v < least) {
+      const by = cx.deal.settings.find(
+        (x): x is FlagSetting => x.kind === "flag" && x.id === variation,
+      );
+      return `${s.name} must be at least ${least} with ${(by?.name ?? variation).toLowerCase()}.`;
+    }
+  return null;
 }
 
 export const number: SettingKind<NumberSetting> = {
