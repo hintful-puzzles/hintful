@@ -42,7 +42,7 @@ import {
   growByOf,
 } from "./fill/partitions.ts";
 import { markWhileOf, playOf } from "./fill/play.ts";
-import { checkFirst, checkSample, sampledValue } from "./fill/sample.ts";
+import { checkFirst, checkSample, dealtSample, sampledValue } from "./fill/sample.ts";
 import {
   dealFlag,
   type SettingOut,
@@ -172,7 +172,7 @@ function dealOf(
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(hexagon === null ? {} : { hexagon }),
     settings,
-    sample,
+    sample: dealtSample(json, sample),
     ...present("hide", hide),
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...present("tierFlag", tierFlag),

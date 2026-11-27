@@ -15,6 +15,7 @@ import { shuffle } from "../board/shuffle.ts";
 import { type RandomState, randomBits, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { latinGenerate, matching } from "../solve/latin.ts";
+import type { FillDivision } from "./game-id.ts";
 
 type Near = "adj4" | "adj8";
 
@@ -30,7 +31,33 @@ export type Sample =
   | PictureSample
   | PiecesSample
   | LatinSample
-  | SearchSample;
+  | SearchSample
+  | WallsSample;
+
+/** A partition of the cells, an answer on the edges: the board divided as
+ * `walls.division` cuts it, `walls.value` on each edge between two parts and
+ * `walls.rest` on each edge inside one (Palisade's regions). */
+export interface WallsSample {
+  readonly walls: {
+    readonly division: FillDivision;
+    readonly value: number;
+    readonly rest: number;
+  };
+}
+
+/** The walls of `parts`, each cell's part, as `sample` paints them on `sp`'s
+ * edges. */
+export function wallsOf(
+  sample: WallsSample,
+  sp: GridSpace,
+  parts: Int32Array,
+): Uint8Array {
+  const { value, rest } = sample.walls;
+  const g = new Uint8Array(sp.edges.length);
+  for (const e of sp.edges)
+    g[e] = parts[sp.edgeEnds[2 * e]] === parts[sp.edgeEnds[2 * e + 1]] ? rest : value;
+  return g;
+}
 
 /** A Latin square on the board, its values `1` to its side. */
 export interface LatinSample {

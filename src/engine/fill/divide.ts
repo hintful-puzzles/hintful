@@ -1,7 +1,8 @@
 /**
  * A dealt partition divided at random apart from the answer
  * (`deal.divide`), which a deal lays its clues on or searches its answer
- * under. Two ways:
+ * under; or the answer itself, as the walls between its parts
+ * (`sample.walls`). Three ways:
  *
  * - Into small parts, upstream keen.c's cages. Each cell in a random order
  *   is joined, at the odds `pairs`, to the first of its neighbors in that
@@ -22,7 +23,7 @@ import { growToSize } from "../generate/divide.ts";
 import { divvyRectangle } from "../generate/divvy.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
-import type { FillDivide } from "./game-id.ts";
+import type { FillDivision } from "./game-id.ts";
 
 /** The resolution the odds of a pair are drawn at. */
 const CHANCE = 1 << 20;
@@ -32,7 +33,7 @@ const CHANCE = 1 << 20;
  * are the board's sizes beyond the grid's, which a list of sizes may be
  * chosen by. */
 export function dividePartition(
-  divide: FillDivide,
+  divide: FillDivision,
   sp: GridSpace,
   sizes: Readonly<Record<string, number>>,
   rs: RandomState,
@@ -92,7 +93,7 @@ export function dividePartition(
 
 /** The cells of each part a division into equal parts deals on the board
  * `sp` of the sizes `sizes`: a number, `w` the board's width, or a size. */
-function equalSize(
+export function equalSize(
   divide: { readonly equal: number | string },
   sp: { readonly w: number },
   sizes: Readonly<Record<string, number>>,

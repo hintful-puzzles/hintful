@@ -87,6 +87,14 @@ export function fillSetup<C extends Clues<C>>(
   /** Whether the answer sits on the edges: each tile then draws its four
    * sides' values (`tile-word.ts`'s edge word), and holds none of its own. */
   const onEdges = module.answerSort === "edge";
+  /** On an answer on the edges, the value painted a wall, which the board's
+   * rim is drawn as: a partition's regions end there, as at a wall. 0 where
+   * no value is a wall. */
+  const rimWall = onEdges
+    ? Number(
+        Object.entries(play.values ?? {}).find(([, v]) => v.paint === "wall")?.[0] ?? 0,
+      )
+    : 0;
   const metrics: FillMetrics = fillMetrics({
     notes,
     covers: play.covers !== undefined,
@@ -168,6 +176,7 @@ export function fillSetup<C extends Clues<C>>(
     raises,
     linkClues,
     onEdges,
+    rimWall,
     pal,
     metrics,
     tallied,

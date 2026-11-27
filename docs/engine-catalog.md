@@ -869,7 +869,8 @@ addressed to the piece, never to a game. On an answer on the edges
 (`value.sort: edge`) `paint:` names an edge painter instead
 (`EDGE_VALUE_PAINTERS`, `edge-value.ts`): a wall, a line or a cross, which
 each of the edge's two squares draws its half of, in its own clip, as Pearl
-draws a line.
+draws a line. Where a value is a wall, the board's rim is drawn as one, so
+every region is closed.
 
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
 

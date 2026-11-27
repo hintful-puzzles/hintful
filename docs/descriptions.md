@@ -411,7 +411,10 @@ description author acts on:
   `place(e, d)` read an edge, and `CellMarks` holds a mark an edge
   (`held: "edge"`). A hint step names an edge's two squares. A division
   game states its regions as `through(c, O)`, `O` the edges known open,
-  since the answer is the walls.
+  since the answer is the walls. Its deal samples a division and writes
+  its walls (`sample.walls`, the `fencing` fixture), with the value the
+  play paints `wall`, never a dealt partition: one in `deal.divide` is on
+  the board, and its desc would give the answer away.
 - **A diagonal neighbor is across an edge too where the space says
   `edges: king`** (Spokes' links between hubs): `edges` holds the
   diagonals, `edge(a, b)` names one between squares corner to corner,

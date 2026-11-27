@@ -1469,6 +1469,45 @@ describe("what the fill board reads of a description", () => {
       ).toThrow(new RegExp(`^${at}: the answer is on the edges, and `));
   });
 
+  it("samples a partition's walls with the value the play paints a wall", () => {
+    const fencing = "src/engine/testing/fixtures/fencing/fencing.description.yaml";
+    type Fencing = {
+      play: { values: Record<string, { paint: string }> };
+      deal: { sample: unknown };
+    };
+    const edited = (edit: (j: Fencing) => void) =>
+      compileEdited(fencing, (j: Fencing) => {
+        edit(j);
+        return j;
+      });
+    expect(edited(() => {})).toContain(
+      '"sample":{"walls":{"division":{"equal":3},"value":1,"rest":2}}',
+    );
+    // The wall is whichever value is painted one.
+    expect(
+      edited((j) => {
+        j.play.values["1"].paint = "cross";
+        j.play.values["2"].paint = "wall";
+      }),
+    ).toContain('"walls":{"division":{"equal":3},"value":2,"rest":1}');
+    expect(() =>
+      edited((j) => {
+        j.play.values["1"].paint = "line";
+      }),
+    ).toThrow(/deal sample walls: the play places two values, one painted wall/);
+    expect(() =>
+      edited((j) => {
+        j.deal.sample = { walls: { equal: "k" } };
+      }),
+    ).toThrow(/deal sample walls: equal parts of k, which is no size/);
+    expect(() =>
+      compileTents((j: { deal: { sample: unknown } }) => {
+        j.deal.sample = { walls: { equal: 3 } };
+        return j;
+      }),
+    ).toThrow(/deal sample walls: the answer is not on the edges/);
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

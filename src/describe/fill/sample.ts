@@ -4,6 +4,7 @@
  * the deal.
  */
 
+import type { WallsSample } from "../../engine/fill/sample.ts";
 import { SET_BLACKS_SYMM } from "../../engine/generate/symmetry.ts";
 import { CompileError } from "../compile-sorts.ts";
 import {
@@ -17,13 +18,56 @@ import type { SettingOut } from "./settings.ts";
 /** The value a sample lays, 0 where it lays no one value: it builds the
  * answer, draws a Latin square, or searches one. */
 export function sampledValue(sample: SampleJson | null): number {
-  if (sample === null || "build" in sample || "latin" in sample || "search" in sample)
+  if (
+    sample === null ||
+    "build" in sample ||
+    "latin" in sample ||
+    "search" in sample ||
+    "walls" in sample
+  )
     return 0;
   if ("dominoes" in sample) return sample.dominoes.value;
   if ("lines" in sample) return sample.lines.value;
   if ("picture" in sample) return sample.picture.value;
   if ("pieces" in sample) return sample.pieces.value;
   return sample.scatter.value;
+}
+
+/**
+ * The sample as the deal reads it (`engine/fill/sample.ts`' `Sample`): a
+ * partition's walls take the value the play paints `wall` between two parts
+ * and its one other value inside one, so the deal and the drawing cannot
+ * disagree on which is the wall. Refused where the answer is not on the
+ * edges, where no value or more than one is painted a wall, or where the
+ * play has no one other value; and a division into equal parts of a size
+ * the params do not give.
+ */
+export function dealtSample(
+  json: DescriptionJson,
+  sample: SampleJson | null,
+): Exclude<SampleJson, { walls: unknown }> | WallsSample | null {
+  if (sample === null || !("walls" in sample)) return sample;
+  if (json.answer.value.sort !== "edge")
+    throw new CompileError("deal sample walls: the answer is not on the edges");
+  const values = Object.entries(json.play?.values ?? {});
+  const walls = values.filter(([, v]) => v.paint === "wall");
+  const others = values.filter(([, v]) => v.paint !== "wall");
+  if (walls.length !== 1 || others.length !== 1)
+    throw new CompileError(
+      "deal sample walls: the play places two values, one painted wall",
+    );
+  const { equal } = sample.walls;
+  if (typeof equal === "string" && equal !== "w" && json.sizes[equal] === undefined)
+    throw new CompileError(
+      `deal sample walls: equal parts of ${equal}, which is no size`,
+    );
+  return {
+    walls: {
+      division: { equal },
+      value: Number(walls[0][0]),
+      rest: Number(others[0][0]),
+    },
+  };
 }
 
 /** Refuses a sample of lines counted by no size the params give, an unpair

@@ -2,8 +2,8 @@
  * An answer on the edges (`answer.value.sort: edge`): each edge's value is
  * drawn by its edge painter (`pieces/edge-value.ts`), each of the edge's two
  * squares its half in its own clip, red where a rule breaks at the edge or
- * Check & Save found it wrong; and the half-grid cursor where it rests on an
- * edge or a corner.
+ * Check & Save found it wrong; the rim as a wall where a value is painted
+ * one; and the half-grid cursor where it rests on an edge or a corner.
  */
 
 import { COL_CURSOR, COL_ERROR } from "../../../color/roles.ts";
@@ -54,6 +54,15 @@ export function edgeWordsOf<C extends Clues<C>>(
       out[a] |= (v << (EDGE_VALUE_BITS * d)) | (flags << d);
     }
   }
+  // The rim is a wall's on every side no edge is on.
+  if (cx.rimWall !== 0)
+    for (const c of sp.cells)
+      for (const [d, [dx, dy]] of DIRS.entries()) {
+        const x = (c % w) + dx;
+        const y = Math.floor(c / w) + dy;
+        if (x < 0 || y < 0 || x >= w || y >= h)
+          out[c] |= cx.rimWall << (EDGE_VALUE_BITS * d);
+      }
   return out;
 }
 

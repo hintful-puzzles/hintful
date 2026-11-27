@@ -31,11 +31,22 @@ fill board. This is stage 4 of
 Dominosa, Subsets, Wordtrail. Needs: an answer on edges or a partition of
 the cells, not a value a cell, which the fill pilot left out on purpose
 (`archive/2026-11-22-a-game-from-its-description-alone/design.md`
-§ "Goals / Non-Goals").
+§ "Goals / Non-Goals"). It starts from `a-fill-board-of-any-slot`: the
+fill board holds an answer on the edges (`answer.value.sort: edge`),
+dealt, drawn, played on the half grid and hinted, and a partition is such
+an answer painted `wall`, its deal the walls of a division
+(`sample.walls`); the `fencing` fixture is Palisade's rules on a small
+board. What it lacks is what each game brings: a stronger ladder (fencing's
+three techniques deal nothing at 9x9), divisions other than equal parts,
+and what an edge answer still refuses (`describe/fill/cell-only.ts`).
 
 **Lines and loops.** Loopy, Pearl, Tracks, Bridges, Spokes, Slant, Path,
 Signpost, Net, and Ascent (Rome went to the candidate group). Needs: edge answers, as the regions group does, and
 the line-drawing input `engine/mechanics/line-drawing.ts` shares already.
+It starts from the `lacing` fixture of `a-fill-board-of-any-slot`: lines
+on the edges, drawn square to square as halves, played by clicks and a
+drag along the edges; the drag from square to square is still to adopt,
+and tilings (Loopy, Net) are not yet a fill board.
 Tracks' square-marking drag is the fill engine's `play.straight` drag; its
 rail drag, from a square that already carries track, stays its own (two kinds
 of target), as `one-drag-for-fill-games`' design records.

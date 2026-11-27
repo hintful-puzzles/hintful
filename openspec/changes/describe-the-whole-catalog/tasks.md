@@ -23,7 +23,7 @@ what is left, and whether the migration is good to proceed.
 - [x] 0.4 `one-way-to-say-a-setting`
 - [x] 0.5 `the-compiler-reads-meaning`
 - [x] 0.6 `the-description-documented-once`
-- [ ] 0.7 `a-fill-board-of-any-slot`
+- [x] 0.7 `a-fill-board-of-any-slot`
 
 ## 1. The route
 

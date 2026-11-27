@@ -18,6 +18,7 @@ import type { Symmetry } from "../generate/symmetry.ts";
 import type { GridSpace, Partition } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
 import type { IdSegment } from "./desc.ts";
+import { equalSize } from "./divide.ts";
 import type { FillGrow } from "./grow.ts";
 import { beyond, type FillBounds, type SizeBounds } from "./params/bounds.ts";
 import { leastWords } from "./params/choice.ts";
@@ -162,22 +163,26 @@ export interface FillDeal {
 }
 
 /** A dealt partition divided at random apart from the answer
- * (`deal.divide`): into small parts, each cell joined at odds `pairs` to a
- * neighbor alone, then each left alone to a neighboring part under `most`
- * cells; a part at a time grown to a size drawn from one of `sizes`, the
- * first, or with `by` the one at the setting's value less its least; or the
- * board tiled by parts of `equal` cells, a number, a size the params give, or
- * `w`, the board's width. One with a `variation` is divided only on a board
- * it is on (the blocks Solo's Jigsaw deals). */
-export type FillDivide = (
-  | { readonly partition: string; readonly pairs: number; readonly most: number }
+ * (`deal.divide`), as `FillDivision` cuts it. One with a `variation` is
+ * divided only on a board it is on (the blocks Solo's Jigsaw deals). */
+export type FillDivide = FillDivision & {
+  readonly partition: string;
+  readonly variation?: string;
+};
+
+/** How a division cuts the board into parts: into small parts, each cell
+ * joined at odds `pairs` to a neighbor alone, then each left alone to a
+ * neighboring part under `most` cells; a part at a time grown to a size
+ * drawn from one of `sizes`, the first, or with `by` the one at the
+ * setting's value less its least; or the board tiled by parts of `equal`
+ * cells, a number, a size the params give, or `w`, the board's width. */
+export type FillDivision =
+  | { readonly pairs: number; readonly most: number }
   | {
-      readonly partition: string;
       readonly sizes: readonly (readonly number[])[];
       readonly by?: { readonly size: string; readonly min: number };
     }
-  | { readonly partition: string; readonly equal: number | string }
-) & { readonly variation?: string };
+  | { readonly equal: number | string };
 
 /** The divides of `deal` a board with `variations` on is dealt. */
 export const dividesOn = (
@@ -357,6 +362,14 @@ export function fillParams(
         ) === null
       )
         return `The ${tallyIn(deal)?.id ?? "pieces"} does not fit into the grid.`;
+      // Parts of one size tile the board where it divides the board's area.
+      if (
+        sample !== null &&
+        "walls" in sample &&
+        "equal" in sample.walls.division &&
+        (p.w * p.h) % equalSize(sample.walls.division, p, sizesOf(p)) !== 0
+      )
+        return `The region size must divide the number of squares, ${p.w * p.h}.`;
       const outside = beyond(bounds.all, p);
       if (outside !== null) return `${outside}.`;
       // A tier's own bounds hold of the board a deal makes, which only a full

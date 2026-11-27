@@ -1,0 +1,10 @@
+--  fencing: no board of order 4 has an answer, so nothing is checked there
+ok  fencing    numberCount                    3  sound    (want sound   )     9 queries    0.3s
+ok  fencing    numberCount (planted)          3  unsound  (want unsound )     1 queries    0.0s   at clue number 0
+ok  src/engine/testing/fixtures/fencing/fencing.description.yaml#numberCount: recorded sound, proved whole on all 1 boards
+ok  fencing    tooBig                         3  sound    (want sound   )     1 queries    0.1s
+ok  fencing    tooBig (planted)               3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/engine/testing/fixtures/fencing/fencing.description.yaml#tooBig: recorded sound, proved whole on all 1 boards
+ok  fencing    lastWay                        3  sound    (want sound   )     1 queries    0.4s
+ok  fencing    lastWay (planted)              3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/engine/testing/fixtures/fencing/fencing.description.yaml#lastWay: recorded sound, proved whole on all 1 boards

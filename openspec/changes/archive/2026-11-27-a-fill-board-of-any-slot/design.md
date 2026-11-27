@@ -70,7 +70,13 @@ cell:
 
 So the engine has no partition sort. What makes an edge answer a partition
 is how its values are painted (`paint: wall`) and how the deal samples it
-(a divided partition, its walls written between parts).
+(`sample: { walls: { equal: k } }`: a division, its walls written between
+parts). The division is the sample's own, not a `deal.divide`: a divided
+partition is a dealt one, which the board carries and the desc writes, and
+this one is the answer. The wall is the value the play paints `wall`, read
+by the compiler, so the deal and the drawing cannot disagree; a board the
+parts do not tile is refused as its params are read. The rim is drawn as a
+wall, since the regions end there.
 
 ### Each concept, its form on an element, in order
 
@@ -90,9 +96,9 @@ earlier:
    `revealOne` and the `aux` answer are index-generic already. The text
    format prints an edge's value in the wall's place between its two cells,
    as `gap` prints a gap's clue: one character, from the value's glyph.
-3. **The deal**: the scatter sampler over elements; a divided partition
-   (`deal.divide`) sampled as an answer, its walls the value painted
-   `wall` between two parts and the other value elsewhere. Clues derive
+3. **The deal**: the scatter sampler over elements; a division sampled as an
+   answer (`sample.walls`), its walls the value painted `wall` between
+   two parts and the other value elsewhere. Clues derive
    from `means`, which reads the answer by its sort already. `given` of an
    edge answer is refused until a game has one.
 4. **The drawing**: a tile's word gains its four sides' edge values; an
@@ -125,10 +131,11 @@ earlier:
   number counting its square's lines; sampled by scatter at a share; its
   ladder the count kind's both readings (Palisade's `numberExhausted`).
   Drawn as lines, played by clicks.
-- **`fencing`, a partition**: walls between squares, every region of `k`
-  squares and each number counting its square's walls, the rim's
-  included (Palisade's rules, on a small board); sampled by a divided
-  partition. Drawn as walls.
+- **`fencing`, a partition**: walls between squares, every region of
+  three squares and each number counting its square's walls, the rim's
+  included (Palisade's rules, on a small board); sampled as the walls of
+  a division into threes; its ladder a number's count and two region
+  kinds. Drawn as walls, the rim one.
 
 ## Risks / Trade-offs
 

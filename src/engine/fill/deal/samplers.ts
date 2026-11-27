@@ -8,6 +8,7 @@
 import { drawRejected } from "../../contract/deal-census.ts";
 import { inHexagon } from "../../solve/describe-runtime.ts";
 import { type Clues, elementsOf } from "../board.ts";
+import { dividePartition } from "../divide.ts";
 import { piecesOf } from "../params/tally.ts";
 import {
   type Sample,
@@ -17,6 +18,7 @@ import {
   sampleLines,
   samplePicture,
   samplePieces,
+  wallsOf,
 } from "../sample.ts";
 import { searchedPositions } from "../search.ts";
 import { buildAnswer, climbBuild, DEAD_END } from "./build.ts";
@@ -44,7 +46,8 @@ type SampleKey =
   | "picture"
   | "pieces"
   | "latin"
-  | "scatter";
+  | "scatter"
+  | "walls";
 
 type Sampler<S> = <C extends Clues<C>>(sample: S, cx: DealContext<C>) => Drawn | null;
 
@@ -90,6 +93,10 @@ const SAMPLERS: {
   pieces: (sample, cx) =>
     answer(samplePieces(sample, cx.sp.w, cx.sp.h, piecesOf(cx.deal, cx.p), cx.rs)),
   latin: (_, cx) => answer(sampleLatin(cx.sp, cx.rs)),
+  walls(sample, cx) {
+    const parts = dividePartition(sample.walls.division, cx.sp, cx.sizes, cx.rs);
+    return answer(parts === null ? null : wallsOf(sample, cx.sp, parts));
+  },
   scatter: (sample, cx) => {
     const first =
       sample.first === undefined

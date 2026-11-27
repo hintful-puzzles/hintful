@@ -1,0 +1,107 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: walls between squares that divide the board into
+# regions of three, each number counting the walls round its square, the
+# rim's included (Palisade's rules, its regions fixed at three). For the fill
+# engine's tests of a partition of the cells stated as an answer on the
+# edges, sampled as the walls between the parts of a division, drawn as
+# walls, played and hinted, on a description that names no game.
+game: fencing
+produces: regions
+sizes:
+  # Its three techniques finished no 9x9 board in 10,000 draws (2026-11-27).
+  w: { min: 2, max: 6 }
+  h: { min: 2, max: 6 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a wall, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The edges known to have no wall.
+  joined: "{e in edges where value(e) = 2}"
+  # The edges round square c.
+  round(c): "set(edge(c, y) over y in adj4(c))"
+  # The walls round square c, the grid's rim included.
+  walls(c): "4 - |adj4(c)| + count(e in round(c) where value(e) = 1)"
+  # The edges of S not yet decided.
+  open(S): "{e in S where not known(e)}"
+shape:
+  # A wall stands between two squares side by side exactly where they are in
+  # different regions.
+  - "forall O = joined, e in edges: value(e) = 1 iff end2(e) not in through(end1(e), O)"
+  # Every region holds three squares.
+  - "forall O = joined, c in cells: |through(c, O)| = 3"
+clues:
+  # The walls round a square, the grid's rim included.
+  number: { at: cell, value: "range(0, 4)", means: "4 - |adj4(at)| + count(e in round(at) where value(e) = 1) = v" }
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: build a wall, key: W, paint: wall }
+    2: { does: mark no wall, key: X, paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  # A 3x3 board's regions of three are too many ways round for its ladder.
+  boards: [3x4, 6x4]
+  hintMarks:
+    ring: the edges the step decides.
+    outline: the number the step reasons from.
+    stripes: the region the step is about.
+deal:
+  answer: the board divided at random into regions of three, a wall between every two
+  number: every square's, then each hidden while the board still finishes
+  tier: the one tier
+  sample: { walls: { equal: 3 } }
+  hide: number
+id:
+  - digits: number
+tiers: [Easy]
+kindWords:
+  # A number counts the walls round its square, the rim's included.
+  group: "q in clues(number), a = at(q)"
+  set: "set(edge(a, y) over y in adj4(a))"
+  need: "v(q) - walls(a)"
+  rest: 2
+  fill: 1
+  zero: "v(q) = 0"
+  mark: outline
+  marks: { outline: "{a}" }
+  unit: "this {clue}"
+  has: "{clue: its wall | all {clue} of its walls}"
+  items: "{n: wall | walls}"
+  slots: "open {n: edge | edges}"
+  restWord: "can't be a wall"
+  fillWord: "must be a wall"
+names:
+  numberCount: "a number's count of walls"
+  tooBig: "a region that would grow too big"
+  lastWay: "a region's last way to grow"
+techniques:
+  # A number with all its walls has no more: its other edges are open. One
+  # that reaches its count only with every edge left a wall has them all.
+  - kind: count.both
+    as: numberCount
+    tier: Easy
+    with:
+      terms: { placed: "n < v(q)", clue: "v(q)" }
+  # Two groups whose squares together outnumber a region are different
+  # regions.
+  - kind: region.apart
+    as: tooBig
+    tier: Easy
+    with: { apart: "|A| + |B| > 3" }
+    says:
+      terms: { joined: "|A| + |B|" }
+      marks: { outline: A + B }
+      look: "Joining {outline: these two regions} would make {joined} squares"
+      again: "{outline: the same outlined region | the same outlined regions}"
+  - kind: region.grow
+    as: lastWay
+    tier: Easy
+    with: { size: "3" }

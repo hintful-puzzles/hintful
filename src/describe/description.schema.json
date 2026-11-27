@@ -2247,6 +2247,33 @@
                 },
                 {
                   "type": "object",
+                  "description": "A partition of the cells as an answer on the edges (`answer.value.sort: edge`): the board tiled by connected parts of `equal` squares each (upstream divvy.c), a number, a size the params give, or `w`, the board's width; the value painted `wall` on each edge between two parts, and the play's other value on each edge inside one.",
+                  "required": ["walls"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "walls": {
+                      "type": "object",
+                      "required": ["equal"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "equal": {
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
                   "description": "The answer searched under the partitions the deal divides first (`divide`), or under the board's units alone where it divides none: from the blank board with the partition dealt, the search by trial and error over the ladder tries each square's values in a random order, and a draw whose search runs out of budget is drawn again.",
                   "required": ["search"],
                   "additionalProperties": false,
