@@ -1,7 +1,12 @@
 ## Next
 
-2.4d, the rest of Group. The figures of 3.1 are taken again at the end,
-after 3.1a's and 3.1b's fixes.
+2.4e, Group's tiers. Read 2026-11-27 at `a99d7e8bc`: `i` is a ruleset
+choice (the `lettering` fixture's shape), so its hidden board is its own
+menu section, `8x8i` at `boardTiers` Normal; `sizeLacksTier`'s table is
+each choice's `bounds.tiers` minimums. Missing: a ruleset refusing a tier
+whole (no Easy with the identity hidden), and `play.boardSkips` (8x8 skips
+Hard). The figures of 3.1 are taken again at the end, after 3.1a's and
+3.1b's fixes.
 Group's controls are answered: keep them, as engine capabilities
 (design.md § "Decisions" 2).
 
