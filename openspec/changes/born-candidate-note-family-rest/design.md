@@ -347,6 +347,20 @@ seed's least of three runs, bundled; baseline / working median):
 
 No walk comes near 100 ms on a menu board.
 
+**The steps by rung (3.1b)**, `--quick` (one board a menu board; baseline
+/ working), read so far:
+
+- **Salad**, 996 / 1,141. `borderNear` 114 / 305 is the rise; `emptyLine`
+  121 stands for the hand-written `countLettersDone` and `countHolesDone`
+  (87 and 76), and `crossNaked`, `circleXNote` and `xNoteGone` (64) are
+  gone into `emptySquare` and `ball` (54). A `borderNear` firing strikes
+  one square (those before it are placed empty), so the rise is in how
+  often it fires, not a firing cut into legs: to read on a board, step by
+  step in both trees.
+- **Solo**, 1,329 / 1,234. `note` 188 / 43 is the fall (the implicit
+  reading writes fewer cells' notes); `intersect` 69 / 136 doubles, to
+  read the same way, as a firing cut by cell would do less a step.
+
 ## Open Questions
 
 - **Group's header drag, dividers and diagonal multifill**: they are
