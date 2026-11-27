@@ -84,16 +84,22 @@ export interface HiddenKind {
   /** Kept whole on a board below this tier, by its index. */
   readonly from?: number;
   /** Hidden whole on a board below a tier, by the tier's index, with
-   * variation `with` on where given, and within bounds: the answer is drawn
-   * again until the board finishes without it. */
+   * variation `with` on or of `ruleset`, a choice of a size's setting by
+   * its index, where given, and within bounds: the answer is drawn again
+   * until the board finishes without it. */
   readonly whole?: {
     readonly below: number;
     readonly bounds: SizeBounds;
     readonly with?: string;
+    readonly ruleset?: { readonly setting: string; readonly choice: number };
   };
   /** Hidden only where this flag is on, and then a board hiding none of it
    * is drawn again. */
   readonly when?: string;
+  /** The hidden kind whose clue at the same place goes first: this kind's
+   * clue there is tried straight after that one goes, and kept while it is
+   * shown (Salad's ball, left where its number was). */
+  readonly after?: string;
 }
 
 /** What a compiled fill module says of its deal (`deal`). */
@@ -109,6 +115,10 @@ export interface FillDeal {
   /** The kinds the deal hides while the board still finishes, in one random
    * order, each as `HiddenKind` says. */
   readonly hide?: readonly HiddenKind[];
+  /** The techniques, by id, that may not alone place every square of the
+   * answer holding the module's `refusePlaces`: a board they finish so is
+   * drawn again. */
+  readonly refuse?: { readonly by: readonly string[] };
   /** Where a search tier's strip starts every draw: from every clue, not
    * from a board of the lowest tier one draw in eight (Sticks'). */
   readonly stripFrom?: "everyClue";

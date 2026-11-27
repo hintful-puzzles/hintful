@@ -44,6 +44,9 @@ export type DealtFillModule<C> = SearchedFillModule<C> &
     /** Where a hidden clue of `kind` at `at` goes in the hide, read on the
      * clues as dealt (a hidden kind's `by`): a higher one is hidden first. */
     hideRank?(sp: GridSpace, cl: C, kind: string, at: number): number;
+    /** The value whose squares `deal.refuse`'s techniques may not place
+     * alone, on a board of these sizes. */
+    refusePlaces?(sp: GridSpace, sizes: Readonly<Record<string, number>>): number;
   };
 
 /** What a deal's board is, and how the ladder does on one. */

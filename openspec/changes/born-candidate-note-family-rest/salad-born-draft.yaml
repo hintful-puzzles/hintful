@@ -44,6 +44,18 @@ play:
   numbers: { empty: { ball: ball } }
   boards: [4x4n3L, 5x5n3L, 5x5n4L, 6x6n4L, 7x7n4L, 8x8n5L, 5x5n3B, 5x5n4B, 6x6n3B, 6x6n4B, 7x7n4B, 8x8n5B]
   default: 4x4n3L
+  # Normal where its deal is quick: forty deals each took at most 0.2 s on a
+  # loaded machine. Every other Numbers shape took seconds at Normal.
+  boardTiers:
+    4x4n3L: [Easy, Easy]
+    7x7n4L: [Easy, Easy]
+    8x8n5L: [Easy, Easy]
+    5x5n3B: [Easy, Easy]
+    5x5n4B: [Normal, Normal]
+    6x6n3B: [Easy, Easy]
+    6x6n4B: [Easy, Easy]
+    7x7n4B: [Easy, Easy]
+    8x8n5B: [Easy, Easy]
   hintMarks:
     ring: the square the step fills in.
     strike: the pencil marks the step crosses out.
@@ -56,7 +68,15 @@ deal:
   given: every square, then each hidden while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, border]
+  # A board whose empty squares all fall out with no symbol placed never asks
+  # where a symbol goes.
+  refuse: { by: [ball, emptyLine, emptySquare], places: "n + 1" }
+  hide:
+    # A Letters board below 8x8 is clued on its border alone.
+    given: { whole: { with: Letters, shorter: { max: 7 } } }
+    border:
+    # A number given is weakened to its ball before the ball goes.
+    ball: { after: given }
 settings:
   n:
     kind: number
@@ -69,6 +89,7 @@ settings:
     max: 9
     default: 3
     words: "{n} symbols"
+    under: w
   mode:
     kind: choice
     gives: size
@@ -78,10 +99,13 @@ settings:
         rule: The letters on the edge show which letter appears first when 'looking' into the grid.
         deals: [border]
         letters: true
+        # No board of two letters is Normal clued on its border alone.
+        bounds: { tiers: { Normal: { sizes: { n: 2 }, shorter: { min: 8 } } } }
       - name: Numbers
         code: B
         rule: Squares with a ball must contain a number. Squares with a cross must remain empty.
         deals: [ball]
+        bounds: { tiers: { Normal: { sizes: { n: 2 }, shorter: { min: 5 } } } }
 id:
   - { digits: border, glyphs: true, sides: [top, left, bottom, right], after: "," }
   - { digits: given, glyphs: true, codes: { O: "ball 0" } }
@@ -95,6 +119,9 @@ names:
   wing: "a wing"
   borderNear: "the letter a clue sees first"
   borderFar: "how far in a clue's letter sits"
+  ball: "a ball's square"
+  emptyLine: "a line's last squares that can be empty"
+  emptySquare: "a square that can hold no symbol"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - id: border
@@ -122,6 +149,47 @@ techniques:
         borderFar:
           when: "true"
           look: "{outline k: This clue} sees {v} first, so {v} sits no further in"
+  # A ball's square is struck the empty square.
+  - id: ball
+    tier: Easy
+    rung: ball
+    for: "c in cells where clue(ball, c) != none"
+    conclude: "strike(c, n + 1)"
+    says:
+      terms:
+        at: c
+      marks: {}
+      wordings:
+        - when: "true"
+          look: "{outline at: The ball} means its square holds a number"
+  # A line with only as many squares left that may be empty as it has empty
+  # squares to place has one in each.
+  - id: emptyLine
+    tier: Easy
+    rung: emptyLine
+    for: >-
+      L in units,
+      E = {c in cells(L) where not known(c) and n + 1 in cand(c)},
+      k = w - n - count(c in cells(L) where known(c) and value(c) = n + 1)
+      where |E| > 0 and |E| = k
+    conclude: "forall c in E: place(c, n + 1)"
+    says:
+      terms: { L: L }
+      marks:
+        stripes: "cells(L)"
+      wordings:
+        - look: "{stripes: this {unit}} has only as many squares left that can be empty as it has empty squares to place"
+  # A square that can hold no symbol is empty.
+  - id: emptySquare
+    tier: Easy
+    rung: emptySquare
+    for: "c in cells where not known(c) and |cand(c)| = 1 and n + 1 in cand(c)"
+    conclude: "place(c, n + 1)"
+    says:
+      terms: { at: c }
+      marks: {}
+      wordings:
+        - look: "{outline at: This square} has nothing left but the empty square"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   - { use: latin.set, tier: Normal, rung: set }

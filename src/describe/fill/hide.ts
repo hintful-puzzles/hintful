@@ -28,8 +28,14 @@ export interface HiddenKindOut {
   kind: string;
   first?: true;
   from?: number;
-  whole?: { below: number; bounds: SizeBoundsJson; with?: string };
+  whole?: {
+    below: number;
+    bounds: SizeBoundsJson;
+    with?: string;
+    ruleset?: { setting: string; choice: number };
+  };
   when?: string;
+  after?: string;
 }
 
 /** What a kind's entry in `deal.hide` may say. */
@@ -60,15 +66,31 @@ export function hideOf(
     if (c === undefined) throw new CompileError(`deal hide: no clue kind ${kind}`);
     if (c.complete)
       throw new CompileError(`deal hide: ${kind} is complete, so none of it is hidden`);
-    const { first, from, whole, when } = props;
+    const { first, from, whole, when, after } = props;
+    if (after !== undefined) {
+      const by = entries.find(([k]) => k === after && k !== kind);
+      if (by === undefined)
+        throw new CompileError(
+          `deal hide: ${kind} after ${after}, no other kind hidden`,
+        );
+      if (d.clueKinds.get(after)?.at !== c.at)
+        throw new CompileError(`deal hide: ${kind} after ${after}, at other places`);
+      if (by[1].after !== undefined)
+        throw new CompileError(
+          `deal hide: ${kind} after ${after}, itself after another`,
+        );
+    }
     return {
       kind,
       ...(first === true ? { first: true as const } : {}),
       ...(from === undefined ? {} : { from: fromOf(kind, from, tiers) }),
-      ...(whole === undefined ? {} : { whole: wholeOf(json, kind, whole, tiers) }),
+      ...(whole === undefined
+        ? {}
+        : { whole: wholeOf(json, settings, kind, whole, tiers) }),
       ...(when === undefined
         ? {}
         : { when: dealFlag(settings, when, `deal hide: ${kind}'s when`) }),
+      ...(after === undefined ? {} : { after }),
     };
   });
   const firsts = out.filter((h) => h.first === true).length;
@@ -113,19 +135,25 @@ function fromOf(kind: string, tier: string, tiers: readonly string[]): number {
 }
 
 /** A kind's `whole`: hidden whole on a board below a tier, by the tier's
- * index (past the last where none is named), with a variation on where one
- * is named, within the bounds. */
+ * index (past the last where none is named), with a variation on or of a
+ * ruleset where one is named, within the bounds. */
 function wholeOf(
   json: DescriptionJson,
+  settings: readonly SettingOut[],
   kind: string,
   spec: NonNullable<HideProps["whole"]>,
   tiers: readonly string[],
-): { below: number; bounds: SizeBoundsJson; with?: string } {
-  const { below, with: variation, ...bounds } = spec;
-  if (variation !== undefined && json.variations?.[variation] === undefined)
-    throw new CompileError(`deal hide: ${kind} whole with ${variation}, no variation`);
-  if (below === undefined && variation === undefined)
-    throw new CompileError(`deal hide: ${kind} whole below a tier or with a variation`);
+): NonNullable<HiddenKindOut["whole"]> {
+  const { below, with: named, ...bounds } = spec;
+  const ruleset = named === undefined ? null : rulesetNamed(settings, named);
+  if (named !== undefined && ruleset === null && json.variations?.[named] === undefined)
+    throw new CompileError(
+      `deal hide: ${kind} whole with ${named}, no variation or ruleset`,
+    );
+  if (below === undefined && named === undefined)
+    throw new CompileError(
+      `deal hide: ${kind} whole below a tier, or with a variation or ruleset`,
+    );
   const at = below === undefined ? tiers.length : tierIndex(tiers, below, "deal hide");
   if (at === 0)
     throw new CompileError(
@@ -134,8 +162,22 @@ function wholeOf(
   return {
     below: at,
     bounds,
-    ...(variation === undefined ? {} : { with: variation }),
+    ...(named === undefined ? {} : ruleset === null ? { with: named } : { ruleset }),
   };
+}
+
+/** The ruleset of name `name`, by its setting and its choice's index; `null`
+ * where no choice of a size is so named. */
+function rulesetNamed(
+  settings: readonly SettingOut[],
+  name: string,
+): { setting: string; choice: number } | null {
+  for (const s of settings) {
+    if (s.kind !== "choice" || s.gives !== "size") continue;
+    const choice = s.choices.findIndex((c) => c.name === name);
+    if (choice >= 0) return { setting: s.id, choice };
+  }
+  return null;
 }
 
 /**

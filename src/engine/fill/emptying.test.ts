@@ -20,6 +20,9 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import { refusalOf } from "./deal/accept.ts";
+import { dealContext } from "./deal/context.ts";
+import { hideOf } from "./deal/hide.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
 import { applyMove, type FillMove } from "./notes.ts";
@@ -340,6 +343,108 @@ describe("a clue kind a ruleset deals", () => {
     const p = game.decodeParams("4k3");
     expect(game.encodeParams(p, false)).toBe("4k3S");
     expect(game.encodeParams(game.decodeParams("4k3B"), false)).toBe("4k3B");
+  });
+});
+
+describe("the deal", () => {
+  /** A deal's context and hide on board `id`, its answer and every clue
+   * the answer derives. */
+  const drawn = (id: string, seed: string) => {
+    const p = game.decodeParams(id);
+    const rs = randomNew(seed);
+    const cx = dealContext(emptying, emptying.deal, p, rs);
+    const k = p.sizes?.["k"] ?? 0;
+    const g = sampleLatin(cx.sp, rs, k + 1);
+    return { cx, k, g, clues: emptying.deriveClues(g, cx.sp, {}, cx.sizes) };
+  };
+
+  it("hides every given on a Sight board below 5x5, and from 5x5 shows some", () => {
+    const givens = (id: string) =>
+      Array.from({ length: 10 }, (_, i) => {
+        const p = game.decodeParams(id);
+        return game.newState(p, game.newDesc(p, randomNew(`whole-${id}-${i}`)).desc)
+          .dealt.given.at.length;
+      });
+    expect(givens("4k3S")).toEqual(Array(10).fill(0));
+    expect(Math.max(...givens("5k3S"))).toBeGreaterThan(0);
+    // A Balls board is not Sight's, so it shows givens at any size.
+    expect(Math.max(...givens("4k3B"))).toBeGreaterThan(0);
+  });
+
+  const validate = (id: string, full: boolean): string | null => {
+    if (game.validateParams === undefined) throw new Error("no validateParams");
+    return game.validateParams(game.decodeParams(id), full);
+  };
+
+  it("refuses as many values as a line has squares", () => {
+    const why = (id: string) => validate(id, false);
+    expect(why("4k4")).toBe("Values must be less than the grid size.");
+    expect(why("5k4")).toBeNull();
+  });
+
+  it("refuses a tier a ruleset's bounds keep from a board of its sizes", () => {
+    const why = (id: string) => validate(id, true);
+    expect(why("4k2Bdn")).toBe("No 4x4 Balls puzzle with 2 values is Normal.");
+    expect(why("5k2Bdn")).toBeNull();
+    // Other sizes, another ruleset and another tier keep no such bound.
+    expect(why("4k3Bdn")).toBeNull();
+    expect(why("4k2Sdn")).toBeNull();
+    expect(why("4k2Bde")).toBeNull();
+    // Only a full ID names the tier.
+    expect(validate("4k2Bdn", false)).toBeNull();
+  });
+
+  it("tries a ball straight after the number at its square goes", () => {
+    for (let i = 0; i < 5; i++) {
+      const { cx, clues } = drawn("5k3B", `after-${i}`);
+      const hide = hideOf(cx);
+      const order = hide.hideOrder(clues, hide.unitsOf(clues, hide.allShown(clues)));
+      // The hidden kinds are numbered given, sees, ball, in the deal's order.
+      const balls = clues.given.at.length + clues.sees.at.length;
+      let followed = 0;
+      order.forEach(([j], n) => {
+        if (j < balls) return;
+        const at = clues.ball.at[j - balls];
+        expect(order[n - 1]?.[0], `ball at ${at}`).toBe(clues.given.byAt[at]);
+        followed++;
+      });
+      expect(followed).toBe(clues.ball.at.length);
+    }
+  });
+
+  it("keeps a ball while the number at its square is shown", () => {
+    let weakened = 0;
+    for (let i = 0; i < 10; i++) {
+      const { cx, k, clues } = drawn("5k3B", `kept-${i}`);
+      const kept = hideOf(cx).hideUpTo(clues, 0);
+      if (kept === null) continue;
+      const { given, ball } = kept;
+      // A number shown has its ball beside it.
+      given.at.forEach((at, j) => {
+        if (given.v[j] <= k)
+          expect(ball.byAt[at], `ball at ${at}`).toBeGreaterThanOrEqual(0);
+      });
+      for (const at of ball.at) if (given.byAt[at] < 0) weakened++;
+    }
+    expect(weakened).toBeGreaterThan(0);
+  });
+
+  it("refuses a board whose empty squares the named techniques alone place", () => {
+    for (let i = 0; i < 5; i++) {
+      const { cx, g, clues } = drawn("5k3B", `refuse-${i}`);
+      // Every number given: the empty squares fall without a number placed.
+      expect(refusalOf(cx)(clues, g)).toBe(
+        "fill: the refused techniques alone place the value's squares",
+      );
+    }
+    for (let i = 0; i < 10; i++) {
+      const { cx, g, clues } = drawn("5k3B", `kept-board-${i}`);
+      const kept = hideOf(cx).hideUpTo(clues, 0);
+      if (kept === null) continue;
+      const refused = refusalOf(cx)(kept, g);
+      if (refused === null) return;
+    }
+    expect.fail("no board of ten hidden from was kept");
   });
 });
 

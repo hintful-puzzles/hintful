@@ -1,7 +1,7 @@
 ## Next
 
-Salad (2.3): 2.3e, the deal, then the flip, a capability a fixture each,
-built on `emptying`.
+Salad (2.3): 2.3f, the flip, on the draft as 2.3e left it (its deal
+deals every menu board at its tiers, 2026-11-27).
 Open: Group's header
 drag, dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
@@ -52,15 +52,13 @@ changed for a player" gets its line. In the order task 1.1 set.
         a ball; its reach waits for a line's every copy.
   - [x] 2.3d The ID, and values drawn, typed, said and written by
         ruleset: the commit that ticks 2.3d.
-  - [ ] 2.3e The deal: no givens on a Letters board below 8x8; a given
-        weakened to a ball before it goes (Numbers'); a board refused
-        where a named part of the ladder finishes it (Numbers' empty
-        squares alone); Normal refused for two symbols by size and
-        ruleset; the menu's tiers by board. The draft's 8x8 rejected some
-        8,000 draws with every clue shown while both kinds were dealt;
-        with one kind a ruleset, ten 8x8 Letters deals take 3 to 20 ms
-        under vitest (2026-11-27), so that is gone.
+  - [x] 2.3e The deal: givens whole by ruleset, a ball after its number,
+        `refuse` on the empty squares, Normal bounded by ruleset and size,
+        the menu's tiers: the commit that ticks 2.3e, with its figures.
   - [ ] 2.3f The flip: the value's word by ruleset (letter, number);
+        the words of the draft's `emptyLine` and `emptySquare`, which 2.3e
+        added for its `refuse`, and the hint's order with them before the
+        Latin singles;
         Salad's steps as `says` (a line with all its empty squares or all
         its symbols, a square with only the X left or no X, the border
         clue's two arms, a set holding a line's empties); soundness, tests

@@ -3,18 +3,19 @@
  * draw below a search tier.
  */
 
-import type { Caps } from "../../solve/ladder-runtime.ts";
-import { type Clues, capsOf } from "../board.ts";
+import { type Caps, ladderTechniques, runLadder } from "../../solve/ladder-runtime.ts";
+import { type Clues, capsOf, marksOf } from "../board.ts";
 import { isOn } from "../params/settings.ts";
 import type { DealContext } from "./context.ts";
 import { hidesAny } from "./keeping.ts";
 
-/** What a board is refused for, by the census's stage; `null` where it is
- * kept. Each check in turn, the cheapest refusal first. */
+/** What a board of answer `g` is refused for, by the census's stage; `null`
+ * where it is kept. Each check in turn, the cheapest refusal first. */
 export function refusalOf<C extends Clues<C>>(
   cx: DealContext<C>,
-): (clues: C) => string | null {
+): (clues: C, g: ArrayLike<number>) => string | null {
   const { module, deal, p, sp, variations, finishes } = cx;
+  const placesAlone = placedAlone(cx);
   /** For each other scale this board's ladder runs an entry of, the caps of
    * the asked tier with that scale a tier under its top: a board is held to
    * need the top of each, as it is held to need the asked tier. */
@@ -32,7 +33,10 @@ export function refusalOf<C extends Clues<C>>(
       ...capsOf(module, p.diff),
       [scale]: tiers.length - 2,
     }));
-  return (clues) => {
+  return (clues, g) => {
+    // A few techniques, and no answer check: cheaper than a finish.
+    if (placesAlone?.(clues, g) === true)
+      return "fill: the refused techniques alone place the value's squares";
     if (!finishes(clues, p.diff))
       return "fill: the tier stops short with the clues left";
     if (p.diff > 0 && finishes(clues, p.diff - 1))
@@ -53,5 +57,29 @@ export function refusalOf<C extends Clues<C>>(
     )
       return "fill: the board hides none of the flag's kind";
     return null;
+  };
+}
+
+/** Whether `deal.refuse`'s techniques alone, at the asked tier, place
+ * every square of answer `g` that holds the refused value; `null` where the
+ * deal refuses no such board. */
+function placedAlone<C extends Clues<C>>(
+  cx: DealContext<C>,
+): ((clues: C, g: ArrayLike<number>) => boolean) | null {
+  const { module, deal, p, sp, sizes, board } = cx;
+  const by = deal.refuse?.by;
+  if (by === undefined) return null;
+  if (module.refusePlaces === undefined)
+    throw new Error("deal: a refuse, and no value it places");
+  const v = module.refusePlaces(sp, sizes);
+  const caps = capsOf(module, p.diff);
+  return (clues, g) => {
+    const { marks, ok, entries } = marksOf(module, board(clues));
+    if (!ok) return false;
+    const alone = entries.filter((e) => by.includes(e.id));
+    if (runLadder(marks, ladderTechniques(marks, alone, caps, {}))) return false;
+    for (let c = 0; c < g.length; c++)
+      if (g[c] === v && marks.grid[c] !== v) return false;
+    return true;
   };
 }

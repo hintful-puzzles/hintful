@@ -38,11 +38,25 @@ function letterOf(id: string, s: SettingJson, letters: Letters): string {
   return s.letter;
 }
 
-/** `s`'s bounds as the engine holds them, a tier's by its index. */
-function choicesOut(id: string, cs: readonly ChoiceJson[], tiers: readonly string[]) {
+/** `s`'s bounds as the engine holds them, a tier's by its index, the sizes
+ * a tier's are kept on each a number setting's that gives a size. */
+function choicesOut(
+  json: DescriptionJson,
+  id: string,
+  cs: readonly ChoiceJson[],
+  tiers: readonly string[],
+) {
   return cs.map(({ bounds, ...bare }) => {
     if (bounds === undefined) return bare;
     const { tiers: byTier, ...all } = bounds;
+    for (const b of Object.values(byTier ?? {}))
+      for (const size of Object.keys(b.sizes ?? {})) {
+        const by = json.settings?.[size];
+        if (by?.kind !== "number" || by.gives !== "size")
+          throw new CompileError(
+            `settings ${id}: a tier's bounds on ${size}, which no number setting gives`,
+          );
+      }
     return {
       ...bare,
       bounds: {
@@ -149,7 +163,7 @@ function choiceOut(
     ...(size ? { gives: "size" as const } : fieldOf(id, s)),
     from: size ? (range?.min ?? 0) : 0,
     default: byDefault,
-    choices: choicesOut(id, choices, tiers),
+    choices: choicesOut(json, id, choices, tiers),
   };
 }
 
@@ -331,6 +345,11 @@ function settingOut(
         if (least <= min || least > max)
           throw new CompileError(`settings ${id}: least under ${v} is past its range`);
       }
+      const { under } = s;
+      if (under !== undefined && under !== "w" && under !== "h")
+        throw new CompileError(
+          `settings ${id}: under ${under}, not a side of the grid`,
+        );
       return {
         kind: "number",
         id,
@@ -343,6 +362,7 @@ function settingOut(
         default: byDefault,
         ...(typeof s.words === "string" ? { words: s.words } : {}),
         ...(s.least === undefined ? {} : { least: s.least }),
+        ...(under === undefined ? {} : { under }),
       };
     }
     case "choice":

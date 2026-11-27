@@ -1345,6 +1345,18 @@ the boards a seed deals move").
   canonical index is the first square" and calls `dsf_canonify` is broken
   upstream, since the smallest element has its own call, `dsf_minimal`, which
   a map precomputed after all merges answers.
+- **A board a part of the ladder finishes alone is a quality gate, stated
+  as that part.** Upstream salad.c throws away a Number Ball board whose
+  empty squares all fall with no number placed. A description states the
+  techniques that reason about the empty square alone as techniques of its
+  ladder, which the hint then names, and the deal refuses a board those
+  alone finish (`deal.refuse`, the `emptying` fixture). A one-off solver
+  mode for the gate would be a second copy of the ladder.
+- **A clue weakened before it goes is a kind hidden `after` another.** A
+  weaker clue shown beside a stronger one at its place (Salad's ball beside
+  its number) is tried straight after the stronger goes, and kept while it
+  is shown: hidden in one random order with the rest, it went first, unread
+  beside its number, and the number then went with nothing left behind.
 
 ### Recover emergent parameters from upstream's boards
 

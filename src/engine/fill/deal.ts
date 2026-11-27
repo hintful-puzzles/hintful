@@ -102,7 +102,7 @@ export function dealFill<C extends Clues<C>>(
       drawRejected("fill: the lowest tier stops short of every clue");
       continue;
     }
-    const refused = refusal(clues);
+    const refused = refusal(clues, drawn.g);
     if (refused !== null) {
       drawRejected(refused);
       continue;

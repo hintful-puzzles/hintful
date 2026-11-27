@@ -47,6 +47,7 @@ import {
   growByOf,
 } from "./fill/partitions.ts";
 import { markWhileOf, playOf } from "./fill/play.ts";
+import { refuseOf, refusePlacesOf } from "./fill/refuse.ts";
 import { checkFirst, checkSample, dealtSample, sampledValue } from "./fill/sample.ts";
 import { dealFlag, ruledKinds, type SettingOut, settingsOf } from "./fill/settings.ts";
 import { sizeSettings } from "./fill/sizes.ts";
@@ -176,6 +177,7 @@ function dealOf(
     settings,
     sample: dealtSample(json, sample),
     ...present("hide", hide),
+    ...present("refuse", refuseOf(json, d)),
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...present("tierFlag", tierFlag),
     ...present("unusedLetters", unusedLetters),
@@ -219,6 +221,7 @@ function dealOf(
     ...max,
     "};",
     ...(grow === null ? [] : growByOf(grow, env)),
+    ...refusePlacesOf(json, env),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
     ...hideRankOf(json, env, measured),
   ];

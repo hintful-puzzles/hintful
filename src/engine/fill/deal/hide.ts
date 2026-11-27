@@ -80,11 +80,48 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     }
     return out;
   };
+  /** Each kind's index among `kinds` of the kind it is hidden `after`, or
+   * -1: one this board does not hide leaves it free. */
+  const afterOf = kinds.map((k) => {
+    const a = deal.hide?.find((h) => h.kind === k)?.after;
+    return a === undefined ? -1 : kinds.indexOf(a);
+  });
+  const follows = afterOf.some((a) => a >= 0);
+  /** For clue `i` of a kind hidden `after` another, the index of that
+   * kind's clue at its place; -1 where it has none. */
+  const leaderOf = (clues: C): ((i: number) => number) => {
+    if (!follows) return () => -1;
+    const offsets = offsetsOf(clues, kinds);
+    return (i) => {
+      const k = offsets.findLastIndex((o) => o <= i);
+      const a = afterOf[k];
+      if (a < 0) return -1;
+      const at = (clues[kinds[k] as keyof C] as ClueList).at[i - offsets[k]];
+      const j = (clues[kinds[a] as keyof C] as ClueList).byAt[at];
+      return j < 0 ? -1 : offsets[a] + j;
+    };
+  };
+  /** `order` with each unit of a kind hidden `after` another moved to
+   * straight after the unit its leader is in, where one is. */
+  const following = (clues: C, order: number[][]): number[][] => {
+    if (!follows) return order;
+    const lead = leaderOf(clues);
+    const unitOf = new Map<number, number[]>();
+    for (const u of order) for (const i of u) unitOf.set(i, u);
+    const behind = new Map<number[], number[][]>();
+    const out: number[][] = [];
+    for (const u of order) {
+      const leader = unitOf.get(lead(u[0]));
+      if (leader === undefined) out.push(u);
+      else behind.set(leader, [...(behind.get(leader) ?? []), u]);
+    }
+    return out.flatMap((u) => [u, ...(behind.get(u) ?? [])]);
+  };
   /** Every unit of the kinds hidden `first` before any of the rest, each
    * side in a random order, and a kind's units ranked by its `by`
    * taking its places in that order higher first, so the kinds stay mixed
    * as they fell. A unit is of its first clue's kind and ranks as it does. */
-  const hideOrder = (clues: C, units: number[][]): number[][] => {
+  const ranked = (clues: C, units: number[][]): number[][] => {
     shuffle(units, rs);
     const firsts = (deal.hide ?? []).filter((h) => h.first === true).map((h) => h.kind);
     const { hideRank } = module;
@@ -120,6 +157,10 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     // A stable sort keeps each side's units in their order.
     return order.sort((a, b) => later(a) - later(b));
   };
+  /** The units ranked, each of a kind hidden `after` another then straight
+   * after its leader's. */
+  const hideOrder = (clues: C, units: number[][]): number[][] =>
+    following(clues, ranked(clues, units));
   /**
    * The shortest run from the end of `units` whose clues alone of the
    * hidden kinds tier `t` finishes the board with, found by halving: the
@@ -214,6 +255,7 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
       .flat()
       .sort(byIndex);
     if (finishes(keeping(clues, pruned), from)) shown = pruned;
+    const lead = leaderOf(clues);
     const atFrom = (units: number[][]): number[][] =>
       units.filter((u) => !u.some(later));
     if (thorough && !forSearch) {
@@ -236,6 +278,8 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
         ? order
         : order.slice(0, t === from ? 0 : Math.min(p.w, p.h));
       for (const unit of tries) {
+        // A clue hidden `after` another stays while that one is shown.
+        if (follows && shown.includes(lead(unit[0]))) continue;
         const without = shown.filter((j) => !unit.includes(j));
         if (finishes(keeping(clues, without), t)) shown = without;
       }

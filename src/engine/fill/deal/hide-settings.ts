@@ -8,7 +8,7 @@ import type { Symmetry } from "../../generate/symmetry.ts";
 import type { Clues } from "../board.ts";
 import type { FillDeal, FillParams } from "../game-id.ts";
 import { within } from "../params/bounds.ts";
-import { isOn, symmetricOf } from "../params/settings.ts";
+import { isOn, settingOf, symmetricOf } from "../params/settings.ts";
 
 export interface HideSettings<C> {
   /** The kinds hidden, in the deal's order. */
@@ -36,6 +36,8 @@ export function hideSettingsOf<C extends Clues<C>>(
       h !== undefined &&
       p.diff < h.below &&
       (h.with === undefined || variations.includes(h.with)) &&
+      (h.ruleset === undefined ||
+        settingOf(deal, p, h.ruleset.setting) === h.ruleset.choice) &&
       within(h.bounds, p)
     );
   });

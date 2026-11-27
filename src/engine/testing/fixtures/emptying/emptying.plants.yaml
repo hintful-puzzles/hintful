@@ -6,6 +6,16 @@ techniques:
   # The ball's square struck its first number, not the empty square.
   ball:
     conclude: "strike(c, 1)"
+  # A line's empty squares placed with one place left over.
+  emptyLine:
+    for: >-
+      L in units,
+      E = {c in cells(L) where not known(c) and k + 1 in cand(c)},
+      m = w - k - count(c in cells(L) where known(c) and value(c) = k + 1)
+      where |E| > 0 and |E| = m + 1
+  # A square with the empty square and one number left taken to be empty.
+  emptySquare:
+    for: "c in cells where not known(c) and |cand(c)| = 2 and k + 1 in cand(c)"
   # The clue's number let sit one square further in than the empties reach.
   sees:
     conclude: >-

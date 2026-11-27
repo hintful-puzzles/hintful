@@ -1987,6 +1987,24 @@
                 }
               }
             },
+            "refuse": {
+              "type": "object",
+              "required": ["by", "places"],
+              "additionalProperties": false,
+              "description": "A board drawn again where the techniques `by` alone, the rest of the ladder off but what runs on placing, place every square of the answer holding the value `places`, a formula of the sizes: one that never asks for the rest of the ladder (upstream salad.c's Number Ball boards whose empty squares all fall with no number placed).",
+              "properties": {
+                "by": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "places": {
+                  "$ref": "#/$defs/formula"
+                }
+              }
+            },
             "unpair": {
               "type": "string",
               "description": "A clue kind at a cell of which two side by side with the same value are both taken off, in reading order: the board's answer is then the one the ladder finds, not the sample. With no `hide`."
@@ -2032,10 +2050,14 @@
                             "type": "string",
                             "description": "A flag of the settings under which alone it is hidden; a board with the flag on that hides none of it is drawn again (Boats' `S`, Remove numbers)."
                           },
+                          "after": {
+                            "type": "string",
+                            "description": "Another hidden kind at the same places whose clue goes first: this kind's clue at a place is tried straight after that one's goes, and kept while that one is shown, so a clue is weakened before it is taken off (Salad's number given to the bare ball that says only its square is not empty, then the ball, as upstream salad.c's)."
+                          },
                           "whole": {
                             "type": "object",
                             "additionalProperties": false,
-                            "description": "A board on which the deal hides every clue of it: one below the tier `below`, with the variation `with` on, and within the size bounds given beside them, as `play.bounds` states them, each where given. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given; solo.c's Killer boards, which show none).",
+                            "description": "A board on which the deal hides every clue of it: one below the tier `below`, with the variation `with` on or of the ruleset `with`, and within the size bounds given beside them, as `play.bounds` states them, each where given. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given; solo.c's Killer boards, which show none; salad.c's Letters boards below 8x8, which show none).",
                             "properties": {
                               "below": {
                                 "type": "string"
@@ -2987,6 +3009,10 @@
                 "type": "integer",
                 "minimum": 0
               }
+            },
+            "under": {
+              "enum": ["w", "h"],
+              "description": "The side of the grid it must be less than (Salad's symbols, fewer than a line's squares)."
             }
           }
         },
@@ -3075,10 +3101,18 @@
                       },
                       "tiers": {
                         "type": "object",
+                        "description": "By a tier's name, the bounds a board of that tier keeps, and only one whose number sizes are `sizes` where given: a board outside them is refused as having no such tier (Salad's Normal with 2 symbols, none on a Letters board below 8x8).",
                         "additionalProperties": {
                           "type": "object",
                           "additionalProperties": false,
                           "properties": {
+                            "sizes": {
+                              "type": "object",
+                              "minProperties": 1,
+                              "additionalProperties": {
+                                "type": "integer"
+                              }
+                            },
                             "sum": {
                               "$ref": "#/$defs/sizeBound"
                             },

@@ -28,6 +28,9 @@ export interface NumberSetting extends SettingBase, SettingField {
   readonly words?: string;
   /** By a variation's id, the least it may be with the variation on. */
   readonly least?: Readonly<Record<string, number>>;
+  /** The side of the grid it is less than (Salad's symbols, fewer than a
+   * line's squares). */
+  readonly under?: "w" | "h";
 }
 
 /** The value `s` has on board `p`. */
@@ -52,6 +55,10 @@ export function numberRefusal(
   if (!full && s.gives !== "size") return null;
   const v = numberOf(s, p);
   if (v < s.min || v > s.max) return `${s.name} must be between ${s.min} and ${s.max}.`;
+  if (s.under !== undefined && v >= p[s.under])
+    return cx.deal.square === true
+      ? `${s.name} must be less than the grid size.`
+      : `${s.name} must be less than the ${s.under === "w" ? "width" : "height"}.`;
   for (const [variation, least] of Object.entries(s.least ?? {}))
     if (variationsOf(p).includes(variation) && v < least) {
       const by = cx.deal.settings.find(

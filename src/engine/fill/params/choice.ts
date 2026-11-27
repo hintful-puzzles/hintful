@@ -18,10 +18,14 @@ import {
 } from "./setting.ts";
 
 /** Bounds on a board's size a choice sets: on its sides, that it is
- * square, and a tier's own, by the tier's index. */
+ * square, and a tier's own, by the tier's index, kept only on a board
+ * whose number sizes are `sizes` where given. */
 export type ChoiceBounds = SizeBounds & {
   readonly square?: true;
-  readonly tiers?: readonly (SizeBounds & { readonly tier: number })[];
+  readonly tiers?: readonly (SizeBounds & {
+    readonly tier: number;
+    readonly sizes?: Readonly<Record<string, number>>;
+  })[];
 };
 
 /** One choice of a setting. */
@@ -113,7 +117,8 @@ function codesSegment(s: ChoiceSetting): ParamsSegment<FillParams> {
 }
 
 /** Why board `p` cannot have choice `s` as it is: a ruleset's least board,
- * or the bounds a choice of the deal's sets. */
+ * or the bounds a choice sets. A choice of the deal's is held to them in a
+ * full ID alone, which names it, and a tier's bounds hold only there. */
 export function choiceRefusal(
   s: ChoiceSetting,
   p: FillParams,
@@ -122,16 +127,14 @@ export function choiceRefusal(
 ): string | null {
   const v = choiceOf(s, p);
   const c = s.choices[v];
-  if (s.gives === "size") {
+  const ruleset = s.gives === "size";
+  if (ruleset) {
     if (c === undefined) return "There is no such game mode.";
     if (c.least !== undefined && Math.min(p.w, p.h) < c.least)
       return cx.deal.square === true
         ? `${c.name}: the grid size must be at least ${c.least}.`
         : `${c.name}: width and height must both be at least ${c.least}.`;
-    return null;
-  }
-  // Only the deal reads it, so only a full ID's is held to it.
-  if (!full) return null;
+  } else if (!full) return null;
   const what = (s.name ?? s.id).toLowerCase();
   if (c === undefined) return `There is no such ${what}.`;
   const b = c.bounds;
@@ -139,10 +142,27 @@ export function choiceRefusal(
   if (b.square === true && p.w !== p.h) return `${c.name}: the grid must be square.`;
   const past = beyond(b, p);
   if (past !== null) return `${c.name}: ${past[0].toLowerCase()}${past.slice(1)}.`;
-  for (const { tier, ...tb } of b.tiers ?? [])
-    if (tier === p.diff && beyond(tb, p) !== null)
-      return noSuchTier(`${p.w}x${p.h} puzzle with ${c.name} ${what}`, cx.tiers[tier]);
+  if (!full) return null;
+  for (const { tier, sizes, ...tb } of b.tiers ?? []) {
+    if (tier !== p.diff || beyond(tb, p) === null) continue;
+    const at = Object.entries(sizes ?? {});
+    if (at.some(([id, n]) => p.sizes?.[id] !== n)) continue;
+    return noSuchTier(
+      ruleset
+        ? `${p.w}x${p.h} ${c.name} puzzle${at.map(([id, n]) => ` with ${sizeWords(cx, id, n)}`).join("")}`
+        : `${p.w}x${p.h} puzzle with ${c.name} ${what}`,
+      cx.tiers[tier],
+    );
+  }
   return null;
+}
+
+/** What a board's name says of number size `id` at `n`: its setting's
+ * words, or its name and the number. */
+function sizeWords(cx: SettingContext, id: string, n: number): string {
+  const s = cx.deal.settings.find((x) => x.id === id);
+  if (s?.kind !== "number") return `${id} ${n}`;
+  return s.words?.replace("{n}", String(n)) ?? `${s.name} ${n}`;
 }
 
 export const choice: SettingKind<ChoiceSetting> = {

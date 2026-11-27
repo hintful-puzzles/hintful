@@ -454,3 +454,66 @@ largest value its sizes give.
 
 - **WHEN** the `4k3S` desc `dAk,p` is read
 - **THEN** its one clue is at the left of the first row
+
+### Requirement: A born deal's hide may be whole under a ruleset
+
+A hidden kind's `whole` MAY name a ruleset as it names a variation: on a
+board of that ruleset within the bounds, the deal SHALL hide every clue of
+the kind.
+
+#### Scenario: The emptying fixture's Sight boards below 5x5
+
+- **WHEN** ten `4k3S` boards, ten `5k3S` boards and ten `4k3B` boards are
+  dealt
+- **THEN** no `4k3S` board shows a given, and some board of each of the
+  others does
+
+### Requirement: A born board's number size may be bounded by a side
+
+A number setting MAY be less than a side of the grid (`under`): a board
+whose number is not SHALL be refused, saying so.
+
+#### Scenario: The emptying fixture's values
+
+- **WHEN** `4k4` and `5k4` are validated
+- **THEN** the first is refused with "Values must be less than the grid
+  size." and the second is not
+
+### Requirement: A born board's ruleset may bound a tier on some sizes
+
+A ruleset's choice MAY bound the boards of a tier, as a choice of the deal's
+does, on a board whose number sizes are those it names (`sizes`) alone; a
+full ID's board outside them SHALL be refused as having no such tier, named
+by its size, its ruleset and those sizes.
+
+#### Scenario: The emptying fixture's Normal Balls boards of two values
+
+- **WHEN** `4k2Bdn`, `5k2Bdn`, `4k3Bdn`, `4k2Sdn` and `4k2Bde` are
+  validated as full IDs
+- **THEN** only the first is refused, with "No 4x4 Balls puzzle with 2
+  values is Normal."
+
+### Requirement: A born deal may weaken a clue before it goes
+
+A hidden kind MAY be hidden `after` another at the same places: its clue at
+a place SHALL be tried straight after that kind's clue there goes, and kept
+while that clue is shown.
+
+#### Scenario: The emptying fixture's balls
+
+- **WHEN** the hide orders a `5k3B` board's clues, and hides from it
+- **THEN** every ball comes straight after the number at its square, every
+  number left shown keeps its ball, and some ball is left where its number
+  went
+
+### Requirement: A born deal may refuse a board a part of its ladder finishes
+
+The deal MAY name techniques of its ladder and a value (`refuse`): a board
+on which those techniques alone, with what runs on placing, place every
+square of the answer holding that value SHALL be drawn again.
+
+#### Scenario: The emptying fixture's empty squares
+
+- **WHEN** a `5k3B` board shows every number, or is hidden from at its tier
+- **THEN** the first is refused, as its empty squares fall with no number
+  placed, and a board hidden from is kept

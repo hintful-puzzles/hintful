@@ -10,8 +10,10 @@
 # clues at a line's end, or a ball on a square that is not empty), and the
 # empty square typed, noted and drawn; and a ruleset's values drawn, typed and
 # written as letters (Sight's) where the other's are numerals, in an ID of
-# glyphs over the slots in an order of its own, on a description that names
-# no game.
+# glyphs over the slots in an order of its own; and a deal that hides a kind
+# whole under a ruleset, weakens a number to its ball before the ball goes,
+# refuses a board its empty-square techniques finish alone, and a tier a
+# ruleset bounds on some sizes; on a description that names no game.
 game: emptying
 produces: latin
 sizes:
@@ -51,6 +53,11 @@ play:
   # square's notes, drawn as the ball a clue's is.
   numbers: { empty: { ball: ball } }
   boards: [4x4k3S, 5x5k3S, 5x5k4S, 5x5k3B]
+  boardTiers:
+    4x4k3S: [Easy, Easy]
+    5x5k3S: [Easy, Easy]
+    5x5k4S: [Easy, Easy]
+    5x5k3B: [Easy, Easy]
   hintMarks:
     ring: the square the step fills in.
     strike: the notes the step crosses out.
@@ -63,7 +70,14 @@ deal:
   given: every square, then each hidden while the board still finishes
   tier: the one tier
   sample: { latin: true }
-  hide: [given, sees, ball]
+  # A board whose empty squares all fall out with no number placed.
+  refuse: { by: [ball, emptyLine, emptySquare], places: "k + 1" }
+  hide:
+    # A Sight board below 5x5 is clued at the lines' ends alone.
+    given: { whole: { with: Sight, shorter: { max: 4 } } }
+    sees:
+    # A number given is weakened to its ball before the ball goes.
+    ball: { after: given }
 settings:
   k:
     kind: number
@@ -76,6 +90,7 @@ settings:
     max: 5
     default: 3
     words: "{n} values"
+    under: w
   mode:
     kind: choice
     gives: size
@@ -89,13 +104,14 @@ settings:
         code: B
         rule: A square with a ball holds a number.
         deals: [ball]
+        bounds: { tiers: { Normal: { sizes: { k: 2 }, shorter: { min: 5 } } } }
 # Each value as the board draws it, a letter under Sight and a numeral under
 # Balls, the empty square X: the clues at the lines' ends top, left, bottom
 # and right, then a comma, on a Sight board; then the squares.
 id:
   - { digits: sees, glyphs: true, sides: [top, left, bottom, right], after: "," }
   - { digits: given, glyphs: true, codes: { O: "ball 0" } }
-tiers: [Easy]
+tiers: [Easy, Normal]
 names:
   dup: "a placed number's row and column"
   single: "the only number left in a square"
@@ -103,6 +119,9 @@ names:
   near: "what a clue sees first"
   far: "how far in a clue's number sits"
   ball: "a ball's square"
+  emptyLine: "a line's last squares that can be empty"
+  emptySquare: "a square that can hold no number"
+  set: "numbers already accounted for"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   # Near a clue, every square up to the first not known empty holds no
@@ -146,5 +165,32 @@ techniques:
       wordings:
         - when: "true"
           look: "{outline at: The ball} means its square holds a number"
+  # A line with only as many squares left that may be empty as it has empty
+  # squares to place has one in each.
+  - id: emptyLine
+    tier: Easy
+    for: >-
+      L in units,
+      E = {c in cells(L) where not known(c) and k + 1 in cand(c)},
+      m = w - k - count(c in cells(L) where known(c) and value(c) = k + 1)
+      where |E| > 0 and |E| = m
+    conclude: "forall c in E: place(c, k + 1)"
+    says:
+      terms: { L: L }
+      marks:
+        stripes: "cells(L)"
+      wordings:
+        - look: "{stripes: this {unit}} has only as many squares left that can be empty as it has empty squares to place"
+  # A square that can hold no number is empty.
+  - id: emptySquare
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| = 1 and k + 1 in cand(c)"
+    conclude: "place(c, k + 1)"
+    says:
+      terms: { at: c }
+      marks: {}
+      wordings:
+        - look: "{outline at: This square} has nothing left but the empty square"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Normal, rung: set }
