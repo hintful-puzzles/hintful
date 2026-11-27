@@ -14,7 +14,7 @@ import { type RandomState, randomUpto } from "../../random/index.ts";
 import { dealUnreasonable } from "../../solve/answer-search.ts";
 import type { ClueList, GridSpace } from "../../solve/describe-runtime.ts";
 import { encodeAnswer } from "../answer.ts";
-import { type Clues, type FillBoard, solveBoard } from "../board.ts";
+import { type Clues, type FillBoard, perValuesOf, solveBoard } from "../board.ts";
 import { encodeDesc } from "../desc.ts";
 import type { FillDeal, FillParams, givenOf } from "../game-id.ts";
 import { type ScatterSample, sampleAnswer } from "../sample.ts";
@@ -100,7 +100,10 @@ export function climbFill<C extends Clues<C>>(
         return got;
       },
     });
-    return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(answer) };
+    return {
+      desc: encodeDesc(deal, sp, clues, perValuesOf(module, sp, clues)),
+      aux: encodeAnswer(answer),
+    };
   }
 
   const attempt = retryLimit("fill: climb");
@@ -113,7 +116,10 @@ export function climbFill<C extends Clues<C>>(
     const got = solveBoard(module, from, p.diff);
     position.set(got.values);
     if (got.verdict === "solved")
-      return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(got.values) };
+      return {
+        desc: encodeDesc(deal, sp, clues, perValuesOf(module, sp, clues)),
+        aux: encodeAnswer(got.values),
+      };
   }
 }
 

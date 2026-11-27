@@ -15,7 +15,7 @@ import {
   unusedLetter,
 } from "../game-id/params-codec.ts";
 import type { Symmetry } from "../generate/symmetry.ts";
-import type { GridSpace, Partition } from "../solve/describe-runtime.ts";
+import { type GridSpace, type Partition, perPlace } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
 import type { IdSegment } from "./desc.ts";
 import { equalSize } from "./divide.ts";
@@ -55,7 +55,11 @@ export function elementCount<C extends Clues<C>>(
 ): number {
   const u = deal.universes[kind];
   if (u === undefined) throw new Error(`deal: no clue kind ${kind}`);
-  if (u !== "parts") return sp[u].length;
+  if (u !== "parts")
+    // A kind one a value sits at an element and a value.
+    return deal.perValue?.includes(kind) === true
+      ? perPlace(sp[u].length, 0)
+      : sp[u].length;
   // A board its partition is not dealt on has no part for it (Solo's
   // cages, Killer's alone).
   return (
@@ -147,6 +151,9 @@ export interface FillDeal {
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, ClueUniverse>>;
+  /** The kinds dealt one a value at each element (`per: value`), each clue
+   * at its element and value's place (`perPlace`). */
+  readonly perValue?: readonly string[];
   /** The partition each kind at parts sits at, by kind. */
   readonly partsOf?: Readonly<Record<string, string>>;
   /** The dealt partitions, by name: Norinori's regions. */

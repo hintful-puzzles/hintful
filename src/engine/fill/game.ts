@@ -42,6 +42,7 @@ import {
   type FillBoard,
   newBoard,
   paramSpaceOf,
+  perValuesOf,
   solveBoard,
   spaceOf,
   walledParts,
@@ -317,8 +318,9 @@ export function fillGame<C extends Clues<C> & object>(
     const sp = paramSpaceOf(module, p);
     const sizes = sizesOf(p);
     const grown = module.growBy?.(sp, sizes) ?? null;
+    const values = perValuesOf(module, sp, givenOf(deal, p) as C);
     const clues = descValue(
-      decodeDesc<C>(deal, sp, module.clueMax, desc, grown, variationsOf(p)),
+      decodeDesc<C>(deal, sp, module.clueMax, desc, grown, variationsOf(p), values),
     );
     return newBoard<C>(
       module,

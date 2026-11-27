@@ -13,7 +13,7 @@ import {
   lowestSolvingCap,
   tierOf,
 } from "../contract/difficulty.ts";
-import { type Clues, spaceOf } from "../fill/board.ts";
+import { type Clues, perValuesOf, spaceOf } from "../fill/board.ts";
 import type { DealtFillModule } from "../fill/deal/context.ts";
 import { encodeDesc } from "../fill/desc.ts";
 import { type FillDeal, type FillParams, givenOf } from "../fill/game-id.ts";
@@ -88,7 +88,7 @@ export function everyAnswer(
     const clues = module.deriveClues(g, sp, {}, given);
     if (!module.isAnswer(g, sp, clues, variations)) continue;
     answers++;
-    const desc = encodeDesc(deal, sp, clues);
+    const desc = encodeDesc(deal, sp, clues, perValuesOf(module, sp, clues));
     const lowest = lowestSolvingCap(cappedSolveFor(difficulty, p, desc), tierCount);
     if (lowest !== null && lowest < tier) continue;
     unfinished++;

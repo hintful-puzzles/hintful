@@ -184,7 +184,11 @@ regions".
 
 Exemplar: [`fill/notes.ts`](../src/engine/fill/notes.ts)'s `reachOf`, a
 born board's reach: the units' peers and what its placing techniques strike
-(Seismic's `cull`), asked once a cell and value.
+(Seismic's `cull`), asked once a cell and value. A born board may have no
+unit at all (ABCD's, whose lines count rather than forbid a repeat): its
+reach is then its techniques' alone, it has no hidden single, and its
+description words the walk's steps (`WALK_STEPS`), as the `counting`
+fixture does.
 
 ## A sentence names which kinds of region
 

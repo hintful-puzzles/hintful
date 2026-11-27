@@ -900,12 +900,13 @@ describe("what the fill board reads of a description", () => {
         j.space.units = ["rows"];
       }),
     ).toContain('export const units: readonly string[] = ["rows"];');
-    // Its areas' rule dropped, no part holds a value once.
-    expect(() =>
+    // Its areas' rule dropped, no part holds a value once, and the walk,
+    // with no unit either, reads its techniques' reach alone.
+    expect(
       compileZoning((j) => {
         j.shape = j.shape.slice(1);
       }),
-    ).toThrow(/no partition a rule holds distinct/);
+    ).not.toContain('distinctParts = ["area"]');
     expect(() =>
       compileZoning((j) => {
         delete j.steps["cull"];

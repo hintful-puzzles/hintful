@@ -204,6 +204,23 @@ export interface SpaceOf {
   readonly variations: readonly string[];
 }
 
+/** The largest value a board on the space `sp` dealt `dealt` holds: the
+ * top of its domain over every cell. */
+export function topValue<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
+  let mask = 0;
+  for (const c of sp.cells) mask |= module.domainOf(sp, dealt, c);
+  return 31 - Math.clz32(mask);
+}
+
+/** The values a clue one a value is dealt for at each element on a board
+ * dealt `dealt` (the desc's `values`), 0 where no kind is one a value: the
+ * domain of a module with one is a size's, so the sizes alone give it. */
+export const perValuesOf = <C>(
+  module: FillModule<C>,
+  sp: GridSpace,
+  dealt: C,
+): number => (module.deal?.perValue === undefined ? 0 : topValue(module, sp, dealt));
+
 /** Each module's units by the variations on, kept, since a space is found
  * again by its units' identity first. */
 const unitsKept = new WeakMap<object, Map<string, readonly string[]>>();

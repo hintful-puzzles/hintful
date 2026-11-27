@@ -104,9 +104,10 @@ function distinctPartsOf(json: DescriptionJson, env: Env): string[] {
  * Holds a board of notes to the regions its walk reads: its units (rows,
  * columns, diagonals and the partition among them) and the parts of
  * partitions its rules hold distinct. Where a placed value rules itself out
- * of more than a row and a column, the description words the walk's steps
- * that say how far (`WALK_STEPS`), each over the terms the walk supplies and
- * the board's sizes.
+ * of more than a row and a column, or of none (a board with no unit, whose
+ * placements reach as far as its techniques strike, ABCD's neighbors), the
+ * description words the walk's steps that say how far (`WALK_STEPS`), each
+ * over the terms the walk supplies and the board's sizes.
  */
 function checkWalkSteps(
   json: DescriptionJson,
@@ -115,10 +116,6 @@ function checkWalkSteps(
 ): void {
   // Every variation's units, as the compiled module lists them.
   const { units } = d.json.space;
-  if (units.length === 0 && distinctParts.length === 0)
-    throw new CompileError(
-      "marks: the walk of the notes reads no unit, and no partition a rule holds distinct",
-    );
   const lines = units.every((u) => u === "rows" || u === "cols" || u === "lines");
   if (units.length > 0 && lines && distinctParts.length === 0) return;
   const sizes = Object.keys(json.sizes ?? {}).filter((s) => s !== "w" && s !== "h");

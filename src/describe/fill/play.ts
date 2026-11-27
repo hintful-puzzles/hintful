@@ -339,7 +339,7 @@ function boardDomainOf(
   return [
     "",
     "/** The values each cell may hold: the board's domain, the same at every cell. */",
-    `export function domainOf(${param("sp", "GridSpace", body)}, _cl: Dealt, _c: number): number {`,
+    `export function domainOf(${param("sp", "GridSpace", body)}, ${param("cl", "Dealt", body)}, _c: number): number {`,
     ...body,
     "}",
   ];

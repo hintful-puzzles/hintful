@@ -69,7 +69,13 @@ import { loadDesc, readBoard } from "../contract/desc-error.ts";
 import type { HintStep } from "../contract/game.ts";
 import { CELL } from "../contract/hint-words.ts";
 import type { Color, ConfigValues, Point } from "../contract/types.ts";
-import { type Clues, type FillBoard, type FillModule, spaceOf } from "../fill/board.ts";
+import {
+  type Clues,
+  type FillBoard,
+  type FillModule,
+  perValuesOf,
+  spaceOf,
+} from "../fill/board.ts";
 import { encodeDesc } from "../fill/desc.ts";
 import type { FillDeal } from "../fill/game-id.ts";
 import { type FillHintModule, pairPieces } from "../fill/hint.ts";
@@ -880,7 +886,8 @@ export function writtenBack(
   if (!read.ok) return `nothing: ${read.error}`;
   const b = read.value as FillBoard<Clues<object>>;
   const module = compiled as unknown as FillModule<Clues<object>>;
-  return encodeDesc(deal, spaceOf(module, b), b.dealt);
+  const sp = spaceOf(module, b);
+  return encodeDesc(deal, sp, b.dealt, perValuesOf(module, sp, b.dealt));
 }
 
 /** What of an ID case the game does not do: empty when it holds. What the

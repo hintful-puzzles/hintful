@@ -128,6 +128,7 @@ function dealOf(
   if (tierLetters.length !== tiers.length || new Set(tierLetters).size !== tiers.length)
     throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
   const universes = universesOf(json, d, env);
+  const perValue = kinds.filter((k) => env.clues.get(k)?.per === true);
   const partsOf = partsOfKinds(d, universes);
   const sample = sampleOf(json);
   const grow = growOf(json);
@@ -199,6 +200,7 @@ function dealOf(
       "records" in seg && flagKind(d, seg.sides) ? { ...seg, both: true } : seg,
     ),
     universes,
+    ...present("perValue", perValue.length === 0 ? null : perValue),
     ...partsOf,
     ...(partitions.length === 0 ? {} : { partitions }),
     tierLetters,

@@ -237,8 +237,6 @@ function settingOut(
   id: string,
   s: SettingJson,
 ): SettingOut {
-  if (s.gives === "size" && s.kind !== "choice")
-    throw new CompileError(`settings ${id}: a size is a choice of rulesets`);
   if (s.gives === "variation" && s.kind !== "flag")
     throw new CompileError(`settings ${id}: a variation is a flag`);
   switch (s.kind) {
@@ -252,9 +250,20 @@ function settingOut(
       const byDefault = s.default ?? min;
       if (byDefault < min || byDefault > max)
         throw new CompileError(`settings ${id}: the default is out of range`);
+      const size = s.gives === "size";
+      if (size) {
+        const range = json.sizes[id];
+        if (range === undefined || !env.sizes.names.has(id))
+          throw new CompileError(`settings ${id}: gives no size beyond the grid's`);
+        // The rules are checked sound on the size's range, so the params give
+        // no value past it.
+        if (min < range.min || (range.max !== undefined && max > range.max))
+          throw new CompileError(`settings ${id}: a range past the size's`);
+      }
       return {
         kind: "number",
         id,
+        ...(size ? { gives: "size" as const } : {}),
         letter,
         ...(s.after === undefined ? {} : { after: s.after }),
         ...fieldOf(id, s),
@@ -298,7 +307,7 @@ export function settingsOf(
     ? (blocksOf(json, env.boxes) ?? [])
     : [];
   for (const n of env.sizes.names)
-    if (!blocks.includes(n) && !out.some((s) => s.kind === "choice" && s.id === n))
+    if (!blocks.includes(n) && !sizeSettings(out).some((s) => s.id === n))
       throw new CompileError(`settings: ${n} is a size the params must give`);
   // The Custom dialog has one ruleset field.
   const rulesets = out.filter(
@@ -330,5 +339,7 @@ export const sizeSettings = (
   settings.flatMap((s) =>
     s.kind === "choice" && s.gives === "size"
       ? [{ id: s.id, from: s.from, values: s.choices.length }]
-      : [],
+      : s.kind === "number" && s.gives === "size"
+        ? [{ id: s.id, from: s.min, values: s.max - s.min + 1 }]
+        : [],
   );

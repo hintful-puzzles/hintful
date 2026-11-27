@@ -218,8 +218,6 @@ export function derivedClues(
   const growing = growOf(json)?.partition;
   const grown =
     growing === undefined ? dividesOf(json).map((x) => x.partition) : [growing];
-  /** The partitions as the clues read them off the deal's. */
-  const grownClues = `const cl = { ${grown.map((r) => `${r}: grown[${JSON.stringify(r)}]`).join(", ")} } as unknown as Dealt;`;
   // A size the grid is not measured in is the params' (a `settings` choice that gives a size).
   if (dealtPartitions(env).some((r) => !grown.includes(r)) || env.relations.size > 0)
     throw new CompileError(
@@ -245,8 +243,6 @@ export function derivedClues(
   const partKinds = [...d.clueKinds.values()].some(atParts);
   if (partKinds && Object.keys(oneIn).length > 0)
     throw new CompileError("deal oneIn: a kind dealt one a group, and kinds at parts");
-  // A part's clue reads the partition off the clues it is derived beside.
-  if (partKinds) derive.emit(grownClues);
   for (const [kind, c] of d.clueKinds) {
     // The tally is the params', as a size is.
     if (kind === tally) {
@@ -281,10 +277,17 @@ export function derivedClues(
       env.used.add("listClues");
       continue;
     }
-    if (c.value === null || sorts.per || sorts.list || universe === undefined)
+    if (
+      c.value === null ||
+      sorts.list ||
+      universe === undefined ||
+      (sorts.per && universe === null)
+    )
       throw new CompileError(
-        `clue ${kind}: a sampled deal derives a clue of one value at a cell, a line, a slot, an edge, a corner or a part`,
+        `clue ${kind}: a sampled deal derives a clue of one value at a cell, a line, a slot, an edge, a corner or a part, or one a value at any but a part`,
       );
+    // A clue one a value is read at its element for the value `per`.
+    const per = sorts.per ? "per" : null;
     const readsClues = { yes: false };
     const scratch: string[] = [];
     const henv = answerEnv(env, readsClues, scratch);
@@ -294,6 +297,9 @@ export function derivedClues(
       new Map<string, Val>([
         ["at", { code: "at", sort: sorts.at }],
         ["v", { code: "v", sort: sorts.v }],
+        ...(per === null
+          ? []
+          : [[per, { code: per, sort: { k: "num" } }] as [string, Val]]),
       ]),
       henv,
       out,
@@ -320,12 +326,15 @@ export function derivedClues(
         param("sp", "GridSpace", body),
         ...(group === undefined && !parts ? [] : [param("cl", "Dealt", body)]),
         param("at", "number", body),
+        ...(per === null ? [] : [param(per, "number", body)]),
         param("v", "number", body),
       ].join(", ")}): boolean {`,
       ...body,
       "}",
     );
     if (group !== undefined) {
+      if (per !== null)
+        throw new CompileError(`deal oneIn: ${kind} is a clue one a value`);
       onceOf(kind, c, group, sorts, henv, measured, once);
       continue;
     }
@@ -350,6 +359,9 @@ export function derivedClues(
         of: { k: "name", name: parts ? c.at : (universe as string) },
         where: null,
       },
+      ...(per === null
+        ? []
+        : [{ name: per, kind: "in", of: measured(d.domain), where: null } as Binder]),
       solved === null
         ? { name: "v", kind: "in", of: value, where: null }
         : {
@@ -365,23 +377,27 @@ export function derivedClues(
       { ...henv, readsClues: { yes: false } },
       derive,
       (sc) => {
-        const a = (sc.get("at") as Val).code;
+        const el = (sc.get("at") as Val).code;
+        const d = per === null ? null : (sc.get(per) as Val).code;
+        // A clue one a value sits at its element and value's place.
+        const a = d === null ? el : `perPlace(${el}, ${d})`;
         const v = (sc.get("v") as Val).code;
         // No clue of another kind sits outside a hexagon.
         const within =
           outside !== undefined && universe === "cells"
-            ? `inHexagon(sp.w, sp.h, ${a} % sp.w, Math.floor(${a} / sp.w)) && `
+            ? `inHexagon(sp.w, sp.h, ${el} % sp.w, Math.floor(${el} / sp.w)) && `
             : "";
         // A value only an ID writes is never derived.
         const withheld = (neverValues.get(kind) ?? []).map((n) => ` && ${v} !== ${n}`);
         derive.emit(
-          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts ? "cl, " : ""}${a}, ${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
+          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts ? "cl, " : ""}${el}, ${d === null ? "" : `${d}, `}${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
         );
       },
     );
     if (gated) derive.close();
+    if (per !== null) env.used.add("perPlace");
     dealt.push(
-      `${kind}: clueList(${at}, ${vs}, ${parts ? `cl.${c.at}${gated ? "?" : ""}.parts.length${gated ? " ?? 0" : ""}` : `sp.${universe}.length`})`,
+      `${kind}: clueList(${at}, ${vs}, ${parts ? `cl.${c.at}${gated ? "?" : ""}.parts.length${gated ? " ?? 0" : ""}` : per === null ? `sp.${universe}.length` : `perPlace(sp.${universe}.length, 0)`})`,
     );
   }
   if (dealt.length > 0) env.used.add("clueList");
@@ -390,11 +406,17 @@ export function derivedClues(
   const sizes = [...env.sizes.read].sort();
   for (const n of sizes) dealt.push(`${n}: sizes.${n}`);
   const onceKinds = Object.keys(oneIn);
-  // A cell's clue may read the partition too, as a given's value reads the
-  // size of its cell's area (Seismic's).
+  // A clue reads the partitions off the deal's, a part's its cells and a
+  // cell's the size of its area (Seismic's given), and the sizes off the
+  // params (ABCD's letters, which a clue a value is one of).
   const derived = derive.text();
-  if (grown.length > 0 && !partKinds && derived.some((l) => /\bcl\./.test(l)))
-    derived.unshift(`  ${grownClues}`);
+  if (derived.some((l) => /\bcl\./.test(l)))
+    derived.unshift(
+      `  const cl = { ${[
+        ...grown.map((r) => `${r}: grown[${JSON.stringify(r)}]`),
+        ...sizes.map((n) => `${n}: sizes.${n}`),
+      ].join(", ")} } as unknown as Dealt;`,
+    );
   const body =
     onceKinds.length === 0
       ? [...derived, `  return { ${dealt.join(", ")} };`]

@@ -331,7 +331,15 @@ export function checkSegments(
   env: Env,
   json: DescriptionJson,
 ): void {
-  for (const [i, seg] of id.entries()) readOf(seg).check(seg, { id, i, d, env, json });
+  for (const [i, seg] of id.entries()) {
+    readOf(seg).check(seg, { id, i, d, env, json });
+    // Only `numbers` writes a clue one a value, each element's values in
+    // turn.
+    if (!("numbers" in seg))
+      for (const kind of readOf(seg).names(seg))
+        if (env.clues.get(kind)?.per === true)
+          throw new CompileError(`id: ${kind} is one a value, which numbers writes`);
+  }
 }
 
 /** The grid's hexagon, its outside kind held to be a cell's marker. */

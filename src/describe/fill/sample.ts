@@ -13,7 +13,7 @@ import {
   type SampleJson,
   sampleOf,
 } from "../description.ts";
-import type { SettingOut } from "./settings.ts";
+import { type SettingOut, sizeSettings } from "./settings.ts";
 
 /** The value a sample lays, 0 where it lays no one value: it builds the
  * answer, draws a Latin square, or searches one. */
@@ -84,7 +84,7 @@ export function checkSample(
     const { count } = sample.lines;
     if (
       typeof count === "string" &&
-      !settings.some((s) => s.id === count && s.kind === "choice" && s.gives === "size")
+      !sizeSettings(settings).some((s) => s.id === count)
     )
       throw new CompileError(`deal sample: ${count} is no size the params give`);
   }

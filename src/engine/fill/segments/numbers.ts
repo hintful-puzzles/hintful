@@ -1,16 +1,17 @@
 /** The `numbers` segment: a kind's values, the first after `before` and the
  * rest after commas (or `between`), in the space's order or the columns
- * first. */
+ * first; a kind one a value, each element's values in turn. */
 
 import { isDigit } from "../../game-id/decimal.ts";
 import { clueList } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
 import {
   type Decoding,
-  elements,
+  elementOf,
   maxOf,
+  placeCount,
+  placesOf,
   type SegmentKind,
-  universeOf,
 } from "./segment.ts";
 
 export type NumbersSegment = {
@@ -27,10 +28,10 @@ export type NumbersSegment = {
 };
 
 export const numbers: SegmentKind<NumbersSegment> = {
-  encode(seg, { deal, sp, listOf }) {
+  encode(seg, { deal, sp, listOf, values }) {
     const list = listOf(seg.numbers);
     let out = "";
-    elements(sp, universeOf(deal, seg.numbers), seg.order).forEach((e, i) => {
+    placesOf(deal, sp, seg.numbers, values, seg.order).forEach((e, i) => {
       if (i === 0) out += seg.before ?? "";
       else if (seg.closed !== true) out += seg.between ?? ",";
       const v = list.valueAt[e];
@@ -41,13 +42,12 @@ export const numbers: SegmentKind<NumbersSegment> = {
   },
   decode<C extends Clues<C>>(
     seg: NumbersSegment,
-    { r, deal, sp, clueMax, out }: Decoding<C>,
+    { r, deal, sp, clueMax, out, values }: Decoding<C>,
   ) {
     const kind = seg.numbers as keyof C;
-    const universe = universeOf(deal, seg.numbers);
     const at: number[] = [];
     const v: number[] = [];
-    elements(sp, universe, seg.order).forEach((e, i) => {
+    placesOf(deal, sp, seg.numbers, values, seg.order).forEach((e, i) => {
       if (i === 0) {
         if (seg.before !== undefined) r.expect(seg.before);
       } else if (seg.closed !== true) r.expect(seg.between ?? ",");
@@ -58,7 +58,12 @@ export const numbers: SegmentKind<NumbersSegment> = {
       }
       if (seg.hidden === undefined && !r.peekIs(isDigit)) return;
       at.push(e);
-      v.push(r.int(deal.least?.[seg.numbers] ?? 0, maxOf(clueMax, kind, sp, e)));
+      v.push(
+        r.int(
+          deal.least?.[seg.numbers] ?? 0,
+          maxOf(clueMax, kind, sp, elementOf(deal, seg.numbers, e)),
+        ),
+      );
       if (seg.closed === true) r.expect(",");
     });
     // The elements in the space's order, as a list is held.
@@ -66,7 +71,7 @@ export const numbers: SegmentKind<NumbersSegment> = {
     out[kind] = clueList(
       byAt.map(([e]) => e),
       byAt.map(([, x]) => x),
-      sp[universe].length,
+      placeCount(deal, sp, seg.numbers),
     );
   },
 };

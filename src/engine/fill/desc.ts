@@ -70,17 +70,20 @@ function kindOf(seg: IdSegment): SegmentKind<IdSegment> {
   return SEGMENT_KINDS[key] as SegmentKind<IdSegment>;
 }
 
-/** The desc of the clues `dealt`, by the deal's `id`. */
+/** The desc of the clues `dealt`, by the deal's `id`; `values`, the top of
+ * the board's domain, where a kind is one a value. */
 export function encodeDesc<C extends Clues<C>>(
   deal: FillDeal,
   sp: GridSpace,
   dealt: C,
+  values = 0,
 ): string {
   const cx = {
     deal,
     sp,
     dealt,
     listOf: (kind: string): ClueList => dealt[kind as keyof C] as ClueList,
+    values,
   };
   return deal.id.map((seg) => kindOf(seg).encode(seg, cx)).join("");
 }
@@ -99,10 +102,12 @@ export function decodeDesc<C extends Clues<C>>(
   /** The variations the board has on, which say whether it deals a
    * partition a variation deals. */
   variations: readonly string[] = [],
+  /** The top of the board's domain, where a kind is one a value. */
+  values = 0,
 ): DescParse<C> {
   return readDesc(desc, (r) => {
     const out: Partial<Record<keyof C, ClueList | ListClues | Partition>> = {};
-    const cx = { r, deal, sp, clueMax, out, grown, variations };
+    const cx = { r, deal, sp, clueMax, out, grown, variations, values };
     for (const seg of deal.id) kindOf(seg).decode(seg, cx);
     r.end();
     // The compiler holds `id` to naming every kind once.

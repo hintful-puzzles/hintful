@@ -8,7 +8,7 @@ import { drawRejected } from "../../contract/deal-census.ts";
 import { retryLimit } from "../../contract/retry-limit.ts";
 import { dealUnreasonable } from "../../solve/answer-search.ts";
 import { encodeAnswer } from "../answer.ts";
-import type { Clues } from "../board.ts";
+import { type Clues, perValuesOf } from "../board.ts";
 import { encodeDesc } from "../desc.ts";
 import { searchAgainst } from "../search.ts";
 import type { DealContext } from "./context.ts";
@@ -54,7 +54,10 @@ export function dealEveryClue<C extends Clues<C>>(
     deduced: (b) => finishes(b.clues, top),
     answer: (b, budget) => searchAgainst(module, board(b.clues), b.g, budget),
   });
-  return { desc: encodeDesc(cx.deal, cx.sp, got.clues), aux: encodeAnswer(got.g) };
+  return {
+    desc: encodeDesc(cx.deal, cx.sp, got.clues, perValuesOf(module, cx.sp, got.clues)),
+    aux: encodeAnswer(got.g),
+  };
 }
 
 /** A board of the hidden kinds' clues, stripped while the search proves it
@@ -130,5 +133,9 @@ export function dealStripped<C extends Clues<C>>(
     deduced: (b) => finishes(held(b), top),
     answer: (b, budget) => searchAgainst(module, board(held(b)), answer, budget),
   });
-  return { desc: encodeDesc(deal, cx.sp, held(got)), aux: encodeAnswer(answer) };
+  const clues = held(got);
+  return {
+    desc: encodeDesc(deal, cx.sp, clues, perValuesOf(cx.module, cx.sp, clues)),
+    aux: encodeAnswer(answer),
+  };
 }

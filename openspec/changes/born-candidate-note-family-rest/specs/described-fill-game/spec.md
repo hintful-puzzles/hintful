@@ -40,6 +40,14 @@ any other formula SHALL be refused.
   walk's words for that reach are the description's, chosen by the
   modifier as a flag by its name
 
+#### Scenario: A board with no unit
+
+- **WHEN** a born board with notes has no unit and no partition a rule
+  holds distinct, and its description words the walk's steps
+- **THEN** the walk strikes a placed value from the notes its placing
+  techniques strike it from, finds no hidden single, and finishes a board
+  the ladder finishes
+
 #### Scenario: A partition by another formula is refused
 
 - **WHEN** a description states a partition by a formula other than
@@ -237,3 +245,32 @@ clue at a part with no sign in `play.signs` SHALL be drawn as its number.
 - **WHEN** a board is dealt with Killer on, whose `hideWhole` names it
 - **THEN** it shows no given number, its cages' totals drawn as plain
   numbers, and a board past Killer's bounds is refused with Killer's name
+
+### Requirement: A born game's size may be a number
+
+A size beyond the grid's MAY be a number setting (`kind: number, gives:
+size`), which SHALL be written in a brief ID as its letter and the number,
+read as its default where absent, and refused outside its range.
+
+#### Scenario: The number of values
+
+- **WHEN** the `counting` fixture's params `4x5k4`, `4x5` and `4x4k5` are
+  read
+- **THEN** the first writes back as it was, the second has 3 values, and
+  the third is refused, saying the range
+
+### Requirement: A born game may deal a clue one a value
+
+A born game whose deal samples an answer SHALL derive a clue kind `per:
+value` at each element for each value of the answer's domain, and its
+`numbers` segment SHALL write and read each element's values in turn; no
+other segment writes one. An answer built by the ladder with nothing laid
+first SHALL be built on no clue.
+
+#### Scenario: A line's count of each value
+
+- **WHEN** the `counting` fixture deals a board of `k` values, and its desc
+  is read back
+- **THEN** each row and column holds one clue for each value, the count of
+  it the answer holds, written rows then columns, each line's values from 1
+  in turn; and a desc with a clue too many or too few is refused

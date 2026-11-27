@@ -90,8 +90,8 @@ export const sizeOf =
  * `menu`, what the preset menu offers beside its grid of `boards`: the
  * default board where it is not the first, the tiers a board stops at, and
  * the variant boards, a tier by its index. Nothing where the description
- * states none. A board not in `boards`, a tier not in `tiers` or a variation
- * the description lacks is refused.
+ * states none. A default or a board stopping at tiers not in `boards`, a
+ * tier not in `tiers` or a variation the description lacks is refused.
  */
 export function menuOf(
   json: DescriptionJson,
@@ -148,7 +148,9 @@ export function menuOf(
       for (const name of variations)
         if (json.variations?.[name] === undefined)
           throw new CompileError(`play variants: ${name} is no variation or flag`);
-      const sized = board(v.board, "variants");
+      // A variant may need sizes no board of the grid has (ABCD's rule
+      // against diagonal touching, five letters or more).
+      const sized = sizeOf(json)(v.board);
       return {
         ...sized,
         ...(flags.length === 0

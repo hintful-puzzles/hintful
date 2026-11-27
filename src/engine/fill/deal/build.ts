@@ -67,10 +67,23 @@ export function buildAnswer<C extends Clues<C>>(
   // A Latin kind is a Latin square's on the cells built round, so the ladder
   // reads numbers none of which repeats (upstream singles.c's new_game_desc).
   const numbered = withLatin(derived, deal, sp, start, rs);
+  // With nothing laid first, the build reads no clue the answer derives: a
+  // blank board's are no answer's (a line's count of a letter is 0 on it,
+  // ABCD's). A kind dealt apart from the answer is read: a Latin kind's
+  // numbers (Singles'), and a hexagon's corners (Bricks').
+  const apart = [deal.latin?.kind, deal.hexagon?.outside];
   const blank =
-    first === undefined || deal.hide === undefined
-      ? numbered
-      : keepingAll(numbered, deal, hiddenKinds(deal, p), sp, []);
+    first === undefined
+      ? keepingAll(
+          numbered,
+          deal,
+          Object.keys(deal.universes).filter((k) => !apart.includes(k)),
+          sp,
+          [],
+        )
+      : deal.hide === undefined
+        ? numbered
+        : keepingAll(numbered, deal, hiddenKinds(deal, p), sp, []);
   const board = newBoard(module, sp.w, sp.h, blank, variationsOf(p));
   // One set of marks the whole build, the ladder run again after each
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.

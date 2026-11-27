@@ -12,6 +12,8 @@ import {
   type ListClues,
   type Partition,
   partition,
+  perElement,
+  perPlace,
 } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
 import type { ClueMax, FillDeal, Universe } from "../game-id.ts";
@@ -24,6 +26,9 @@ export interface Encoding<C> {
   readonly dealt: C;
   /** The clue list of kind `kind`. */
   listOf(kind: string): ClueList;
+  /** The values an element holds a clue for, from 1, of a kind one a value
+   * (`FillDeal.perValue`): the top of the board's domain. */
+  readonly values: number;
 }
 
 /** What a segment reads into: `out`, the clues read so far, which a later
@@ -39,6 +44,37 @@ export interface Decoding<C> {
   readonly grown: GrowSizes | null;
   /** The variations the board has on. */
   readonly variations: readonly string[];
+  /** As {@link Encoding.values}. */
+  readonly values: number;
+}
+
+/** The places kind `kind` is written at, in the order a segment writes them
+ * (`elements`), each element's values in turn where the kind is one a
+ * value. */
+export function placesOf(
+  deal: FillDeal,
+  sp: GridSpace,
+  kind: string,
+  values: number,
+  order?: "columns",
+): readonly number[] {
+  const els = elements(sp, universeOf(deal, kind), order);
+  if (deal.perValue?.includes(kind) !== true) return els;
+  if (values < 1) throw new Error(`id: ${kind} is one a value, and the board has none`);
+  return els.flatMap((e) =>
+    Array.from({ length: values }, (_, d) => perPlace(e, d + 1)),
+  );
+}
+
+/** The element a place of kind `kind` is at ({@link placesOf}). */
+export const elementOf = (deal: FillDeal, kind: string, place: number): number =>
+  deal.perValue?.includes(kind) === true ? perElement(place) : place;
+
+/** How many places kind `kind` has on the space `sp`: its elements, or an
+ * element's places a value where it is one a value. */
+export function placeCount(deal: FillDeal, sp: GridSpace, kind: string): number {
+  const n = sp[universeOf(deal, kind)].length;
+  return deal.perValue?.includes(kind) === true ? perPlace(n, 0) : n;
 }
 
 /** A kind of desc segment, `S` its entry in the description's `id:`. */

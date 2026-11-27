@@ -17,7 +17,7 @@ import { retryLimit } from "../contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import type { ClueList } from "../solve/describe-runtime.ts";
 import { encodeAnswer } from "./answer.ts";
-import { type Clues, spaceOf } from "./board.ts";
+import { type Clues, perValuesOf, spaceOf } from "./board.ts";
 import { refusalOf } from "./deal/accept.ts";
 import { climbBuild } from "./deal/build.ts";
 import { climbFill } from "./deal/climb.ts";
@@ -107,6 +107,9 @@ export function dealFill<C extends Clues<C>>(
       drawRejected(refused);
       continue;
     }
-    return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(drawn.g) };
+    return {
+      desc: encodeDesc(deal, sp, clues, perValuesOf(module, sp, clues)),
+      aux: encodeAnswer(drawn.g),
+    };
   }
 }

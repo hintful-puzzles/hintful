@@ -1494,7 +1494,7 @@
             },
             "variants": {
               "type": "array",
-              "description": "The boards after the menu's grid, one for each modifier: a size of `boards`, `with` the variations on or a deal setting turned on, each by its name (Keen's multiplication-only), and its tier.",
+              "description": "The boards after the menu's grid, one for each modifier: a size, as `boards` writes one, `with` the variations on or a deal setting turned on, each by its name (Keen's multiplication-only), and its tier.",
               "items": {
                 "type": "object",
                 "required": ["board", "with", "tier"],
@@ -2771,7 +2771,7 @@
     },
     "setting": {
       "type": "object",
-      "description": "A setting the params give (`engine/fill/params/`), by its `kind`. It `gives` a variation of its name (a flag) or a size of its name (a choice, each a ruleset), written in a brief ID; without, only the deal reads it, by its name, and only a full ID writes it. Its Custom field is `kw`, `name` and `doc`, and `words` what a board's name says of it where it is not the usual.",
+      "description": "A setting the params give (`engine/fill/params/`), by its `kind`. It `gives` a variation of its name (a flag) or a size of its name (a number, or a choice, each choice a ruleset), written in a brief ID; without, only the deal reads it, by its name, and only a full ID writes it. Its Custom field is `kw`, `name` and `doc`, and `words` what a board's name says of it where it is not the usual.",
       "required": ["kind"],
       "oneOf": [
         {
@@ -2872,6 +2872,10 @@
           "properties": {
             "kind": {
               "const": "number"
+            },
+            "gives": {
+              "const": "size",
+              "description": "The size of its name, which the rules read (ABCD's letters): its `min` and `max` are the size's."
             },
             "after": {
               "const": "tier",

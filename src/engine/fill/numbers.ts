@@ -49,19 +49,12 @@ import {
   type LadderedFillModule,
   paramSpaceOf,
   spaceOf,
+  topValue,
 } from "./board.ts";
 import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
 import type { FillParams } from "./game-id.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
-
-/** The largest value a board of numbers on the space `sp` dealt `dealt`
- * holds: the top of its domain over every cell. */
-export function topValue<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
-  let mask = 0;
-  for (const c of sp.cells) mask |= module.domainOf(sp, dealt, c);
-  return 31 - Math.clz32(mask);
-}
 
 /**
  * The keypad's last value on a board of `size`, which the params alone

@@ -1,0 +1,12 @@
+ok  counting   placed                         current: recorded src/engine/testing/fixtures/counting/counting.description.yaml#placed a94d1f83d53e442b
+ok  counting   single                         current: recorded src/engine/testing/fixtures/counting/counting.description.yaml#single 8919b8a4191d34e8
+ok  counting k=2 full                           3  sound    (want sound   )     6 queries    0.0s
+ok  counting k=2 full (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  counting k=3 full                           3  sound    (want sound   )     6 queries    0.1s
+ok  counting k=4 full                           3  sound    (want sound   )     6 queries    0.1s
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#full: recorded sound, proved whole on all 3 boards
+ok  counting k=2 room                           3  sound    (want sound   )     6 queries    0.1s
+ok  counting k=2 room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  counting k=3 room                           3  sound    (want sound   )     6 queries    0.1s
+ok  counting k=4 room                           3  sound    (want sound   )     6 queries    0.2s
+ok  src/engine/testing/fixtures/counting/counting.description.yaml#room: recorded sound, proved whole on all 3 boards
