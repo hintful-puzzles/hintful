@@ -3,7 +3,8 @@
  * The board keeps one flag a clue of each such kind, by its index in the
  * kind's list, so the mark is the same wherever the clue sits; where a press
  * finds it is the clue's place's (a gap, for a clue at an edge; its drawn
- * text, for a clue at a part; its margin square, for a clue at a slot).
+ * text, for a clue at a part; its margin square, for a clue at a slot or
+ * one a value at a line).
  */
 
 import type { Point, Rect } from "../contract/types.ts";
@@ -17,11 +18,12 @@ import {
   stripModifiers,
 } from "../input/pointer.ts";
 import { dragMarkVerbs, type TargetVerbs } from "../input/target-verb.ts";
-import type { GridSpace } from "../solve/describe-runtime.ts";
+import { type GridSpace, perPlace } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import { slotAt, slotClueAt } from "./slots.ts";
+import { marginClueAt, marginPlaceAt, marginValuesOf } from "./value-margin.ts";
 
 /** The clue of the part holding cell `c` on a board drawn at tile size
  * `ts`, with the box it is drawn in (`FillRender.partClueBox`). */
@@ -90,6 +92,15 @@ export interface DoneInput<C, D> {
   keyed(board: FillBoard<C>, ui: FillUi, rawButton: number): DoneMove | null;
 }
 
+/** Where a board's clues sit off its cells and edges, which a press there
+ * marks done: at parts, found by the box their text is drawn in; at slots;
+ * and at lines one a value, in the margin before their start. */
+export interface ClueSites<C> {
+  readonly partClue?: PartClueAt<C> | null;
+  readonly slotKinds?: readonly (keyof C)[];
+  readonly marginKinds?: readonly (keyof C)[];
+}
+
 /**
  * The done marks of a board drawn with `gap` pixels between its cells from
  * `origin`, where its clues sit at edges: a press in a gap marks the clue in
@@ -98,15 +109,17 @@ export interface DoneInput<C, D> {
  * (`partClue`), a press on a clue's text marks it, and a drag on marks
  * those that looked the same alike. Where they sit at slots (`slotKinds`), a
  * press on one in the margin marks it, and Shift or Ctrl with an arrow marks
- * the one at that end of the cursor's line.
+ * the one at that end of the cursor's line. Where they sit at lines one a
+ * value (`marginKinds`), a press on one in the margin marks it, and Shift or
+ * Ctrl with Left or Up marks the cursor's row's or column's clue for the
+ * value the cursor's cell holds.
  */
 export function doneInput<C extends Clues<C>, D extends { readonly tileSize: number }>(
   module: FillModule<C>,
   play: FillPlay,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number,
-  partClue: PartClueAt<C> | null = null,
-  slotKinds: readonly (keyof C)[] = [],
+  { partClue = null, slotKinds = [], marginKinds = [] }: ClueSites<C> = {},
 ): DoneInput<C, D> | null {
   const nouns = Object.values(play.done ?? {});
   if (nouns.length === 0) return null;
@@ -119,13 +132,25 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
     const clue = slotClueAt(slotKinds, b, s);
     return clue === null ? null : marked(clue.kind, clue.k);
   };
-  /** The clue in the margin square round `p`, beyond a line's end. */
+  /** The clue at `place` in the margin of clues one a value, where it is one
+   * marked done. */
+  const atMargin = (b: FillBoard<C>, place: number): DoneMove | null => {
+    const clue = marginClueAt(marginKinds, b, place);
+    return clue === null ? null : marked(clue.kind, clue.k);
+  };
+  /** The clue in the margin square round `p`: beyond a line's end, or
+   * before its start. */
   const slotClueOf = (b: FillBoard<C>, ts: number, p: Point): DoneMove | null => {
-    if (slotKinds.length === 0) return null;
+    if (slotKinds.length === 0 && marginKinds.length === 0) return null;
     const o = origin(ts, b);
     const x = Math.floor((p.x - o) / pitch(ts));
     const y = Math.floor((p.y - o) / pitch(ts));
-    return atSlot(b, slotAt(b.w, b.h, x, y));
+    return (
+      atSlot(b, slotAt(b.w, b.h, x, y)) ??
+      (marginKinds.length === 0
+        ? null
+        : atMargin(b, marginPlaceAt(b.w, b.h, marginValuesOf(module, b), x, y)))
+    );
   };
   /** The clue of a part drawn round `p`, a few pixels' slack about its
    * text: a press elsewhere in its square selects the square. */
@@ -212,6 +237,13 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
         const ex = dx === 0 ? x : dx < 0 ? -1 : b.w;
         const ey = dy === 0 ? y : dy < 0 ? -1 : b.h;
         return atSlot(b, slotAt(b.w, b.h, ex, ey));
+      }
+      // On a board of clues one a value before the lines' start, the clue
+      // for the cursor's value of its row (Left) or column (Up).
+      if (marginKinds.length > 0) {
+        const v = b.values[y * b.w + x];
+        if (v === 0 || step[1] > 0 || step[2] > 0) return null;
+        return atMargin(b, perPlace(step[1] < 0 ? y : b.h + x, v));
       }
       const [nx, ny] = [x + step[1], y + step[2]];
       if (nx < 0 || ny < 0 || nx >= b.w || ny >= b.h) return null;

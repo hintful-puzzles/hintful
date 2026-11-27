@@ -5,7 +5,7 @@
 techniques:
   # A line one short of its number read as holding them all.
   full:
-    for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) + 1 >= v"
+    for: "q in clues(count), L = at(q), d = per(q), v = v(q) where holds(L, d) + 1 >= v"
     conclude: "forall c in cells(L) where not known(c): strike(c, d)"
   # A line with one square more than it needs read as having just enough.
   room:

@@ -24,6 +24,9 @@ export interface FillShape {
   readonly lineLabels: boolean;
   /** The lines have lists before their start. */
   readonly listed: boolean;
+  /** The lines have clues one a value before their start, a tile a value
+   * (`value-margin.ts`). */
+  readonly margined: boolean;
   /** The lines have clues past their end. */
   readonly lineClued: boolean;
   /** The board has clues at slots. */
@@ -38,14 +41,24 @@ export type FillMetrics = ReturnType<typeof fillMetrics>;
 
 /** The geometry of a board of shape `shape` that no frame changes. */
 export function fillMetrics(shape: FillShape) {
-  const { notes, covers, lineLabels, listed, lineClued, slotted, gapped, hexagon } =
-    shape;
+  const {
+    notes,
+    covers,
+    lineLabels,
+    listed,
+    margined,
+    lineClued,
+    slotted,
+    gapped,
+    hexagon,
+  } = shape;
   /** The tiles before a board's lines its lists take, upstream pattern.c's
    * `TLBORDER`: a line of `d` holds at most about `d / 2` runs, which stack
-   * a fifth as deep with room to spare. One depth serves both axes, the
+   * a fifth as deep with room to spare. Its clues one a value take a tile
+   * each of the `values` its margin heads. One depth serves both axes, the
    * longer side's, so the board has one origin. */
-  const depthOf = (b: { w: number; h: number }): number =>
-    !listed ? 0 : Math.floor(Math.max(b.w, b.h) / 5) + 2;
+  const depthOf = (b: { w: number; h: number }, values: number): number =>
+    listed ? Math.floor(Math.max(b.w, b.h) / 5) + 2 : margined ? values : 0;
   // Where a press off the grid shows the covered numbers, the board keeps
   // half a tile round it to press (upstream singles.c's BORDER); where it
   // keeps notes, the pencil-mode indicator's room at its top right.
@@ -62,7 +75,7 @@ export function fillMetrics(shape: FillShape) {
     lineLabels
       ? ts
       : d > 0
-        ? d * ts + Math.floor(ts / 4)
+        ? d * ts + (margined ? rim(ts) : Math.floor(ts / 4))
         : slotted
           ? slotMargin(ts)
           : rim(ts);
@@ -87,14 +100,16 @@ export function fillMetrics(shape: FillShape) {
   /** The tile size a board is drawn at: even on a hexagon, so its rows shift
    * by exactly half a tile. */
   const tileOf = (ts: number): number => (hexagon ? ts & ~1 : ts);
-  /** The canvas a board `w` by `h` takes at tile size `ts`, with the tally of
-   * `counts` beneath it where it has one, its pieces as long as they are. */
+  /** The canvas a board `w` by `h` whose margin heads `values` values takes
+   * at tile size `ts`, with the tally of `counts` beneath it where it has
+   * one, its pieces as long as they are. */
   const canvasOf = (
     { w, h }: { readonly w: number; readonly h: number },
+    values: number,
     counts: readonly number[] | null,
     ts: number,
   ): Size => {
-    const from = startAt(ts, depthOf({ w, h }));
+    const from = startAt(ts, depthOf({ w, h }, values));
     // The cells, and the gaps between them.
     const across = (n: number): number => pitch(ts) * n - gapOf(ts);
     return {

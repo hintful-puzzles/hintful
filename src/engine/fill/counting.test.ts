@@ -3,21 +3,37 @@
  * and column for each of the values 1 to `k`, `k` a size the params give
  * as a number; the board's answer built on no clue; and the walk of notes
  * on a board with no unit, whose placed number reaches only as far as its
- * technique strikes.
+ * technique strikes; the clues drawn in a margin before the lines, a tile
+ * a value, marked done, printed, and outlined where a step reads one.
  */
 
 import { describe, expect, it } from "vitest";
 import * as counting from "../../generated/engine/testing/fixtures/counting/counting.compiled.ts";
+import { clueDoneColor } from "../color/palette.ts";
+import { COL_ERROR, COL_HINT_OUTLINE } from "../color/roles.ts";
 import { validateDesc } from "../contract/desc-error.ts";
-import type { HintStep } from "../contract/game.ts";
+import { type HintStep, UI_UPDATE } from "../contract/game.ts";
+import { CELL, stepMarks } from "../contract/hint-words.ts";
+import type { Color, Point } from "../contract/types.ts";
 import type { CandidateReading } from "../hint/candidate-hint.ts";
+import {
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_UP,
+  LEFT_BUTTON,
+  MOD_CTRL,
+  MOD_SHFT,
+} from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
-import { perPlace } from "../solve/describe-runtime.ts";
-import { renderScenario } from "../testing/render-scenario.ts";
+import { NO_FLASH } from "../render/win-wave.ts";
+import { perElement, perPlace, perValue } from "../solve/describe-runtime.ts";
+import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import type { FillHint } from "./hint.ts";
 import type { FillMove } from "./notes.ts";
+import { marginPlaceAt, marginPoint } from "./value-margin.ts";
 
 const game = fillGame("counting", counting);
 type Board = FillBoard<counting.Dealt>;
@@ -145,10 +161,10 @@ describe("values as letters", () => {
       ],
     });
     const texts = recording.ops.flatMap((o) => (o.op === "text" ? [o.text] : []));
-    // The placed letter and the two notes; the clues beside the lines stay
-    // numbers.
+    // The placed letter and the two notes, beside the margin's headings; the
+    // clues beside the lines stay numbers.
     expect(texts.filter((t) => /^[A-Z]$/.test(t)).sort()).toEqual(
-      [letter, "A", "C"].sort(),
+      [letter, "A", "C", "A", "A", "B", "B", "C"].sort(),
     );
     expect(texts.filter((t) => /^[0-9]$/.test(t)).length).toBeGreaterThan(0);
     // The hint names a letter by its glyph, a count by its digits.
@@ -163,6 +179,191 @@ describe("values as letters", () => {
     const words = [...said].join("\n");
     expect(words).toMatch(/must be [ABC]\b|can only be [ABC]\b/);
     expect(words).not.toMatch(/must be [1-9]\b|can only be [1-9]\b/);
+  });
+});
+
+describe("a clue one a value in the margin before its line", () => {
+  const TS = 32;
+  const colors = game.colors(DEFAULT_BACKGROUND);
+  const sameColor = (a: Color, b: Color): boolean => a.every((v, i) => v === b[i]);
+  const draw = (b: Board, extra: object = {}): readonly DrawOp[] => {
+    const dr = new RecordingDrawing(colors);
+    game.redraw(dr, game.newDrawState(b, TS), {
+      state: b,
+      prev: null,
+      dir: 1,
+      ui: game.newUi(b),
+      animTime: 0,
+      flash: NO_FLASH,
+      ...extra,
+    } as never);
+    return dr.ops;
+  };
+  const texts = (ops: readonly DrawOp[]) =>
+    ops.filter((op): op is Extract<DrawOp, { op: "text" }> => op.op === "text");
+  /** Where board `s`'s first square lies, read off the grid's frame. */
+  const fillOrigin = (s: Board): number => {
+    const frame = draw(s).find((op) => op.op === "rect" && op.w === 4 * TS + 1);
+    if (frame?.op !== "rect") throw new Error("no frame");
+    return frame.x;
+  };
+  const b = dealt("4x4k3", "w");
+  const o = fillOrigin(b);
+  /** The middle of the square at `(x, y)`, off the grid or on it. */
+  const middle = ({ x, y }: Point): Point => ({
+    x: o + x * TS + TS / 2,
+    y: o + y * TS + TS / 2,
+  });
+  const ds = game.newDrawState(b, TS);
+  const { count } = b.dealt;
+
+  it("is a tile deep for each value, on the canvas the params size", () => {
+    const p3 = game.decodeParams("4x4k3");
+    const p4 = game.decodeParams("4x4k4");
+    expect(fillOrigin(dealt("4x4k4", "w")) - fillOrigin(b)).toBe(TS);
+    expect(game.computeSize(p4, TS).w - game.computeSize(p3, TS).w).toBe(TS);
+    // The board lies its margin and a rim in from the top left, and the
+    // canvas holds it with a rim beyond.
+    const { w } = game.computeSize(p3, TS);
+    expect(w - 4 * TS - o).toBe(o - 3 * TS);
+  });
+
+  it("writes each clue in its value's square, its value heading the margin", () => {
+    const off = (t: Point) => t.x < o || t.y < o;
+    const drawn = texts(draw(b)).filter(off);
+    const clues = drawn.filter((t) => /^[0-9]$/.test(t.text));
+    expect(clues.map((t) => [t.text, { x: t.x, y: t.y }])).toEqual(
+      Array.from(count.at, (place, k) => [
+        String(count.v[k]),
+        middle(marginPoint(4, 3, place)),
+      ]),
+    );
+    // Value 1 furthest out: row 0's clue for A is three tiles before it.
+    expect(marginPoint(4, 3, perPlace(0, 1))).toEqual({ x: -3, y: 0 });
+    expect(marginPoint(4, 3, perPlace(4 + 2, 3))).toEqual({ x: 2, y: -1 });
+    const heads = drawn.filter((t) => /^[A-Z]$/.test(t.text));
+    expect(heads.map((t) => [t.text, { x: t.x, y: t.y }])).toEqual([
+      ["A", middle({ x: -3, y: -1 })],
+      ["A", middle({ x: -1, y: -3 })],
+      ["B", middle({ x: -2, y: -1 })],
+      ["B", middle({ x: -1, y: -2 })],
+      ["C", middle({ x: -1, y: -1 })],
+    ]);
+  });
+
+  it("draws a clue red once its line holds more of its value", () => {
+    // A line's clue of 0 for a value, and a square of that line.
+    const k = Array.from(count.v).indexOf(0);
+    expect(k).toBeGreaterThanOrEqual(0);
+    const place = count.at[k];
+    const sp = spaceOf(counting, b);
+    const c = sp.lineCells[perElement(place)][0];
+    const broken = game.executeMove(b, {
+      type: "set",
+      x: c % 4,
+      y: Math.floor(c / 4),
+      n: perValue(place),
+      pencil: false,
+    });
+    const red = texts(draw(broken)).filter((t) =>
+      sameColor(colors[t.color], colors[COL_ERROR]),
+    );
+    expect(red.map((t) => ({ x: t.x, y: t.y }))).toContainEqual(
+      middle(marginPoint(4, 3, place)),
+    );
+  });
+
+  /** The board after the move a press at `p` makes. */
+  const pressed = (s: Board, p: Point, button = LEFT_BUTTON) => {
+    const move = game.interpretMove(s, game.newUi(s), ds, p, button);
+    if (move === null || move === UI_UPDATE) throw new Error("the press made no move");
+    return game.executeMove(s, move);
+  };
+
+  it("is marked done by a press on it, drawn gray, and by Shift or Ctrl with Left or Up", () => {
+    const place = perPlace(1, 2);
+    const marked = pressed(b, middle(marginPoint(4, 3, place)));
+    expect(Array.from(marked.done["count"] ?? [])[count.byAt[place]]).toBe(1);
+    const gray = clueDoneColor(DEFAULT_BACKGROUND);
+    const grays = (s: Board) =>
+      texts(draw(s)).filter((t) => sameColor(colors[t.color], gray)).length;
+    expect(grays(b)).toBe(0);
+    expect(grays(marked)).toBe(1);
+    // A heading, and the margins' corner, take no mark.
+    for (const p of [
+      { x: -1, y: -1 },
+      { x: -2, y: -1 },
+    ])
+      expect(
+        game.interpretMove(b, game.newUi(b), ds, middle(p), LEFT_BUTTON),
+      ).toBeNull();
+    // The cursor on a square holding B: its row's clue for B, its column's.
+    const at = game.executeMove(b, { type: "set", x: 2, y: 1, n: 2, pencil: false });
+    const ui = game.newUi(at);
+    Object.assign(ui.cursor, { x: 2, y: 1, visible: true });
+    const key = (k: number) => game.interpretMove(at, ui, ds, { x: 0, y: 0 }, k);
+    const marks = (p: number) => ({ type: "done", kind: "count", k: count.byAt[p] });
+    expect(key(CURSOR_LEFT | MOD_SHFT)).toEqual(marks(perPlace(1, 2)));
+    expect(key(CURSOR_UP | MOD_CTRL)).toEqual(marks(perPlace(4 + 2, 2)));
+    expect(key(CURSOR_RIGHT | MOD_SHFT)).toBeNull();
+  });
+
+  it("is printed before its line in the text, a value a column, each headed", () => {
+    const text = (game.textFormat?.(b) ?? "").split("\n");
+    const row = (L: number) =>
+      [1, 2, 3].map((d) => String(count.valueAt[perPlace(L, d)]).padEnd(2)).join("");
+    const column = (d: number) =>
+      [0, 1, 2, 3]
+        .map((x) => `  ${count.valueAt[perPlace(4 + x, d)]} `)
+        .join("")
+        .trimEnd();
+    expect(text.slice(0, 3)).toEqual([
+      `    A ${column(1)}`,
+      `    B ${column(2)}`,
+      `A B C ${column(3)}`,
+    ]);
+    expect(text[3]).toBe("      +---+---+---+---+");
+    expect(text[4]).toBe(`${row(0)}| . | . | . | . |`);
+    expect(text).toHaveLength(3 + 9 + 1);
+  });
+
+  it("is outlined where a step reads it", () => {
+    let outlined = 0;
+    for (const seed of ["a", "b", "c", "d"]) {
+      let s = dealt("4x4k3", seed);
+      for (let made = 0; game.status(s) !== "solved"; made++) {
+        expect(made).toBeLessThan(200);
+        const got = game.hint.plan(s, undefined, game.newUi(s));
+        if (!got.ok) throw new Error("no plan");
+        const [step] = got.steps;
+        if (step.rung === "full") {
+          const places = stepMarks(step)
+            .of("outline", CELL)
+            .map((q) => marginPlaceAt(4, 4, 3, q.x, q.y));
+          expect(places).toHaveLength(1);
+          const [place] = places;
+          expect(s.dealt.count.byAt[place]).toBeGreaterThanOrEqual(0);
+          // Its line is the one striped.
+          const striped = stepMarks(step).of("stripes", CELL);
+          const L = perElement(place);
+          expect(striped.every((q) => (L < 4 ? q.y === L : q.x === L - 4))).toBe(true);
+          const p = marginPoint(4, 3, place);
+          const sides = draw(s, { hint: step }).filter(
+            (op) =>
+              op.op === "rect" &&
+              sameColor(colors[op.color], colors[COL_HINT_OUTLINE]) &&
+              op.x >= o + p.x * TS &&
+              op.x + op.w <= o + (p.x + 1) * TS &&
+              op.y >= o + p.y * TS &&
+              op.y + op.h <= o + (p.y + 1) * TS,
+          );
+          expect(sides).toHaveLength(4);
+          outlined++;
+        }
+        s = game.executeMove(s, step.move);
+      }
+    }
+    expect(outlined).toBeGreaterThan(0);
   });
 });
 

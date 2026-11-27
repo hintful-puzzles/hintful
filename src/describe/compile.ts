@@ -581,7 +581,8 @@ export function compileGame(
     " * does (`describedLadder`). A fill game's names the bindings of a firing",
     " * that name a clue it reads: an element's, with the kinds placed there, or",
     " * a clue's index by its kind; the terms its firings say that name slots,",
-    " * which it marks off the grid;",
+    " * which it marks off the grid, and those that name a clue, by its kind,",
+    " * which it marks where the clue is drawn;",
     " * the kind of rule it was placed as; whether it leads, placing with no",
     " * notes read; whether its steps strike a value each; and its one rung,",
     " * where that is not its id. */",
@@ -594,6 +595,10 @@ export function compileGame(
           json.play === undefined || c.slotTerms.length === 0
             ? ""
             : `, slotTerms: ${JSON.stringify(c.slotTerms)}`
+        }${
+          json.play === undefined || Object.keys(c.clueTerms).length === 0
+            ? ""
+            : `, clueTerms: ${JSON.stringify(c.clueTerms)}`
         }${json.play === undefined || noteMarkOf(json) === null ? "" : walkOf(c)} },`,
     ),
     "} as const;",

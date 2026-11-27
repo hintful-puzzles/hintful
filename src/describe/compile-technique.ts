@@ -501,6 +501,9 @@ export interface CompiledTechnique {
   readonly clues: boolean;
   /** The terms its firings say that name slots. */
   readonly slotTerms: readonly string[];
+  /** The terms its firings say that name a clue, each a clue's index in
+   * its kind's list, by the kind. */
+  readonly clueTerms: Readonly<Record<string, string>>;
   /** Whether it places, strikes nothing and reads no candidate: a walk of
    * notes offers it before the notes are set up. */
   readonly leads: boolean;
@@ -1152,13 +1155,18 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
   // The terms a firing says that name slots, which a fill board marks in its
   // margin, off the cells every other term names.
   const slotTerms = new Set<string>();
+  // And those that name a clue, which a fill board marks where it draws it.
+  const clueTerms: Record<string, string> = {};
   for (const sortsOf of [
     ...saysFields.variants.map((v) => v.sorts),
     tenv.factSays?.sorts ?? new Map<string, Sort>(),
   ])
     for (const [name, s] of sortsOf) {
       const of = s.k === "set" ? s.of : s;
-      if (of.k === "elem" && of.e === "slot") slotTerms.add(name);
+      if (of.k !== "elem") continue;
+      if (of.e === "slot") slotTerms.add(name);
+      if (of.e.startsWith("clue ") && env.clues.has(of.e.slice("clue ".length)))
+        clueTerms[name] = of.e.slice("clue ".length);
     }
   const readsCandidates =
     t.binders.some((b) => b.kind === "fill") ||
@@ -1171,6 +1179,7 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
     code: lines.join("\n"),
     clues: readsClues.yes,
     slotTerms: [...slotTerms],
+    clueTerms,
     leads:
       places(t.conclude, env) &&
       !concludes(t.conclude, "strike", env) &&

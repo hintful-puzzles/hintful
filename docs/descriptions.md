@@ -1553,7 +1553,10 @@ holds literal words. **A term whose elements are drawn on a kind of their own**
 squares) is a reference `{outline tried: …}` like any term of elements; `termAt`
 and `elements.at` are given the state, so a game whose pieces are squares, sides
 and clues in one kind (Tracks') can number them by the board's width, and a
-supplied term then holds those numbers. **A term or mark only the game's own
+supplied term then holds those numbers. On a fill board a term that is a slot,
+or a clue (bound `q in clues(kind)`), is marked where it is drawn: off the grid
+for a slot or a line's clue one a value, in the margin (the `counting` fixture's
+`full`), at its cell for any other. **A term or mark only the game's own
 code can supply** (Dominosa's leg names the domino it decides, which no
 binding holds for every leg) is declared by its kind: `{ supplied: flag }`, `number`, `element` or
 `elements` in `terms`, `{ supplied: elements }` in `marks`. **`{ supplied:

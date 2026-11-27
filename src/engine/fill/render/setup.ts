@@ -16,6 +16,7 @@ import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
+import { marginValuesOf } from "../value-margin.ts";
 import { type FillMetrics, fillMetrics } from "./geometry.ts";
 import { type FillPalette, fillPalette } from "./palette.ts";
 
@@ -39,6 +40,8 @@ export function fillSetup<C extends Clues<C>>(
   const play: FillPlay = look.play;
   const { lineClues, labels } = look;
   const lineLists = look.lineLists ?? [];
+  const valueMargins = look.valueMargins ?? [];
+  const margined = valueMargins.length > 0;
   const slotClues = look.slotClues ?? [];
   const slotted = slotClues.length > 0;
   const labelStart = labels?.start;
@@ -102,6 +105,7 @@ export function fillSetup<C extends Clues<C>>(
     covers: play.covers !== undefined,
     lineLabels: labelStart !== undefined,
     listed: lineLists.length > 0,
+    margined,
     lineClued: lineClues.length > 0,
     slotted,
     gapped,
@@ -143,6 +147,11 @@ export function fillSetup<C extends Clues<C>>(
     return null;
   };
 
+  /** The values board `b`'s margin of clues one a value heads, 0 where it
+   * has none. */
+  const marginValues = (b: FillBoard<C>): number =>
+    margined ? marginValuesOf(module, b) : 0;
+
   /** The partition the part clues sit at on board `b`: absent from a board a
    * variation that deals it is off on. */
   const labelParts = (b: FillBoard<C>): Partition | null =>
@@ -156,6 +165,8 @@ export function fillSetup<C extends Clues<C>>(
     previewed,
     lineClues,
     lineLists,
+    valueMargins,
+    margined,
     slotClues,
     slotted,
     labelStart,
@@ -185,6 +196,7 @@ export function fillSetup<C extends Clues<C>>(
     tallied,
     tallyCounts,
     numberAt,
+    marginValues,
     labelParts,
     /** Each part clue's size, by tile size, walls and length
      * (`cell-text.ts`'s `labelText`). */

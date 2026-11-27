@@ -16,8 +16,17 @@ import type { Color, Rect, Size } from "../contract/types.ts";
 import { HintMarks } from "../render/hint-mark.ts";
 import { OverlaySidecar } from "../render/overlay-sidecar.ts";
 import { TileCache } from "../render/tile-cache.ts";
+import { perPlace } from "../solve/describe-runtime.ts";
 import type { FillMistake } from "./answer.ts";
-import { type Clues, type FillBoard, spaceOf, topValue } from "./board.ts";
+import {
+  type Clues,
+  type FillBoard,
+  paramSpaceOf,
+  perValuesOf,
+  spaceOf,
+  topValue,
+} from "./board.ts";
+import { type FillParams, givenOf } from "./game-id.ts";
 import type { FillMove } from "./notes.ts";
 import { tallyIn, tallyOf } from "./params/tally.ts";
 import type { FillPlay, FillUi } from "./play.ts";
@@ -44,6 +53,7 @@ import { pencil } from "./render/sites/pencil.ts";
 import type { FillSite } from "./render/sites/site.ts";
 import { slots } from "./render/sites/slots.ts";
 import { tally } from "./render/sites/tally.ts";
+import { valueMargins } from "./render/sites/value-margins.ts";
 import { raisedIntoOf, repaintMargins } from "./render/three-d.ts";
 import { paintTiles, tileWordsOf } from "./render/tile.ts";
 
@@ -58,6 +68,9 @@ export interface FillLook<C> {
   readonly slotClues?: readonly (keyof C)[];
   /** The list kinds at lines, each list stacked before its line's start. */
   readonly lineLists?: readonly (keyof C)[];
+  /** The clue kinds at lines one a value, each line's before its start, a
+   * tile a value (`value-margin.ts`). */
+  readonly valueMargins?: readonly (keyof C)[];
   /** The fixed text before each line's start, by the line's index along its
    * axis. */
   readonly labels?: { readonly start?: (i: number) => string };
@@ -87,6 +100,9 @@ export interface FillDrawState {
   readonly clues: TileCache;
   /** Per line, its list's error, hatch, cursor and font. */
   readonly lists: TileCache;
+  /** Per place of a clue one a value at a line (`perPlace`), its error,
+   * done mark, hatch and outline, where the board has such clues. */
+  readonly margins: TileCache;
   /** Per edge, the clue in its gap and its error, where the board has
    * gaps. */
   readonly gaps: TileCache;
@@ -108,13 +124,10 @@ export interface FillDrawState {
 export interface FillRender<C> {
   readonly preferredTileSize: number;
   /** How far in from the canvas's top and left the board's first cell lies. */
-  origin(tileSize: number, board: { w: number; h: number }): number;
+  origin(tileSize: number, board: FillBoard<C>): number;
   /** The space between two cells, 0 on a board without gaps. */
   gap(tileSize: number): number;
-  computeSize(
-    size: { w: number; h: number; tally?: readonly number[] },
-    tileSize: number,
-  ): Size;
+  computeSize(params: FillParams, tileSize: number): Size;
   colors(background: Color): Color[];
   newDrawState(board: FillBoard<C>, tileSize: number): FillDrawState;
   redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void;
@@ -148,6 +161,7 @@ const SITES: readonly FillSite[] = [
   edgeRings,
   tally,
   lists,
+  valueMargins,
   lineClues,
 ];
 
@@ -163,7 +177,12 @@ export function fillRender<C extends Clues<C>>(
   /** The layout of a frame of board `b`, raised in 3D where `threeD`. */
   const layoutFor = (b: FillBoard<C>, threeD: boolean, top: number) =>
     cellLayoutOf(
-      layoutOf(metrics, { depth: metrics.depthOf(b), boardW: b.w, threeD, top }),
+      layoutOf(metrics, {
+        depth: metrics.depthOf(b, cx.marginValues(b)),
+        boardW: b.w,
+        threeD,
+        top,
+      }),
       cx.labeled,
       cx.labelSizes,
     );
@@ -203,13 +222,20 @@ export function fillRender<C extends Clues<C>>(
 
   return {
     preferredTileSize: PREFERRED_TILE_SIZE,
-    origin: (ts, b) => metrics.startAt(ts, metrics.depthOf(b)),
+    origin: (ts, b) => metrics.startAt(ts, metrics.depthOf(b, cx.marginValues(b))),
     gap: metrics.gapOf,
     // A hexagon's rows reach half a tile past its width.
     computeSize: (p, size) => {
       const t = module.deal === undefined ? null : tallyIn(module.deal);
+      // The margin of clues one a value is as deep as the domain the
+      // params' sizes give.
+      const values =
+        cx.margined && module.deal !== undefined
+          ? perValuesOf(module, paramSpaceOf(module, p), givenOf(module.deal, p) as C)
+          : 0;
       return metrics.canvasOf(
         p,
+        values,
         t === null ? null : tallyOf(t, p),
         metrics.tileOf(size),
       );
@@ -224,6 +250,7 @@ export function fillRender<C extends Clues<C>>(
         struck,
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),
+        margins: new TileCache(cx.margined ? perPlace(b.w + b.h, 0) : 0),
         gaps: new TileCache(cx.gapped ? spaceOf(module, b).edges.length : 0),
         slots: new TileCache(cx.slotted ? spaceOf(module, b).slots.length : 0),
         corners: new TileCache(cx.cornered ? spaceOf(module, b).corners.length : 0),

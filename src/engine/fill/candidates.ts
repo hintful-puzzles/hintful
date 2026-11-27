@@ -81,12 +81,14 @@ import {
   type FillBoard,
   type LadderedFillModule,
   ladderOf,
+  listOf,
   spaceOf,
 } from "./board.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { glyphsOf } from "./numbers.ts";
 import { variationFlags } from "./params/settings.ts";
 import { slotPoint } from "./slots.ts";
+import { marginPoint, marginValuesOf } from "./value-margin.ts";
 import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
 
 /** What a step of the candidate walk marks: the shared highlights. */
@@ -135,6 +137,10 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   readonly STEPS?: StepTable<Readonly<Record<string, UntypedStep>>>;
   /** The dealt partitions whose parts hold no value twice. */
   readonly distinctParts?: readonly string[];
+  /** The kinds drawn off the grid, where a step that names one of their
+   * clues marks it: at slots, and at lines one a value. */
+  readonly slotClues?: readonly (keyof C)[];
+  readonly valueMargins?: readonly (keyof C)[];
 }
 
 /** A step of the description's whose terms and marks are not known here. */
@@ -316,6 +322,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     id: string,
     f: LadderFiring,
     sp: GridSpace,
+    board: FillBoard<C>,
   ): Firing<FillMove, CandidateFillHint, Reason> {
     const { w, h } = sp;
     const { says } = f.reasons[0] as Said<unknown, StatedSays>;
@@ -326,13 +333,26 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       Object.entries(says.marks ?? {}).map(([role, els]) => [role, els.map(at)]),
     );
     const reads = marks["reads"];
-    // A slot lies a step beyond its line's end, off the cells.
-    const termAt = Object.fromEntries(
-      (module.techniques[id]?.slotTerms ?? []).map((name) => [
+    // A clue is marked where it is drawn: a slot's a step beyond its line's
+    // end, a line's one a value in the margin before its start, and any
+    // other's at its cell.
+    const clueSquare = (clueKind: string, k: number): Point => {
+      const place = listOf(board.dealt, clueKind as keyof C).at[k];
+      if (module.valueMargins?.includes(clueKind as keyof C) === true)
+        return marginPoint(h, marginValuesOf(module, board), place);
+      if (module.slotClues?.includes(clueKind as keyof C) === true)
+        return slotPoint(w, h, place);
+      return at(place);
+    };
+    const termAt = Object.fromEntries([
+      ...(module.techniques[id]?.slotTerms ?? []).map((name) => [
         name,
         (s: number) => slotPoint(w, h, s),
       ]),
-    );
+      ...Object.entries(module.techniques[id]?.clueTerms ?? {}).map(
+        ([name, clueKind]) => [name, (k: number) => clueSquare(clueKind, k)],
+      ),
+    ]);
     /** The clauses fact `k` is worded by, and what they are rendered
      * against with the leg's cells `ring`. */
     const wordsOf = (k: number, ring: readonly Point[]) => {
@@ -514,7 +534,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
             techniqueRung<FillMove, CandidateFillHint, Reason>(
               on,
               id,
-              (f) => ownLegs(id, f, sp),
+              (f) => ownLegs(id, f, sp, board),
               { leads: module.techniques[id]?.leads === true },
             ),
           ),

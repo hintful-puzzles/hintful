@@ -37,6 +37,7 @@ clues:
 freedom: { kind: fill }
 play:
   numbers: { letters: true }
+  done: { count: number }
   boards: [4x4k3]
   hintMarks:
     ring: the square the step fills in.
@@ -104,15 +105,16 @@ techniques:
   - kind: one.cell
     as: single
     tier: Easy
-  # A line holding all of a letter it counts has room for no more.
+  # A line holding all of a letter it counts has room for no more. The
+  # clue it reads is a term, outlined in the margin.
   - id: full
     tier: Easy
-    for: "L in lines, d in domain, v = clue(count, L, d) where v >= 0 and holds(L, d) >= v"
+    for: "q in clues(count), L = at(q), d = per(q), v = v(q) where holds(L, d) >= v"
     conclude: "holds(L, d) = v and (forall c in cells(L) where not known(c): strike(c, d))"
     says:
-      terms: { L: L, d: d, v: v }
+      terms: { L: L, d: d, v: v, q: q }
       marks: { stripes: "cells(L)" }
-      look: "{stripes: this {unit}} already holds all {numeral v} of its {d}s"
+      look: "{stripes: this {unit}} already holds {outline q: all {numeral v}} of its {d}s"
   # A line with just as many squares left for a letter as it still needs.
   - id: room
     tier: Easy

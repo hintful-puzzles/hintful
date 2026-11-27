@@ -89,6 +89,7 @@ import {
 import { PLACE_ANIM_TIME } from "./render/tile.ts";
 import { type FillDrawState, type FillRender, fillRender } from "./render.ts";
 import { answerSearched, searches } from "./search.ts";
+import { marginValuesOf } from "./value-margin.ts";
 
 /** What a game born from its description's compiled module holds. */
 export interface BornModule<C>
@@ -99,6 +100,7 @@ export interface BornModule<C>
   readonly lineClues: readonly (keyof C)[];
   readonly lineLists?: readonly (keyof C)[];
   readonly slotClues?: readonly (keyof C)[];
+  readonly valueMargins?: readonly (keyof C)[];
   readonly labels?: { readonly start?: (i: number) => string };
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
@@ -280,6 +282,14 @@ export function fillGame<C extends Clues<C> & object>(
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+    ...(module.valueMargins === undefined
+      ? {}
+      : {
+          valueMargins: {
+            kinds: module.valueMargins,
+            values: (b: FillBoard<C>) => marginValuesOf(module, b),
+          },
+        }),
     ...(module.answerSort === "cell"
       ? {}
       : { edges: { text: edgeTextOf(play), space: (b) => spaceOf(module, b) } }),
@@ -342,6 +352,9 @@ export function fillGame<C extends Clues<C> & object>(
       lineClues: module.lineClues,
       ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
       ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+      ...(module.valueMargins === undefined
+        ? {}
+        : { valueMargins: module.valueMargins }),
       ...(module.labels === undefined ? {} : { labels: module.labels }),
     },
     (b, ui) => buttons?.previewed(b, ui) ?? b,
@@ -350,13 +363,11 @@ export function fillGame<C extends Clues<C> & object>(
   const typed =
     play.numbers === undefined
       ? null
-      : numberInput<C, FillDrawState>(
-          module,
-          render.origin,
-          render.gap,
-          render.partClueBox,
-          module.slotClues ?? [],
-        );
+      : numberInput<C, FillDrawState>(module, render.origin, render.gap, {
+          partClue: render.partClueBox,
+          slotKinds: module.slotClues ?? [],
+          marginKinds: module.valueMargins ?? [],
+        });
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
   const inputs =

@@ -4,7 +4,7 @@
  * and how the clues at each place are drawn, at a corner and a part with a
  * sign (`engine/fill/corners.ts`), at an edge in its gap
  * (`engine/fill/gaps.ts`), and at a line or a slot in the margins
- * (`engine/fill/slots.ts`).
+ * (`engine/fill/slots.ts`, `engine/fill/value-margin.ts`).
  */
 
 import { EDGE_PAINTERS } from "../../engine/render/pieces/edge.ts";
@@ -119,18 +119,25 @@ export function checkGaps(p: PlayJson, d: Description, env: Env): void {
   }
 }
 
-/** `lineClues`, `slotClues` and `lineLists`, the kinds drawn in the
- * margins. A clue at a slot is refused beside a line's, which the same
- * margins draw. */
-export function marginsOf(d: Description, env: Env): string[] {
+/** `lineClues`, `slotClues`, `lineLists` and `valueMargins`, the kinds
+ * drawn in the margins. A clue at a slot is refused beside a line's, which
+ * the same margins draw; a line's clue one a value beside a list or the
+ * lines' labels (`labeled`), which take the margin before the lines' start
+ * it is drawn in. */
+export function marginsOf(d: Description, env: Env, labeled: boolean): string[] {
   const atLines = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
-  const isList = (k: string) => (env.clues.get(k) as ClueKind).list;
-  const lineClues = atLines.filter((k) => !isList(k));
-  const lineLists = atLines.filter(isList);
+  const kindOf = (k: string) => env.clues.get(k) as ClueKind;
+  const lineClues = atLines.filter((k) => !kindOf(k).list && !kindOf(k).per);
+  const lineLists = atLines.filter((k) => kindOf(k).list);
+  const valueMargins = atLines.filter((k) => kindOf(k).per);
   const slotClues = [...d.clueKinds].filter(([, c]) => c.at === "slot").map(([k]) => k);
-  if (slotClues.length > 0 && (lineClues.length > 0 || lineLists.length > 0))
+  if (slotClues.length > 0 && atLines.length > 0)
     throw new CompileError(
       `clue ${slotClues[0]}: a clue at a slot is drawn in the margins, where a line's clue is`,
+    );
+  if (valueMargins.length > 0 && (lineLists.length > 0 || labeled))
+    throw new CompileError(
+      `clue ${valueMargins[0]}: a clue one a value is drawn before the lines' start, where a list or a label is`,
     );
   return [
     "",
@@ -149,6 +156,13 @@ export function marginsOf(d: Description, env: Env): string[] {
           "",
           "/** The list kinds at lines, each list drawn stacked before its line's start. */",
           `export const lineLists = ${JSON.stringify(lineLists)} as const;`,
+        ]),
+    ...(valueMargins.length === 0
+      ? []
+      : [
+          "",
+          "/** The clue kinds at lines one a value, each line's drawn before its start, a tile a value. */",
+          `export const valueMargins = ${JSON.stringify(valueMargins)} as const;`,
         ]),
   ];
 }

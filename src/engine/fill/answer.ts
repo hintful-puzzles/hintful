@@ -24,6 +24,7 @@ import {
   type ListClues,
   listAt,
   type Partition,
+  perPlace,
 } from "../solve/describe-runtime.ts";
 import { describedRules } from "../solve/described-rules.ts";
 import {
@@ -43,6 +44,7 @@ import type { FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
 import { slotClueAt } from "./slots.ts";
+import { marginClueAt } from "./value-margin.ts";
 
 /** A cell the player's board holds against the answer: its value, the mark
  * on it, or its notes, which leave the answer out. */
@@ -66,6 +68,12 @@ export interface AnswerReading<C> {
   readonly lineLists?: readonly (keyof C)[];
   /** The clue kinds at slots, printed in a rim round the grid. */
   readonly slotClues?: readonly (keyof C)[];
+  /** The clue kinds at lines one a value, printed before each line's start
+   * a value a column, and the values a board's margin heads. */
+  readonly valueMargins?: {
+    readonly kinds: readonly (keyof C)[];
+    readonly values: (board: FillBoard<C>) => number;
+  };
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
   readonly numbers?: readonly (keyof C)[];
@@ -320,13 +328,17 @@ export function textFormat<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
 ): string {
-  const grid = withSlotClues(
+  const grid = withValueMargins(
     reading,
     board,
-    withCornerClues(
+    withSlotClues(
       reading,
       board,
-      withPartClues(reading, board, gridFormat(reading, board)),
+      withCornerClues(
+        reading,
+        board,
+        withPartClues(reading, board, gridFormat(reading, board)),
+      ),
     ),
   );
   const kinds = reading.lineLists ?? [];
@@ -358,6 +370,56 @@ export function textFormat<C extends Clues<C>>(
     return row.length === 0 ? line : `${line} ${row.join(" ")}`;
   });
   return [...above.map((l) => ` ${l}`), ...lines].join("\n");
+}
+
+/** `grid` with the clues one a value at its lines before them, as the board
+ * draws them: a column's a line a value above it, each over the middle of
+ * its cell, and a row's a column a value before it. Each value heads its
+ * row of the columns' clues at the end of the line, and the last line,
+ * which the corner shares, heads each column of the rows' clues (upstream
+ * abcd.c's `game_text_format`). A hidden clue's place is blank. */
+function withValueMargins<C extends Clues<C>>(
+  reading: AnswerReading<C>,
+  board: FillBoard<C>,
+  grid: string,
+): string {
+  const margins = reading.valueMargins;
+  if (margins === undefined) return grid;
+  const { w, h } = board;
+  const values = margins.values(board);
+  const clue = (line: number, v: number): string => {
+    const at = marginClueAt(margins.kinds, board, perPlace(line, v));
+    return at === null ? "" : String(at.v);
+  };
+  const heading = (v: number): string => (reading.glyphs[v] ?? String(v)).trim();
+  // A column of the rows' clues is as wide as its widest text and a space.
+  let width = 2;
+  for (let line = 0; line < w + h; line++)
+    for (let v = 1; v <= values; v++)
+      width = Math.max(width, clue(line, v).length + 1, heading(v).length + 1);
+  const everyValue = Array.from({ length: values }, (_, i) => i + 1);
+  // A cell's text is three characters after a one-character wall.
+  const above = everyValue.map((v) => {
+    const heads =
+      v === values
+        ? everyValue.map((u) => heading(u).padEnd(width)).join("")
+        : `${" ".repeat((values - 1) * width)}${heading(v).padEnd(width)}`;
+    const columns = Array.from({ length: w }, (_, x) => {
+      const t = clue(h + x, v);
+      return ` ${t.length === 1 ? ` ${t} ` : t.padEnd(3)}`;
+    }).join("");
+    return `${heads}${columns}`.trimEnd();
+  });
+  // The grid's lines alternate a wall and a row of cells.
+  const lines = grid
+    .trimEnd()
+    .split("\n")
+    .map((line, i) =>
+      i % 2 === 1 && (i - 1) / 2 < h
+        ? `${everyValue.map((v) => clue((i - 1) / 2, v).padEnd(width)).join("")}${line}`
+        : `${" ".repeat(values * width)}${line}`,
+    );
+  return `${[...above, ...lines].join("\n")}\n`;
 }
 
 /** `grid` in a rim of the clues at its slots: each column's above and below

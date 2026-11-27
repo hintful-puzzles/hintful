@@ -81,6 +81,7 @@ export function errorWords<C extends Clues<C>>(
 ) {
   const { rules, partRules, gapped, lineClues, lineLists, slotClues, cornerKinds } =
     setup;
+  const { valueMargins } = setup;
   const { partKinds, numbers, labeledBy, play } = setup;
   const { w, h } = state;
   const errors = liveErrors(rules, shown);
@@ -137,6 +138,7 @@ export function errorWords<C extends Clues<C>>(
   const gapErrors = new Set<number>();
   const slotErrors = new Set<number>();
   const cornerErrors = new Set<number>();
+  const marginErrors = new Set<number>();
   // A broken number is drawn as a badge (`numberStates`), not on the piece;
   // a part's clue red at its part's first cell.
   for (const [kind, broken] of errors.clues)
@@ -144,6 +146,7 @@ export function errorWords<C extends Clues<C>>(
       const at = listOf(state.dealt, kind as keyof C).at[q];
       if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
         lineErrors.add(at);
+      else if (valueMargins.includes(kind as keyof C)) marginErrors.add(at);
       else if (slotClues.includes(kind as keyof C)) slotErrors.add(at);
       else if (cornerKinds.includes(kind as keyof C & string)) cornerErrors.add(at);
       else if (play.gaps?.[kind] !== undefined) gapErrors.add(at);
@@ -160,6 +163,7 @@ export function errorWords<C extends Clues<C>>(
     gapErrors,
     slotErrors,
     cornerErrors,
+    marginErrors,
   };
 }
 

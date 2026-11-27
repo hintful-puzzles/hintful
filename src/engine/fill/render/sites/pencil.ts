@@ -18,7 +18,7 @@ export const pencil: FillSite = {
       dr,
       ds,
       ui.pencilMode === true,
-      pencilIndicatorBox(cx.metrics.canvasOf(b, counts, ts), ts),
+      pencilIndicatorBox(cx.metrics.canvasOf(b, cx.marginValues(b), counts, ts), ts),
       cx.pal.PENCIL_STYLE,
     );
   },

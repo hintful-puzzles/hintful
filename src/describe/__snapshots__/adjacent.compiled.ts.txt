@@ -63,7 +63,8 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * does (`describedLadder`). A fill game's names the bindings of a firing
  * that name a clue it reads: an element's, with the kinds placed there, or
  * a clue's index by its kind; the terms its firings say that name slots,
- * which it marks off the grid;
+ * which it marks off the grid, and those that name a clue, by its kind,
+ * which it marks where the clue is drawn;
  * the kind of rule it was placed as; whether it leads, placing with no
  * notes read; whether its steps strike a value each; and its one rung,
  * where that is not its id. */

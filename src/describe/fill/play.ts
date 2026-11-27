@@ -8,6 +8,7 @@
 import { EDGE_VALUE_PAINTERS } from "../../engine/render/pieces/edge-value.ts";
 import { compileExpr } from "../compile-expr.ts";
 import {
+  type ClueKind,
   CompileError,
   type Env,
   elem,
@@ -198,14 +199,21 @@ export function playOf(
   checkSigns(p, d, env);
   checkGaps(p, d, env);
   // A clue is marked done by a press where it is drawn, and the engine finds
-  // a press on a clue in a gap, at a slot or on one at a part alone; the
-  // press goes to the board of numbers' input, which takes no press off its
-  // squares of its own.
+  // a press on a clue in a gap, at a slot, on one at a part, or on a line's
+  // one a value in the margin before its start, alone; the press goes to the
+  // board of numbers' input, which takes no press off its squares of its
+  // own.
   for (const k of Object.keys(p.done ?? {})) {
     const at = d.clueKinds.get(k)?.at ?? "";
-    if (p.gaps?.[k] === undefined && !env.regions.has(at) && at !== "slot")
+    const margined = at === "line" && (env.clues.get(k) as ClueKind | undefined)?.per;
+    if (
+      p.gaps?.[k] === undefined &&
+      !env.regions.has(at) &&
+      at !== "slot" &&
+      margined !== true
+    )
       throw new CompileError(
-        `play done: ${k} is no clue kind drawn in a gap, at a slot or at a part, the places a press marks a clue done`,
+        `play done: ${k} is no clue kind drawn in a gap, at a slot, at a part or one a value at a line, the places a press marks a clue done`,
       );
     if (p.numbers === undefined)
       throw new CompileError(
@@ -230,7 +238,7 @@ export function playOf(
             ...(glance === undefined ? {} : { glance, askBefore: askBefore ?? [] }),
           },
         };
-  const margins = marginsOf(d, env);
+  const margins = marginsOf(d, env, labels?.start !== undefined);
   // A rule over a dealt partition's parts breaks at the cells it counts, which
   // may happen to lie in a row and still are no run.
   const overParts = (src: string): boolean => {

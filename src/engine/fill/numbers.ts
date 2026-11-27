@@ -51,7 +51,7 @@ import {
   spaceOf,
   topValue,
 } from "./board.ts";
-import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
+import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { FillParams } from "./game-id.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
@@ -198,8 +198,7 @@ export function numberInput<
   module: LadderedFillModule<C>,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
-  partClue: PartClueAt<C> | null = null,
-  slotKinds: readonly (keyof C)[] = [],
+  clueSites: ClueSites<C> = {},
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
@@ -207,7 +206,7 @@ export function numberInput<
   const done =
     module.play === undefined
       ? null
-      : doneInput<C, D>(module, module.play, origin, gap, partClue, slotKinds);
+      : doneInput<C, D>(module, module.play, origin, gap, clueSites);
   /** The cell whose raised value a press at `p` lands on, drawn up and
    * right of its own square, or `null`. A raised board has no gaps. */
   const raisedPressed = (b: FillBoard<C>, ds: D, p: Point): Point | null => {

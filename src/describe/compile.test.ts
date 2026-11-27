@@ -1081,6 +1081,33 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play done: count is no clue kind drawn in a gap/);
   });
 
+  it("draws a line's clue one a value before the lines, and refuses a list or a label there", () => {
+    const source = "src/engine/testing/fixtures/counting/counting.description.yaml";
+    const counting = sources.get(source);
+    if (counting === undefined || !isFormal(counting)) throw new Error("no counting");
+    type Json = { play: { labels?: { start: string } } };
+    const compileCounting = (edit: (j: Json) => void) => {
+      const j = structuredClone(counting) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const plain = compileCounting(() => {});
+    expect(plain).toContain('export const valueMargins = ["count"]');
+    expect(plain).toContain("export const lineClues = []");
+    expect(plain).toContain('clueTerms: {"q":"count"}');
+    expect(() =>
+      compileCounting((j) => {
+        j.play.labels = { start: "i + 1" };
+      }),
+    ).toThrow(/clue count: a clue one a value is drawn before the lines' start/);
+  });
+
   it("refuses a stream's codes that could not be read back", () => {
     const source = "src/engine/testing/fixtures/walling/walling.description.yaml";
     const walling = sources.get(source);

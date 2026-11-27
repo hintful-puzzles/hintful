@@ -1,10 +1,12 @@
-/** What the first frame draws under every tile: the grid's frame, and each
- * line's fixed label (`labels:`) before its start, where the board has
- * them. */
+/** What the first frame draws under every tile: the grid's frame, each
+ * line's fixed label (`labels:`) before its start, and the values heading
+ * the margin of clues one a value, where the board has them. */
 
 import type { GameDrawing } from "../../contract/game.ts";
+import { glyphFont } from "../../render/draw.ts";
 import type { Clues, FillBoard } from "../board.ts";
 import type { FillDrawState } from "../render.ts";
+import { marginHeadings } from "../value-margin.ts";
 import type { CellLayout } from "./cell-text.ts";
 import { COL_GRID, COL_LABEL } from "./palette.ts";
 import type { FillSetup } from "./setup.ts";
@@ -36,6 +38,15 @@ export function drawFrame<C extends Clues<C>>(
       { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
       ds.parts === null ? COL_GRID : cx.pal.COL_WALL,
     );
+  // Each value heading its clues in the margin, as large as they are.
+  if (cx.margined)
+    for (const { x, y, v } of marginHeadings(cx.marginValues(state)))
+      dr.drawText(
+        { x: coord(x, ts) + Math.floor(ts / 2), y: coord(y, ts) + Math.floor(ts / 2) },
+        glyphFont(Math.floor(ts / 2)),
+        COL_LABEL,
+        cx.glyph(v),
+      );
   if (labelStart === undefined) return;
   const size = Math.floor((ts * 2) / 5);
   const font = {

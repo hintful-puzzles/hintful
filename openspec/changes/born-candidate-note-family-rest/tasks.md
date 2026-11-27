@@ -1,6 +1,6 @@
 ## Next
 
-2.2c, ABCD's margin, then 2.2e and the flip (2.2f). Open: Group's header drag,
+2.2e, ABCD's bounds and corner crosses, then the flip (2.2f). Open: Group's header drag,
 dividers and multifill, asked at 1.1 (design.md § "Open Questions");
 2.4 waits for the answer.
 
@@ -39,13 +39,9 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.2a A number size and a clue one a value dealt, written and read,
         on the `counting` fixture.
   - [x] 2.2b Letters (`play.numbers.letters`), on the `counting` fixture.
-  - [ ] 2.2c A clue one a value drawn in a margin as deep as the values,
-        each heading a value, marked done, struck as a hint reads it, and
-        in the text format. Upstream's look is a margin before the start,
-        a tile a value, the letters heading it at the corner
-        (`games/abcd/render.ts`' `drawBorderLetters`, `state.ts`'
-        `textFormat`); the engine's nearest is a site beside
-        `engine/fill/render/sites/lists.ts`, built on `counting`.
+  - [x] 2.2c A clue one a value in a margin before its line, headed, done,
+        outlined as a hint reads it, printed, on `counting`. Whether ABCD
+        has `play.done` (upstream marks none) is the flip's call.
   - [x] 2.2d The walk with no unit, on the `counting` fixture; ABCD's
         `satisfied` and `runs` as `says` are the flip's.
   - [ ] 2.2e Bounds: Unreasonable refused on a board of nine squares or

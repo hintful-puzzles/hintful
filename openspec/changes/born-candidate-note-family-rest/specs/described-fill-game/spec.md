@@ -287,3 +287,34 @@ place. A count SHALL still be said in digits.
 - **WHEN** a square of a `counting` board of three letters is selected and
   `b`, `B` or `2` is pressed
 - **THEN** each enters B, and `d` or `4` enters nothing
+
+### Requirement: A line's clues one a value are drawn in a margin before it
+
+A born board's clue kind at lines `per: value` SHALL be drawn before each
+line's start, a tile a value, value 1 furthest out, headed by each value's
+glyph. A clue SHALL be red where the rules break it, hatched where a step
+stripes its line, and outlined where a step's term names it. The compiler
+SHALL refuse such a kind beside a list or labels at lines.
+
+#### Scenario: Reading a count from the margin
+
+- **WHEN** a `counting` board of three letters is drawn, and the walk's
+  step that a line already holds all of a letter is shown
+- **THEN** each count sits in its letter's tile before its line, A, B and C
+  head the tiles, and the count the step reads is outlined, its line
+  hatched through the margin
+
+### Requirement: A clue in the margin before a line is marked done and printed
+
+A clue one a value at a line marked done (`play.done`) SHALL be drawn gray.
+A press on it SHALL mark it done, and Shift or Ctrl with Left or Up the
+cursor's row's or column's clue for the value its square holds. The text
+format SHALL print the clues before their lines as the board draws them,
+each headed by its value.
+
+#### Scenario: Marking a count done
+
+- **WHEN** a count in the margin is pressed, or Shift-Left is pressed with
+  the cursor on a square holding B
+- **THEN** the pressed count is drawn gray, and the key marks the cursor's
+  row's count of B
