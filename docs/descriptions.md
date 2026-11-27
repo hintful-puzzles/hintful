@@ -2240,7 +2240,7 @@ two pilots failed while their families went on (the owner, 2026-11-22).
    time (the least of several runs, on a bundle of the tree as the
    command bundles it, never under vitest) on a menu board where the
    baseline's did not is fixed before the family is archived, in the
-   engine.
+   engine. `compare-cost --quick --times 12` takes those times.
 5. **The hint does no less a step.** Steps on the same boards, both trees.
    Fewer is explained, as a firing that settles several squares at once;
    more means each hint does less than before, and the engine is fixed so

@@ -12,7 +12,10 @@
  * - `walk`: load the boards of `COST_GAME` in `COST_LIST` and walk each by
  *   its hint to the end;
  * - `deal`: deal the params of those boards, as many times each as there are
- *   boards of them.
+ *   boards of them;
+ * - `time`: deal each params of those boards on `COST_SEEDS` seeds, each seed
+ *   `TIME_REPEATS` times, and write each seed's least CPU time in ms, by the
+ *   params as the list encodes them.
  *
  * It writes what it saw to `COST_OUT`. Only the engine's oldest entry points
  * are read, so a baseline from before the counter it reports still runs.
@@ -53,6 +56,11 @@ function area(encoded: string): number | null {
 }
 
 const MAX_AREA = 100;
+
+/** A seed's deal is timed this many times and the least kept: CPU time moves
+ * with the load, and the least is the work at the speed the core can give
+ * (`docs/method.md` § "Compare a cost in instructions, not in time"). */
+const TIME_REPEATS = 3;
 
 function list(): CostRun {
   const boardsAPreset = Number(process.env["COST_BOARDS"] ?? 4);
@@ -96,11 +104,33 @@ function run(kind: string): CostRun {
     for (const { params } of boards) game.newDesc(params, randomNew(`deal ${k++}`));
     return {};
   }
+  if (kind === "time") {
+    const seeds = Number(env("COST_SEEDS"));
+    const times: Record<string, number[]> = {};
+    for (const { gameId, params } of boards) {
+      const encoded = gameId.slice(0, gameId.indexOf(":"));
+      if (encoded in times) continue;
+      times[encoded] = Array.from({ length: seeds }, (_, s) => {
+        let least = Number.POSITIVE_INFINITY;
+        for (let r = 0; r < TIME_REPEATS; r++) {
+          const t = process.cpuUsage();
+          game.newDesc(params, randomNew(`time ${encoded} ${s}`));
+          const { user, system } = process.cpuUsage(t);
+          least = Math.min(least, (user + system) / 1000);
+        }
+        return least;
+      });
+    }
+    return { times };
+  }
   if (kind !== "walk")
-    throw new Error(`cost-walk: COST_KIND "${kind}" is none of list, none, walk, deal`);
+    throw new Error(
+      `cost-walk: COST_KIND "${kind}" is none of list, none, walk, deal, time`,
+    );
   const tries = "techniqueTries" in fixpoint ? fixpoint.techniqueTries : null;
   const refused: Record<string, string> = {};
   const unsolved: string[] = [];
+  const rungs: Record<string, number> = {};
   let steps = 0;
   const triesBefore = tries?.count ?? 0;
   for (const { gameId, params, desc } of boards) {
@@ -118,6 +148,8 @@ function run(kind: string): CostRun {
       for (const step of plan.steps) {
         state = game.executeMove(state, step.move);
         steps++;
+        const rung = (step as { rung?: string }).rung ?? "(none)";
+        rungs[rung] = (rungs[rung] ?? 0) + 1;
       }
     }
     if (game.status(state) !== "solved") unsolved.push(gameId);
@@ -125,6 +157,7 @@ function run(kind: string): CostRun {
   return {
     refused,
     steps,
+    rungs,
     tries: tries === null ? null : tries.count - triesBefore,
     unsolved,
   };

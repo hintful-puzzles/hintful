@@ -285,6 +285,68 @@ to the engine is in its commit.
   boards): 1141 steps for 996, the walk 31% dearer in instructions, the
   deal 2.5 times (10.0 G instructions for 15 deals, some 50 ms each).
 
+## The figures (3.1)
+
+Taken 2026-11-27 against `0b0727c9d`, the gap list's baseline, for the
+three games flipped (Group's when it is). The baseline's lockfile differs
+from this tree's by a dev-only type generator (`json-schema-to-typescript`,
+`936f6a6b9`) that no bundle holds, so the cost runs took a worktree of the
+baseline carrying this tree's lockfile (`--baseline`).
+
+**1. Lines.** Each flip's hand-written TypeScript removed under
+`src/games/<g>/`, tests excluded, against what `src/engine/` and
+`src/describe/` gained net over the change's own commits for that game
+(its capabilities and its flip), tests, `engine/testing/`, JSON and YAML
+excluded. Between Solo's flip and ABCD's, three other changes landed (the
+fill engine by concern, one way to say a setting, an answer on the edges),
+so a range of commits would count theirs.
+
+| Game | Removed | Engine net | Description | Cases |
+| --- | --- | --- | --- | --- |
+| Solo | 3,780 | +1,310 | 609 | 515 |
+| ABCD | 2,334 | +716 | 272 | 206 |
+| Salad | 3,545 | +1,009 | 284 | 241 |
+| So far | 9,659 | +3,035 | 1,165 | 962 |
+
+3.2 lines go for each one the engine gains, past the bar of two.
+
+**2. Capabilities** are listed with their concepts in each flip's task.
+
+**3. What earlier flips built is used.** Solo met its blocks, givens,
+alphabet, cages and their totals from Keen's parts and deal on the answer,
+and added the walk over any unit, a second scale, the diagonals, the
+equal-part division and the eight symmetries. ABCD met little: its clue a
+value, letters, the number size and the walk with no unit were all new.
+Salad, on Towers' slots and ABCD's letters and number size, met most of
+its board and added the ruleset choosing kinds, the folded square and the
+empty value. Within the Latin squares the share rose from ABCD to Salad,
+as the order meant it to.
+
+**4 and 5. Cost and steps**, `npm run compare-cost` (five rounds, four
+boards a menu board of at most 100 squares; baseline / working tree):
+
+| Game | Walk instructions | Deal instructions | Steps |
+| --- | --- | --- | --- |
+| Solo | 53.84 / 42.48 G, −21.1% | 53.26 / 205.15 G, +285% | 5498 / 5064 |
+| ABCD | 7.72 / 8.95 G, +15.9% | 3.23 / 6.78 G, +110% | 2392 / 2392 |
+| Salad | 9.36 / 11.82 G, +26.3% | 16.61 / 31.08 G, +87.1% | 4080 / 4591 |
+
+Each spread is under 1%. Both trees leave the same boards unsolved by the
+hint (Solo 8, ABCD 16).
+
+The deals in ms (`--quick --times 12`: each menu board twelve seeds, each
+seed's least of three runs, bundled; baseline / working median):
+
+- **Solo passes the bar on four menu boards** where the baseline did not:
+  3x3 Intermediate 9 / 136, 3x3 Unreasonable 86 / 178, 3x3 Killer 6 / 136,
+  9 Jigsaw Extreme 96 / 325. Those the baseline already passed are dearer
+  too: 3x3 Advanced 163 / 516 (slowest 615 / 6,402), 3x3 Extreme 135 / 621,
+  2x3 Intermediate 263 / 645. To be fixed in the engine (3.1a).
+- **ABCD and Salad stay under it**: ABCD's largest median 17 ms (6x8 Hard),
+  Salad's 159 on 5n4Bdx, which the baseline passed at 128.
+
+No walk comes near 100 ms on a menu board.
+
 ## Open Questions
 
 - **Group's header drag, dividers and diagonal multifill**: they are

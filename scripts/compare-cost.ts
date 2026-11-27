@@ -53,7 +53,17 @@
  * not in its count.
  *
  * Steps and technique tries are the engine's own counts and are exact; tries
- * read "–" in a tree from before the counter (`techniqueTries`).
+ * read "–" in a tree from before the counter (`techniqueTries`). Where the
+ * steps differ, the rungs that make the difference are listed, as each step
+ * names its rung.
+ *
+ * **`--times <seeds>`** also deals each menu board's params on that many
+ * seeds in each tree, each seed three times and its least CPU time kept, with
+ * Node as the app runs it (no `--predictable`), and prints each board's
+ * median, slowest and how many seeds pass 100 ms, marking a board whose
+ * median passes it where the baseline's does not: the bar of
+ * `docs/descriptions.md` § "Judging a family moved onto its description", 4.
+ * It needs no rounds, so `--quick --times 12` is the usual call.
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
@@ -76,10 +86,14 @@ export interface CostRun {
   /** The boards a `walk` could not load, each with why. */
   refused?: Record<string, string>;
   steps?: number;
+  /** A walk's steps by the rung each speaks. */
+  rungs?: Record<string, number>;
   /** `null` where the tree has no counter. */
   tries?: number | null;
   /** Walks that ended unsolved, by ID. */
   unsolved?: string[];
+  /** A `time` run's deals: each seed's least CPU ms, by encoded params. */
+  times?: Record<string, number[]>;
 }
 
 const ROOT = path.resolve(import.meta.dirname, "..");
@@ -91,7 +105,7 @@ const KILL_MS = 600_000;
 function usage(why: string): never {
   console.error(`compare-cost: ${why}`);
   console.error(
-    "usage: npm run compare-cost -- (--base <commit> | --baseline <dir>) [--quick | --rounds <n>] <game…>",
+    "usage: npm run compare-cost -- (--base <commit> | --baseline <dir>) [--quick | --rounds <n>] [--times <seeds>] <game…>",
   );
   process.exit(2);
 }
@@ -102,12 +116,15 @@ interface Args {
   rounds: number;
   /** Boards dealt on each menu entry. */
   boards: number;
+  /** Seeds each menu board's deal is timed on; 0 times none. */
+  times: number;
   games: string[];
 }
 
 function parseArgs(argv: readonly string[]): Args {
   let baseline: Args["baseline"] | null = null;
   let rounds: number | null = null;
+  let times = 0;
   let quick = false;
   const games: string[] = [];
   for (let i = 0; i < argv.length; i++) {
@@ -120,6 +137,7 @@ function parseArgs(argv: readonly string[]): Args {
       baseline = { commit: argv[++i] ?? usage("--base needs a commit") };
     else if (arg === "--rounds") rounds = Number(argv[++i]);
     else if (arg === "--quick") quick = true;
+    else if (arg === "--times") times = Number(argv[++i]);
     else if (arg.startsWith("-")) usage(`no option ${arg}`);
     else games.push(arg);
   }
@@ -127,8 +145,16 @@ function parseArgs(argv: readonly string[]): Args {
   if (quick && rounds !== null) usage("--quick counts one round; drop --rounds");
   if (rounds !== null && (!Number.isInteger(rounds) || rounds < 2))
     usage("--rounds is a whole number of 2 or more");
+  if (!Number.isInteger(times) || times < 0)
+    usage("--times is a whole number of seeds");
   if (games.length === 0) usage("name the games to compare");
-  return { baseline, rounds: quick ? 1 : (rounds ?? 5), boards: quick ? 1 : 4, games };
+  return {
+    baseline,
+    rounds: quick ? 1 : (rounds ?? 5),
+    boards: quick ? 1 : 4,
+    times,
+    games,
+  };
 }
 
 /** Check `commit` out where the scratch directory is, so the exit that
@@ -244,6 +270,47 @@ async function counted(bundle: string, env: Record<string, string>): Promise<Cou
   };
 }
 
+/** A `time` run of a worker `bundle`: Node as the app's engine runs, without
+ * `--predictable`, whose single-threaded compiler is no player's. */
+async function timed(bundle: string, env: Record<string, string>): Promise<CostRun> {
+  const out = path.join(scratch, "out.json");
+  rmSync(out, { force: true });
+  await finished(
+    scratch,
+    process.execPath,
+    [bundle],
+    { ...env, COST_KIND: "time", COST_OUT: out },
+    `a time run of ${bundle}`,
+  );
+  return JSON.parse(readFileSync(out, "utf8")) as CostRun;
+}
+
+/** The 100 ms a player does not notice (`docs/descriptions.md` § "Judging a
+ * family moved onto its description", 4). */
+const NOTICED_MS = 100;
+
+/** A line for each menu board's deal, both trees' median and slowest ms and
+ * how many seeds pass {@link NOTICED_MS}; marked where the working tree's
+ * median passes it and the baseline's does not. */
+function timeLines(
+  base: Record<string, number[]>,
+  work: Record<string, number[]>,
+): string[] {
+  const ms = (n: number) => n.toFixed(0);
+  return Object.keys(base).map((params) => {
+    const b = base[params];
+    const w = work[params] ?? [];
+    const over = (xs: readonly number[]) => xs.filter((x) => x > NOTICED_MS).length;
+    const passes =
+      median(w) > NOTICED_MS && median(b) <= NOTICED_MS ? "  ← past the bar" : "";
+    return (
+      `  deal ms ${params}: median ${ms(median(b))} / ${ms(median(w))}, ` +
+      `slowest ${ms(Math.max(...b))} / ${ms(Math.max(...w))}, ` +
+      `over ${NOTICED_MS} ${over(b)} / ${over(w)} of ${b.length}${passes}`
+    );
+  });
+}
+
 const median = (xs: readonly number[]): number => {
   const s = [...xs].sort((a, b) => a - b);
   const m = s.length >> 1;
@@ -257,8 +324,24 @@ interface Side {
   walkCycles: number[];
   deal: number[];
   steps: number;
+  rungs: Record<string, number>;
   tries: number | null;
   unsolved: readonly string[];
+}
+
+/** The rungs whose steps differ between the trees, most changed first: what
+ * a change in the step count is made of (criterion 5 asks it explained). */
+function rungLine(
+  base: Record<string, number>,
+  work: Record<string, number>,
+): string | null {
+  const diffs = [...new Set([...Object.keys(base), ...Object.keys(work)])]
+    .map((r) => ({ r, b: base[r] ?? 0, w: work[r] ?? 0 }))
+    .filter(({ b, w }) => b !== w)
+    .sort((x, y) => Math.abs(y.w - y.b) - Math.abs(x.w - x.b));
+  return diffs.length === 0
+    ? null
+    : `  steps by rung ${diffs.map(({ r, b, w }) => `${r} ${b} / ${w}`).join(", ")}`;
 }
 
 /** A line's comparison of one figure: the medians, and the change unless it
@@ -316,23 +399,18 @@ async function main(): Promise<void> {
     ids = ids.filter((id) => !refused.has(id));
     writeFileSync(list, JSON.stringify(ids));
 
+    const empty = (): Side => ({
+      walk: [],
+      walkCycles: [],
+      deal: [],
+      steps: 0,
+      rungs: {},
+      tries: null,
+      unsolved: [],
+    });
     const sides: Record<keyof typeof trees, Side> = {
-      baseline: {
-        walk: [],
-        walkCycles: [],
-        deal: [],
-        steps: 0,
-        tries: null,
-        unsolved: [],
-      },
-      working: {
-        walk: [],
-        walkCycles: [],
-        deal: [],
-        steps: 0,
-        tries: null,
-        unsolved: [],
-      },
+      baseline: empty(),
+      working: empty(),
     };
     for (let r = 0; r < rounds; r++) {
       const order = (
@@ -349,11 +427,20 @@ async function main(): Promise<void> {
         side.walkCycles.push(walk.cycles - none.cycles);
         side.deal.push(deal.instructions - none.instructions);
         side.steps = walk.out.steps ?? 0;
+        side.rungs = walk.out.rungs ?? {};
         side.tries = walk.out.tries ?? null;
         side.unsolved = walk.out.unsolved ?? [];
       }
     }
     const { baseline: b, working: w } = sides;
+    let times: string[] = [];
+    if (args.times > 0) {
+      const env = { COST_GAME: game, COST_LIST: list, COST_SEEDS: String(args.times) };
+      console.error(`${game}: timing each menu board's deal on ${args.times} seeds`);
+      const base = await timed(trees.baseline, env);
+      const work = await timed(trees.working, env);
+      times = timeLines(base.times ?? {}, work.times ?? {});
+    }
     const tries = (n: number | null) => (n === null ? "–" : String(n));
     lines.push(
       [
@@ -365,6 +452,8 @@ async function main(): Promise<void> {
           (b.unsolved.length + w.unsolved.length > 0
             ? `, unsolved ${b.unsolved.length} / ${w.unsolved.length}`
             : ""),
+        ...[rungLine(b.rungs, w.rungs) ?? []].flat(),
+        ...times,
         ...[...refused].map(([id, why]) => `  refused ${id}: ${why}`),
         // A walk left unsolved is a defect to open, so each is named.
         ...b.unsolved.map((id) => `  unsolved in the baseline: ${id}`),
