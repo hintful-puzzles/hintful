@@ -2276,13 +2276,26 @@
                 "type": "object",
                 "required": ["records", "sides"],
                 "additionalProperties": false,
-                "description": "A record a cell, each closed by a comma: the cell's clue of `records` as a number, 0 for none, then a letter `U`, `R`, `D` or `L` for each side whose clue of `sides`, a clue at an edge whose value is one of its ends, has this cell as its value (upstream's Unequal). Where `sides` is instead valued 0 or 1 and complete, the letter is written from both ends of each edge whose clue is 1 (upstream's Adjacent).",
+                "description": "A record a cell, each closed by a comma: the cell's clue of `records` as a number, 0 for none, then a letter `U`, `R`, `D` or `L` for each side whose clue of `sides`, a clue at an edge whose value is one of its ends, has this cell as its value (upstream's Unequal). Where `sides` is instead valued 0 or 1 and complete, the letter is written from both ends of each edge whose clue is 1 (upstream's Adjacent); where it is valued 0 to 2 and complete, 1 naming the edge's first end and 2 its second, the letter is written at the end its clue names (upstream's Subsets, a horseshoe at its open end).",
                 "properties": {
                   "records": {
                     "type": "string"
                   },
                   "sides": {
                     "type": "string"
+                  },
+                  "hidden": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "What a cell with no clue of `records` is written as, where not 0 (Subsets' `_`)."
+                  },
+                  "from": {
+                    "const": 0,
+                    "description": "Each number written counted from 0, one less than its value (Subsets' sets, the empty set, value 1, written 0); it needs `hidden`."
+                  },
+                  "closed": {
+                    "const": false,
+                    "description": "A comma between two records rather than after each (upstream's Subsets)."
                   }
                 }
               },
@@ -2844,6 +2857,17 @@
                     },
                     "first": {
                       "$ref": "#/$defs/firstCells"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as every value of its domain once, shuffled over the cells (upstream subsets.c's `new_game_desc`, its sixteen sets on sixteen squares). The clues are then the answer's. A board whose cells number other than the domain's values has no such answer, and the deal of one throws.",
+                  "required": ["once"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "once": {
+                      "const": true
                     }
                   }
                 },

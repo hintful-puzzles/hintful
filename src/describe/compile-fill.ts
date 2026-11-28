@@ -61,7 +61,7 @@ import {
 import { dealFlag, ruledKinds, type SettingOut, settingsOf } from "./fill/settings.ts";
 import { sightlinesOf } from "./fill/sightlines.ts";
 import { sizeSettings } from "./fill/sizes.ts";
-import { flagKind, markerKind } from "./fill/values.ts";
+import { endKind, flagKind, markerKind } from "./fill/values.ts";
 
 /** The fill board's part of a game's module, in the order it is written. */
 export function fillOf(
@@ -222,9 +222,16 @@ function dealOf(
             ...(grow.closed === undefined ? {} : { closed: grow.closed }),
           },
         }),
-    // A record's sides of a kind valued 0 or 1 are written from both ends.
+    // A record's sides of a kind valued 0 or 1 are written from both ends,
+    // and of one valued 0 to 2 from the end it names.
     id: id.map((seg) =>
-      "records" in seg && flagKind(d, seg.sides) ? { ...seg, both: true } : seg,
+      !("records" in seg)
+        ? seg
+        : flagKind(d, seg.sides)
+          ? { ...seg, both: true }
+          : endKind(d, seg.sides)
+            ? { ...seg, ends: true }
+            : seg,
     ),
     ...(ruledKinds(json).size === 0 ? {} : { idKinds: id.map(segmentNames) }),
     universes,

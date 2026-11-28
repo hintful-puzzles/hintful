@@ -884,3 +884,31 @@ or give it back.
   Down
 - **THEN** the cursor is on the band, the square it left in focus, and Up
   from the band's top row takes it back to the board
+
+### Requirement: A born game's answer may hold every value once
+
+A deal whose sample is `once` SHALL place every value of the answer's
+domain on one cell each, in a random order, and derive the clues from that
+answer.
+
+#### Scenario: Every set once
+
+- **WHEN** `holding` boards are dealt on several seeds
+- **THEN** each answer holds each of the four sets once, and the answers
+  differ
+
+### Requirement: A born game's ID may write a record a cell as upstream Subsets does
+
+The `records` segment SHALL write, where it names them, a cell with no
+clue as `hidden`, a number one less than its value (`from: 0`), and a
+comma between two records rather than after each (`closed: false`). A side
+clue valued 0 to 2 at every edge SHALL be written as the side's letter at
+the end it names, 1 its first and 2 its second, and an edge named from both
+ends SHALL be refused. The compiler SHALL refuse `from: 0` with no
+`hidden`, and a `hidden` that reads as a number, a side or a comma.
+
+#### Scenario: Upstream's Subsets ID
+
+- **WHEN** the `holding` board {A} {B} over {} {A, B}, {A} hidden, is
+  written
+- **THEN** its ID is `_D,2,0,3UL`, and it reads back to the same board

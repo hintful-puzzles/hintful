@@ -1387,6 +1387,10 @@ the boards a seed deals move").
   (Crossing's numbers, `deal.records`, the `listing` fixture). A square
   board whose rows and columns read alike is never unique: its mirror on
   the leading diagonal reads the same list.
+- **An answer that holds every value once is shuffled, not drawn**
+  (`sample.once`, upstream subsets.c's sixteen sets, the `holding`
+  fixture): a uniform draw of sixteen squares is a permutation about once
+  in 880,000, and a build pays the ladder for what one shuffle gives.
 - **Walls dealt apart from the answer are first cells an opening leaves**
   (`first.opened`, `deal/opened.ts`, upstream crossing.c's walls). Upstream
   stops at joined open squares but does not promise them: a square it lays

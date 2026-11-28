@@ -33,6 +33,7 @@ export type Sample =
   | PictureSample
   | PiecesSample
   | LatinSample
+  | OnceSample
   | SearchSample
   | UniformSample
   | WallsSample;
@@ -285,6 +286,21 @@ export function sampleUniform(
   for (let c = 0; c < n; c++)
     g[c] = first?.[c] ? first[c] : values[randomUpto(rs, values.length)];
   return g;
+}
+
+/** Every value of the domain once, shuffled over the cells (upstream
+ * subsets.c's). */
+export interface OnceSample {
+  readonly once: true;
+}
+
+/** Every value from 1 to `top` once on `n` cells, in a random order. */
+export function sampleOnce(n: number, top: number, rs: RandomState): Uint8Array {
+  if (n !== top)
+    throw new Error(`deal: every value once, ${top} of them, on ${n} cells`);
+  const values = Array.from({ length: top }, (_, i) => i + 1);
+  shuffle(values, rs);
+  return Uint8Array.from(values);
 }
 
 /** An answer the ladder builds: any value of a cell's domain, or `value`

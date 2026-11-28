@@ -28,6 +28,7 @@ export function sampledValue(sample: SampleJson | null): number {
     "build" in sample ||
     "group" in sample ||
     "latin" in sample ||
+    "once" in sample ||
     "search" in sample ||
     "uniform" in sample ||
     "walls" in sample

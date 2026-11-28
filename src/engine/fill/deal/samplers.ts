@@ -14,11 +14,13 @@ import { piecesOf } from "../params/tally.ts";
 import { isUnder } from "../params/under.ts";
 import {
   type LatinSample,
+  type OnceSample,
   type Sample,
   sampleAnswer,
   sampleDominoes,
   sampleLatin,
   sampleLines,
+  sampleOnce,
   samplePicture,
   samplePieces,
   sampleUniform,
@@ -63,6 +65,7 @@ type SampleKey =
   | "picture"
   | "pieces"
   | "latin"
+  | "once"
   | "scatter"
   | "uniform"
   | "walls";
@@ -134,6 +137,10 @@ const SAMPLERS: {
   latin<C extends Clues<C>>(_: LatinSample, cx: DealContext<C>) {
     const top = topValue(cx.module, cx.sp, cx.sizes as unknown as C);
     return answer(sampleLatin(cx.sp, cx.rs, top));
+  },
+  once<C extends Clues<C>>(_: OnceSample, cx: DealContext<C>) {
+    const top = topValue(cx.module, cx.sp, cx.sizes as unknown as C);
+    return answer(sampleOnce(cx.sp.cells.length, top, cx.rs));
   },
   walls(sample, cx) {
     const parts = dividePartition(sample.walls.division, cx.sp, cx.sizes, cx.rs);

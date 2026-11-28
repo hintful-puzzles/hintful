@@ -37,6 +37,14 @@ export function flagKind(d: Description, kind: string): boolean {
   );
 }
 
+/** Whether a kind is valued 0 to 2 at every edge (Subsets' horseshoe), 1
+ * naming the edge's first end and 2 its second, so a record writes it at
+ * the end it names. */
+export function endKind(d: Description, kind: string): boolean {
+  const c = d.clueKinds.get(kind);
+  return c?.at === "edge" && c.complete && valuesOf(d, kind)?.join() === "0,2";
+}
+
 /** Whether a clue kind's value is one of the board's elements (a sign's
  * greater end), not a number. */
 export const isElement = (env: Env, kind: string): boolean =>

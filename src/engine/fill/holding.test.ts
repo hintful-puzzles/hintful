@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import * as holding from "../../generated/engine/testing/fixtures/holding/holding.compiled.ts";
 import { GREEN_WASH } from "../color/colors.ts";
 import { COL_CURSOR, COL_ERROR, COL_HINT_OUTLINE } from "../color/roles.ts";
+import { loadDesc, validateDesc } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
   BACKSPACE,
@@ -23,9 +24,10 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
+import { randomNew } from "../random/index.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
-import { paramSpaceOf } from "./board.ts";
+import { paramSpaceOf, solveBoard } from "./board.ts";
 import { fillGame } from "./game.ts";
 import type { FillMove } from "./notes.ts";
 import { COL_INK } from "./render/palette.ts";
@@ -40,16 +42,26 @@ const holds = (x: number, y: number): boolean =>
 
 const PARAMS = game.defaultParams();
 
-/** The desc of the 2x2 board `answer`, its squares `hidden` written as
- * nothing, each edge's horseshoe read off it. */
+/** The desc of the 2x2 board `answer` as upstream subsets.c writes it: a
+ * square's letters as a number, `_` where it is `hidden`, then a letter for
+ * each side whose neighbor's set its own holds, a comma between two. */
 function descOf(answer: readonly number[], hidden: readonly number[] = []): string {
-  const sp = paramSpaceOf(holding, { w: 2, h: 2 });
-  const shoes = sp.edges.map((e) => {
-    const [a, z] = [answer[sp.edgeEnds[2 * e]], answer[sp.edgeEnds[2 * e + 1]]];
-    return holds(a, z) ? 1 : holds(z, a) ? 2 : 0;
-  });
-  const given = answer.map((v, c) => (hidden.includes(c) ? "" : v));
-  return [...given, ...shoes].join(",");
+  const sides: [string, number, number][] = [
+    ["U", 0, -1],
+    ["R", 1, 0],
+    ["D", 0, 1],
+    ["L", -1, 0],
+  ];
+  return answer
+    .map((v, c) => {
+      const [x, y] = [c % 2, Math.floor(c / 2)];
+      const open = sides.filter(([, dx, dy]) => {
+        const [nx, ny] = [x + dx, y + dy];
+        return nx >= 0 && ny >= 0 && nx < 2 && ny < 2 && holds(v, answer[ny * 2 + nx]);
+      });
+      return `${hidden.includes(c) ? "_" : letters(v)}${open.map(([s]) => s).join("")}`;
+    })
+    .join(",");
 }
 
 const idOf = (answer: readonly number[], hidden: readonly number[] = []): string =>
@@ -119,6 +131,55 @@ describe("a horseshoe", () => {
     expect(text).toContain("∪");
     expect(text).toContain("∩");
     expect(text).toContain("⊂");
+  });
+});
+
+describe("the deal and the ID", () => {
+  it("places every set once, and writes it as upstream does", () => {
+    const sp = paramSpaceOf(holding, { w: 2, h: 2 });
+    let hiddenSeen = 0;
+    const answers = new Set<string>();
+    for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+      const { desc } = game.newDesc(PARAMS, randomNew(seed));
+      const board = game.newState(PARAMS, desc);
+      const solved = solveBoard(holding, board, 0);
+      expect(solved.verdict).toBe("solved");
+      const answer = Array.from(solved.values);
+      expect([...answer].sort()).toEqual([1, 2, 3, 4]);
+      answers.add(answer.join());
+      const hidden = sp.cells.filter((c) => board.dealt.given.valueAt[c] < 0);
+      hiddenSeen += hidden.length;
+      expect(desc).toBe(descOf(answer, hidden));
+    }
+    // The sets are shuffled, and the deal hides what the board still
+    // finishes without.
+    expect(answers.size).toBeGreaterThan(1);
+    expect(hiddenSeen).toBeGreaterThan(0);
+  });
+
+  it("reads a board back as it was written", () => {
+    // {A} {B} over {} {A, B}: {A} holds the {} below it, and {A, B} the {B}
+    // above it and the {} left of it.
+    const desc = "_D,2,0,3UL";
+    expect(descOf(ANSWER, [0])).toBe(desc);
+    expect(validateDesc(game, PARAMS, desc)).toBeNull();
+    const board = game.newState(PARAMS, desc);
+    expect(Array.from(board.dealt.given.valueAt)).toEqual([-1, 3, 1, 4]);
+    expect(solveBoard(holding, board, 0).values).toEqual(Uint8Array.from(ANSWER));
+  });
+
+  it("refuses a horseshoe off the board, one open at both ends, and a set past the last", () => {
+    expect(validateDesc(game, PARAMS, "_DU,2,0,3UL")).not.toBeNull();
+    expect(validateDesc(game, PARAMS, "_D,2,0U,3UL")).not.toBeNull();
+    expect(validateDesc(game, PARAMS, "_D,2,4,3UL")).not.toBeNull();
+    expect(validateDesc(game, PARAMS, "_D,2,0,3UL,")).not.toBeNull();
+    expect(validateDesc(game, PARAMS, "_D,2,0")).not.toBeNull();
+  });
+
+  it("loads no board with a set given twice, which has no answer", () => {
+    expect(validateDesc(game, PARAMS, "1D,1,0,3UL")).toBeNull();
+    expect(loadDesc(game, PARAMS, "1D,1,0,3UL").ok).toBe(false);
+    expect(loadDesc(game, PARAMS, "_D,2,0,3UL").ok).toBe(true);
   });
 });
 

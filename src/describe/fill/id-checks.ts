@@ -14,6 +14,7 @@ import { CompileError, type Env } from "../compile-sorts.ts";
 import { type Description, type DescriptionJson, dividesOf } from "../description.ts";
 import { dealtPartitions } from "./partitions.ts";
 import {
+  endKind,
   flagKind,
   isElement,
   lowBound,
@@ -310,10 +311,20 @@ const SEGMENTS: { readonly [K in SegmentKey]: SegmentRead<SegmentOf<K>> } = {
       const sides = d.clueKinds.get(seg.sides);
       if (
         sides?.at !== "edge" ||
-        !(isElement(env, seg.sides) || flagKind(d, seg.sides))
+        !(isElement(env, seg.sides) || flagKind(d, seg.sides) || endKind(d, seg.sides))
       )
         throw new CompileError(
-          `id: sides of ${seg.sides}, which is not an edge's clue valued one of its ends, nor 0 or 1 at every edge`,
+          `id: sides of ${seg.sides}, which is not an edge's clue valued one of its ends, nor 0 or 1 at every edge, nor 0 to 2`,
+        );
+      // A number counted from 0 writes value 1 as 0, the mark of a cell with
+      // no clue unless another is named.
+      if (seg.from === 0 && seg.hidden === undefined)
+        throw new CompileError(`id: records of ${kind} from 0, with no hidden`);
+      // What a cell with no clue is written as must not read as a number or
+      // a side.
+      if (seg.hidden !== undefined && /[0-9URDL,]/.test(seg.hidden))
+        throw new CompileError(
+          `id: records' hidden ${seg.hidden}, which reads as a number, a side or a comma`,
         );
     },
   },

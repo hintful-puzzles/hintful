@@ -527,6 +527,30 @@ where it can. Every value a step strikes from any square is ringed on the
 band, as a list ringed a step's target, so a strike the letters cannot
 show is still read off the board.
 
+### 25. Every set once is a sample, and the ID is Unequal's record (2.5d)
+
+The deal shuffles every value of the domain over the cells
+(`sample.once`), as upstream subsets.c does; a uniform draw of sixteen
+squares is a permutation once in some 880,000 draws, and a build would pay
+the ladder for what a shuffle gives. A board whose cells number other than
+its values has no such answer, and its deal throws.
+
+Upstream's ID is upstream unequal.c's record a cell, read by the `records`
+segment, which gains what Subsets writes differently, each a property of
+the segment, not a kind: `hidden` (`_` for a square with no set given,
+where Unequal writes 0), `from: 0` (a set counted from 0, one less than
+its value, since the marks hold no value 0) and `closed: false` (a comma
+between two records, not after each). A horseshoe is a clue valued 0 to 2
+at every edge, 1 naming its first end and 2 its second, and the record
+writes its letter at the end it names; the compiler reads that off the
+kind (`endKind`), as it reads Adjacent's both-ends bar (`flagKind`), so the
+description says nothing more. The draft's horseshoe is `range(0, 2)` for
+it, as the fixture's, and its nine techniques were checked sound again.
+
+For the flip: a set given twice reads, and the board is refused at load by
+its answer check, as on every born board, where the hand-written reader
+refused it as a number given twice.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

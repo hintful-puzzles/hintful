@@ -1138,6 +1138,35 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play band: the band is drawn beneath the board/);
   });
 
+  it("writes a horseshoe in a record at the end it names, and refuses a number from 0 with no hidden", () => {
+    const source = "src/engine/testing/fixtures/holding/holding.description.yaml";
+    const holding = sources.get(source);
+    if (holding === undefined || !isFormal(holding)) throw new Error("no holding");
+    type Json = { id: { hidden?: string }[] };
+    const compileHolding = (over: (j: Json) => void) => {
+      const j = structuredClone(holding) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileHolding(() => {})).toContain('"ends":true');
+    expect(() =>
+      compileHolding((j) => {
+        delete j.id[0].hidden;
+      }),
+    ).toThrow(/id: records of given from 0, with no hidden/);
+    expect(() =>
+      compileHolding((j) => {
+        j.id[0].hidden = "R";
+      }),
+    ).toThrow(/id: records' hidden R, which reads as a number, a side or a comma/);
+  });
+
   it("refuses {tally}, which only the library's fish is given, in a game's own wording", () => {
     const source = "src/games/solo/solo.description.yaml";
     const solo = sources.get(source);
@@ -2025,7 +2054,7 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/id: sides of bar, which is not an edge's clue valued one of its ends/);
     expect(
       edited((j) => {
-        j.clues.bar.value = "range(0, 2)";
+        j.clues.bar.value = "range(0, 3)";
       }),
     ).toThrow(/id: sides of bar/);
     expect(

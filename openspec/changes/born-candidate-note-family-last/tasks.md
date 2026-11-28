@@ -3,8 +3,8 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a to 2.5c are in, 2.5d is next (design.md §
-"Decisions" 16, 20 to 24). For 2.2f: the
+on meanwhile: 2.5a to 2.5d are in, the flip 2.5e is next (design.md §
+"Decisions" 16, 20 to 25). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -135,7 +135,9 @@ order.
           notes rule out, a press strikes or gives back (§ "Decisions" 23).
     - [x] 2.5c4 The keyboard into the band, the hint's strike by it and
           its rings on it (design.md § "Decisions" 24).
-  - [ ] 2.5d Every value once (the sample), and upstream's ID.
+  - [x] 2.5d Every value once (`sample.once`), and upstream's ID as a
+        `records` segment with `hidden`, `from: 0`, `closed: false` and
+        sides at the end a horseshoe names (design.md § "Decisions" 25).
   - [ ] 2.5e The flip. Weigh: whether a set a square settles to should
         strike itself from the other squares, which the hand-written game
         never did (no auto-pencil is offered, design.md § "Decisions" 19).

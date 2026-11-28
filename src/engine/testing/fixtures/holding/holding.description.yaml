@@ -51,7 +51,12 @@ deal:
   shoe: every edge's, read off the answer
   value: every set, then as many hidden as the board still finishes
   tier: the one tier
-  sample: { uniform: true }
+  sample: { once: true }
+  hide: given
+# Upstream subsets.c's: a square's set counted from 0, `_` where it is
+# hidden, then the letters of the horseshoes open at it, a comma between two.
+id:
+  - { records: given, sides: shoe, hidden: _, from: 0, closed: false }
 tiers: [Easy]
 names:
   placed: "a set already placed"

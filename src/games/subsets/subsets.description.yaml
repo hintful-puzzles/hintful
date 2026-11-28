@@ -81,7 +81,7 @@ clues:
   # and 0, none, where neither holds the other. Every one there is shows.
   shoe:
     at: edge
-    value: "{0, 1, 2}"
+    value: "range(0, 2)"
     complete: true
     means: >-
       (v = 1) = holds(value(end1(at)), value(end2(at)))
@@ -92,6 +92,12 @@ deal:
   shoe: every edge's, read off the answer
   value: every set, then as many hidden in a shuffled order as the board stays at its tier
   tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { once: true }
+  hide: given
+# Upstream's: a square's set counted from 0, `_` where it is hidden, then the
+# letters of the horseshoes open at it, a comma between two.
+id:
+  - { records: given, sides: shoe, hidden: _, from: 0, closed: false }
 tiers: [Easy, Normal]
 # What a horseshoe's rule-out says; the walk names the sets the neighbor has
 # open in the tally (`open`).
