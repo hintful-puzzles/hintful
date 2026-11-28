@@ -375,7 +375,10 @@ export class Puzzle {
    * repeated presses walk the plan one move per three presses, a manual,
    * self-paced version of Auto-Hint. Any intervening user action sends it back
    * to `show` via `disarmHintApply()`, so the next press shows the
-   * now-relevant step rather than explaining or applying a stale one.
+   * now-relevant step rather than explaining or applying a stale one, except
+   * a press that leaves on display the step the beat is about, as shown
+   * (`hintShownAtBeat`): moving a cursor or putting a square in focus is
+   * no reason to show the step again from where to look.
    *
    * A **signal**, because the chrome reads it: the hint control's label says
    * what the next press does, and a label that only changed on the *next*
@@ -428,11 +431,17 @@ export class Puzzle {
    * route through here. */
   private disarmHintApply(): void {
     this._hintBeat.set("show");
+    this.hintShownAtBeat = null;
     if (this.armedRefusal !== null && this._helpMessage.get() === this.armedRefusal) {
       this.setHelpMessage("");
     }
     this.armedRefusal = null;
   }
+
+  /** What the midend had on display (`hintShown`) when the beat last moved on
+   * from `show`; `null` in `show`, and for an armed refusal, which shows no
+   * step. */
+  private hintShownAtBeat: number | null = null;
 
   /** The banner of a refusal the stepper is armed to play the way forward of,
    * which stays up while it is armed and goes when it is disarmed. */
@@ -805,7 +814,9 @@ export class Puzzle {
       // Second press with nothing done in between: the step shown at where to
       // look is shown whole, its words and every mark.
       this._hintBeat.set("apply");
-      await (await this.board()).explainHint();
+      const board = await this.board();
+      await board.explainHint();
+      this.hintShownAtBeat = await board.hintShown();
       return null;
     }
     if (this.hintBeat === "apply") {
@@ -853,7 +864,10 @@ export class Puzzle {
     // the plan now, and arming behind it would make the next manual press
     // apply a step Auto-Hint is already applying.
     const looking = await board.hintLooking();
-    if (!this._autoHintActive.get()) this._hintBeat.set(looking ? "explain" : "apply");
+    if (!this._autoHintActive.get()) {
+      this._hintBeat.set(looking ? "explain" : "apply");
+      this.hintShownAtBeat = await board.hintShown();
+    }
     return null;
   }
 
@@ -955,7 +969,7 @@ export class Puzzle {
     const consumed = await this.enqueueInput(async () =>
       (await this.board()).processKey(key),
     );
-    if (consumed) this.stopAutoHint("Canceled by manual move");
+    if (consumed) await this.tookManualInput();
     return consumed;
   }
 
@@ -966,8 +980,23 @@ export class Puzzle {
     const consumed = await this.enqueueInput(async () =>
       (await this.board()).processMouse({ x, y }, button),
     );
-    if (consumed) this.stopAutoHint("Canceled by manual move");
+    if (consumed) await this.tookManualInput();
     return consumed;
+  }
+
+  /** A key or press the game took ends Auto-Hint and disarms the stepper,
+   * unless it left on display the step the beat is about, as it was shown: a
+   * press that changed only what the Ui shows (a cursor, a square put in
+   * focus) leaves the next Hint press to go on with that step. */
+  private async tookManualInput(): Promise<void> {
+    const shown = this.hintShownAtBeat;
+    if (
+      shown !== null &&
+      !this._autoHintActive.get() &&
+      (await (await this.board()).hintShown()) === shown
+    )
+      return;
+    this.stopAutoHint("Canceled by manual move");
   }
 
   /** The pointer whose press the game claimed was canceled, by the browser or

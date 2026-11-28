@@ -75,7 +75,13 @@ describe("a hint's first beat shows where to look", () => {
             expect(status()?.activeHintSpans).toBeUndefined();
             const look = frame(b);
             expect(look, `${id}: "${step.explanation}" draws its mark`).not.toBe(bare);
+            // What the Hint button's beat is kept against: the same while
+            // the step is shown as it was, another once it is shown whole.
+            const atLook = midend.hintShown();
+            expect(atLook).not.toBeNull();
+            expect(midend.hintShown()).toBe(atLook);
             midend.explainHint();
+            expect(midend.hintShown()).not.toBe(atLook);
             expect(midend.hintLooking()).toBe(false);
             expect(status()?.activeHintExplanation).toBe(step.explanation);
             if (count(marks(refs)) > count(one))

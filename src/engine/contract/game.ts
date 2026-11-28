@@ -551,9 +551,8 @@ export interface GameHint<
    * A game needs this when its in-place UI changes are an *alternative display*
    * the hint would fight with, because the hint then **suppresses** something
    * and the suppression is invisible until the player touches it — at which
-   * point nothing happens at all, and there is no way out of hint mode. Subsets'
-   * reference aid draws in the hint's overlay space; Crossing's hint takes over
-   * the board's coloring from the selected-run wash.
+   * point nothing happens at all, and there is no way out of hint mode.
+   * Crossing's hint takes over the board's coloring from the selected-run wash.
    *
    * `() => true` dismisses on every UI change — the simplest rule, and enough
    * when the game has no "follow this by hand" flow to protect. Answering per

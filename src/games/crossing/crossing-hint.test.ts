@@ -874,7 +874,7 @@ describe("crossing hint — the frame", () => {
     // on screen *and* — because a displayed hint suppresses the run wash — do
     // nothing visible at all, leaving no way out of hint mode. A selection
     // change is a `UI_UPDATE`, which `hint.keepTrack` never sees;
-    // `hint.uiUpdateClears` is what dismisses it (Subsets' precedent).
+    // `hint.uiUpdateClears` is what dismisses it.
     const { midend, step } = hinted("hint-dismiss");
     const params = EASY_PRESETS[0];
     const puzzle = board(params, "hint-dismiss").puzzle;

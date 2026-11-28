@@ -117,6 +117,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   hintLooking(): boolean {
     return this.engine.hintLooking();
   }
+  hintShown(): number | null {
+    return this.engine.hintShown();
+  }
   explainHint(): void {
     this.engine.explainHint();
   }

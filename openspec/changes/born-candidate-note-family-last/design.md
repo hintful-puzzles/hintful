@@ -612,6 +612,23 @@ The rest the flip needed:
 - **The `holding` fixture gained `noShoe` and `smaller`**, with a plant,
   since its hint had no step left once clean was the board's.
 
+### 27. A press that leaves the step keeps the Hint control's beat (2.5f)
+
+The midend kept the step through a badge press, as it keeps one through any
+change of what the Ui shows where the game names no `uiUpdateClears`, but
+every press the game took sent the Hint control back to "Hint", whose press
+then showed the same step again from where to look: on every game, a cursor's
+move did the same. Of the three answers the task named, the step and the
+control are kept together: the midend says what it has on display
+(`hintShown`, the same number while the same step object is shown at the
+same beat), the page records it when the beat moves on from show, and a key
+or press that leaves it as it was keeps the beat (`tookManualInput`). A move
+on track that refreshes the step, a move that puts it away, and a game whose
+`uiUpdateClears` dismisses it all change what is shown, so they disarm as
+before; an armed refusal shows no step and disarms too. Putting the step
+away on a badge press was refused: the band's own hint gesture presses a
+badge, and the player following the hint by hand would lose it.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

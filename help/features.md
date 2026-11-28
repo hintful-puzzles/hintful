@@ -107,7 +107,8 @@ A step that carries on from the one before, such as the second half of a slide
 or the rest of a run the last step started, skips the first beat: you're
 already looking there. Anything you do in between — a move of your own, undo,
 redo — puts the hint back to the first beat, so a press always shows before it
-plays.
+plays. Moving the cursor, or anything else that leaves the hint on screen as it
+was, keeps the button where it was.
 
 **The words in pills point at the board.** Tap or click one, "this cell" or
 "the outlined cells", and the marks those words mean light up for a second,

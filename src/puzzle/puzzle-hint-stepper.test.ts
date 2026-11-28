@@ -3,7 +3,8 @@
 // it, and a third *applies* that one step via executeHint(true) (which hides the
 // plan rather than previewing the next) and disarms, so the player gets one
 // applied hint per request. A step the midend shows whole at once (a journey's
-// later leg) skips the explain. Any intervening user action also disarms.
+// later leg) skips the explain. Any intervening user action also disarms,
+// unless it leaves the step on display as it was shown.
 // These tests drive Puzzle's
 // orchestration directly against a stub worker — the logic lives entirely in
 // Puzzle, no midend/worker needed.
@@ -46,6 +47,7 @@ function makePuzzle(
   setExecuteError: (e: string | null) => void;
   setWayForward: (w: WayForward | null) => void;
   setLooking: (l: boolean) => void;
+  setKeyKeepsStep: (k: boolean) => void;
 } {
   const calls: string[] = [];
   let hintError: string | null = null;
@@ -54,14 +56,21 @@ function makePuzzle(
   // The midend shows a step whole at once unless a test says otherwise, which
   // is the stepper's two-beat rhythm.
   let looking = false;
+  // What the midend has on display: a key changes it unless a test says it
+  // leaves the step, as a cursor's move does.
+  let shown = 0;
+  let keyKeepsStep = false;
   const workerPuzzle = {
     hint: vi.fn(async () => {
       calls.push("show");
+      shown++;
       return hintError;
     }),
     hintLooking: vi.fn(async () => hintError === null && looking),
+    hintShown: vi.fn(async () => (hintError === null ? shown : null)),
     explainHint: vi.fn(async () => {
       calls.push("explain");
+      shown++;
     }),
     hintWayForward: vi.fn(async () => (hintError === null ? null : wayForward)),
     executeHint: vi.fn(async () => {
@@ -73,6 +82,7 @@ function makePuzzle(
     }),
     processKey: vi.fn(async () => {
       calls.push("key");
+      if (!keyKeepsStep) shown++;
       return true;
     }),
     ...overrides,
@@ -110,6 +120,9 @@ function makePuzzle(
     },
     setLooking: (l) => {
       looking = l;
+    },
+    setKeyKeepsStep: (k) => {
+      keyKeepsStep = k;
     },
   };
 }
@@ -173,6 +186,30 @@ describe("Hint button stepper", () => {
     await puzzle.processKey(65); // intervening action disarms
     await puzzle.hint(); // shows again
     expect(calls).toEqual(["show", "key", "show"]);
+  });
+
+  it("a keypress that leaves the step on display keeps each beat", async () => {
+    const { puzzle, calls, setLooking, setKeyKeepsStep } = makePuzzle();
+    setLooking(true);
+    setKeyKeepsStep(true);
+    await puzzle.hint();
+    await puzzle.processKey(65);
+    expect(puzzle.hintBeat).toBe("explain");
+    await puzzle.hint();
+    await puzzle.processKey(65);
+    expect(puzzle.hintBeat).toBe("apply");
+    await puzzle.hint();
+    expect(calls).toEqual(["show", "key", "explain", "key", "apply"]);
+  });
+
+  it("a keypress keeps no armed refusal, which shows no step", async () => {
+    const { puzzle, setHintError, setWayForward, setKeyKeepsStep } = makePuzzle();
+    setHintError(FIX_MISTAKES_FIRST);
+    setWayForward("clear");
+    setKeyKeepsStep(true);
+    await puzzle.hint();
+    await puzzle.processKey(65);
+    expect(puzzle.hintBeat).toBe("show");
   });
 
   it("a refusal with no way forward does not arm the apply", async () => {

@@ -208,6 +208,10 @@ export interface EngineCore {
   hint(look?: boolean): string | null;
   /** Whether the displayed step shows only where to look. */
   hintLooking(): boolean;
+  /** What the hint shows: the same number while the same step is on display
+   * as before (at where to look, or whole), another once it is not, and
+   * `null` with none on display. */
+  hintShown(): number | null;
   /** Show the whole of a step shown at where to look: its words and marks. */
   explainHint(): void;
   executeHint(hideAfter?: boolean): string | null;
@@ -1112,10 +1116,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * animation or flash in flight plays on, since the move it belongs to
    * still stands: the release after a winning press is such a change in a
    * game that tidies its `Ui` there, and must not end the win's highlight.
-   * A game whose change is an alternative display (Subsets'
-   * reference aid) dismisses any displayed hint here, so the aid is not
-   * suppressed by a still-active hint; `afterTransition` re-emits the status
-   * bar without the hint text. */
+   * A game whose change is an alternative display the hint would suppress
+   * dismisses any displayed hint here (`GameHint.uiUpdateClears`);
+   * `afterTransition` re-emits the status bar without the hint text. */
   private uiUpdated(): void {
     if (this.uiUpdateDismisses()) this.clearHint();
     this.afterTransition();
@@ -1368,6 +1371,22 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   hintLooking(): boolean {
     return this.displayedHintLook !== null;
+  }
+
+  /** A number for each step object shown, so that a step refreshed into
+   * another object, or another step, reads as another. */
+  private readonly shownIds = new WeakMap<HintStep<Move>, number>();
+  private nextShownId = 0;
+
+  hintShown(): number | null {
+    const step = this.displayedHintStep;
+    if (step === null) return null;
+    let id = this.shownIds.get(step);
+    if (id === undefined) {
+      id = this.nextShownId++;
+      this.shownIds.set(step, id);
+    }
+    return id * 2 + (this.hintLooking() ? 1 : 0);
   }
 
   explainHint(): void {

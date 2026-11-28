@@ -3,8 +3,7 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), and Subsets is born
-(2.5e, design.md § "Decisions" 26): 2.5f, a hint's state after a badge
-press, is next, then 2.6 Map. For 2.2f: the
+(2.5e, design.md § "Decisions" 26, and 2.5f): 2.6 Map is next. For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -103,7 +102,7 @@ order.
   - [ ] 2.4g The flip: the hint restated as `says`, cases, spec deltas,
         guides. In the browser: an empty tile drawn as the partition's
         pastel fill against upstream's rounded tile, and the hint's clicks.
-- [ ] 2.5 Subsets born. Read against `0cb9604be` (design.md § "Decisions"
+- [x] 2.5 Subsets born. Read against `0cb9604be` (design.md § "Decisions"
       16), each piece on the `holding` fixture.
   - [x] 2.5a The horseshoe painter, `shoe`, on `holding`. In the app at
         2.5e.
@@ -141,14 +140,9 @@ order.
   - [x] 2.5e The flip. Weighed: a placed set strikes itself from the other
         squares, and a given's from the deal (design.md § "Decisions" 26,
         and § "What each flip changed for a player").
-  - [ ] 2.5f In the app: with a hint step on display, a press on another
-        square's badge leaves the sentence and the marks up and turns
-        "Apply the hint" back to "Hint" (2026-11-28, Normal board
-        `13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9`, a `carryOut` step).
-        Find what the midend decides there (`uiUpdateDismisses`, the
-        hint's keep-track on a `UI_UPDATE`) and make it one of: the step
-        kept, the button with it, or put away whole. The hint's own band
-        gesture presses a badge, so following it must keep the step.
+  - [x] 2.5f A badge press, as any press leaving the step on display,
+        keeps the step and the Hint control's beat (design.md §
+        "Decisions" 27). Seen in the app.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
 
 ## 3. Finish

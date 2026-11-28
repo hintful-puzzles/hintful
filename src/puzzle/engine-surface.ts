@@ -58,6 +58,9 @@ export interface BoardSurface {
   hint(look?: boolean): string | null;
   /** Whether the displayed step shows only where to look. */
   hintLooking(): boolean;
+  /** What the hint shows: the same number while the same step is on display
+   * as it was, `null` with none. */
+  hintShown(): number | null;
   /** Show the whole of a step shown at where to look. */
   explainHint(): void;
   /** Apply one step of the stored plan in slow motion. `hideAfter` (the

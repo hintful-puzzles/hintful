@@ -36,8 +36,9 @@ const COMMANDS: Record<string, (p: Puzzle) => Promise<unknown>> = {
 
 /** What a command asks the board after its own method, where it asks more. */
 const THEN_ASKS: Record<string, readonly string[]> = {
-  // Whether the step is shown at where to look decides the next beat.
-  hint: ["hintLooking"],
+  // Whether the step is shown at where to look decides the next beat, and
+  // what is shown is what a later press is measured against.
+  hint: ["hintLooking", "hintShown"],
 };
 
 function makePuzzle(): { puzzle: Puzzle; asked: string[]; dealBoard: () => void } {
