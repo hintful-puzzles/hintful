@@ -41,7 +41,7 @@ import {
   stepsBlock,
 } from "./compile-stated.ts";
 import { capitalized, compileTechnique } from "./compile-technique.ts";
-import { freeNames, reads } from "./compile-terms.ts";
+import { freeNames, kindsRead, reads } from "./compile-terms.ts";
 import { type MarkRead, violationCheck } from "./compile-violations.ts";
 import {
   cellMarkOf,
@@ -365,7 +365,29 @@ export function compileGame(
     for (const a of blocksOf(json, boxes) ?? [])
       if (typeof a === "string") env.sizes.read.add(a);
   Out.own("", () => {
-    for (const [kind, c] of d.clueKinds) clues.set(kind, clueSorts(kind, c, env));
+    // A kind's values may read another kind (the givens, over the answer's
+    // domain, which reads Undead's mirrors): its sorts come after that
+    // kind's, and the kinds keep the description's order.
+    const pending = new Map(d.clueKinds);
+    while (pending.size > 0) {
+      const ready = [...pending].filter(
+        ([kind, c]) =>
+          c.value === null ||
+          [...kindsRead(c.value, d.defs)].every((k) => k === kind || !pending.has(k)),
+      );
+      if (ready.length === 0)
+        throw new CompileError(
+          `clues: ${[...pending.keys()].join(", ")} each read another's values`,
+        );
+      for (const [kind, c] of ready) {
+        clues.set(kind, clueSorts(kind, c, env));
+        pending.delete(kind);
+      }
+    }
+    const sorted = new Map(clues);
+    clues.clear();
+    for (const kind of d.clueKinds.keys())
+      clues.set(kind, sorted.get(kind) as ClueKind);
   });
   const domainLines = Out.own("domainOf", () =>
     cellDomain(d.domain, env, d.json.sizes),

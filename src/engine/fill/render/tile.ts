@@ -202,10 +202,13 @@ function drawTile<C extends Clues<C>>(
   const ty = lay.coord(y, ts);
   const tile = { x: tx, y: ty, w: ts, h: ts };
   // A board of numbers draws a value's piece where the player's preference
-  // draws pictures, and its glyph otherwise.
+  // draws pictures, and its glyph otherwise; a value only the deal places
+  // (Undead's mirrors) is always its piece.
   const pictured = (lineWord & PICTURED) !== 0;
   const pieceOf = (v: number) =>
-    typed && !pictured ? null : (pal.byValue.get(v) ?? null);
+    typed && !pictured && play.given?.[v] === undefined
+      ? null
+      : (pal.byValue.get(v) ?? null);
   const frame: TileFrame = {
     dr,
     ts,

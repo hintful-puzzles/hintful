@@ -55,7 +55,7 @@ import {
 } from "./board.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
-import { countedOf } from "./counts.ts";
+import { countedOf, countRecords } from "./counts.ts";
 import type { DealtFillModule } from "./deal/context.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, glyphsIn } from "./desc.ts";
@@ -315,6 +315,7 @@ export function fillGame<C extends Clues<C> & object>(
       glyph === undefined ? [] : [[Number(v), glyph]],
     ),
   );
+  const counted = countedOf(play);
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
@@ -324,17 +325,22 @@ export function fillGame<C extends Clues<C> & object>(
     glyphs:
       play.numbers === undefined
         ? () => valueGlyphs
-        : // Every value a cell's domain mask can hold that has a glyph.
+        : // Every value a cell's domain mask can hold that has a glyph, and
+          // each the deal alone places as its own.
           (b) => {
             const { draw, top } = boardGlyphs(module, spaceOf(module, b), b.dealt);
-            return Object.fromEntries(
-              Array.from({ length: top }, (_, i) => [i + 1, ` ${draw(i + 1)} `]),
-            );
+            return {
+              ...Object.fromEntries(
+                Array.from({ length: top }, (_, i) => [i + 1, ` ${draw(i + 1)} `]),
+              ),
+              ...valueGlyphs,
+            };
           },
     ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+    ...(counted === null ? {} : { counts: (b) => countRecords(b, counted) }),
     off: (b) => offKinds(deal, b.dealt as Readonly<Record<string, number>>),
     ...(module.valueMargins === undefined
       ? {}
@@ -478,7 +484,7 @@ export function fillGame<C extends Clues<C> & object>(
   /** The input, a press on a record of the row of counts typing its value's
    * key (`counts.ts`). */
   const interpretMove =
-    countedOf(play) === null
+    counted === null
       ? inputs.interpretMove
       : (b: FillBoard<C>, ui: FillUi, ds: FillDrawState, p: Point, button: number) => {
           const v = isMouseDown(button) ? render.countPressed(b, ds, p) : null;

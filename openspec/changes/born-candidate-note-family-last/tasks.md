@@ -1,14 +1,15 @@
 ## Next
 
-2.1c, the ID, with the mirrors drawn on a board of numbers. Undead's
-answer gives a mirror one value, 4, and its painter (`fall`, `rise`) needs
-its way; so the answer's mirrors become two values, `\` 4 and `/` 5, the
-clue's meaning `value(at) = v + 3`. A board of numbers then needs
-`play.given` (drawn by its painter whatever the preference; no key, no
-keypad key, no note), and its domain differs from cell to cell at the
-givens alone, which `play.ts`'s "the domain differs from cell to cell"
-refuses today; `keypadTop` reads the domain off the params, where no
-mirror is dealt.
+2.1d, the deal, on Undead's description (the `sighting` fixture deals no
+mirror: `never: mirror`). Undead's answer becomes the `sighting` shape:
+`\` 4 and `/` 5, the mirror clue's meaning `value(at) = v + 3`, the
+domain `{d in range(1, 5) where (clue(mirror, c) < 0 and d < 4) or d =
+clue(mirror, c) + 3}`, the mirror clue listed before `sees`. Then
+`sample.first` with a value of several drawn at random. Upstream
+undead.c's `new_game_desc` gives each square a mirror at 2 in 5, either
+way alike, with no symmetry, and draws again where the monsters are four
+or fewer or under 0.48 or over 0.78 of the squares; then the rest of
+2.1d's list.
 
 ## 1. Design
 
@@ -36,11 +37,11 @@ order.
   - [x] 2.1b A board of numbers drawn as pictures (design.md § "Decisions"
         4), on `portraying`. For 2.1e to weigh: the keypad says G, V, Z
         where Undead's says Ghost, Vampire, Zombie.
-  - [ ] 2.1c The ID: the totals, the mirrors' glyph stream, the
-        sightings round the grid clockwise (`sides` with the bottom and
-        left read backwards).
+  - [x] 2.1c The ID: the totals, the mirrors, the sightings clockwise
+        (`sides`, bottom and left backwards), on `sighting`; mirrors as
+        values only the deal places (design.md § "Decisions" 5).
   - [ ] 2.1d The deal: mirrors first on a share of the cells, each one of
-        the values its meaning allows at random; a sightline length bound
+        the two mirror values at random (design.md § "Decisions" 5); a sightline length bound
         and the build's settings by tier; a board refused for holding one
         kind of monster; Easy graded by a rung's passes; timed.
   - [ ] 2.1e The flip: words, cases, spec deltas, guides.

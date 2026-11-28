@@ -239,6 +239,13 @@ function withGivens(data: DescriptionFile, path: string): DescriptionFile {
     throw new DescriptionError(
       `${path}: given: a size is named c, which the answer's domain reads as its cell`,
     );
+  // A value the deal alone places (Undead's mirrors) is a cell's by its own
+  // clue, and never a given: the values are those below it.
+  const dealOnly = Object.keys(data.play.given ?? {}).map(Number);
+  const value =
+    dealOnly.length === 0
+      ? domain.replace(/\bc\b/g, "at")
+      : `range(1, ${Math.min(...dealOnly) - 1})`;
   return {
     ...data,
     clues:
@@ -247,7 +254,7 @@ function withGivens(data: DescriptionFile, path: string): DescriptionFile {
         : {
             [GIVEN]: {
               at: "cell",
-              value: domain.replace(/\bc\b/g, "at"),
+              value,
               means: "value(at) = v",
             },
             ...clues,

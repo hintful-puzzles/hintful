@@ -65,8 +65,9 @@ export function placesOf(
   kind: string,
   values: number,
   order?: "columns",
+  sides?: readonly Side[],
 ): readonly number[] {
-  const els = elements(sp, universeOf(deal, kind), order);
+  const els = elements(sp, universeOf(deal, kind), order, sides);
   if (deal.perValue?.includes(kind) !== true) return els;
   if (values < 1) throw new Error(`id: ${kind} is one a value, and the board has none`);
   return els.flatMap((e) =>
@@ -110,15 +111,50 @@ export const maxOf = <C>(
   return max(sp, at, cl as C);
 };
 
+/** A side of the board, whose slots are beyond its lines' ends, its slots
+ * left to right or top to bottom, or `backwards` the other way. */
+export type Side =
+  | "top"
+  | "bottom"
+  | "left"
+  | "right"
+  | "top backwards"
+  | "bottom backwards"
+  | "left backwards"
+  | "right backwards";
+
+/** The slots in the order `sides` writes them, each side once. */
+function sidesOrder(sp: GridSpace, sides: readonly Side[]): readonly number[] {
+  const { w, h } = sp;
+  // The space numbers them above each column, below each, left of each row
+  // and right of each.
+  const first = { top: 0, bottom: w, left: 2 * w, right: 2 * w + h };
+  const count = { top: w, bottom: w, left: h, right: h };
+  const named = sides.map((s) => s.split(" ")[0] as keyof typeof first);
+  if (new Set(named).size !== 4) throw new Error("id: sides, not each side once");
+  return sides.flatMap((s, i) => {
+    const slots = Array.from(
+      { length: count[named[i]] },
+      (_, k) => first[named[i]] + k,
+    );
+    return s.endsWith(" backwards") ? slots.reverse() : slots;
+  });
+}
+
 /** The elements a kind sits at, in the order a segment writes them: a cell's
  * kind by rows or by columns, a line's kind the rows then the columns, or
- * the columns first. */
+ * the columns first; a slot's kind, where `sides` is given, side by side. */
 export function elements(
   sp: GridSpace,
   universe: Universe,
   order?: "columns",
+  sides?: readonly Side[],
 ): readonly number[] {
   const { w, h } = sp;
+  if (sides !== undefined) {
+    if (universe !== "slots") throw new Error("id: sides, on a kind not at slots");
+    return sidesOrder(sp, sides);
+  }
   if (order !== "columns") return sp[universe];
   if (universe === "edges" || universe === "slots" || universe === "corners")
     throw new Error(`id: a kind at ${universe} is written in their order`);

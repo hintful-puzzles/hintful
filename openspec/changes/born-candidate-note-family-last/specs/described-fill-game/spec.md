@@ -74,3 +74,48 @@ value or an empty square.
 
 - **WHEN** a `portraying` description's alphabet is `GAZ`
 - **THEN** the compiler refuses it, since `A` switches the pictures
+
+### Requirement: A born game's board of numbers may hold values only the deal places
+
+`play.given` on a board of numbers SHALL name values, running on from one
+another above every value the player places, that only a clue fixing a
+cell holds: each SHALL be drawn by its painter whatever the player's
+preference, printed as its glyph, offered no key and taken by no note, and
+the keypad SHALL end below them. The answer's domain MAY differ from cell
+to cell where such a clue narrows it, and the board's givens SHALL be the
+values below them.
+
+#### Scenario: A mirror on a board of monsters
+
+- **WHEN** a `sighting` board with a mirror is drawn as pictures and again
+  as letters
+- **THEN** the mirror is drawn as the same lines both times, and its
+  keypad offers a ghost and a zombie alone
+
+### Requirement: A born game's derived clue may read a kind dealt before it
+
+A clue a sampled deal derives whose meaning reads another clue kind SHALL
+be handed the clues dealt before it, and the compiler SHALL refuse one
+reading a kind dealt after it.
+
+#### Scenario: Sightlines through mirrors
+
+- **WHEN** the `sighting` description lists its sightline numbers after
+  its mirrors, and again before them
+- **THEN** the first deals the numbers through the mirrors, and the second
+  is refused
+
+### Requirement: A born game's ID may write slots side by side, a side backwards
+
+An `id:` segment of a kind at slots, `numbers` or a stream, SHALL write
+the slots side by side in the order `sides` names, each side left to right
+or top to bottom, or the other way where it is named `backwards`, and the
+compiler SHALL refuse a side named twice. The text format SHALL print a
+row of counts beneath the grid, each record its value's glyph and count.
+
+#### Scenario: Upstream Undead's clockwise numbers
+
+- **WHEN** a `sighting` ID writes twelve numbers round a 3x3 grid as
+  top, right, bottom backwards, left backwards
+- **THEN** each number is read at the slot going round the grid clockwise
+  from the top left, and the board writes back the same ID

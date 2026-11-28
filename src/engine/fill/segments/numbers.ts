@@ -1,6 +1,6 @@
 /** The `numbers` segment: a kind's values, the first after `before` and the
- * rest after commas (or `between`), in the space's order or the columns
- * first; a kind one a value, each element's values in turn; a clue at the
+ * rest after commas (or `between`), in the space's order, the columns
+ * first, or on slots side by side; a kind one a value, each element's values in turn; a clue at the
  * board, each record the deal may hold in turn, its last field. */
 
 import { isDigit } from "../../game-id/decimal.ts";
@@ -14,6 +14,7 @@ import {
   placeCount,
   placesOf,
   type SegmentKind,
+  type Side,
 } from "./segment.ts";
 
 export type NumbersSegment = {
@@ -22,6 +23,9 @@ export type NumbersSegment = {
   /** What stands between two elements, where not a comma. */
   readonly between?: string;
   readonly order?: "columns";
+  /** On slots, the sides in the order written (upstream Undead's clockwise
+   * from the top left). */
+  readonly sides?: readonly Side[];
   /** What an element without a clue is written as, where not nothing. */
   readonly hidden?: string;
   /** Whether a comma follows every element, the last too, rather than
@@ -67,7 +71,7 @@ export const numbers: SegmentKind<NumbersSegment> = {
             seg.numbers,
             dealt[seg.numbers as keyof typeof dealt] as FieldClue,
           )
-        : placesOf(deal, sp, seg.numbers, values, seg.order).map(
+        : placesOf(deal, sp, seg.numbers, values, seg.order, seg.sides).map(
             (e) => listOf(seg.numbers).valueAt[e],
           );
     let out = "";
@@ -87,7 +91,7 @@ export const numbers: SegmentKind<NumbersSegment> = {
     const board = deal.universes[seg.numbers] === "board";
     const places = board
       ? recordsOf(deal, seg.numbers).keys.map((_, k) => k)
-      : placesOf(deal, sp, seg.numbers, values, seg.order);
+      : placesOf(deal, sp, seg.numbers, values, seg.order, seg.sides);
     const read: [number, number][] = [];
     places.forEach((e, i) => {
       if (i === 0) {

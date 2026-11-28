@@ -88,6 +88,25 @@
         }
       ]
     },
+    "slotSides": {
+      "type": "array",
+      "description": "On slots, the four sides in the order written, each side's slots left to right or top to bottom, or with `backwards` right to left or bottom to top (Salad's top, left, bottom, right; upstream Undead's clockwise from the top left: top, right, bottom backwards, left backwards); absent, the space's order, top, bottom, left, right.",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "top",
+          "bottom",
+          "left",
+          "right",
+          "top backwards",
+          "bottom backwards",
+          "left backwards",
+          "right backwards"
+        ]
+      }
+    },
     "firstCells": {
       "type": "object",
       "description": "A value dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational).",
@@ -1898,12 +1917,7 @@
                     "description": "`digits`' number written as the board draws it, one character (`engine/fill/glyphs.ts`): a numeral or by the ruleset a letter, the empty square `X` (Salad's). The kind is `given`, or a clue with `glyph`."
                   },
                   "sides": {
-                    "type": "array",
-                    "description": "On slots, the four sides in the order written, each side's slots left to right or top to bottom (Salad's top, left, bottom, right); absent, the space's order, top, bottom, left, right.",
-                    "minItems": 4,
-                    "maxItems": 4,
-                    "uniqueItems": true,
-                    "items": { "enum": ["top", "bottom", "left", "right"] }
+                    "$ref": "#/$defs/slotSides"
                   }
                 }
               },
@@ -1926,6 +1940,9 @@
                   },
                   "order": {
                     "enum": ["columns"]
+                  },
+                  "sides": {
+                    "$ref": "#/$defs/slotSides"
                   },
                   "hidden": {
                     "type": "string",

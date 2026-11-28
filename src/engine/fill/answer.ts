@@ -39,6 +39,7 @@ import {
   washedValues,
 } from "./board.ts";
 import { cornerClueAt, signedText } from "./corners.ts";
+import type { CountRecord } from "./counts.ts";
 import type { Edit } from "./edit.ts";
 import { BALL_GLYPH } from "./glyphs.ts";
 import type { FillMove } from "./notes.ts";
@@ -73,6 +74,10 @@ export interface AnswerReading<C> {
   readonly lineLists?: readonly (keyof C)[];
   /** The clue kinds at slots, printed in a rim round the grid. */
   readonly slotClues?: readonly (keyof C)[];
+  /** The records of the clue at the board drawn as counts (`play.counts`),
+   * printed beneath the grid as the board draws them, each its value's
+   * glyph and its count. */
+  readonly counts?: (board: FillBoard<C>) => readonly CountRecord[];
   /** The clue kinds `board`'s ruleset does not deal, which print no rim
    * (Salad's border on a Numbers board). */
   readonly off?: (board: FillBoard<C>) => ReadonlySet<string>;
@@ -339,16 +344,20 @@ export function textFormat<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
 ): string {
-  const grid = withValueMargins(
+  const grid = withCounts(
     reading,
     board,
-    withSlotClues(
+    withValueMargins(
       reading,
       board,
-      withCornerClues(
+      withSlotClues(
         reading,
         board,
-        withPartClues(reading, board, gridFormat(reading, board)),
+        withCornerClues(
+          reading,
+          board,
+          withPartClues(reading, board, gridFormat(reading, board)),
+        ),
       ),
     ),
   );
@@ -381,6 +390,22 @@ export function textFormat<C extends Clues<C>>(
     return row.length === 0 ? line : `${line} ${row.join(" ")}`;
   });
   return [...above.map((l) => ` ${l}`), ...lines].join("\n");
+}
+
+/** `grid` with the row of counts beneath it, each record its value's glyph,
+ * a colon and its count (upstream undead.c's `G: 4 V: 2 Z: 3`). */
+function withCounts<C extends Clues<C>>(
+  reading: AnswerReading<C>,
+  board: FillBoard<C>,
+  grid: string,
+): string {
+  const records = reading.counts?.(board) ?? [];
+  if (records.length === 0) return grid;
+  const glyphs = reading.glyphs(board);
+  const row = records
+    .map((r) => `${(glyphs[r.value] ?? String(r.value)).trim()}: ${r.count}`)
+    .join(" ");
+  return `${grid.replace(/\n$/, "")}\n\n${row}\n`;
 }
 
 /** `grid` with the clues one a value at its lines before them, as the board

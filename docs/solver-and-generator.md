@@ -1364,6 +1364,9 @@ the boards a seed deals move").
   there is none fills the board with the other value: state what it needs
   dealt (`counted(d)`, a record of `d` exists) beside what it reads. The
   records are distinct too, or the soundness check finds a board with two.
+- **A derived clue reads only the kinds dealt before it**, in the order the
+  description lists its clues: Undead's sightlines through its mirrors
+  list the mirrors first, and the compiler refuses the other order.
 
 ### Recover emergent parameters from upstream's boards
 

@@ -29,7 +29,14 @@ import {
 } from "../game-id.ts";
 import type { ValueGlyphs } from "../glyphs.ts";
 import { type CodeSaid, codeSaid, isNumberCode } from "./code-said.ts";
-import { type Decoding, maxOf, type SegmentKind, universeOf } from "./segment.ts";
+import {
+  type Decoding,
+  elements,
+  maxOf,
+  type SegmentKind,
+  type Side,
+  universeOf,
+} from "./segment.ts";
 
 export type StreamSegment = {
   /** The kind written as its number: a digit, or with `apart` a whole
@@ -59,31 +66,6 @@ export type StreamSegment = {
    * right), each side's slots in the space's order. */
   readonly sides?: readonly Side[];
 };
-
-/** A side of the board, whose slots are beyond its lines' ends. */
-type Side = "top" | "bottom" | "left" | "right";
-
-/** The elements of place `u` in the order the segment writes them: the
- * space's, or on slots its sides in the order `sides` gives. */
-function streamOrder(
-  sp: GridSpace,
-  u: Universe,
-  sides?: readonly Side[],
-): readonly number[] {
-  if (sides === undefined) return sp[u];
-  if (u !== "slots") throw new Error("id: sides, on a stream not at slots");
-  const { w, h } = sp;
-  // The space numbers them above each column, below each, left of each row
-  // and right of each.
-  const first: Record<Side, number> = {
-    top: 0,
-    bottom: w,
-    left: 2 * w,
-    right: 2 * w + h,
-  };
-  const count: Record<Side, number> = { top: w, bottom: w, left: h, right: h };
-  return sides.flatMap((s) => Array.from({ length: count[s] }, (_, i) => first[s] + i));
-}
 
 /** How the segment's own number is written and read: as the board's glyph
  * where it writes glyphs, else in decimal. */
@@ -263,7 +245,7 @@ function readStream<C extends Clues<C>>(
   if (seg.before !== undefined && !r.accept(seg.before))
     return new Read(kindsOf(seg)).lists(all);
   const onBoard = onBoardOf(deal, sp, u);
-  const elements = streamOrder(sp, u, seg.sides).filter(onBoard);
+  const written = elements(sp, u, undefined, seg.sides).filter(onBoard);
   // A hexagon's outside kind, a one-valued marker, holds every cell the
   // stream leaves out.
   const outside = u === "cells" ? (deal.hexagon?.outside ?? null) : null;
@@ -294,14 +276,14 @@ function readStream<C extends Clues<C>>(
   // Whether the element before was written, so a number here has no run
   // before it.
   let afterClue = false;
-  for (let pos = 0; pos < elements.length; ) {
+  for (let pos = 0; pos < written.length; ) {
     if (r.peekIs(isRun)) {
       pos += r.char().charCodeAt(0) - 96;
-      if (pos > elements.length) r.fail(DESC_TOO_LONG);
+      if (pos > written.length) r.fail(DESC_TOO_LONG);
       afterClue = false;
       continue;
     }
-    const e = elements[pos];
+    const e = written[pos];
     const code = codes.read.find((c) => r.accept(c.code));
     if (code !== undefined) {
       read.push(code.kind, e, code.value ?? number(code.kind, e));
@@ -418,7 +400,7 @@ export const stream: SegmentKind<StreamSegment> = {
     // Whether the element before was written, so a number here has no run
     // before it, and `apart` is written there.
     let afterClue = false;
-    for (const e of streamOrder(sp, u, seg.sides)) {
+    for (const e of elements(sp, u, undefined, seg.sides)) {
       // A cell off the board is never written, and ends a run of letters
       // (upstream bricks.c).
       if (!onBoard(e)) {

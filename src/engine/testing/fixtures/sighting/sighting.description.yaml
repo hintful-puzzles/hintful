@@ -1,0 +1,135 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: ghosts and zombies among mirrors, a number beyond
+# each end of every row and column counting the zombies its sightline passes,
+# and a count at the board of how many of each the board holds, for the fill
+# engine's tests of values only the deal places on a board of numbers (the
+# mirrors, drawn by their painters whatever the player's preference, typed by
+# no key and noted by no note), and of an ID written as upstream undead.c's:
+# the counts, then the grid's mirrors and given monsters between runs of
+# empty squares, then the numbers going round the grid clockwise from the top
+# left, on a description that names no game.
+game: sighting
+produces: numbers
+sizes:
+  w: { min: 2, max: 6 }
+  h: { min: 2, max: 6 }
+space:
+  grid: { w: "w", h: "h" }
+  slots: true
+  units: []
+answer:
+  # 1 is a ghost, 2 a zombie, and 3 a mirror `\` and 4 a mirror `/`, which
+  # hold neither.
+  value:
+    sort: cell
+    domain: "{d in range(1, 4) where (clue(mirror, c) < 0 and d < 3) or d = clue(mirror, c) + 2}"
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 4)" }
+clues:
+  # A mirror, `\` (1) or `/` (2), which only a game ID carries.
+  mirror:
+    at: cell
+    value: "range(1, 2)"
+    means: "value(at) = v + 2"
+  # A number beyond a row's or a column's end: how many zombies its
+  # sightline passes.
+  sees:
+    at: slot
+    value: "range(0, 2 * |cells|)"
+    means: "count(x in sight(at, mirror) where value(x) = 2) = v"
+  # How many of each monster the board holds.
+  total:
+    at: board
+    fields:
+      item: { value: "range(1, 2)" }
+      many: { value: "range(0, |cells|)" }
+    means: "count(c in cells where value(c) = item(k)) = many(k)"
+freedom: { kind: fill }
+play:
+  numbers:
+    letters: GZ
+    pictures:
+      paint: { 1: ghost, 2: zombie }
+      pref: { kw: monsters, name: Monster representation }
+  given:
+    3: { glyph: " \\ ", paint: fall }
+    4: { glyph: " / ", paint: rise }
+  counts: { total: item }
+  boards: [4x4]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    stripes: the sightline the step is about.
+deal:
+  answer: >-
+    built a square at a time: a random monster on a random empty square,
+    then every square the ladder decides from them
+  given: every square's monster, then each hidden while the board still finishes
+  sees: every number
+  total: every count
+  tier: the one tier
+  sample: { build: true }
+  hide: given
+  mirror: none; only a game ID gives a mirror
+  never: mirror
+# Upstream undead.c's: the counts, the grid (`L` a mirror `\`, `R` one `/`,
+# `G` and `Z` a given monster, a run of empty squares a letter from a to z),
+# and each number round the grid clockwise from the top left.
+id:
+  - numbers: total
+  - codes: { L: mirror 1, R: mirror 2, G: given 1, Z: given 2 }
+    before: ","
+    always: true
+  - numbers: sees
+    before: ","
+    sides: [top, right, bottom backwards, left backwards]
+tiers: [Easy]
+names:
+  none: "a sightline passing no zombie"
+  single: "the only monster left in a square"
+techniques:
+  # A sightline passing no zombie holds none.
+  - id: none
+    tier: Easy
+    for: >-
+      s in slots where clue(sees, s) = 0,
+      X = {x in sight(s, mirror) where 2 in cand(x) and |cand(x)| > 1}
+      where |X| > 0
+    conclude: "forall x in X: strike(x, 2)"
+    says:
+      terms: { s: s }
+      marks: { stripes: "sight(s, mirror)" }
+      look: "{stripes: This sightline} passes no zombie"
+      move: "{ring: its squares} can hold none"
+  - kind: one.cell
+    as: single
+    tier: Easy
+    with:
+      square: "true"
+      move: "(known(c) or place(c, first(U)))"
+# A placed monster rules none out of another square, so the walk's steps
+# name no neighbors.
+steps:
+  clean:
+    ring: cell
+    move: "nothing, since a monster rules out no other square"
+  note:
+    ring: cell
+    terms: { unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "Nothing rules out a monster in {ring} yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: is | are} still possible in {ring}"
+        move: "pencil {vs: it | them} in"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other monster is ruled out in {ring}"
+    move: "it can only be {n}"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "no other square"

@@ -496,9 +496,13 @@ export function noteMarkOf(json: DescriptionJson): string | null {
     throw new Error(`${json.game}: one mark of candidate notes, not ${read.length}`);
   if (read.length === 0) return null;
   const [name, m] = read[0];
-  if (m.notation !== `set of ${json.answer.value.domain}`)
+  const { domain } = json.answer.value;
+  // A domain that a cell narrows (Undead's, at its mirrors) is a set of the
+  // values it draws from.
+  const drawn = /^\{\w+ in (.+?) where /.exec(domain)?.[1];
+  if (m.notation !== `set of ${domain}` && m.notation !== `set of ${drawn}`)
     throw new Error(
-      `${name}: candidate notes are a set of the answer's domain, ${json.answer.value.domain}`,
+      `${name}: candidate notes are a set of the answer's domain, ${domain}, or of the values it draws from`,
     );
   return name;
 }

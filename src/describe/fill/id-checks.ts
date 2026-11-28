@@ -187,6 +187,13 @@ function checkCodes(
 }
 
 /** What the compiler reads of a stream, by either of its keys. */
+/** Refuses `sides` that name a side twice, one way and the other. */
+function checkSides(sides: readonly string[]): void {
+  const named = sides.map((s) => s.split(" ")[0]);
+  if (new Set(named).size !== named.length)
+    throw new CompileError(`id: sides ${sides.join(", ")}, a side named twice`);
+}
+
 const STREAM: SegmentRead<SegmentOf<"codes">> = {
   names: streamNames,
   check(seg, cx) {
@@ -202,6 +209,7 @@ const STREAM: SegmentRead<SegmentOf<"codes">> = {
     checkCodes(seg, cx, own);
     if (seg.sides !== undefined && c.at !== "slot")
       throw new CompileError(`id: sides, on digits of ${kind}, which is not at a slot`);
+    if (seg.sides !== undefined) checkSides(seg.sides);
     // A glyph is one character, as the board draws the value: an answer's
     // value given or a clue that says one, on a board of numbers.
     if (seg.glyphs === true) {
@@ -325,7 +333,17 @@ const SEGMENTS: { readonly [K in SegmentKey]: SegmentRead<SegmentOf<K>> } = {
     },
   ),
   lists: numbers((seg) => seg.lists),
-  numbers: numbers((seg) => seg.numbers),
+  numbers: numbers(
+    (seg) => seg.numbers,
+    (seg, _cx, { kind, c }) => {
+      if (seg.sides === undefined) return;
+      if (c.at !== "slot")
+        throw new CompileError(
+          `id: sides, on numbers of ${kind}, which is not at a slot`,
+        );
+      checkSides(seg.sides);
+    },
+  ),
   // Last, as `engine/fill/desc.ts` holds them: a `parts` entry holds
   // `codes` too.
   codes: STREAM,

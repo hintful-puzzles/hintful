@@ -89,13 +89,16 @@ const PASS = "pass";
  * give: the top of the domain, the same at every cell; or where a cell's is
  * the numbers 1 to its part's size, the largest part the deal divides
  * (Seismic's), as the compiler holds it. A key past it would type nothing
- * on any board dealt.
+ * on any board dealt. Where the deal alone places some values (Undead's
+ * mirrors), the value below them, on every board.
  */
 function keypadTop<C>(
   module: FillModule<C>,
   sp: GridSpace,
   sizes: Readonly<Record<string, number>>,
 ): number {
+  const dealOnly = Object.keys(module.play?.given ?? {}).map(Number);
+  if (dealOnly.length > 0) return Math.min(...dealOnly) - 1;
   const divide = module.deal?.divide?.find((d) => "sizes" in d);
   if (divide === undefined || !("sizes" in divide))
     // The compiler refuses any other domain that differs from cell to cell.
@@ -479,7 +482,9 @@ export function numberInput<
       // A board from another ID may hold a part larger than any the deal
       // divides (upstream Seismic's areas of six): its keypad reaches it.
       const n =
-        board === undefined ? top : Math.max(top, topValue(module, sp, board.dealt));
+        board === undefined || module.play?.given !== undefined
+          ? top
+          : Math.max(top, topValue(module, sp, board.dealt));
       const dealt = (board?.dealt ?? p.sizes ?? {}) as C;
       const empty = emptyOf(module, sp, dealt);
       const glyphs = glyphsOf(module, dealt as Readonly<Record<string, unknown>>);

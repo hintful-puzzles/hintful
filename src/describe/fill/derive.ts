@@ -14,7 +14,7 @@ import {
   Out,
   type Val,
 } from "../compile-sorts.ts";
-import { freeNames } from "../compile-terms.ts";
+import { freeNames, kindsRead } from "../compile-terms.ts";
 import {
   type Description,
   type DescriptionJson,
@@ -471,11 +471,18 @@ export function derivedClues(
     );
     expect(means, "bool", `clue ${kind}`);
     const group = oneIn[kind];
-    // A part's cells are read off the partition, which the clues hold.
-    if (readsClues.yes && group === undefined && !parts)
-      throw new CompileError(
-        `clue ${kind}: its meaning reads the board's clues, so a sampled answer cannot deal it`,
-      );
+    // A part's cells are read off the partition, which the clues hold; any
+    // other kind it reads is dealt before it (Undead's sightlines read its
+    // mirrors), and handed it as the clues dealt so far.
+    const before = readsClues.yes && group === undefined && !parts;
+    if (before) {
+      const dealtKinds = new Set(dealt.map((s) => s.slice(0, s.indexOf(":"))));
+      const late = [...kindsRead(c.means, d.defs)].filter((k) => !dealtKinds.has(k));
+      if (late.length > 0)
+        throw new CompileError(
+          `clue ${kind}: its meaning reads ${late.join(", ")}, which a sampled answer deals after it`,
+        );
+    }
     const body = [
       ...scratch.map((s) => `  ${s}`),
       ...out.text(),
@@ -489,7 +496,7 @@ export function derivedClues(
       `export function clueHolds_${kind}(${[
         "g: ArrayLike<number>",
         param("sp", "GridSpace", body),
-        ...(group === undefined && !parts && !readsSizes.yes
+        ...(group === undefined && !parts && !readsSizes.yes && !before
           ? []
           : [param("cl", "Dealt", body)]),
         param("at", "number", body),
@@ -511,6 +518,12 @@ export function derivedClues(
     const vs = `${kind}_v`;
     derive.emit(`const ${at}: number[] = [];`);
     derive.emit(`const ${vs}: number[] = [];`);
+    // The clues dealt so far, and the sizes, a kind reading them is handed.
+    const handed = before ? `cl_${kind}` : "cl";
+    if (before)
+      derive.emit(
+        `const ${handed} = { ${[...grown.map((r) => `${r}: grown[${JSON.stringify(r)}]`), ...dealt, ...[...env.sizes.read].map((n) => `${n}: sizes.${n}`)].join(", ")} } as unknown as Dealt;`,
+      );
     // A board a variation's partition is not dealt on has no clue at its
     // parts (Solo's cages and their totals, Killer's alone).
     const gated = parts && dealtBy(json, c.at) !== null;
@@ -546,13 +559,15 @@ export function derivedClues(
             where: { k: "bin", op: "in", a: { k: "name", name: "v" }, b: value },
           },
     ];
+    // A kind handed the clues dealt so far reads them in its loops too.
+    const loops = before ? new Out(0) : derive;
     bindingLoops(
       binders,
       new Map(),
       // The loops read the sizes off the `cl` built before them, not
       // through the meaning's call.
       { ...henv, readsClues: { yes: false }, readsSizes: { yes: false } },
-      derive,
+      loops,
       (sc) => {
         const el = (sc.get("at") as Val).code;
         const d = per === null ? null : (sc.get(per) as Val).code;
@@ -566,11 +581,17 @@ export function derivedClues(
             : "";
         // A value only an ID writes is never derived.
         const withheld = (neverValues.get(kind) ?? []).map((n) => ` && ${v} !== ${n}`);
-        derive.emit(
-          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts || readsSizes.yes ? "cl, " : ""}${el}, ${d === null ? "" : `${d}, `}${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
+        loops.emit(
+          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts || readsSizes.yes || before ? `${handed}, ` : ""}${el}, ${d === null ? "" : `${d}, `}${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
         );
       },
     );
+    if (loops !== derive) {
+      for (const e of loops.entries)
+        for (const line of "text" in e ? [e] : e.lines)
+          line.text = line.text.replace(/\bcl\./g, `${handed}.`);
+      derive.append(loops);
+    }
     if (gated) derive.close();
     if (rule !== undefined) derive.close();
     if (per !== null) env.used.add("perPlace");

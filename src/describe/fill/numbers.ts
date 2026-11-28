@@ -42,12 +42,24 @@ export function numbersOf(
   const shape = json.play.shape;
   if (shape !== undefined && d.clueKinds.get(shape)?.at !== "cell")
     throw new CompileError(`play shape: ${shape} is no clue kind at a cell`);
+  // A kind setting its cell's value, on a board where the deal alone places
+  // some values, is drawn as the value's piece (Undead's mirrors).
+  const dealOnly = Object.keys(json.play.given ?? {}).length > 0;
+  const setsItsValue = (means: Expr): boolean =>
+    means.k === "bin" &&
+    means.op === "=" &&
+    means.a.k === "call" &&
+    means.a.fn === "value" &&
+    means.a.args.length === 1 &&
+    means.a.args[0].k === "name" &&
+    means.a.args[0].name === "at";
   const numbers = [...d.clueKinds].filter(
     ([kind, c]) =>
       c.at === "cell" &&
       kind !== json.play?.dealt &&
       kind !== shape &&
-      !oneValued(c.value),
+      !oneValued(c.value) &&
+      !(dealOnly && setsItsValue(c.means)),
   );
   if (numbers.length === 0) return [];
   const plain = json.play.plain ?? [];

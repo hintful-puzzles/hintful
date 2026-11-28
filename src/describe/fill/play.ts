@@ -214,8 +214,26 @@ export function playOf(
   }
   // The keypad is the domain, which the params alone must give: the board's,
   // or the numbers 1 to a cell's part's size, the part dealt to sizes drawn
-  // from a list (Seismic's areas), whose largest is the keypad's last.
-  if (p.numbers !== undefined && env.cellDomain && partBound(d.domain, json) === null)
+  // from a list (Seismic's areas), whose largest is the keypad's last; or,
+  // where the deal alone places some values (Undead's mirrors), the numbers
+  // below them, those values differing from cell to cell.
+  const given = Object.keys(p.given ?? {}).map(Number);
+  if (p.numbers !== undefined && given.length > 0) {
+    const least = Math.min(...given);
+    if (given.some((v) => !given.includes(v + 1) && v !== Math.max(...given)))
+      throw new CompileError(
+        "play given: on a board of numbers, the values the deal alone places run on from one another",
+      );
+    for (const v of Object.keys(p.numbers.pictures?.paint ?? {}).map(Number))
+      if (v >= least)
+        throw new CompileError(
+          `play given: ${least} and above are the deal's, and pictures paint ${v}`,
+        );
+  } else if (
+    p.numbers !== undefined &&
+    env.cellDomain &&
+    partBound(d.domain, json) === null
+  )
     throw new CompileError(
       "play numbers: the domain differs from cell to cell, and is no part's numbers",
     );

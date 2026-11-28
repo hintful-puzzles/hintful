@@ -825,13 +825,23 @@ describe("what the fill board reads of a description", () => {
     expect(unsampled).not.toContain("clueHolds_");
   });
 
-  it("refuses a sampled deal whose clue reads the board's other clues", () => {
+  it("refuses a sampled deal whose clue reads a kind dealt after it", () => {
+    type Json = { clues: Record<string, { means: string }> };
+    const reading = (j: Json) => {
+      (j.clues["count"] as { means: string }).means =
+        "count(c in cells(at) where clue(tree, c) >= 0) = v";
+      return j;
+    };
+    expect(compileTents(reading)).toContain("clueHolds_count(g, sp, cl_count,");
     expect(() =>
-      compileTents((j: { clues: { count: { means: string } } }) => {
-        j.clues.count.means = "count(c in cells(at) where clue(tree, c) >= 0) = v";
+      compileTents((j: Json) => {
+        const { tree, ...rest } = reading(j).clues;
+        j.clues = { ...rest, tree: tree as { means: string } };
         return j;
       }),
-    ).toThrow(/reads the board's clues/);
+    ).toThrow(
+      /clue count: its meaning reads tree, which a sampled answer deals after it/,
+    );
   });
 
   it("refuses a `while` on any mark but the cell mark naming a clue", () => {
@@ -1230,6 +1240,87 @@ describe("what the fill board reads of a description", () => {
         return lead(j as { play: { leadingDiagonal?: boolean } });
       }),
     ).toThrow(/play leadingDiagonal: a row meets the same column on a square board/);
+  });
+
+  describe("values only the deal places, on a board of numbers", () => {
+    const fixture = "src/engine/testing/fixtures/sighting/sighting.description.yaml";
+    type Sighting = {
+      play: {
+        given?: Record<string, { glyph: string; paint: string }>;
+        numbers: { letters?: string; pictures: { paint: Record<string, string> } };
+      };
+      clues: Record<string, unknown>;
+      id: Record<string, unknown>[];
+    };
+    const edit = (f: (j: Sighting) => void) => (j: Sighting) => {
+      f(j);
+      return j;
+    };
+
+    it("lets the domain differ at them alone", () => {
+      expect(compileEdited(fixture, (j) => j)).toContain('"given":{"3":');
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.play.given = undefined;
+          }),
+        ),
+      ).toThrow(/play numbers: the domain differs from cell to cell/);
+    });
+
+    it("refuses them apart, or painted as a placed value", () => {
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.play.given = {
+              3: { glyph: " \\ ", paint: "fall" },
+              5: { glyph: " / ", paint: "rise" },
+            };
+          }),
+        ),
+      ).toThrow(/the values the deal alone places run on from one another/);
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.play.numbers.letters = "GZV";
+            j.play.numbers.pictures.paint["3"] = "vampire";
+          }),
+        ),
+      ).toThrow(/play given: 3 and above are the deal's, and pictures paint 3/);
+    });
+
+    it("deals a clue reading another after it, and refuses one before", () => {
+      expect(compileEdited(fixture, (j) => j)).toContain(
+        "clueHolds_sees(g, sp, cl_sees,",
+      );
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            const { mirror, ...rest } = j.clues;
+            j.clues = { ...rest, mirror };
+          }),
+        ),
+      ).toThrow(
+        /clue sees: its meaning reads mirror, which a sampled answer deals after it/,
+      );
+    });
+
+    it("refuses sides naming a side twice", () => {
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.id[2]["sides"] = ["top", "right", "bottom backwards", "top backwards"];
+          }),
+        ),
+      ).toThrow(
+        /id: sides top, right, bottom backwards, top backwards, a side named twice/,
+      );
+    });
   });
 
   it("refuses an order off a square board of numbers with labels, or where a place is fixed", () => {

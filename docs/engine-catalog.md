@@ -882,7 +882,11 @@ the square (`render/layers/notes.ts`). A note's tile is a third larger than
 its slot, which a piece drawn in three quarters of its tile fills, as the
 monsters are (`monster.ts`); a painter that fills its whole tile would
 overrun its slot there. A painter takes its sizes from its tile alone, so
-a caller may draw it at any size.
+a caller may draw it at any size. A value only the deal places
+(`play.given`, Undead's mirrors) is a piece on a board of numbers too,
+whatever the preference: it sits above every value the player places, so
+the keypad, the givens and the notes stop below it, and the domain may
+differ from cell to cell where its clue narrows it.
 
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
 

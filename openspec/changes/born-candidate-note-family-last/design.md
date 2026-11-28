@@ -104,6 +104,18 @@ not the box a hint's ring keeps clear for text: that box drew them at three
 fifths of upstream's size. A ring goes round a picture's cell over it, as
 it goes round any piece, and as the hand-written Undead's does.
 
+### 5. Undead's mirrors are two values only the deal places (2.1c)
+
+A mirror's way is drawn by its painter (`fall`, `rise`), so the answer
+gives `\` and `/` a value each, as Tents gives its trees and Light Up its
+walls one, and the mirror clue fixes the cell (`value(at) = v + 3`). The
+alternative, one mirror value drawn from its clue, would have needed a
+second way of drawing a given cell beside `play.given`. A board of numbers
+takes `play.given` (the engine catalog's `pieces/` section says what
+follows from it), and the deal's first cells, two values now, are each one
+of them at random: the mirror clue is derived from the answer as any clue
+is, and no clue value is drawn at random apart from the answer.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

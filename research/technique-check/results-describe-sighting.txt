@@ -1,0 +1,6 @@
+ok  sighting   none                           3  sound    (want sound   )    12 queries    1.3s
+ok  sighting   none (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at slot 0
+ok  src/engine/testing/fixtures/sighting/sighting.description.yaml#none: recorded sound, proved whole on all 1 boards
+ok  sighting   single                         3  sound    (want sound   )     9 queries    0.2s
+ok  sighting   single (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/sighting/sighting.description.yaml#single: recorded sound, proved whole on all 1 boards

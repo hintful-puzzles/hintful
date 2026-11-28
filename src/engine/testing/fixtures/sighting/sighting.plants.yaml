@@ -1,0 +1,10 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A sightline passing one zombie read as passing none.
+  none:
+    for: >-
+      s in slots where clue(sees, s) <= 1,
+      X = {x in sight(s, mirror) where 2 in cand(x) and |cand(x)| > 1}
+      where |X| > 0
