@@ -264,6 +264,35 @@ The flip weighs whether the preference still earns its place beside that
 (`docs/rendering.md` § "Live errors are the rules'": what the rules make
 certain shows).
 
+### 12. Rome's goals are a build's fallback, its areas merged by its rules (2.3d)
+
+Upstream rome.c lays an arrow a square, its Easy solver run after each,
+and a goal on any square the solver leaves no arrow, at most one in 25
+squares (or one) or the board is drawn again; then it joins neighboring
+regions, the pairs of squares in a random order, wherever the two hold no
+arrow alike and neither is a goal. The build states the first as
+`sample.fallback` (a value, outside the domain if need be, and its `most`),
+since Rome's domain gives 5 only where a goal's clue is, which a build
+never reads. The second is `deal.merge`, whose join rule is no rule of its
+own but the game's: two parts join wherever the answer is still an answer
+with its clues derived on the joined partition. An area's distinct arrows
+are Rome's shape, and a goal stays alone because its clue's meaning says
+so; a stated join rule would have been a second copy of both. While the
+answer is built the partition is a cell a part, as upstream's regions are.
+
+Each try derives and checks the whole board, where upstream's join reads
+two masks: a 10x10 merges in 8 ms on the `merging` fixture, a quarter of
+its deal, and it grows about as n^1.6 (1.2 ms at 6x6, 3.7 at 8x8;
+2026-11-28). A Custom 100x100 would pay seconds here, which § "A Custom
+size is not refused for its wait" of `docs/solver-and-generator.md` allows.
+
+Left to the flip (2.3e): upstream's cluster steer (`rome_join_arrows`,
+which avoids an arrow growing a run of three alike) is not built; the flip
+weighs it by the areas the born deal makes against the hand-written ones.
+`mergeNeighbors` loses its one user with the hand-written generator. The
+draft's notes become `set of range(1, 5)`, as the compiler holds notes to
+the domain's values, and it words the walk's `clean` and `cull`.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

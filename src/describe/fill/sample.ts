@@ -7,7 +7,7 @@
 import { type GroupSample, groupTable } from "../../engine/fill/group-table.ts";
 import type { WallsSample } from "../../engine/fill/sample.ts";
 import { SET_BLACKS_SYMM } from "../../engine/generate/symmetry.ts";
-import { CompileError } from "../compile-sorts.ts";
+import { CompileError, type Env } from "../compile-sorts.ts";
 import { kindsRead } from "../compile-terms.ts";
 import {
   type Description,
@@ -15,6 +15,7 @@ import {
   type SampleJson,
   sampleOf,
 } from "../description.ts";
+import { sizesFunction } from "./emit.ts";
 import type { SettingOut } from "./settings.ts";
 import { sizeSettings } from "./sizes.ts";
 import { underOf } from "./under.ts";
@@ -201,8 +202,9 @@ export function checkSample(
  * answer's domain reads: the clues those cells derive that the build and
  * the first cells' keep read (Undead's mirrors, Light Up's walls). Every other kind derived from first cells alone is no
  * answer's: a sightline's count of a board of mirrors and nothing else. The
- * first cells' `keep` is the module's `firstKeeps` and the sightlines' `open`
- * its `sightlinesOpen`, so the deal holds neither. */
+ * first cells' `keep` is the module's `firstKeeps`, the sightlines' `open`
+ * its `sightlinesOpen` and the fallback's `most` its `fallbackMost`, so the
+ * deal holds none of them. */
 export function withBuildReads<S extends object>(
   sample: S | null,
   d: Description,
@@ -217,11 +219,29 @@ export function withBuildReads<S extends object>(
     ...("sightlines" in sample
       ? { sightlines: without(sample.sightlines, "open") }
       : {}),
+    ...("fallback" in sample ? { fallback: without(sample.fallback, "most") } : {}),
     ...("first" in sample ? { first: without(sample.first, "keep") } : {}),
     ...("first" in sample && ("build" in sample || "uniform" in sample)
       ? { reads: [...kindsRead(d.domain, d.defs)].sort() }
       : {}),
   };
+}
+
+/** `fallbackMost(sp, cl)`, the most cells a build may give its fallback
+ * value on a board of these sizes; nothing where it has no fallback. */
+export function fallbackMostOf(json: DescriptionJson, env: Env): string[] {
+  const sample = sampleOf(json);
+  if (sample === null || !("fallback" in sample) || sample.fallback === undefined)
+    return [];
+  const { most } = sample.fallback;
+  return sizesFunction(
+    env,
+    "deal sample fallback",
+    "/** The most cells the build gives its fallback value on a board of these sizes. */",
+    "fallbackMost",
+    "number",
+    (term) => term(most),
+  );
 }
 
 /** Refuses first cells whose share is no number the options give, or whose

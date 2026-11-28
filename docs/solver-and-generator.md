@@ -1181,6 +1181,14 @@ states what it wants:
   mirror image) and Solo's Killer (it wants pairs, and a merge under a
   largest size deals regions at that size) do. A born game deals that
   division by `deal.divide` (Keen's).
+- **A born game's join rule is its rules, read on the answer**: `deal.merge`
+  joins two neighboring parts wherever the answer, its clues derived on the
+  joined partition, is still an answer ([`fill/deal/partition.ts`](../src/engine/fill/deal/partition.ts)'s
+  `merged`, the `merging` fixture). So nothing restates which parts may
+  join: an area's distinct arrows are its shape, and a goal stays alone
+  because its clue's meaning says so and the domain gives a goal's value
+  only where that clue is. While the answer is built, the partition is a
+  cell a part.
 - **Where the regions are the board's only clue, a division dealt at random
   seldom has one answer, and the engine mends it** with `mendDivision`
   ([`mend-division.ts`](../src/engine/generate/mend-division.ts)), whose doc says what
@@ -1361,6 +1369,16 @@ the boards a seed deals move").
   every line must read a record, two leave no board with an answer, and
   "proved whole on all 0 boards" is a check of nothing. Read the board
   count in its line before trusting a verdict.
+- **A value only the deal places where nothing else fits is a build's
+  fallback** (`sample.fallback`): where a placement leaves an undecided cell
+  no value, the cell takes it whether its domain holds it there or not, the
+  ladder runs again, and past `most` cells the draw is thrown away
+  (upstream rome.c's goals, the `merging` fixture). The domain is the dealt
+  board's, read through a clue the answer then derives at the fallback's
+  cells (`clue(goal, c)`), so the build, which reads no such clue, could
+  never place it as a value. Where every cell must lead somewhere, the
+  fallback is what the build needs at least once: arrows filling a board
+  with no goal close a loop.
 - **A list at the board the answer derives cannot steer a build**: a build
   reads none of its records, and every list technique then strikes every
   value, so the answer is drawn by `sample.uniform` instead, a value a

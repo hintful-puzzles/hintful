@@ -561,3 +561,37 @@ list does.
   that fits it is picked in the panel
 - **THEN** the number is written along the run, as a press on it in the
   list would write it
+
+### Requirement: A born game's build may fall back on a value where none fits
+
+Where `sample.fallback` names a value, a build SHALL give it to an
+undecided cell its placements leave no value, whether or not the cell's
+domain holds it while the answer is built, and SHALL go on building. A
+build that gives it to more cells than its `most`, a number or a formula
+of the board's sizes, SHALL be thrown away.
+
+#### Scenario: A goal where no arrow fits
+
+- **WHEN** a `merging` board is dealt
+- **THEN** its answer holds at least one goal, and no more than one in 25
+  of its squares or one
+
+#### Scenario: Too many goals
+
+- **WHEN** `merging` boards of 36 and 40 squares are dealt
+- **THEN** some builds needing a second goal are thrown away
+
+### Requirement: A born game's partition may be merged on its answer
+
+Where `deal.merge` names a dealt partition, it SHALL be a part a cell while
+the answer is drawn; then each two neighboring cells, in a random order,
+SHALL have their parts joined wherever the answer, its clues derived on the
+joined partition, is still an answer. The compiler SHALL refuse a merge of
+no dealt partition, and one beside a grow or a divide.
+
+#### Scenario: Areas no two of which could join
+
+- **WHEN** a `merging` board is dealt and solved
+- **THEN** each area holds each arrow at most once and a goal alone, and
+  any two neighboring areas joined would hold an arrow twice or a goal
+  with another square

@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: arrows leading to goals in areas of different
+# arrows, for the fill engine's tests of a build that falls back on a value
+# where a placement leaves a square none (`sample.fallback`: a goal, which
+# only a goal's square may hold, at most one in 25 squares), and of a dealt
+# partition merged on the answer (`deal.merge`): a square an area while the
+# answer is built, then neighbors joined while it keeps its rules, so an
+# area never holds an arrow twice and a goal stays alone.
+game: merging
+produces: lines
+sizes:
+  w: { min: 3, max: 10 }
+  h: { min: 3, max: 10 }
+space:
+  grid: { w: "w", h: "h" }
+  regions: { area: dealt }
+  units: []
+answer:
+  # 1 up, 2 down, 3 left, 4 right, none off the board; 5 a goal.
+  value:
+    sort: cell
+    domain: >-
+      {d in range(1, 5) where (d = 5) = (clue(goal, c) >= 0)
+      and (d = 5 or step(c, d) != none)}
+    to: "step(c, d)"
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 5)" }
+shape:
+  - "forall r in area: distinct(value(c) over c in cells(r))"
+  - "forall c in cells: exists g in chain(c): value(g) = 5"
+clues:
+  # A goal, alone in its area.
+  goal:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 5 and |cells(area(at))| = 1"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  given:
+    5: { glyph: " o ", paint: disc }
+  boards: [4x4, 6x6]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the area the step is about.
+deal:
+  answer: an arrow a square at random, and a goal where none fits
+  area: neighboring squares joined at random while the answer keeps its rules
+  value: every arrow, then each hidden while the board still finishes
+  tier: the one tier
+  sample:
+    build: true
+    fallback:
+      value: 5
+      most: "max(x in range(1, w * h) where x = 1 or 25 * x <= w * h of x)"
+  merge: { partition: area }
+  hide: given
+id:
+  - walls: area
+  - digits: given
+    codes: { G: goal 0 }
+    before: ","
+tiers: [Easy]
+names:
+  dup: "one of each arrow in an area"
+  single: "the only arrow left in a square"
+  loop: "avoiding a loop"
+techniques:
+  - kind: peer.placed
+    as: cull
+    tier: Easy
+    with:
+      peer: "p in cells(area(c)) where p != c"
+  - kind: one.cell
+    as: lone
+    tier: Easy
+    rung: single
+  - kind: loop.never
+    as: loop
+    tier: Easy
+    with:
+      more: ", q = step(c, d)"
+      closes: "q != none and c in chain(q)"
+steps:
+  clean:
+    ring: cell
+    move: "any arrow already in its square's area"
+  note:
+    ring: cell
+    terms: { vs: values, unruled: flag }
+    wordings:
+      - when: unruled
+        look: "Nothing in {ring}'s area limits the way it can point yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: isn't | aren't} already used in {ring}'s area"
+        move: "pencil {vs: it | them} in"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "area"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other way {ring} can point is already used in its area"
+    move: "it must hold {n}"

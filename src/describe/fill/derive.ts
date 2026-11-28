@@ -20,6 +20,7 @@ import {
   type DescriptionJson,
   dividesOf,
   growOf,
+  mergeOf,
   sampleOf,
   tallyKindOf,
 } from "../description.ts";
@@ -357,9 +358,9 @@ export function derivedClues(
       );
     return [];
   }
-  // The partition the deal grows round the answer, or those it divides apart
-  // from it.
-  const growing = growOf(json)?.partition;
+  // The partition the deal grows round the answer or merges on it, or those
+  // it divides apart from it.
+  const growing = growOf(json)?.partition ?? mergeOf(json)?.partition;
   const grown =
     growing === undefined ? dividesOf(json).map((x) => x.partition) : [growing];
   // A size the grid is not measured in is the params' (a `settings` choice that gives a size).

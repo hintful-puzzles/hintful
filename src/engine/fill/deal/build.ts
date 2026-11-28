@@ -17,6 +17,7 @@ import type { DealContext, DealtFillModule } from "./context.ts";
 import { firstLaid } from "./first-laid.ts";
 import { hiddenKinds } from "./hide-settings.ts";
 import { keepingAll } from "./keeping.ts";
+import { unmerged } from "./partition.ts";
 import { sightlinesLaid } from "./sightlines.ts";
 
 /** What a build returns where a placement left no answer or a cell undecided:
@@ -47,7 +48,10 @@ export function climbBuild<C extends Clues<C>>(
  * unruly.c `unruly_fill_game`. With `first`, its value is dealt first on a
  * share of the cells, as symmetric as the options ask, and the build is on
  * the clues those cells derive with every clue of the hidden kind hidden
- * (Light Up's walls, upstream's lightup.c `set_blacks`).
+ * (Light Up's walls, upstream's lightup.c `set_blacks`). With `fallback`, a
+ * cell left no value takes the fallback and the build goes on, the draw
+ * refused past its most (Rome's goals). A partition the deal merges on the
+ * answer is a cell a part throughout.
  */
 export function buildAnswer<C extends Clues<C>>(
   module: DealtFillModule<C>,
@@ -64,7 +68,7 @@ export function buildAnswer<C extends Clues<C>>(
     first === undefined
       ? new Uint8Array(sp.cells.length)
       : firstLaid(first, deal, p, rs, draw);
-  const derived = module.deriveClues(start, sp, {}, givenOf(deal, p));
+  const derived = module.deriveClues(start, sp, unmerged(deal, sp), givenOf(deal, p));
   // A Latin kind is a Latin square's on the cells built round, so the ladder
   // reads numbers none of which repeats (upstream singles.c's new_game_desc).
   const numbered = withLatin(derived, deal, sp, start, rs);
@@ -103,6 +107,32 @@ export function buildAnswer<C extends Clues<C>>(
       if (start[c] === 0 && laid[c] !== 0) marks.place(c, laid[c]);
     if (runLadder(marks, ladder)) return DEAD_END;
   }
+  const fallback = sample.fallback?.value ?? null;
+  const most = fallback === null ? 0 : fallbackMost(module, sp, p);
+  let fell = 0;
+  /** Gives each of `cells` the fallback, false where that is past its most. */
+  const fallBack = (cells: readonly number[]): boolean => {
+    fell += cells.length;
+    if (fallback === null || fell > most) return false;
+    for (const c of cells) marks.force(c, fallback);
+    return true;
+  };
+  /** The ladder run, and where it leaves an undecided cell no value, that
+   * cell given the fallback and the ladder run again (upstream rome.c's
+   * goals): `"past"` where the fallback goes past its most. */
+  const settle = (): typeof DEAD_END | "past" | null => {
+    while (runLadder(marks, ladder)) {
+      if (fallback === null) return DEAD_END;
+      const stuck = sp.cells.filter(
+        (c) => marks.grid[c] === 0 && marks.candCount(c) === 0,
+      );
+      if (stuck.length === 0) return DEAD_END;
+      if (!fallBack(stuck)) return "past";
+    }
+    return null;
+  };
+  const tooMany = (): null =>
+    drawRejected("fill: the build fell back on too many cells");
   const build = sample.build === true ? null : sample.build;
   const order = Array.from(sp.cells);
   if (build?.order === "upward")
@@ -119,12 +149,14 @@ export function buildAnswer<C extends Clues<C>>(
       const v = 31 - Math.clz32(m & -m);
       if (marks.has(c, v) && (only === null || v === only)) values.push(v);
     }
-    if (values.length === 0) {
+    if (values.length > 0) marks.place(c, pickValue(values, build, rs));
+    else if (fallback === null) {
       if (only === null) return DEAD_END;
       continue;
-    }
-    marks.place(c, pickValue(values, build, rs));
-    if (runLadder(marks, ladder)) return DEAD_END;
+    } else if (!fallBack([c])) return tooMany();
+    const settled = settle();
+    if (settled === "past") return tooMany();
+    if (settled !== null) return settled;
   }
   if (marks.grid.includes(0)) return DEAD_END;
   const least = build?.least;
@@ -134,6 +166,17 @@ export function buildAnswer<C extends Clues<C>>(
   )
     return null;
   return Uint8Array.from(marks.grid);
+}
+
+/** The most cells a build on these params gives its fallback value. */
+function fallbackMost<C extends Clues<C>>(
+  module: DealtFillModule<C>,
+  sp: GridSpace,
+  p: FillParams,
+): number {
+  if (module.fallbackMost === undefined)
+    throw new Error("deal: a build's fallback with no fallbackMost");
+  return module.fallbackMost(sp, sizesOf(p));
 }
 
 /** The value a build lays on a cell that may hold `values`: with a share,

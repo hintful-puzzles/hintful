@@ -4,17 +4,17 @@
  * the params give.
  */
 
-import { compileExpr } from "../compile-expr.ts";
-import { CompileError, type Env, Out } from "../compile-sorts.ts";
+import { CompileError, type Env } from "../compile-sorts.ts";
 import type {
   DescriptionJson,
   DivideJson,
   GrowJson,
+  MergeJson,
   SampleJson,
   SettingJson,
 } from "../description.ts";
 import { parse } from "../expr.ts";
-import { answerEnv, param } from "./emit.ts";
+import { sizesFunction } from "./emit.ts";
 import { sampledValue } from "./sample.ts";
 
 /** The sizes the settings give (`sizes.ts`' `sizeSettings`). */
@@ -27,11 +27,13 @@ export const dealtPartitions = (env: Env): string[] => [
   ...env.regions,
 ];
 
-/** Refuses a grow or a divide of no dealt partition, and a dealt partition
- * the deal neither grows nor divides. */
+/** Refuses a grow, a divide or a merge of no dealt partition, a merge beside
+ * either of the others, and a dealt partition the deal neither grows,
+ * divides nor merges. */
 export function checkPartitions(
   grow: GrowJson | null,
   divides: readonly DivideJson[],
+  merge: MergeJson | null,
   sample: SampleJson | null,
   partitions: readonly string[],
   tiers: readonly string[],
@@ -40,6 +42,14 @@ export function checkPartitions(
   const dividedNames = divides.map((x) => x.partition);
   if (divides.length > 0 && grow !== null)
     throw new CompileError("deal divide: a partition grown, and one divided");
+  if (merge !== null) {
+    if (grow !== null || divides.length > 0)
+      throw new CompileError(
+        "deal merge: a partition merged, and one grown or divided",
+      );
+    if (!partitions.includes(merge.partition))
+      throw new CompileError(`deal merge: ${merge.partition} is no dealt partition`);
+  }
   if (grow !== null) {
     if (!env.regions.has(grow.partition))
       throw new CompileError(`deal grow: ${grow.partition} is no dealt partition`);
@@ -55,9 +65,9 @@ export function checkPartitions(
       throw new CompileError(`deal divide: ${name} is divided twice`);
   }
   for (const r of partitions)
-    if (grow?.partition !== r && !dividedNames.includes(r))
+    if (grow?.partition !== r && merge?.partition !== r && !dividedNames.includes(r))
       throw new CompileError(
-        `${r}: a fill game's dealt partition is one the deal grows or divides`,
+        `${r}: a fill game's dealt partition is one the deal grows, divides or merges`,
       );
 }
 
@@ -128,44 +138,15 @@ export function dealtBy(json: DescriptionJson, r: string): string | null {
  * (`engine/fill/grow.ts`'s `GrowSizes`).
  */
 export function growByOf(grow: GrowJson, env: Env): string[] {
-  const read = new Set<string>();
-  const scratch: string[] = [];
-  const out = new Out(1);
-  const genv = {
-    ...answerEnv(env, { yes: false }, scratch),
-    sizes: { names: env.sizes.names, read },
-  };
-  const term = (v?: number | string): string => {
-    if (v === undefined) return "null";
-    if (typeof v === "number") return String(v);
-    const got = compileExpr(parse(v), new Map(), genv, out);
-    if (got.sort.k !== "int" && got.sort.k !== "num")
-      throw new CompileError(`deal grow: ${v} is not a number`);
-    return got.code;
-  };
-  const fields = [
-    `holds: ${term(grow.holds)}`,
-    `smallest: ${term(grow.smallest)}`,
-    `parts: ${term(grow.parts)}`,
-  ];
-  const body = [
-    ...scratch.map((s) => `  ${s}`),
-    ...out.text(),
-    `  return { ${fields.join(", ")} };`,
-  ];
-  const sizes = [...read].sort().map((n) => JSON.stringify(n));
-  return [
-    "",
+  return sizesFunction(
+    env,
+    "deal grow",
     "/** What the grown partition's parts hold on a board of these sizes. */",
-    `export function growBy(${[
-      param("sp", "GridSpace", body),
-      sizes.length === 0
-        ? "_cl: object"
-        : `cl: Readonly<Record<${sizes.join(" | ")}, number>>`,
-    ].join(", ")}): { holds: number; smallest: number; parts: number | null } {`,
-    ...body,
-    "}",
-  ];
+    "growBy",
+    "{ holds: number; smallest: number; parts: number | null }",
+    (term) =>
+      `{ holds: ${term(grow.holds)}, smallest: ${term(grow.smallest)}, parts: ${term(grow.parts)} }`,
+  );
 }
 
 /**

@@ -64,6 +64,9 @@ export type DealtFillModule<C> = SearchedFillModule<C> &
     /** The most cells the sightlines leave the build at `tier`, `n` those
      * the first cells leave, read with the sizes. */
     sightlinesOpen?(sp: GridSpace, cl: C, tier: number, n: number): number;
+    /** The most cells a build gives its fallback value, read with the sizes
+     * (`sample.fallback.most`). */
+    fallbackMost?(sp: GridSpace, sizes: Readonly<Record<string, number>>): number;
   };
 
 /** What a deal's board is, and how the ladder does on one. */

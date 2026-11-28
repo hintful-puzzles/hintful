@@ -2270,7 +2270,7 @@ describe("a clue at a dealt partition's part", () => {
     ).toThrow(/play signs: cand is no clue kind at a part/);
   });
 
-  it("refuses the parts written before the partition, and a partition both grown and divided", () => {
+  it("refuses the parts written before the partition, and a partition dealt two ways", () => {
     expect(() =>
       compileCaging((j) => {
         j.id.reverse();
@@ -2283,6 +2283,12 @@ describe("a clue at a dealt partition's part", () => {
         return j;
       }),
     ).toThrow(/deal divide: a partition grown, and one divided/);
+    expect(() =>
+      compileCaging((j) => {
+        j.deal["merge"] = { partition: "cage" };
+        return j;
+      }),
+    ).toThrow(/deal merge: a partition merged, and one grown or divided/);
   });
 
   it("refuses one kind a part that leaves out a kind at the parts, and a flag's letter taken", () => {

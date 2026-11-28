@@ -98,6 +98,14 @@ export function growOf(json: DescriptionJson): GrowJson | null {
 
 export type GrowJson = NonNullable<DealJson["grow"]>;
 
+/** The partition the deal merges on its answer (`deal.merge`), or `null`
+ * where it merges none. */
+export function mergeOf(json: DescriptionJson): MergeJson | null {
+  return json.deal?.merge ?? null;
+}
+
+export type MergeJson = NonNullable<DealJson["merge"]>;
+
 export type SampleJson = NonNullable<DealJson["sample"]>;
 
 export type GameWords = NonNullable<Game["words"]>;

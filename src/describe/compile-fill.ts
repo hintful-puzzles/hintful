@@ -22,6 +22,7 @@ import {
   type DescriptionJson,
   dividesOf,
   growOf,
+  mergeOf,
   sampleOf,
   tallyKindOf,
 } from "./description.ts";
@@ -52,6 +53,7 @@ import {
   checkFirst,
   checkSample,
   dealtSample,
+  fallbackMostOf,
   sampledValue,
   withBuildReads,
 } from "./fill/sample.ts";
@@ -149,7 +151,8 @@ function dealOf(
   const grow = growOf(json);
   const divides = dividesOf(json);
   const dividedNames = divides.map((x) => x.partition);
-  checkPartitions(grow, divides, sample, partitions, tiers, env);
+  const merge = mergeOf(json);
+  checkPartitions(grow, divides, merge, sample, partitions, tiers, env);
   const divided =
     divides.length === 0
       ? null
@@ -200,6 +203,7 @@ function dealOf(
     ...present("symmetric", symmetricDeal),
     ...present("thorough", thorough),
     ...present("divide", divided),
+    ...present("merge", merge),
     ...(oneKind === null ? {} : { oneKind: oneKind.deal }),
     ...present("firstKind", firstKind),
     ...(grow === null
@@ -238,6 +242,7 @@ function dealOf(
     ...refusePlacesOf(json, env),
     ...keepsOf(json, d, env, measured),
     ...sightlinesOf(json, d, env, measured),
+    ...fallbackMostOf(json, env),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
     ...hideFormulasOf(json, env, measured),
   ];

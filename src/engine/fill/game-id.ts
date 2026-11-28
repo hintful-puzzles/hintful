@@ -157,6 +157,10 @@ export interface FillDeal {
   /** How it divides each dealt partition it divides, apart from the answer
    * and in this order (`divide.ts`). */
   readonly divide?: readonly FillDivide[];
+  /** The dealt partition merged on the answer: a cell a part while the
+   * answer is drawn, then neighbors joined while it keeps its rules
+   * (`deal/partition.ts`' `merged`). */
+  readonly merge?: { readonly partition: string };
   /** The kinds at the divided partition's parts dealt one a part. */
   readonly oneKind?: {
     readonly kinds: readonly string[];

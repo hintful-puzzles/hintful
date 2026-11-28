@@ -364,6 +364,16 @@ export class CellMarks implements Marks {
     for (const run of this.placing) run(this, c);
   }
 
+  /** Place `d` in `c` whether or not its candidates hold it: a build's
+   * fallback, which the cell's domain need not hold. */
+  force(c: number, d: number): void {
+    this.allow(c, d);
+    this.place(c, d);
+  }
+  protected allow(c: number, d: number): void {
+    this.cands[c] |= 1 << d;
+  }
+
   /** Put the marks back as `grid` and `cands` hold them, as a search does
    * between its branches: a setting wholesale, which no log can follow. */
   restore(grid: ArrayLike<number>, cands: ArrayLike<number>): void {
@@ -573,6 +583,9 @@ export class WideCellMarks extends CellMarks {
   }
   protected override drop(c: number, d: number): void {
     this.wide[c * this.words + (d >> 5)] &= ~(1 << (d & 31));
+  }
+  protected override allow(c: number, d: number): void {
+    this.wide[c * this.words + (d >> 5)] |= 1 << (d & 31);
   }
   protected override keepOnly(c: number, d: number): void {
     const at = c * this.words;

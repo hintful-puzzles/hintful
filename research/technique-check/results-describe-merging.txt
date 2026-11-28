@@ -1,0 +1,9 @@
+ok  merging    cull                           3  sound    (want sound   )     9 queries    0.2s
+ok  merging    cull (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/merging/merging.description.yaml#cull: recorded sound, proved whole on all 1 boards
+ok  merging    lone                           3  sound    (want sound   )     9 queries    0.2s
+ok  merging    lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/merging/merging.description.yaml#lone: recorded sound, proved whole on all 1 boards
+ok  merging    loop                           3  sound    (want sound   )     9 queries    0.3s
+ok  merging    loop (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/merging/merging.description.yaml#loop: recorded sound, proved whole on all 1 boards

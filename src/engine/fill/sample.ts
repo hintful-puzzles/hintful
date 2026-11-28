@@ -303,6 +303,9 @@ export interface BuiltSample {
         /** The least share of the open cells the answer gives `value`. */
         readonly least?: number;
       };
+  /** The value a cell takes where a placement leaves it none, outside its
+   * domain if need be; the module's `fallbackMost` the most cells that may. */
+  readonly fallback?: { readonly value: number };
   readonly first?: FirstCells;
   /** The sightlines through the clues of `through` given unique fillings
    * before the rest is built, as each derives its `ends` clues

@@ -2569,6 +2569,17 @@
                 }
               }
             },
+            "merge": {
+              "type": "object",
+              "description": "A dealt partition merged on the sampled answer: each cell a part of its own while the answer is drawn, then each two neighboring parts, the pairs of neighboring cells in a random order, joined wherever the answer, its clues derived on the joined partition, still keeps every rule (upstream rome.c's `generate_regions`). What is left is a partition no two of whose neighboring parts can join.",
+              "required": ["partition"],
+              "additionalProperties": false,
+              "properties": {
+                "partition": {
+                  "type": "string"
+                }
+              }
+            },
             "stripFrom": {
               "enum": ["everyClue"],
               "description": "A search tier's deal strips every draw from every clue, and not from a board of the lowest tier but one draw in eight: quicker where the lowest tier's boards leave the search little to strip (Sticks')."
@@ -2622,6 +2633,21 @@
                           }
                         }
                       ]
+                    },
+                    "fallback": {
+                      "type": "object",
+                      "description": "Where a placement leaves a cell no value, the build gives it `value`, which its domain need not hold there, and goes on: no more than `most` cells, a number or a formula of the board's sizes, or the draw is thrown away (upstream rome.c's goals, laid where no arrow fits).",
+                      "required": ["value", "most"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "most": {
+                          "$ref": "#/$defs/countOrFormula"
+                        }
+                      }
                     },
                     "first": {
                       "$ref": "#/$defs/firstCells"
