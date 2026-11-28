@@ -8,6 +8,7 @@
 
 import type { DifficultyVerdict } from "../contract/difficulty.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
+import type { FiringTally } from "../solve/deduction-fixpoint.ts";
 import {
   blocks,
   type ClueList,
@@ -24,6 +25,7 @@ import {
   describedLadder,
   type Ladder,
   ladderTechniques,
+  overFired,
   runLadder,
   TIERS,
 } from "../solve/ladder-runtime.ts";
@@ -458,9 +460,11 @@ export function solveBoard<C>(
   });
   if (!ok) return out("impossible");
   const caps = typeof cap === "number" ? capsOf(module, cap) : cap;
-  if (runLadder(marks, ladderTechniques(marks, entries, caps, {})))
+  const firings: FiringTally = new Map();
+  if (runLadder(marks, ladderTechniques(marks, entries, caps, {}), { firings }))
     return out("impossible");
-  if (marks.grid.includes(0)) return out("unsolved");
+  if (marks.grid.includes(0) || overFired(entries, caps, firings))
+    return out("unsolved");
   return out(isAnswerOf(module, board, marks.grid) ? "solved" : "impossible");
 }
 

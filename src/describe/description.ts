@@ -189,7 +189,7 @@ export const variationWord = (v: {
 /** Where a technique sits on the ladder. */
 type Placing = Pick<
   Extract<Schema.Technique, { use: string }>,
-  "tier" | "from" | "until" | "rung"
+  "tier" | "from" | "until" | "most" | "rung"
 >;
 
 /** A technique stated in the description, or one of a library's placed at a
@@ -525,6 +525,9 @@ export interface Technique {
   /** The tier from which the ladder no longer runs it, at a cap that high;
    * `null` where it runs at every cap from its own. */
   until: number | null;
+  /** How many times a board of its own tier fires it at most, `null` where
+   * as often as it fires. */
+  most: number | null;
   /** The hint rungs a firing of it is recorded under. */
   rungs: string[];
   /** What a player calls it (`names`, by its id or else a rung's); `null`
@@ -690,7 +693,7 @@ export function parseDefinitions(
 }
 
 /** What a technique's place on a game's ladder gives it. */
-type Placed = "tier" | "scale" | "from" | "until" | "rungs" | "name";
+type Placed = "tier" | "scale" | "from" | "until" | "most" | "rungs" | "name";
 
 /** A technique placed on no ladder: a library's, read alone. */
 export const UNPLACED: Pick<Technique, Placed> = {
@@ -698,6 +701,7 @@ export const UNPLACED: Pick<Technique, Placed> = {
   scale: null,
   from: null,
   until: null,
+  most: null,
   rungs: [],
   name: null,
 };
@@ -1007,7 +1011,8 @@ export function loadDescription(
     const names = json.names ?? {};
     const key = [parsed.id, ...rungs].find((k) => Object.hasOwn(names, k));
     const name = key === undefined ? null : names[key];
-    return { ...parsed, tier, scale, from, until, rungs, name };
+    const most = t.most ?? null;
+    return { ...parsed, tier, scale, from, until, most, rungs, name };
   });
   return {
     json,

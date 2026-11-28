@@ -116,6 +116,26 @@ follows from it), and the deal's first cells, two values now, are each one
 of them at random: the mirror clue is derived from the answer as any clue
 is, and no clue value is drawn at random apart from the answer.
 
+### 6. Undead's deal is upstream's, its steer a sample's (2.1d)
+
+The draft (`undead-born-draft.yaml`, as Salad's was) deals as upstream
+undead.c's `new_game_desc` does: a mirror on a square in five each way,
+the layout drawn again outside 0.48 to 0.78 monsters or with a sightline
+longer than the tier allows; sightlines filled first, the shortest first,
+each with a filling its two numbers single out, until the tier's share of
+squares is left (Easy 2, Normal min(w + h, n / 2), Unreasonable the max);
+the rest at random; a board of one kind of monster, or at Unreasonable one
+of a kind, drawn again; Easy graded by its passes.
+
+Without the steer, random monsters made a 6x8 Easy about once in fifty
+builds: 0.2 to 7 s a deal. With it, ten deals each under vitest on a busy
+machine, in ms (the hand-written generator's in brackets): 4x4 Easy 0 to 5
+(1 to 6), Normal 1 to 32 (1 to 25), Unreasonable 0 to 12 (1 to 13); 5x5
+0 to 1 (0 to 2), 1 to 20 (0 to 18), 1 to 14 (1 to 47); 6x8 1 to 2 (1 to 8),
+2 to 87 (3 to 114), 2 to 126 (2 to 545). The steer is stated by the
+concept it uses, sightlines through a kind's cells read at both ends, so
+another game whose clues look along sightlines takes it as it is.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

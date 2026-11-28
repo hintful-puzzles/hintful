@@ -13,9 +13,11 @@ import * as sighting from "../../generated/engine/testing/fixtures/sighting/sigh
 import { validateDesc } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
+import { sights } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
-import { type FillBoard, spaceOf } from "./board.ts";
+import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { sightlinesLaid } from "./deal/sightlines.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
 import type { FillUi } from "./play.ts";
@@ -101,7 +103,7 @@ describe("an ID written as upstream undead.c's", () => {
       expect(encodeDesc(sighting, sighting.deal, spaceOf(sighting, b), b.dealt)).toBe(
         desc,
       );
-      expect(desc).toMatch(/^\d+,\d+,[a-zGZ]+(,\d+){12}$/);
+      expect(desc).toMatch(/^\d+,\d+,[a-zGZLR]+(,\d+){12}$/);
     }
   });
 
@@ -153,5 +155,98 @@ describe("values only the deal places, on a board of numbers", () => {
           key.charCodeAt(0),
         ),
       ).toBeNull();
+  });
+});
+
+describe("a deal of mirrors first, sightlines filled, and boards kept", () => {
+  const p4 = game.decodeParams("4x4");
+  const boards = ["d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"].map((seed) =>
+    game.newState(p4, game.newDesc(p4, randomNew(seed)).desc),
+  );
+  /** The most squares a sightline of board `b` passes. */
+  const longest = (b: Board): number =>
+    Math.max(...sights(spaceOf(sighting, b), b.dealt.mirror).map((s) => s.all.length));
+  /** A 2x6 of twelve ghosts and no mirror, every number 0. */
+  const tall = game.newState(game.decodeParams("2x6"), `12,0,l${",0".repeat(16)}`);
+  const sized = (b: Board) => ({ ...b.dealt, w: b.w, h: b.h });
+
+  it("lays mirrors first on a share of the squares within its bounds, either way", () => {
+    const ways = new Set<number>();
+    for (const b of boards) {
+      const { at, v } = b.dealt.mirror;
+      expect(at.length).toBeGreaterThanOrEqual(2);
+      expect(at.length).toBeLessThanOrEqual(8);
+      for (const m of v) ways.add(m);
+    }
+    expect([...ways].sort()).toEqual([1, 2]);
+  });
+
+  it("keeps first cells whose sightlines pass at most a side and one squares", () => {
+    for (const b of boards) expect(longest(b)).toBeLessThanOrEqual(5);
+    expect(longest(tall)).toBe(6);
+    expect(sighting.firstKeeps(spaceOf(sighting, tall), sized(tall), 0)).toBe(false);
+    expect(sighting.firstKeeps(spaceOf(sighting, mirrored), sized(mirrored), 0)).toBe(
+      true,
+    );
+  });
+
+  it("keeps a board holding ghosts, and as many zombies or more", () => {
+    for (const b of boards) {
+      const [ghosts, zombies] = b.dealt.total.many;
+      expect(ghosts).toBeGreaterThan(0);
+      expect(zombies).toBeGreaterThanOrEqual(ghosts);
+    }
+    expect(sighting.dealKeeps(spaceOf(sighting, tall), sized(tall), 0)).toBe(false);
+    expect(sighting.dealKeeps(spaceOf(sighting, mirrored), sized(mirrored), 0)).toBe(
+      false,
+    );
+    const [b] = boards;
+    expect(sighting.dealKeeps(spaceOf(sighting, b), sized(b), 0)).toBe(true);
+  });
+
+  it("fills the shortest sightline so that its two numbers single out its monsters", () => {
+    // A 4x4 with no mirror: every sightline a row or column of four, which
+    // most fillings share their numbers with another of.
+    const open = game.newState(p4, `16,0,p${",0".repeat(16)}`);
+    const sp = spaceOf(sighting, open);
+    const kinds = sighting.deal.sample.sightlines;
+    const first = 0;
+    const { all: cells, exit } = sights(sp, open.dealt.mirror)[first];
+    const key = (g: ArrayLike<number>) =>
+      `${sighting.sightClue(g, sp, open.dealt, first)},${sighting.sightClue(g, sp, open.dealt, exit)}`;
+    for (const seed of ["l1", "l2", "l3", "l4", "l5", "l6"]) {
+      const start = new Uint8Array(16);
+      const laid = sightlinesLaid(
+        sighting,
+        kinds,
+        start,
+        sp,
+        open.dealt,
+        p4,
+        randomNew(seed),
+      );
+      expect(cells.every((c) => laid[c] !== 0)).toBe(true);
+      const want = key(laid);
+      let alike = 0;
+      for (let f = 0; f < 1 << cells.length; f++) {
+        const g = laid.slice();
+        for (const [k, c] of cells.entries()) g[c] = ((f >> k) & 1) + 1;
+        if (key(g) === want) alike++;
+      }
+      expect(alike).toBe(1);
+    }
+  });
+
+  it("grades a board needing a rung more often than its tier allows as the tier above", () => {
+    // Every number 0 on a 3x3 of ghosts: one pass of the sightlines passing
+    // no zombie strikes every zombie, which a bound of none at Easy refuses.
+    const ghosts = game.newState(p, `9,0,i${",0".repeat(12)}`);
+    const most = (n: number) => ({
+      ...sighting,
+      ladder: sighting.ladder.map((e) => (e.id === "none" ? { ...e, most: n } : e)),
+    });
+    expect(solveBoard(most(1), ghosts, 0).verdict).toBe("solved");
+    expect(solveBoard(most(0), ghosts, 0).verdict).toBe("unsolved");
+    expect(solveBoard(most(0), ghosts, 1).verdict).toBe("solved");
   });
 });

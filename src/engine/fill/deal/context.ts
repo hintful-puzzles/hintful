@@ -52,6 +52,18 @@ export type DealtFillModule<C> = SearchedFillModule<C> &
     /** The value whose squares `deal.refuse`'s techniques may not place
      * alone, on a board of these sizes. */
     refusePlaces?(sp: GridSpace, sizes: Readonly<Record<string, number>>): number;
+    /** Whether the deal keeps a board of these clues at `tier`, read on the
+     * clues as the answer derives them and the sizes (`deal.keep`). */
+    dealKeeps?(sp: GridSpace, cl: C, tier: number): boolean;
+    /** Whether a build keeps first cells dealing these clues at `tier`, read
+     * with the sizes (`sample.first.keep`). */
+    firstKeeps?(sp: GridSpace, cl: C, tier: number): boolean;
+    /** The value a clue of `sample.sightlines.ends` at slot `at` derives
+     * from board `g`. */
+    sightClue?(g: ArrayLike<number>, sp: GridSpace, cl: C, at: number): number;
+    /** The most cells the sightlines leave the build at `tier`, `n` those
+     * the first cells leave, read with the sizes. */
+    sightlinesOpen?(sp: GridSpace, cl: C, tier: number, n: number): number;
   };
 
 /** What a deal's board is, and how the ladder does on one. */

@@ -268,8 +268,28 @@ export interface CompiledEntry<Id extends string = string> {
   scale?: string;
   from?: number;
   until?: number;
+  /** How many times a board of its own tier fires it at most: one finished
+   * at that tier only by more is graded above it ({@link overFired}). */
+  most?: number;
   /** The variation that adds it, where one does. */
   variation?: string;
+}
+
+/** Whether a board the ladder at `caps` finished, firing as `firings`
+ * counts, fired an entry of the tier its scale is capped at more often than
+ * that entry's `most`: a board of the tier above, though no technique above
+ * decided it (upstream undead.c's Easy, which grades by its passes). */
+export function overFired(
+  entries: readonly CompiledEntry[],
+  caps: Caps,
+  firings: FiringTally,
+): boolean {
+  return entries.some(
+    (e) =>
+      e.most !== undefined &&
+      caps[e.scale ?? TIERS] === e.tier &&
+      (firings.get(e.id) ?? 0) > e.most,
+  );
 }
 
 /** A ladder entry with the rung that runs it. */

@@ -634,10 +634,11 @@ export function compileGame(
     "",
     "/** The ladder: each technique's tier, on its scale where that is not the",
     " * description's tiers, the least cap it runs at where that is above its",
-    " * tier, the cap from which it no longer runs where it has one, and the",
+    " * tier, the cap from which it no longer runs where it has one, the most",
+    " * times a board of its tier fires it where that is bounded, and the",
     " * variation that adds it where one does, in the order the description",
     " * lists them, a variation's before the first of a higher tier. */",
-    "export const ladder: readonly { id: LadderId; name: string; tier: number; scale?: string; from?: number; until?: number; variation?: string }[] = [",
+    "export const ladder: readonly { id: LadderId; name: string; tier: number; scale?: string; from?: number; until?: number; most?: number; variation?: string }[] = [",
     ...rungOrder(
       d.techniques.filter((t) => t.on === null),
       addedBy,
@@ -655,6 +656,7 @@ export function compileGame(
         ...(t.scale === null ? [] : [`scale: ${JSON.stringify(t.scale)}`]),
         ...(t.from === null ? [] : [`from: ${t.from}`]),
         ...(t.until === null ? [] : [`until: ${t.until}`]),
+        ...(t.most === null ? [] : [`most: ${t.most}`]),
         ...(by === undefined ? [] : [`variation: ${JSON.stringify(by)}`]),
       ];
       return `  { ${fields.join(", ")} },`;

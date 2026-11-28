@@ -9,7 +9,7 @@ import { type RandomState, randomUpto } from "../../random/index.ts";
 import type { GridSpace } from "../../solve/describe-runtime.ts";
 import { ladderTechniques, runLadder } from "../../solve/ladder-runtime.ts";
 import { type Clues, capsOf, marksOf, newBoard } from "../board.ts";
-import { type FillDeal, type FillParams, givenOf } from "../game-id.ts";
+import { type FillDeal, type FillParams, givenOf, sizesOf } from "../game-id.ts";
 import { variationsOf } from "../params/flag.ts";
 import type { BuiltSample } from "../sample.ts";
 import { withLatin } from "./clue-steps.ts";
@@ -17,6 +17,7 @@ import type { DealContext, DealtFillModule } from "./context.ts";
 import { firstLaid } from "./first-laid.ts";
 import { hiddenKinds } from "./hide-settings.ts";
 import { keepingAll } from "./keeping.ts";
+import { sightlinesLaid } from "./sightlines.ts";
 
 /** What a build returns where a placement left no answer or a cell undecided:
  * a sign that its ladder was too low to steer it. */
@@ -71,19 +72,24 @@ export function buildAnswer<C extends Clues<C>>(
   // blank board's are no answer's (a line's count of a letter is 0 on it,
   // ABCD's). A kind dealt apart from the answer is read: a Latin kind's
   // numbers (Singles'), and a hexagon's corners (Bricks').
+  // Laid first, the build reads the shown kinds the domain reads (Light Up's
+  // walls, Undead's mirrors), each other kind derived from the first cells
+  // alone being no answer's (Undead's sightlines over a board of mirrors).
   const apart = [deal.latin?.kind, deal.hexagon?.outside];
-  const blank =
+  const hidden = first === undefined ? [] : hiddenKinds(deal, p);
+  const read = (k: string): boolean =>
     first === undefined
-      ? keepingAll(
-          numbered,
-          deal,
-          Object.keys(deal.universes).filter((k) => !apart.includes(k)),
-          sp,
-          [],
-        )
-      : deal.hide === undefined
-        ? numbered
-        : keepingAll(numbered, deal, hiddenKinds(deal, p), sp, []);
+      ? apart.includes(k)
+      : (sample.reads ?? []).includes(k) && !hidden.includes(k);
+  const blank = keepingAll(
+    numbered,
+    deal,
+    Object.keys(deal.universes).filter((k) => !read(k)),
+    sp,
+    [],
+  );
+  if (module.firstKeeps?.(sp, { ...blank, ...sizesOf(p) }, p.diff) === false)
+    return drawRejected("fill: the first cells' keep refuses them");
   const board = newBoard(module, sp.w, sp.h, blank, variationsOf(p));
   // One set of marks the whole build, the ladder run again after each
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.
@@ -91,6 +97,12 @@ export function buildAnswer<C extends Clues<C>>(
   if (!ok) return null;
   const ladder = ladderTechniques(marks, entries, capsOf(module, tier), {});
   if (runLadder(marks, ladder)) return null;
+  if (sample.sightlines !== undefined) {
+    const laid = sightlinesLaid(module, sample.sightlines, start, sp, blank, p, rs);
+    for (const c of sp.cells)
+      if (start[c] === 0 && laid[c] !== 0) marks.place(c, laid[c]);
+    if (runLadder(marks, ladder)) return DEAD_END;
+  }
   const build = sample.build === true ? null : sample.build;
   const order = Array.from(sp.cells);
   if (build?.order === "upward")

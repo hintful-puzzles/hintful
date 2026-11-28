@@ -19,6 +19,21 @@
       "minLength": 1,
       "description": "A formula."
     },
+    "byTier": {
+      "description": "One formula, or one a tier by its name, each tier named.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/formula"
+        },
+        {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/formula"
+          }
+        }
+      ]
+    },
     "divide": {
       "type": "object",
       "description": "One partition `deal.divide` divides: by `pairs` and `most`, by `sizes`, or into `equal` parts.",
@@ -109,19 +124,61 @@
     },
     "firstCells": {
       "type": "object",
-      "description": "A value dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational).",
-      "required": ["value", "share", "symmetry"],
+      "description": "A value dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational); or with `chance`, on each cell alone at that chance (upstream undead.c's mirrors). A list of values lays each cell one of them at random.",
+      "required": ["value"],
+      "oneOf": [{ "required": ["share", "symmetry"] }, { "required": ["chance"] }],
       "additionalProperties": false,
       "properties": {
         "value": {
-          "type": "integer",
-          "minimum": 1
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minItems": 2,
+              "uniqueItems": true
+            }
+          ]
         },
         "share": {
           "type": "string"
         },
         "symmetry": {
           "type": "string"
+        },
+        "keep": {
+          "$ref": "#/$defs/byTier",
+          "description": "For a build: first cells drawn again unless this holds of the clues they deal and the sizes, one formula or one by tier, each tier named, before the rest is built (upstream undead.c's sightlines no longer than the tier allows). It reads only the kinds the answer's domain reads."
+        },
+        "chance": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "description": "The chance each cell is laid a value, the cells drawn again together until the share laid is `within`'s."
+        },
+        "within": {
+          "type": "object",
+          "description": "The least and the most share of the cells `chance` lays (upstream undead.c's monsters at 0.48 to 0.78 of the squares, its mirrors the rest).",
+          "required": ["min", "max"],
+          "additionalProperties": false,
+          "properties": {
+            "min": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
         },
         "ramp": {
           "type": "object",
@@ -353,6 +410,11 @@
       "type": "string",
       "description": "A tier above the technique's own: at a cap that high the ladder does not run it, where a technique there strikes all it does and a grade should not rest on the weaker one."
     },
+    "most": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "How many times a board of the technique's own tier fires it at most: one the ladder finishes at that tier only by firing it more is graded a tier above (upstream undead.c's Easy, three passes over its sightlines at most, the last narrowing nothing). The hint and the solve run it as often as it fires."
+    },
     "statement": {
       "type": "object",
       "description": "What a technique says, wherever it is stated.",
@@ -539,6 +601,9 @@
             "until": {
               "$ref": "#/$defs/until"
             },
+            "most": {
+              "$ref": "#/$defs/most"
+            },
             "rung": {
               "$ref": "#/$defs/rung"
             }
@@ -564,6 +629,9 @@
             },
             "until": {
               "$ref": "#/$defs/until"
+            },
+            "most": {
+              "$ref": "#/$defs/most"
             },
             "rung": {
               "$ref": "#/$defs/rung"
@@ -606,6 +674,9 @@
             },
             "until": {
               "$ref": "#/$defs/until"
+            },
+            "most": {
+              "$ref": "#/$defs/most"
             },
             "rung": {
               "$ref": "#/$defs/rung"
@@ -2135,6 +2206,10 @@
                 }
               }
             },
+            "keep": {
+              "$ref": "#/$defs/byTier",
+              "description": "A board drawn again unless this holds of its clues and sizes as its answer derives them, before any is hidden: one formula, or one by tier, each tier named (upstream undead.c's boards of more than one kind of monster)."
+            },
             "unpair": {
               "type": "string",
               "description": "A clue kind at a cell of which two side by side with the same value are both taken off, in reading order: the board's answer is then the one the ladder finds, not the sample. With no `hide`."
@@ -2405,6 +2480,23 @@
                     },
                     "first": {
                       "$ref": "#/$defs/firstCells"
+                    },
+                    "sightlines": {
+                      "type": "object",
+                      "description": "Before the build, each sightline through the cells of the kind `through` that a clue of the kind `ends` sees from both of its slots, the fewest squares first: its undecided cells given, at random, a filling whose two clues no other filling of them derives, until no more than `open` cells are undecided, a formula of the sizes and of `n`, the cells the first cells leave undecided, or one a tier by name (upstream undead.c's `get_unique` and its `filling`). The build decides the rest.",
+                      "required": ["through", "ends", "open"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "through": {
+                          "type": "string"
+                        },
+                        "ends": {
+                          "type": "string"
+                        },
+                        "open": {
+                          "$ref": "#/$defs/byTier"
+                        }
+                      }
                     }
                   }
                 },

@@ -47,9 +47,16 @@ import {
   growByOf,
 } from "./fill/partitions.ts";
 import { markWhileOf, playOf } from "./fill/play.ts";
-import { refuseOf, refusePlacesOf } from "./fill/refuse.ts";
-import { checkFirst, checkSample, dealtSample, sampledValue } from "./fill/sample.ts";
+import { keepsOf, refuseOf, refusePlacesOf } from "./fill/refuse.ts";
+import {
+  checkFirst,
+  checkSample,
+  dealtSample,
+  sampledValue,
+  withBuildReads,
+} from "./fill/sample.ts";
 import { dealFlag, ruledKinds, type SettingOut, settingsOf } from "./fill/settings.ts";
+import { sightlinesOf } from "./fill/sightlines.ts";
 import { sizeSettings } from "./fill/sizes.ts";
 import { flagKind, markerKind } from "./fill/values.ts";
 
@@ -154,7 +161,7 @@ function dealOf(
   checkSample(json, d, sample, settings, hides);
   const unpair = json.deal?.unpair;
   const latin = latinOf(json, d);
-  checkFirst(sample, settings, hides);
+  checkFirst(sample, settings, d);
   const symmetricDeal = symmetricOf(symmetric, settings);
   const tierFlag =
     json.tierFlag === undefined
@@ -176,7 +183,7 @@ function dealOf(
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(hexagon === null ? {} : { hexagon }),
     settings,
-    sample: dealtSample(json, sample, settings),
+    sample: withBuildReads(dealtSample(json, sample, settings), d),
     ...present("hide", hide),
     ...present("refuse", refuseOf(json, d)),
     ...(stripFrom === undefined ? {} : { stripFrom }),
@@ -224,6 +231,8 @@ function dealOf(
     "};",
     ...(grow === null ? [] : growByOf(grow, env)),
     ...refusePlacesOf(json, env),
+    ...keepsOf(json, d, env, measured),
+    ...sightlinesOf(json, d, env, measured),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
     ...hideFormulasOf(json, env, measured),
   ];

@@ -119,3 +119,61 @@ row of counts beneath the grid, each record its value's glyph and count.
   top, right, bottom backwards, left backwards
 - **THEN** each number is read at the slot going round the grid clockwise
   from the top left, and the board writes back the same ID
+
+### Requirement: A born game's first cells may be laid a cell at a time, each one of several values
+
+A sample's `first` cells SHALL be laid either by a share and a symmetry
+the settings give, or each cell alone at a `chance`, the board drawn again
+until the share laid is within `within`; of a list of values, each cell
+laid SHALL take one at random. A build on first cells SHALL read only the
+clue kinds the answer's domain reads.
+
+#### Scenario: Undead's mirrors
+
+- **WHEN** the `sighting` fixture deals 4x4 boards, its mirrors laid at a
+  chance of one in five within a tenth and a half of the squares
+- **THEN** each board holds between two and eight mirrors, and both ways
+  of mirror appear among them
+
+### Requirement: A born game's deal may refuse its first cells and its board by tier
+
+A first cells' `keep`, one formula or one a tier, SHALL draw the first
+cells again before the build unless it holds of the clues they deal and
+the sizes, and the compiler SHALL refuse one reading a kind the domain does
+not read. A deal's `keep` SHALL draw a board again unless it holds of the
+clues its answer derives, before any is hidden. The compiler SHALL refuse
+a keep by tier that leaves a tier out, and one that is no truth.
+
+#### Scenario: Upstream Undead's sightlines and kinds of monster
+
+- **WHEN** the `sighting` fixture deals boards with a keep on its first
+  cells' longest sightline and one on its counts
+- **THEN** no dealt board's sightline passes more squares than the keep
+  allows, and every dealt board's counts hold as the keep says
+
+### Requirement: A born game's build may fill sightlines first, each singled out by its numbers
+
+A sample's `sightlines` SHALL, before the build, take each sightline
+through the cells of a kind, the fewest squares first, and give its
+undecided cells at random a filling whose two end clues no other filling
+of them derives, until no more than the tier's `open` cells are undecided.
+
+#### Scenario: Upstream Undead's get_unique
+
+- **WHEN** the sightlines are laid on a 4x4 with no mirror
+- **THEN** the first sightline's two numbers are those of its filling
+  alone
+
+### Requirement: A born game's tier may bound how often a rung fires
+
+A technique's `most` SHALL make a board that the ladder at the
+technique's own tier finishes only by firing it more often than that a
+board of the tier above. The hint and the solve SHALL run the technique as
+often as it fires.
+
+#### Scenario: Upstream Undead's Easy passes
+
+- **WHEN** a board of ghosts is solved at Easy with its sightline rung
+  allowed one firing, and allowed none
+- **THEN** the first is solved at Easy, and the second only at the tier
+  above

@@ -1367,6 +1367,37 @@ the boards a seed deals move").
 - **A derived clue reads only the kinds dealt before it**, in the order the
   description lists its clues: Undead's sightlines through its mirrors
   list the mirrors first, and the compiler refuses the other order.
+- **A build on first cells reads the kinds the answer's domain reads**, and
+  no other: every other kind derived from the first cells alone is no
+  answer's (a sightline's count over a board of mirrors and nothing else).
+  The compiler hands the build that list (`sample.reads`); Light Up's walls
+  and Undead's mirrors are read so.
+- **A technique with no clue to read must not run for nothing.** A build
+  reads no number, so a sightline whose two numbers are absent was
+  enumerating every filling of every sightline at each placement: one draw
+  of a 6x8 Undead took minutes. Bind the clue, and keep the binding only
+  where one exists (`b = clue(sees, t) where a >= 0 or b >= 0`).
+- **Refuse a layout before the build and a board after it**: a draw thrown
+  away for its first cells (`first.keep`, Undead's sightlines longer than
+  the tier allows) costs nothing to refuse there, and a 6x8 Easy deal spent
+  most of its 8 s building boards it then refused for the same thing. A
+  board's own refusal reads what the answer derives (`deal.keep`, Undead's
+  one kind of monster).
+- **Where a random answer rarely reaches the tier, steer the build, don't
+  draw more.** Random monsters on a 6x8 Undead were Easy about once in fifty
+  builds, 0.2 to 7 s a deal against the hand-written 1 to 8 ms. Upstream
+  fills sightlines first, the shortest first, each with a filling its two
+  numbers single out (`get_unique`), until the tier's number of squares is
+  left open: as `sample.sightlines` (`deal/sightlines.ts`) the same deal
+  took 1 to 2 ms (2026-11-28). The steer is a sample's, stated by the
+  concept it uses (sightlines through a kind's cells), for any game whose
+  clues look along them.
+- **A tier graded by how often a rung fires is the rung's `most`.** On the
+  solve path one firing is a whole pass over every binding, so a technique's
+  firings are its passes: upstream Undead's Easy allows three passes over
+  its sightlines, the last narrowing nothing, and its `sightline` says `most:
+  2`. A board the tier finishes only past it is the tier above's
+  (`overFired`); the hint and the solve run the rung as often as it fires.
 
 ### Recover emergent parameters from upstream's boards
 

@@ -225,11 +225,15 @@ export function samplePicture(
 
 /** A value dealt on a share of the cells before the rest is drawn, as
  * symmetric as asked, each by the name of the option that gives it, the
- * share going up by `ramp` as draws fail. */
+ * share going up by `ramp` as draws fail; or on each cell alone at `chance`,
+ * the cells drawn again until the share laid is `within`'s. Of a list of
+ * values, each cell is laid one at random. */
 export interface FirstCells {
-  readonly value: number;
-  readonly share: string;
-  readonly symmetry: string;
+  readonly value: number | readonly number[];
+  readonly share?: string;
+  readonly symmetry?: string;
+  readonly chance?: number;
+  readonly within?: { readonly min: number; readonly max: number };
   readonly ramp?: {
     readonly every: number;
     readonly step: number;
@@ -254,6 +258,13 @@ export interface BuiltSample {
         readonly least?: number;
       };
   readonly first?: FirstCells;
+  /** The sightlines through the clues of `through` given unique fillings
+   * before the rest is built, as each derives its `ends` clues
+   * (`deal/sightlines.ts`). */
+  readonly sightlines?: { readonly through: string; readonly ends: string };
+  /** With `first`, the clue kinds the answer's domain reads: of the clues
+   * the first cells derive, those the build reads. */
+  readonly reads?: readonly string[];
 }
 
 /** The share of `first` cells the draw numbered `draw` of a deal takes, from

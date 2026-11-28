@@ -134,7 +134,7 @@ function neverOf(
 /** `E` where a meaning is `E = v` or `v = E`, alone or a term of a
  * conjunction, and `E` does not read `v`: the one value the clue can hold,
  * which a derive takes without trying each. `null` where it is not. */
-function solvedFor(means: Expr): Expr | null {
+export function solvedFor(means: Expr): Expr | null {
   if (means.k !== "bin") return null;
   if (means.op === "and") return solvedFor(means.a) ?? solvedFor(means.b);
   if (means.op !== "=") return null;

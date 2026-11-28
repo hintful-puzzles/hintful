@@ -1321,6 +1321,96 @@ describe("what the fill board reads of a description", () => {
         /id: sides top, right, bottom backwards, top backwards, a side named twice/,
       );
     });
+
+    describe("a deal of mirrors first, sightlines filled, and boards kept", () => {
+      type Dealing = {
+        deal: {
+          keep?: unknown;
+          sample: {
+            first: Record<string, unknown>;
+            sightlines: Record<string, unknown>;
+          };
+        };
+      };
+      const dealing = (f: (j: Dealing) => void) => (j: Dealing) => {
+        f(j);
+        return j;
+      };
+
+      it("builds on the kinds the domain reads, the keeps and the sightlines compiled", () => {
+        const out = compileEdited(fixture, (j) => j);
+        expect(out).toContain('"reads":["mirror"]');
+        expect(out).toContain('"sightlines":{"through":"mirror","ends":"sees"}');
+        for (const fn of ["firstKeeps", "dealKeeps", "sightClue", "sightlinesOpen"])
+          expect(out).toContain(`export function ${fn}(`);
+        expect(out).toMatch(/\{ id: "none", name: "[^"]*", tier: 0, most: 1 \}/);
+        // The formulas are the module's, so the deal holds none.
+        expect(out).not.toContain('"keep"');
+        expect(out).not.toContain('"open"');
+      });
+
+      it("refuses a chance with a share, or a bound with no chance", () => {
+        expect(() =>
+          compileEdited(
+            fixture,
+            dealing((j) => {
+              j.deal.sample.first["share"] = "walls";
+            }),
+          ),
+        ).toThrow(/cells laid each at a chance, and a share or a symmetry/);
+        expect(() =>
+          compileEdited(
+            fixture,
+            dealing((j) => {
+              j.deal.sample.first["within"] = { min: 0.5, max: 0.1 };
+            }),
+          ),
+        ).toThrow(/within 0.5 to 0.1, which holds no share/);
+      });
+
+      it("refuses a first cells' keep reading what they do not deal", () => {
+        expect(() =>
+          compileEdited(
+            fixture,
+            dealing((j) => {
+              j.deal.sample.first["keep"] = "holds(1) > 0";
+            }),
+          ),
+        ).toThrow(
+          /first keep: holds\(1\) > 0 reads total, which the first cells do not deal/,
+        );
+      });
+
+      it("refuses a keep by tier that leaves a tier out, or is no truth", () => {
+        expect(() =>
+          compileEdited(
+            fixture,
+            dealing((j) => {
+              j.deal.keep = { Easy: "holds(1) > 0" };
+            }),
+          ),
+        ).toThrow(/deal keep: a formula a tier, and not every tier has one/);
+        expect(() =>
+          compileEdited(
+            fixture,
+            dealing((j) => {
+              j.deal.keep = "holds(1)";
+            }),
+          ),
+        ).toThrow(/deal keep: holds\(1\) is not a truth/);
+      });
+
+      it("refuses sightlines whose ends are no clue at a slot", () => {
+        expect(() =>
+          compileEdited(
+            fixture,
+            dealing((j) => {
+              j.deal.sample.sightlines["ends"] = "mirror";
+            }),
+          ),
+        ).toThrow(/sightlines: mirror is no clue kind at a slot meaning `E = v`/);
+      });
+    });
   });
 
   it("refuses an order off a square board of numbers with labels, or where a place is fixed", () => {

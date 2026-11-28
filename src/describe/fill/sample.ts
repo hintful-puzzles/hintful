@@ -8,6 +8,7 @@ import { type GroupSample, groupTable } from "../../engine/fill/group-table.ts";
 import type { WallsSample } from "../../engine/fill/sample.ts";
 import { SET_BLACKS_SYMM } from "../../engine/generate/symmetry.ts";
 import { CompileError } from "../compile-sorts.ts";
+import { kindsRead } from "../compile-terms.ts";
 import {
   type Description,
   type DescriptionJson,
@@ -195,15 +196,71 @@ export function checkSample(
   }
 }
 
+/** A build on first cells, given the clue kinds the answer's domain reads:
+ * the clues those cells derive that the build reads (Undead's mirrors, Light
+ * Up's walls). Every other kind derived from first cells alone is no
+ * answer's: a sightline's count of a board of mirrors and nothing else. The
+ * first cells' `keep` is the module's `firstKeeps` and the sightlines' `open`
+ * its `sightlinesOpen`, so the deal holds neither. */
+export function withBuildReads<S extends object>(
+  sample: S | null,
+  d: Description,
+): S | null {
+  if (sample === null) return sample;
+  const without = (o: unknown, key: string): object => {
+    const { [key]: _, ...rest } = o as Record<string, unknown>;
+    return rest;
+  };
+  return {
+    ...sample,
+    ...("sightlines" in sample
+      ? { sightlines: without(sample.sightlines, "open") }
+      : {}),
+    ...("first" in sample ? { first: without(sample.first, "keep") } : {}),
+    ...("first" in sample && "build" in sample
+      ? { reads: [...kindsRead(d.domain, d.defs)].sort() }
+      : {}),
+  };
+}
+
 /** Refuses first cells whose share is no number the options give, or whose
- * symmetry is no option of the symmetries first cells keep. */
+ * symmetry is no option of the symmetries first cells keep; first cells at a
+ * chance with a share or a symmetry besides, or a bound on the share laid
+ * and no chance; and a first value no clue kind the domain reads fixes, for
+ * a build, which reads those alone. */
 export function checkFirst(
   sample: SampleJson | null,
   settings: readonly SettingOut[],
-  hides: boolean,
+  d: Description,
 ): void {
   if (sample === null || !("first" in sample) || sample.first === undefined) return;
-  const { share, symmetry } = sample.first;
+  const { share, symmetry, chance, within } = sample.first;
+  if (chance !== undefined) {
+    if (share !== undefined || symmetry !== undefined)
+      throw new CompileError(
+        "deal sample first: cells laid each at a chance, and a share or a symmetry",
+      );
+    if (within !== undefined && !(within.min <= within.max))
+      throw new CompileError(
+        `deal sample first: within ${within.min} to ${within.max}, which holds no share`,
+      );
+  } else checkShared(sample.first, settings);
+  if ("build" in sample && [...kindsRead(d.domain, d.defs)].length === 0)
+    throw new CompileError(
+      "deal sample first: the build reads the clue kinds the domain reads, and it reads none",
+    );
+}
+
+/** Refuses first cells laid by a share that is no number the options give,
+ * or a symmetry that is no option of the symmetries first cells keep. */
+function checkShared(
+  { share, symmetry, within }: { share?: string; symmetry?: string; within?: unknown },
+  settings: readonly SettingOut[],
+): void {
+  if (within !== undefined)
+    throw new CompileError(
+      "deal sample first: a bound on the share laid, and no chance",
+    );
   if (!settings.some((s) => s.id === share && s.kind === "number"))
     throw new CompileError(
       `deal sample first: ${share} is no number the settings give`,
@@ -219,9 +276,5 @@ export function checkFirst(
   )
     throw new CompileError(
       `deal sample first: ${symmetry} is no option of the symmetries first cells keep (${Object.keys(SET_BLACKS_SYMM).join(", ")})`,
-    );
-  if (!hides && "build" in sample)
-    throw new CompileError(
-      "deal sample first: the build is on the first cells' clues with every hidden one hidden, and no hide",
     );
 }

@@ -345,7 +345,10 @@ description author acts on:
   under 32, and a supposition. A binder over a set stated member by member
   loops its members, so `m in {n - 1, n + 1}` is how a wide description
   names two numbers; `{n}` made as a mask wrapped past 31 unseen before the
-  compiler refused it.
+  compiler refused it. **Off a wide domain that set is still a mask, and
+  nothing refuses it**: `min(x in {2 * (w + h), n} of x)` shifted `1 << n`
+  past 31 in Undead's draft deal. Say a bound of sizes by `or` and `and`,
+  or bind a `range`.
 - **`connected(S)` says whether the cells `S` are one group**, each reaching
   every other through members side by side, and `cuts(S)` is the members
   without which the rest are not, in `S`'s order. Bind `cuts` once by `=`:

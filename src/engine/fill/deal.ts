@@ -86,6 +86,8 @@ export function dealFill<C extends Clues<C>>(
       return "build" in sample
         ? climbBuild(cx, "fill: the answer built breaks a rule")
         : drawRejected("fill: the answer drawn breaks a rule");
+    if (module.dealKeeps?.(on, { ...derived, ...sizes }, tier) === false)
+      return drawRejected("fill: the deal's keep refuses the board");
     if (kind === null) return { g, clues: derived };
     if (blank.length > 0) derived = blanked(derived, blank);
     const list = derived[kind] as ClueList;

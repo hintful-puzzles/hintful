@@ -8,7 +8,10 @@
 # no key and noted by no note), and of an ID written as upstream undead.c's:
 # the counts, then the grid's mirrors and given monsters between runs of
 # empty squares, then the numbers going round the grid clockwise from the top
-# left, on a description that names no game.
+# left; and of upstream undead.c's deal: mirrors laid first a square at a
+# time, either way, and kept where no sightline is long, sightlines filled
+# so their numbers single them out, a board kept by its counts, and a tier
+# bounding how often a rung fires; on a description that names no game.
 game: sighting
 produces: numbers
 sizes:
@@ -25,6 +28,11 @@ answer:
     sort: cell
     domain: "{d in range(1, 4) where (clue(mirror, c) < 0 and d < 3) or d = clue(mirror, c) + 2}"
 given: [value]
+define:
+  # How many of monster d the board holds, and the most squares a sightline
+  # passes.
+  holds(d): "sum(k in clues(total) where item(k) = d of many(k))"
+  longest: "max(s in slots of |sight(s, mirror)|)"
 marks:
   cand: { sort: cell, notation: "set of range(1, 4)" }
 clues:
@@ -63,17 +71,27 @@ play:
     strike: the notes the step crosses out.
     stripes: the sightline the step is about.
 deal:
+  mirror: a square in five at random, either way, until a sightline is short
   answer: >-
-    built a square at a time: a random monster on a random empty square,
-    then every square the ladder decides from them
+    sightlines whose numbers single out their monsters, shortest first, then
+    a random monster on a random empty square and every square the ladder
+    decides from them
   given: every square's monster, then each hidden while the board still finishes
   sees: every number
-  total: every count
-  tier: the one tier
-  sample: { build: true }
+  total: every count, as many zombies as ghosts or more
+  tier: one of the tiers
+  sample:
+    first:
+      value: [3, 4]
+      chance: 0.2
+      within: { min: 0.1, max: 0.5 }
+      keep: "longest <= w + 1"
+    sightlines: { through: mirror, ends: sees, open: "n / 3" }
+    build: true
+  # A keep that half the boards fail, so a deal that skipped it shows.
+  keep: "holds(2) >= holds(1) and holds(1) > 0"
   hide: given
-  mirror: none; only a game ID gives a mirror
-  never: mirror
+  never: { given: [3, 4] }
 # Upstream undead.c's: the counts, the grid (`L` a mirror `\`, `R` one `/`,
 # `G` and `Z` a given monster, a run of empty squares a letter from a to z),
 # and each number round the grid clockwise from the top left.
@@ -85,14 +103,16 @@ id:
   - numbers: sees
     before: ","
     sides: [top, right, bottom backwards, left backwards]
-tiers: [Easy]
+tiers: [Easy, Normal]
 names:
   none: "a sightline passing no zombie"
   single: "the only monster left in a square"
 techniques:
-  # A sightline passing no zombie holds none.
+  # A sightline passing no zombie holds none. An Easy board needs one pass of
+  # it at most, as it always does.
   - id: none
     tier: Easy
+    most: 1
     for: >-
       s in slots where clue(sees, s) = 0,
       X = {x in sight(s, mirror) where 2 in cand(x) and |cand(x)| > 1}
