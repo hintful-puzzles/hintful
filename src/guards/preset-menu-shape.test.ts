@@ -56,7 +56,7 @@ const TIERS_NOT_OFFERED: Record<string, Record<string, string>> = {
       "the menu is as long as a menu may be with the three tiers the ladder deals; the tier came so that boards dealt before 2026-10-28 still open",
   },
   group: {
-    Hard: "the menu's 6x6 and 8x8 refuse it with the identity shown, and a 12x12 takes eleven seconds",
+    Hard: "a 6x6 showing its identity gave no Hard board in 290,000 tries, an 8x8 takes ten seconds a board and a 12x12 eleven",
   },
 };
 

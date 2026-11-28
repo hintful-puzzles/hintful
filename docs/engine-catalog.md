@@ -118,7 +118,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `region-fill.ts` — a fill for each region of a division |
 | `solve/` — the deduction ladder and what compiled descriptions run on |
 | – `square-tiling.ts` — a square grid as a tiling |
-| – `latin.ts` — Latin-square solver *and* generator |
+| – `latin.ts` — the Latin library *and* the Latin-square generator |
 | – `cell-marks.ts` — the marks a compiled technique reads |
 | – `ladder-runtime.ts` — what a compiled ladder runs on |
 | – `ladder-walk.ts` — a hint's walk over a compiled ladder |
@@ -751,7 +751,7 @@ Reach for it when you declare `paramConfig` or validate params.
 - **Call `paramsError` wherever you would have asked
   `game.validateParams`.** It is the one validity check: every item's
   `bounds` and choice list, then the game's optional `validateParams`.
-- `dimensionParamConfig`, `numberItem`, `squareSize` and `parseConfigInt`
+- `dimensionParamConfig`, `numberItem` and `parseConfigInt`
   are the declarative helpers behind `Game.paramConfig`.
 - **Set `maxShown` on a `bounds` whose max is a limit a player meets**, the
   colors a game has: the Custom dialog's label then says it, "Colors (up to
@@ -1031,7 +1031,7 @@ Reach for it when your game has a pencil mode. It is the "pencil mode is
 on" glyph, the same in every game and in the same
 place: the canvas's top-right corner. The position is the engine's; a game
 picks its three palette indices (`PencilIndicatorStyle`) and finds the
-room. Exemplar: `group/render.ts`.
+room. Exemplar: `undead/render.ts`.
 
 - **Reserve `Math.max(yourMargin, pencilIndicatorReach(ts))`.** The reach
   is the glyph plus both insets, and the glyph is clamped between 20 and 48
@@ -1123,7 +1123,7 @@ from either side; a later leg's sentence is `edgeContinuation` in
 Reach for it in every game that carries `ui.pencilMode` and
 `ui.cursorFromKeyboard`: the player types values and pencils candidates. The
 game keeps its coordinates, its symbols and its
-own `Move`. Exemplar: `group/index.ts`.
+own `Move`. Exemplar: `rome/index.ts`.
 
 - **Input**: `pressNoteTakingCell`, `tapNoteTakingCell` and
   `dragEnteredNoteTakingCell` resolve a press, a release and a drag;
@@ -1379,19 +1379,20 @@ square. **A dimension of 2 wraps to two edges between the same pair of
 squares**, one each way round, so key on the edge, never on the pair.
 Exemplar: `net/solver.ts`.
 
-### `latin.ts` — Latin-square solver *and* generator
+### `latin.ts` — the Latin library *and* the Latin-square generator
 
-Reach for `latinSolver`, `latinGenerate` and `latinGenerateRect` when the
-board is a Latin square. Its bipartite `matching` is usable outside the
-family: pass `rs` for a random matching in generation and leave it out for a
-deterministic existence check (`tents/`). A repeated symbol, the `seed`
-hook, `cubeOut` and the family's generator shapes are in
-[`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
-`group/solver.ts`. Its singles, sets, fish and wing are
-`latin.compiled.ts`, compiled from `latin.description.yaml` by
-`npm run describe` and never edited by hand; `latinLadder` pairs each with
-its reason, and runs a described game's own on its clues
-([`descriptions.md`](./descriptions.md); exemplar `group/solver.ts`).
+A Latin game is its description, and the fill engine solves it (§ "`fill/`
+— the board of a fill game, laid out from its description"); a description
+places the library's techniques with `use: latin.…`. Its singles, sets, fish
+and wing are `latin.compiled.ts`, compiled from `latin.description.yaml` by
+`npm run describe` and never edited by hand; `LATIN_LIBRARY` pairs each with
+the reason a hint narrates, and `describedLadder` takes it as the library
+([`descriptions.md`](./descriptions.md)). Reach for `latinGenerate` and
+`latinGenerateRect` for a random Latin square or rectangle
+(`fill/deal/latin-numbers.ts`). Its bipartite `matching` is usable outside
+the family: pass `rs` for a random matching in generation (`fill/sample.ts`,
+`ascent/generator.ts`) and leave it out for a deterministic existence
+check.
 `describe-runtime.ts` is what compiled code reads, and the modules under
 `describe-runtime/` hold it: the marks' interface, the numbered grid
 (`describedSpace`, `latinSpace`), kept by shape, and a game's `ClueList`s
@@ -1414,7 +1415,6 @@ extends `CellMarks` only to keep a Search no description states. Exemplar:
 Reach for `describedLadder` when a game's techniques are stated in a
 description: the pairing of each technique with its reason, and
 `ladderTechniques` and `runLadder` to run it on the marks capped per scale.
-`withSearch` puts a Search no description states after the ladder, and
 `keptRung` makes a hint rung of the compiled firings that serve another.
 Exemplar: `crossing/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
@@ -1742,7 +1742,7 @@ a strike names), `evidenceOf` (what a step's words outline and stripe),
 `populateThenClean`, and `keepCandidateHintTrack` and
 `refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.
-Exemplars: `group/index.ts`, and `engine/fill/candidates.ts` for every
+Exemplars: `rome/hint.ts`, and `engine/fill/candidates.ts` for every
 born game that keeps notes.
 
 - **`NoteEncoding.all(i)` must agree with the game's own fill-all move.**
@@ -1794,11 +1794,6 @@ supplies its rungs, regions and words; the walk itself is
 - **Its `reading` is the player's.** Under the implicit one there is no
   populate, and a firing first writes the notes of every note-less cell its
   premise reads.
-- **A plain row/column square calls `runLatinCandidatePlan`** and supplies
-  its rungs and words alone. A game whose singles narrate otherwise
-  fails to type-check against it and calls `runCandidatePlan`
-  (`rome/hint.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
-  "The row/column preset".
 - **`buildSteps` hands its plan the prefs' `judging`**, and the game wires
   `judgeMove` as `candidateJudge` over the same `buildSteps`.
 
@@ -1821,9 +1816,8 @@ are `hint-text.ts`'s.
 ### `latin-notes.ts` — a Latin ladder run on the player's notes
 
 Reach for it when a Latin game's hint deduces from the notes.
-`latinNotesLadder` runs the game's ladder on
-`LatinSolver` marks over the walk's grid, and `latinStrikeRungs` makes the
-library's set, fish and wing rungs of the plan, so the game writes legs
+`latinStrikeRungs` makes the library's set, fish and wing rungs of a plan
+that runs the game's ladder on the notes, so the game writes legs
 only for its own techniques; `byCell` cuts a firing a leg a cell, for a
 game whose sentence names one cell's notes, and `byWrittenCell` a leg each
 only for the cells with no notes written, the rest in one, for a walk

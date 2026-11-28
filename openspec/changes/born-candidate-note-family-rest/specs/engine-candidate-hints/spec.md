@@ -32,6 +32,44 @@ under the implicit reading the clean alone. A plan has no setup of its own.
 - **THEN** that firing comes before the fill, and the fill and the clean follow
   once the opening has nothing left
 
+### Requirement: A shared candidate-elimination hint plan
+
+The engine SHALL provide the whole candidate-elimination hint plan walk
+(`runCandidatePlan`) for every pencil-notes game whose hint sets and strikes
+candidate notes and places a value when a cell's notes collapse to one. Such a
+game's `buildSteps` SHALL hand its plan to it, and SHALL NOT walk, build or
+apply steps itself. The walk is hint-plan plumbing only: the solvers and the
+generate and solve paths SHALL NOT change because of it.
+
+#### Scenario: A game's steps are built by the walk
+
+- **WHEN** any game that walks its plan with the shared candidate-plan walk
+  emits a placement or a strike
+- **THEN** the step's move is the game's own placement or strike move, its `targets`
+  are the cells that move acts on, each once, and its `marks` are the candidates it
+  strikes
+
+### Requirement: A candidate strike SHALL end in the walk's conclusion
+
+A candidate-elimination game on the shared plan walk SHALL give a strike's words
+as a premise (`Premise`): the clause saying why the struck values go, without a
+conclusion. The walk SHALL end every strike's sentence with the plan's
+`conclude` words for the move its step makes: a strike ("so 2 and 4 must go"),
+a placement ("so this cell must be 3") or a note of the values left ("so this
+cell can only be 1 or 5"). Every plan SHALL supply its own `conclude`.
+
+#### Scenario: A game writes no strike conclusion
+
+- **WHEN** a game on the walk narrates any strike
+- **THEN** its words carry a premise and no explanation, and the step's sentence
+  is that premise followed by the walk's conclusion for the step's move
+
+#### Scenario: The reference is the struck values
+
+- **WHEN** a strike's step ends "so 2 and 4 must go"
+- **THEN** its reference to the struck notes says "2 and 4", and "must go" is
+  outside it
+
 ## REMOVED Requirements
 
 ### Requirement: A rung list holds only the rungs of the readings its plan walks
@@ -46,3 +84,25 @@ populate-only plan this narrowed is retired with its typing (task 3.4).
 **Reason**: The plan's own setup is retired (task 3.4): every plan takes the
 walk's, from its `notes` words, which a plan must now give.
 **Migration**: None; no plan gave a setup.
+
+### Requirement: A row/column Latin square answers no question its regions already settle
+
+**Reason**: Every row/column Latin game is born from its description, and
+the fill board walks its plan through `runCandidatePlan` with the regions,
+singles and words it builds from the compiled module; the preset
+(`runLatinCandidatePlan`) has no caller left and is retired.
+**Migration**: A hand-written game calls `runCandidatePlan`, with
+`rowColRegions` and `singleReasonOf` from `latin-hint.ts` where its regions
+are a row and a column.
+
+### Requirement: The fields the row/column preset supplies
+
+**Reason**: The preset is retired with its last caller; the born board
+supplies these fields from the compiled module.
+**Migration**: None; no game takes the preset.
+
+### Requirement: A game reasoning over other regions cannot take the preset
+
+**Reason**: The preset is retired, so there is nothing for such a game to be
+turned back from.
+**Migration**: None; every game calls `runCandidatePlan`.

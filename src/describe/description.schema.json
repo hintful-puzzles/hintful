@@ -1459,6 +1459,10 @@
               "type": "string",
               "description": "The variation under which a small cross is drawn at each corner inside the grid, the cue that a rule reaches the squares diagonally beside one (upstream ABCD's no-diagonal mode)."
             },
+            "leadingDiagonal": {
+              "const": true,
+              "description": "On a square board whose rows and columns stand for the same things, the leading diagonal, where a row meets the same column, drawn as a stroke under each square on it, in the order the player gives the lines (upstream Group's): a guide no rule reads."
+            },
             "covers": {
               "type": "object",
               "description": "A value whose piece covers the number on its cell, and a preference, off by default, that shows the number there smaller; a press off the grid flips it (upstream's Singles).",

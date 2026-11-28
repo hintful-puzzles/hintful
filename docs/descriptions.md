@@ -59,9 +59,7 @@ techniques are stated does in TypeScript:
    fails on a compiled technique with no verdict for its statement as it
    reads now (§ "Checking a technique sound").
 4. **Builds its ladder on the board's clues** with
-   `describedLadder(module, dealt)`, or `latinLadder` where it places the
-   Latin library ([`group/solver.ts`](../src/games/group/solver.ts)).
-   The engine runs every technique on `dealt` where the module's
+   `describedLadder(module, dealt)`. The engine runs every technique on `dealt` where the module's
    `techniques` says it reads it, on placing and on striking too; a module
    none of whose techniques reads the clues takes `null`. The game names a
    rung only where it supplies something: a reason the description cannot
@@ -960,10 +958,9 @@ runs the module's `placing` techniques as each value is placed (recording
 their strikes as the placement's cull) and its `striking` techniques as a
 fact strikes a value (`CellMarks.striking`, set beside `placing`), and runs
 the ladder: one technique
-an entry, in the module's order, capped per scale. A game's solver extends
-`CellMarks` only to keep what no description states, a Search (`LatinSolver`
-and Solo's forcing chains and recursion); a game whose solve is its ladder
-uses it as it is, as every fill game does ([`engine/fill/board.ts`](../src/engine/fill/board.ts)).
+an entry, in the module's order, capped per scale. A game uses `CellMarks`
+as it is, as every fill game does ([`engine/fill/board.ts`](../src/engine/fill/board.ts));
+the search above the ladder is the fill engine's, not the marks'.
 
 - **The space is the module's.** `units` lists the description's units in
   its order, and `describedSpace` builds the grid from them: rows and

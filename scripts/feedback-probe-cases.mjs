@@ -50,49 +50,6 @@ export const MODULES = [
     module: "src/engine/solve/latin.ts",
     cases: [
       {
-        within: "LatinSolver",
-        why: "a placed digit is no longer ruled out of the rest of its row and column",
-        find: "    this.placing = placing;",
-        replace: "    this.placing = [];",
-      },
-      {
-        within: "LatinSolver.writeCube",
-        why: "the candidate cube a generator reads is written transposed (x and y swapped)",
-        find: "          out[(x * o + y) * s + n - 1] = this.has(y * o + x, n) ? 1 : 0;",
-        replace:
-          "          out[(y * o + x) * s + n - 1] = this.has(y * o + x, n) ? 1 : 0;",
-      },
-      {
-        within: "LatinSolver.multiplicity",
-        why: "the repeated symbol is read as appearing once a line, so its line is struck at its first placement and a line holding its places for all its copies places none",
-        find: "    return n === this.repeat ? this.times : 1;",
-        replace: "    return 1;",
-      },
-      {
-        within: "LatinSolver.forcing",
-        why: "forcing chains start from three-candidate cells instead of two",
-        find: "        if (count !== 2) continue;",
-        replace: "        if (count !== 3) continue;",
-      },
-      {
-        within: "latinSolverTop",
-        why: "a second solution is graded as solvable instead of ambiguous",
-        find: "    else if (nsol > 1) diff = DIFF_AMBIGUOUS;",
-        replace: "    else if (nsol > 1) diff = cfg.diffRecursive;",
-      },
-      {
-        within: "finish",
-        why: "the game's answer check on a completed grid is skipped",
-        find: "    !cfg.isAnswer(solver.grid)",
-        replace: "    !true",
-      },
-      {
-        within: "latinSolverTop",
-        why: "an unfilled cell no longer marks the solve unfinished",
-        find: "        if (!solver.grid[y * o + x]) diff = DIFF_UNFINISHED;",
-        replace: "        if (false) diff = DIFF_UNFINISHED;",
-      },
-      {
         within: "latinGenerate",
         why: "the generator lets a row reuse a digit already in its column",
         find: "      for (let k = 0; k < i; k++) present[sq[row[k] * o + j] - 1] = 1;",
@@ -104,24 +61,6 @@ export const MODULES = [
         why: "a w×h rectangle is cropped from a min(w,h)-square, overrunning it",
         find: "  const o = Math.max(w, h);\n  const latin = latinGenerate(o, rs);",
         replace: "  const o = Math.min(w, h);\n  const latin = latinGenerate(o, rs);",
-      },
-      {
-        within: "latinSolver",
-        why: "the seed hook (Salad's ball/cross clues) never runs",
-        find: "  cfg.seed?.(solver);",
-        replace: "  void cfg.seed;",
-      },
-      {
-        within: "latinSolver",
-        why: "the final candidate cube is not written back to cubeOut",
-        find: "  if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);\n  return ret;",
-        replace: "  return ret;",
-      },
-      {
-        within: "latinSolver",
-        why: "an inconsistent set of givens is graded solvable, not impossible",
-        find: "  if (!solver.alloc(grid)) {",
-        replace: "  if (false) {",
       },
     ],
   },

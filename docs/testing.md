@@ -234,7 +234,7 @@ What a scan can be told:
   return type (`(): SoloMove[] => …`): a bare literal widens to
   `{ type: string }` and every kind then fails to typecheck.
 - **`ui`**: the `Ui` the hint is asked under, for a kind a candidate reading
-  decides (`group-hint.test.ts`).
+  decides (`rome-hint.test.ts`).
 - **`stray`**: a second line of play on every board, steered by the game, for
   a rung spoken only off the lines that finish (`pegs-hint.test.ts`).
 

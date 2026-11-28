@@ -1,86 +1,28 @@
 /**
- * Generic Latin-square solver and generator: upstream `latin.c`'s solver, and
- * its generator with `matching.c`.
+ * The Latin library and the Latin-square generator: the library's techniques
+ * (`latin.description.yaml`: singles, set elimination, the fish and the wing)
+ * as the rungs a described game places them with, the reasons they give a
+ * hint, and upstream `latin.c`'s generator with `matching.c`.
  *
- * Shared by the games that call `latinSolver`. A game supplies its ladder,
- * compiled from its description, which places the library's techniques
- * (`latin.description.yaml`: singles, set elimination and the wing) among its
- * own, and its answer check, compiled from the same description's rules;
- * `latinSolver` runs them, and at the recursive level forcing
- * chains and guess-and-verify recursion (which doubles as the generators'
- * uniqueness check).
- *
- * The candidates are the engine's marks (`cell-marks.ts`'s `CellMarks`),
- * a mask a cell; upstream's `o³` cube survives only where a generator reads
- * it ({@link LatinSolver.writeCube}). `forcing` is upstream's deduction, and
- * the negative-result sentinels keep upstream's numeric values so a game's
- * `ret <= diff` / `ret != diff` comparisons read as upstream's. Scratch
- * buffers are owned by the solver instance; recursion allocates a sub-solver
- * per guess.
- *
- * ## A symbol that may repeat (this fork's extension)
- *
- * A *pseudo*-Latin puzzle — Salad, where `order − nums` squares per line are
- * empty — has one symbol that appears a stated number of times per line
- * rather than once. Upstream fakes it with a full square whose surplus symbols
- * are reinterpreted as holes, which works but leaves the solver reasoning about
- * *which* interchangeable hole symbol sits where, a question the puzzle never
- * asks; the natural deductions about "the empty square" cannot be written
- * against that encoding. So the solver can be told, via {@link LatinRepeats},
- * that its **last** symbol appears `times` times per line: it then has
- * `symbols = o − times + 1` distinct values,
- * the library's techniques read each value's {@link LatinSolver.multiplicity}
- * (`times(d)`), and forcing chains never link through it (a link relies on the
- * value appearing once). With no repeat declared, `symbols = o` and every
- * multiplicity is 1, and the techniques read as on a Latin square.
+ * A Latin game is its description: the fill engine (`engine/fill/`) solves
+ * it, pairing the description's `use` of a library technique with its rung
+ * here ({@link LATIN_LIBRARY}). The techniques read each value's multiplicity
+ * (`times(d)`) off the engine's marks, so a pseudo-Latin board, whose one
+ * repeated symbol appears a stated number of times a line (Salad's empty
+ * square), runs the same rungs.
  */
 
 import * as compiled from "../../generated/engine/solve/latin.compiled.ts";
 import { shuffle } from "../board/shuffle.ts";
-import type { DifficultyVerdict } from "../contract/difficulty.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
-import { CellMarks, type DupReason, type PlaceRung } from "./cell-marks.ts";
-import type { CompiledTechniques } from "./deduction-fixpoint.ts";
-import { latinSpace, valuesOf } from "./describe-runtime.ts";
+import type { DupReason, PlaceRung } from "./cell-marks.ts";
+import { valuesOf } from "./describe-runtime.ts";
 import {
-  type CompiledLadder,
-  type CompiledTechniquesOf,
-  type DealtOf,
-  describedLadder,
-  type Ladder,
   type Library,
-  ladderTechniques,
-  type OwnRungs,
   type Rung,
-  runLadder,
-  TIERS,
   uncluedPlacingRung,
   uncluedRung,
-  withSearch,
 } from "./ladder-runtime.ts";
-
-/** Upstream `enum { diff_impossible = 10, diff_ambiguous, diff_unfinished }`
- * — positive sentinels larger than any real difficulty level, so a
- * generator's `ret <= diff` correctly treats them as "harder than allowed". */
-export const DIFF_IMPOSSIBLE = 10;
-export const DIFF_AMBIGUOUS = 11;
-export const DIFF_UNFINISHED = 12;
-
-/**
- * Read a latin-family solver's return as a {@link DifficultyVerdict}.
- *
- * Every solver built on this module returns *the difficulty level it reached*,
- * or one of the three sentinels above — so a plain level, whatever its value,
- * means the board was solved within the cap it was given (the cap is what
- * stopped the ladder, so a level above it is unreachable, not reported). Lives
- * here rather than in each game's difficulty contract because it is a fact
- * about *this* return convention, not about any one game.
- */
-export function latinVerdict(ret: number): DifficultyVerdict {
-  if (ret === DIFF_IMPOSSIBLE) return "impossible";
-  if (ret === DIFF_AMBIGUOUS || ret === DIFF_UNFINISHED) return "unsolved";
-  return "solved";
-}
 
 /** Why a *generic* Latin deduction forced a candidate change — the premise a
  * hint narrates. A game's own reasons sit beside these in its reason union;
@@ -145,174 +87,6 @@ function confinedLines(
   return { axis, count: indices.length, cells };
 }
 
-/**
- * One symbol that may appear more than once per line — what a pseudo-Latin
- * puzzle needs (Salad's empty square). The repeated symbol is always the
- * **last** one, `symbols = o − times + 1`, so a consumer's real symbols keep
- * their `1..k` numbering and the repeat sits one past them.
- */
-export interface LatinRepeats {
-  /** How many times the last symbol appears in each row and each column. */
-  times: number;
-}
-
-/** The library's `placed`, run as each value is placed on a Latin square. */
-const LATIN_PLACING: readonly PlaceRung[] = [uncluedPlacingRung(compiled.placed)];
-
-/**
- * The marks of an `o × o` Latin square, cells numbered `y·o + x`, and the
- * forcing chain, which no description states: a supposition, run only at the
- * recursive level.
- */
-export class LatinSolver extends CellMarks {
-  readonly o: number;
-  /** Distinct symbols: `o` for a Latin square, `o − times + 1` with a repeat. */
-  readonly symbols: number;
-  declare grid: Uint8Array;
-
-  // Scratch buffers for forcing chains (instance-owned).
-  private readonly sGrid: Uint8Array;
-  private readonly sNeighbors: Int32Array;
-  private readonly sBfsqueue: Int32Array;
-
-  /** `placing`: what runs as each value is placed, the compiled module's
-   * where a game's ladder gives it, and the library's `placed` otherwise. */
-  constructor(
-    o: number,
-    repeats: LatinRepeats | null = null,
-    placing: readonly PlaceRung[] = LATIN_PLACING,
-  ) {
-    if (repeats && !(repeats.times >= 2 && repeats.times <= o)) {
-      throw new Error(
-        `latin: a repeated symbol must appear 2..${o} times, not ${repeats.times}`,
-      );
-    }
-    const s = repeats ? o - repeats.times + 1 : o;
-    super(
-      latinSpace(o),
-      ((1 << (s + 1)) - 1) & ~1,
-      new Uint8Array(o * o),
-      repeats ? { value: s, times: repeats.times } : null,
-    );
-    this.o = o;
-    this.symbols = s;
-    this.placing = placing;
-    this.sGrid = new Uint8Array(o * o);
-    this.sNeighbors = new Int32Array(3 * o);
-    this.sBfsqueue = new Int32Array(o * o);
-  }
-
-  /** How many times symbol `n` appears in each line. */
-  multiplicity(n: number): number {
-    return n === this.repeat ? this.times : 1;
-  }
-  cubeGet(x: number, y: number, n: number): boolean {
-    return this.has(y * this.o + x, n);
-  }
-
-  /** Seed the marks from `grid` (written back in place). Returns false if a
-   * given digit is already ruled out (inconsistent). */
-  alloc(grid: Uint8Array): boolean {
-    return this.seed(grid);
-  }
-
-  /** The candidate cube upstream's generators read (`state->hints`), at
-   * `cubepos(x, y, n) = (x·o + y)·symbols + n − 1`. */
-  writeCube(out: Uint8Array): void {
-    const { o, symbols: s } = this;
-    for (let x = 0; x < o; x++)
-      for (let y = 0; y < o; y++)
-        for (let n = 1; n <= s; n++)
-          out[(x * o + y) * s + n - 1] = this.has(y * o + x, n) ? 1 : 0;
-  }
-
-  /** Forcing chains (upstream `latin_solver_forcing`): a chain of two-candidate
-   * cells whose ends both line up with a third cell forces a digit out of it.
-   *
-   * Each link is "if this cell is a, that one is b", a conditional no mark
-   * records, so a chain is a supposition: it runs only at the recursive level
-   * (docs/solver-and-generator.md § "Check, Tactic, Search"), and a hint,
-   * which never records at that level, has no words for it. */
-  forcing(): number {
-    if (this.recorder)
-      throw new Error("a forcing chain is a search; no hint narrates one");
-    const o = this.o;
-    const s = this.symbols;
-    const number = this.sGrid; // reused as the BFS "other candidate" map
-    const neighbors = this.sNeighbors;
-    const bfsqueue = this.sBfsqueue;
-
-    for (let y = 0; y < o; y++) {
-      for (let x = 0; x < o; x++) {
-        let count = 0;
-        let t = 0;
-        for (let n = 1; n <= s; n++) {
-          if (this.cubeGet(x, y, n)) {
-            count++;
-            t += n;
-          }
-        }
-        if (count !== 2) continue;
-
-        for (let n = 1; n <= s; n++) {
-          if (!this.cubeGet(x, y, n)) continue;
-          // Every link of a chain — "this cell takes `currn`, so its neighbor
-          // in the line cannot" — relies on `currn` appearing once per line, so
-          // the repeated symbol can neither start a chain nor carry one.
-          if (n === this.repeat) continue;
-          const orign = n;
-          number.fill(o + 1, 0, o * o);
-          let head = 0;
-          let tail = 0;
-          bfsqueue[tail++] = y * o + x;
-          number[y * o + x] = t - n;
-
-          while (head < tail) {
-            let xx = bfsqueue[head++];
-            const yy = (xx / o) | 0;
-            xx %= o;
-            const currn = number[yy * o + xx];
-            // A cell whose forced value is the repeated symbol ends the chain
-            // there: that value does not exclude itself from the line.
-            if (currn === this.repeat) continue;
-
-            let nn = 0;
-            for (let yt = 0; yt < o; yt++) neighbors[nn++] = yt * o + xx;
-            for (let xt = 0; xt < o; xt++) neighbors[nn++] = yy * o + xt;
-
-            for (let i = 0; i < nn; i++) {
-              const xt = neighbors[i] % o;
-              const yt = (neighbors[i] / o) | 0;
-              if (number[yt * o + xt] <= o) continue;
-              if (!this.cubeGet(xt, yt, currn)) continue;
-              if (xt === xx && yt === yy) continue;
-
-              let cc = 0;
-              let tt = 0;
-              for (let m = 1; m <= s; m++) {
-                if (this.cubeGet(xt, yt, m)) {
-                  cc++;
-                  tt += m;
-                }
-              }
-              if (cc === 2) {
-                bfsqueue[tail++] = yt * o + xt;
-                number[yt * o + xt] = tt - currn;
-              }
-
-              if (currn === orign && (xt === x || yt === y)) {
-                this.strikeAt(yt * o + xt, orign);
-                return 1;
-              }
-            }
-          }
-        }
-      }
-    }
-    return 0;
-  }
-}
-
 const cellAt = (w: number) => (c: number) => ({ x: c % w, y: (c / w) | 0 });
 
 /** The library's techniques (`latin.description.yaml`) as rungs, by the id a
@@ -347,27 +121,15 @@ export const LATIN_RUNGS = {
   ),
 } satisfies Record<string, Rung>;
 
+/** The library's `placed`, run as each value is placed on a Latin square. */
+const LATIN_PLACED: PlaceRung = uncluedPlacingRung(compiled.placed);
+
 /** The Latin library, as the engine pairs it for every game that places
  * it. */
 export const LATIN_LIBRARY: Library = {
   rungs: LATIN_RUNGS,
-  placing: { "latin.placed": LATIN_PLACING[0] },
+  placing: { "latin.placed": LATIN_PLACED },
 };
-
-/** A Latin game's ladder: its compiled module's, on the clues `dealt`, with
- * the rungs the game supplies in `own` and the library's by the engine. */
-export function latinLadder<
-  Id extends string,
-  P extends string,
-  S extends CellMarks,
-  T extends CompiledTechniquesOf<Id, P, never>,
->(
-  module: CompiledLadder<Id, P, never, T>,
-  dealt: DealtOf<T>,
-  own: OwnRungs<Id, P, S> = {},
-): Ladder<S> {
-  return describedLadder(module, dealt, own, LATIN_LIBRARY);
-}
 
 /** A fish as a set confined across lines, in the view its `says` names: the
  * columns, whose elements follow the `o` rows in a Latin space, or the rows,
@@ -382,188 +144,6 @@ function fishReason({ arm, terms }: compiled.FishSays, o: number): LatinReason {
         )
       : confinedLines("row", valuesOf(terms.lines), o);
   return { kind: "set", cells: terms.places.map(cellAt(o)), lines };
-}
-
-/** How `latinSolver` runs: its rungs, the game's answer check, and the
- * hint-path hooks. */
-export interface LatinSolverConfig {
-  ladder: Ladder<LatinSolver>;
-  /** Declare the last symbol as repeating `times` per line (a pseudo-Latin
-   * puzzle). Leave unset or `null` for a Latin square; see {@link LatinRepeats}. */
-  repeats?: LatinRepeats | null;
-  maxdiff: number;
-  /** The searching level: forcing chains, then guess-and-verify recursion. */
-  diffRecursive: number;
-  /** Whether a whole grid is an answer to the board: the game's compiled
-   * `isAnswer` over what it deals. A solve that fills the grid with one that
-   * is not is impossible. */
-  isAnswer: (grid: Uint8Array) => boolean;
-  /**
-   * Extra candidate-cube constraints to apply *after* `alloc` and *before* the
-   * deduction fixpoint — the slot upstream games use between
-   * `latin_solver_alloc` and `latin_solver_main`. Salad's Number Ball clues are
-   * the case: a ball ("this square holds a symbol") or a cross ("this one does
-   * not") rules candidates out of a cell without placing any digit, so it
-   * cannot be expressed through the seeded `grid`.
-   *
-   * Deliberately **not** re-applied inside `latinSolverRecurse`, as upstream's
-   * recursion re-runs only `latin_solver_top` on a bare sub-solver. Sound for
-   * Salad, which passes `diffRecursive = DIFF_IMPOSSIBLE` and so never recurses;
-   * a recursing consumer would have to revisit it.
-   */
-  seed?: (solver: LatinSolver) => void;
-  /** Optional `o³` output buffer that receives the final candidate cube
-   * (upstream copies `solver.cube` into `state->hints` after solving). Unequal's
-   * greedy clue-assembly generator reads the remaining-possibility counts off
-   * it; most games omit it. Filled at every non-recursive exit. */
-  cubeOut?: Uint8Array;
-}
-
-/** The forcing chain's id among a ladder's techniques. */
-const FORCING = "forcing-chain";
-
-/**
- * The game's ladder at `cfg.maxdiff`, then at the searching level the forcing
- * chain. Every Latin game lists its techniques in tier order, so they run as
- * a ladder grouped by tier would; the forcing chain is a supposition, so it
- * shares the level of the other search, the recursion, and comes after every
- * technique.
- */
-function latinTechniques(
-  solver: LatinSolver,
-  cfg: LatinSolverConfig,
-  grades: Record<string, number>,
-): CompiledTechniques {
-  const techniques = ladderTechniques(
-    solver,
-    cfg.ladder.entries,
-    { [TIERS]: cfg.maxdiff },
-    grades,
-  );
-  if (cfg.maxdiff < cfg.diffRecursive) return techniques;
-  return withSearch(techniques, {
-    id: FORCING,
-    tier: cfg.diffRecursive,
-    run: () => {
-      const ret = solver.forcing();
-      if (ret > 0) grades[TIERS] = Math.max(grades[TIERS], cfg.diffRecursive);
-      return ret;
-    },
-  });
-}
-
-function latinSolverTop(solver: LatinSolver, cfg: LatinSolverConfig): number {
-  const { maxdiff, diffRecursive } = cfg;
-  const grades = { [TIERS]: 0 };
-  const impossible = runLadder(solver, latinTechniques(solver, cfg, grades));
-  if (impossible) return finish(solver, cfg, DIFF_IMPOSSIBLE);
-  let diff = grades[TIERS];
-
-  if (maxdiff === diffRecursive) {
-    const nsol = latinSolverRecurse(solver, cfg);
-    if (nsol < 0) diff = DIFF_IMPOSSIBLE;
-    else if (nsol === 1) diff = diffRecursive;
-    else if (nsol > 1) diff = DIFF_AMBIGUOUS;
-    // nsol === 0 ⇒ already complete; leave diff unchanged.
-  } else {
-    const o = solver.o;
-    for (let y = 0; y < o; y++) {
-      for (let x = 0; x < o; x++) {
-        if (!solver.grid[y * o + x]) diff = DIFF_UNFINISHED;
-      }
-    }
-  }
-
-  return finish(solver, cfg, diff);
-}
-
-function finish(solver: LatinSolver, cfg: LatinSolverConfig, diff: number): number {
-  if (
-    diff !== DIFF_IMPOSSIBLE &&
-    diff !== DIFF_UNFINISHED &&
-    diff !== DIFF_AMBIGUOUS &&
-    !cfg.isAnswer(solver.grid)
-  ) {
-    return DIFF_IMPOSSIBLE;
-  }
-  return diff;
-}
-
-function latinSolverRecurse(solver: LatinSolver, cfg: LatinSolverConfig): number {
-  const o = solver.o;
-  let best = -1;
-  const s = solver.symbols;
-  let bestcount = s + 1;
-  for (let y = 0; y < o; y++) {
-    for (let x = 0; x < o; x++) {
-      if (!solver.grid[y * o + x]) {
-        let count = 0;
-        for (let n = 1; n <= s; n++) if (solver.cubeGet(x, y, n)) count++;
-        if (count < bestcount) {
-          bestcount = count;
-          best = y * o + x;
-        }
-      }
-    }
-  }
-
-  if (best === -1) return 0; // already complete
-
-  const y = (best / o) | 0;
-  const x = best % o;
-  const list: number[] = [];
-  for (let n = 1; n <= s; n++) if (solver.cubeGet(x, y, n)) list.push(n);
-
-  const ingrid = solver.grid.slice();
-  let diff = DIFF_IMPOSSIBLE; // no solution found yet
-
-  for (const guess of list) {
-    const outgrid = ingrid.slice();
-    outgrid[y * o + x] = guess;
-
-    const sub = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
-    const ret = sub.alloc(outgrid)
-      ? latinSolverTop(sub, { ...cfg, maxdiff: cfg.diffRecursive })
-      : DIFF_IMPOSSIBLE;
-
-    if (ret === DIFF_IMPOSSIBLE) continue;
-    // The first solution found is the one written back; a second makes it
-    // ambiguous.
-    if (diff === DIFF_IMPOSSIBLE) solver.grid.set(outgrid);
-    diff =
-      ret === DIFF_AMBIGUOUS || diff !== DIFF_IMPOSSIBLE
-        ? DIFF_AMBIGUOUS
-        : cfg.diffRecursive;
-    if (diff === DIFF_AMBIGUOUS) break;
-  }
-
-  if (diff === DIFF_IMPOSSIBLE) return -1;
-  if (diff === DIFF_AMBIGUOUS) return 2;
-  return 1;
-}
-
-/**
- * Solve an `o × o` Latin-square puzzle in place. `grid` is the working grid
- * (0 = blank) seeded with the game's fixed cells; it is written back with the
- * first solution found. Returns the difficulty level reached, or one of
- * `DIFF_IMPOSSIBLE` / `DIFF_AMBIGUOUS` / `DIFF_UNFINISHED`.
- */
-export function latinSolver(
-  grid: Uint8Array,
-  o: number,
-  cfg: LatinSolverConfig,
-): number {
-  const solver = new LatinSolver(o, cfg.repeats, cfg.ladder.placing);
-  if (!solver.alloc(grid)) {
-    if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);
-    return DIFF_IMPOSSIBLE;
-  }
-  cfg.seed?.(solver);
-  const ret = latinSolverTop(solver, cfg);
-  // Expose the final candidate cube (upstream's `memcpy(state->hints, ...)`),
-  // for a generator that grades clues by remaining possibilities (Unequal).
-  if (cfg.cubeOut) solver.writeCube(cfg.cubeOut);
-  return ret;
 }
 
 // --- generator (matching.c / latin.c) --------------------------------------

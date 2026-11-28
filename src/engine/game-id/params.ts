@@ -254,11 +254,6 @@ export function numberItem<P>(
   };
 }
 
-/** A square board's size words, `NxN`, for a game sized by one number. */
-export function squareSize<P>(field: PlainNumberKey<P>): (p: P) => string {
-  return (p) => `${p[field]}x${p[field]}`;
-}
-
 /**
  * The most squares any board may have, in every game: a 100x100 board. Where a
  * board has two sides, their fields declare it (`area`); a game sized by one

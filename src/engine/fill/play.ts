@@ -185,6 +185,9 @@ export interface FillPlay {
   /** The variation under which a small cross marks each corner inside the
    * grid (`render/layers/surface.ts`). */
   readonly cornerCrosses?: string;
+  /** Whether the leading diagonal of a square board is drawn as a stroke
+   * under each square on it (`render/layers/surface.ts`). */
+  readonly leadingDiagonal?: true;
   /** The value an open cell reads as for the answer check, where the answer is
    * the other values alone; absent where every cell must be filled. */
   readonly blank?: number;

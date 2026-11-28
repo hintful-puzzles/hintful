@@ -125,6 +125,14 @@ export function paintCornerCrosses(frame: TileFrame, boardW: number): void {
   }
 }
 
+/** A stroke corner to corner under the content of a square where a row
+ * meets the same column (`play.leadingDiagonal`, upstream group.c's): a
+ * guide to where a value is combined with itself, which no rule reads. */
+export function paintLeadingDiagonal(frame: TileFrame): void {
+  const { dr, ts, tx, ty } = frame;
+  dr.drawLine({ x: tx, y: ty }, { x: tx + ts, y: ty + ts }, COL_GRID, 1);
+}
+
 export function paintSurface(
   pal: FillPalette,
   frame: TileFrame,

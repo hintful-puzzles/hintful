@@ -1,17 +1,16 @@
 /**
- * Tests for the generic Latin-square solver/generator (`engine/solve/latin.ts`).
+ * Tests for the Latin library and generator (`engine/solve/latin.ts`).
  *
- * `latin.ts` is the largest module in the engine and the Latin family sits on
- * it. Tested only end to end through `latinSolver`, a defect planted in one of
- * its deductions surfaces, if at all, in a game's suite as a board that
- * misbehaves rather than as the deduction that broke.
+ * The Latin family sits on the library's techniques. Tested only end to end
+ * through a game, a defect planted in one of them surfaces, if at all, as a
+ * board that misbehaves rather than as the deduction that broke.
  *
  * So the blocks below assert each deduction **directly**, in the vocabulary of
  * the technique it implements: the hidden single places on a last remaining
- * position and reports a contradiction on none, `set` refuses three cells sharing two
- * digits, `forcing` follows a chain of two-candidate cells to an elimination.
- * That is the same reasoning a hint narrates, which is why the tests read as
- * sentences about Latin squares rather than as pokes at an array.
+ * position and reports a contradiction on none, `set` refuses three cells
+ * sharing two digits, the wing strikes what no set can. That is the same
+ * reasoning a hint narrates, which is why the tests read as sentences about
+ * Latin squares rather than as pokes at an array.
  *
  * ## What deliberately goes unasserted
  *
@@ -27,46 +26,16 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew, randomUpto } from "../random/index.ts";
+import { CellMarks } from "./cell-marks.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
+import { latinSpace } from "./describe-runtime.ts";
 import {
-  DIFF_AMBIGUOUS,
-  DIFF_IMPOSSIBLE,
-  DIFF_UNFINISHED,
+  LATIN_LIBRARY,
   LATIN_RUNGS,
-  LatinSolver,
-  type LatinSolverConfig,
   latinGenerate,
   latinGenerateRect,
-  latinLadder,
-  latinSolver,
   matching,
 } from "./latin.ts";
-
-/** A plain Latin-square config: no game-specific deductions or rules, the
- * library's singles at 0, its set at 1, its fish and wing at 2, the search at
- * 4, and nothing at 3. */
-function cfg(maxdiff: number): LatinSolverConfig {
-  return {
-    maxdiff,
-    ladder: latinLadder(
-      {
-        ladder: [
-          { id: "latin.hiddenSingle", name: "hidden single", tier: 0 },
-          { id: "latin.single", name: "single", tier: 0 },
-          { id: "latin.set", name: "set", tier: 1 },
-          { id: "latin.fish", name: "fish", tier: 2 },
-          { id: "latin.wing", name: "wing", tier: 2 },
-        ],
-        placing: [{ id: "latin.placed" }],
-        striking: [],
-        techniques: {},
-      },
-      null,
-    ),
-    diffRecursive: 4,
-    isAnswer: () => true,
-  };
-}
 
 function isLatin(grid: Uint8Array, o: number): boolean {
   for (let i = 0; i < o; i++) {
@@ -82,69 +51,60 @@ function isLatin(grid: Uint8Array, o: number): boolean {
   return true;
 }
 
-describe("latin solver", () => {
-  it("solves a uniquely-determined board and writes back a Latin square", () => {
-    // A full Latin square with one cell blanked is uniquely completable.
-    const o = 4;
-    const full = latinGenerate(o, randomNew("latin-unique"));
-    const grid = Uint8Array.from(full, (v) => v);
-    grid[5] = 0; // blank one cell
-    const ret = latinSolver(grid, o, cfg(4));
-    expect(ret).not.toBe(DIFF_AMBIGUOUS);
-    expect(ret).not.toBe(DIFF_UNFINISHED);
-    expect(isLatin(grid, o)).toBe(true);
-    for (let i = 0; i < o * o; i++) expect(grid[i]).toBe(full[i]);
-  });
+/** Marks on a blank `o × o` Latin square, the library's `placed` run as each
+ * value is placed: every digit possible in every cell. */
+function blank(o: number): CellMarks {
+  const s = new CellMarks(
+    latinSpace(o),
+    ((1 << (o + 1)) - 1) & ~1,
+    new Uint8Array(o * o),
+  );
+  s.placing = [LATIN_LIBRARY.placing["latin.placed"]];
+  expect(s.seed(s.grid)).toBe(true);
+  return s;
+}
 
-  it("reports ambiguity for an empty grid with recursion", () => {
-    const grid = new Uint8Array(16); // empty 4×4 has many Latin completions
-    expect(latinSolver(grid, 4, cfg(4))).toBe(DIFF_AMBIGUOUS);
-  });
+/** Whether `(x, y)` of an `o`-wide board may still hold `n`. */
+const can = (s: CellMarks, x: number, y: number, n: number): boolean =>
+  s.has(y * s.sp.w + x, n);
 
-  it("respects the difficulty ceiling (no recursion → unfinished)", () => {
-    const grid = new Uint8Array(16);
-    // maxdiff = 3 < recursive (4): deductions can't finish an empty
-    // grid, and recursion is not permitted, so it reports unfinished.
-    expect(latinSolver(grid, 4, cfg(3))).toBe(DIFF_UNFINISHED);
-  });
-});
+/** Restrict `(x, y)` to exactly `digits`. */
+function only(s: CellMarks, x: number, y: number, digits: number[]): void {
+  for (let n = 1; n <= s.sp.w; n++) {
+    if (!digits.includes(n)) s.strikeAt(y * s.sp.w + x, n);
+  }
+}
 
 /**
- * The deductions, each against the rule it implements. A fresh solver over an
- * all-blank grid starts with every digit possible everywhere, so a test states
+ * The deductions, each against the rule it implements. Fresh marks over an
+ * all-blank grid start with every digit possible everywhere, so a test states
  * its situation by ruling candidates *out* — which is what the deductions
  * themselves manipulate.
  */
 describe("latin deductions", () => {
-  /** A solver on a blank `o × o` board: every digit possible in every cell. */
-  function blank(o: number): LatinSolver {
-    const s = new LatinSolver(o);
-    expect(s.alloc(new Uint8Array(o * o))).toBe(true);
-    return s;
-  }
-
-  /** Restrict `(x, y)` to exactly `digits`. */
-  function only(s: LatinSolver, x: number, y: number, digits: number[]): void {
-    for (let n = 1; n <= s.o; n++) {
-      if (!digits.includes(n)) s.strikeAt(y * s.o + x, n);
-    }
-  }
-
   it("placing a digit rules it out of the rest of its row and column", () => {
-    // The whole of `place`'s job, and the one deduction every other rests on.
-    // Row *and* column: they are two separate loops, so a test that checked
-    // only one would let the other be deleted.
+    // The whole of `placed`'s job, and the one deduction every other rests on.
+    // Row *and* column: a test that checked only one would let the other go.
     const s = blank(4);
     s.place(2 * 4 + 1, 3);
 
     expect(s.grid[2 * 4 + 1]).toBe(3);
-    for (let n = 1; n <= 4; n++) expect(s.cubeGet(1, 2, n)).toBe(n === 3);
-    for (let y = 0; y < 4; y++) if (y !== 2) expect(s.cubeGet(1, y, 3)).toBe(false);
-    for (let x = 0; x < 4; x++) if (x !== 1) expect(s.cubeGet(x, 2, 3)).toBe(false);
+    for (let n = 1; n <= 4; n++) expect(can(s, 1, 2, n)).toBe(n === 3);
+    for (let y = 0; y < 4; y++) if (y !== 2) expect(can(s, 1, y, 3)).toBe(false);
+    for (let x = 0; x < 4; x++) if (x !== 1) expect(can(s, x, 2, 3)).toBe(false);
 
     // ...and nothing beyond that cross was touched: a cell sharing neither
     // line keeps every digit, including the one just placed elsewhere.
-    for (let n = 1; n <= 4; n++) expect(s.cubeGet(0, 0, n)).toBe(true);
+    for (let n = 1; n <= 4; n++) expect(can(s, 0, 0, n)).toBe(true);
+  });
+
+  it("two givens that clash leave no seeding", () => {
+    // Digit 2 twice in column 0: the second given's cell has lost it.
+    const s = blank(4);
+    const clash = new Uint8Array(16);
+    clash[0] = 2;
+    clash[4] = 2;
+    expect(s.seed(clash)).toBe(false);
   });
 
   it("the hidden single places only on the *last* remaining position", () => {
@@ -216,142 +176,18 @@ describe("latin deductions", () => {
     );
   });
 
-  it("forcing chains follow two-candidate cells to an elimination", () => {
-    // The technique in full: assume 1 at (0,0); it forces 2 at (1,0), which
-    // forces 3 at (2,0), which forces 1 back into the same row — so 1 is
-    // impossible at (3,0) whichever way the chain is entered. Cells with a
-    // different number of candidates are not chain links, which is why the
-    // "exactly two" test is the rule and not a tuning constant.
-    const s = blank(4);
-    only(s, 0, 0, [1, 2]);
-    only(s, 1, 0, [2, 3]);
-    only(s, 2, 0, [1, 3]);
-    expect(s.cubeGet(3, 0, 1)).toBe(true);
-
-    expect(s.forcing()).toBe(1);
-    expect(s.cubeGet(3, 0, 1)).toBe(false);
-  });
-});
-
-describe("latin solver configuration", () => {
-  /** A 2×2 board is the smallest with more than one Latin completion: the two
-   * squares [[1,2],[2,1]] and [[2,1],[1,2]]. Small enough to write answers out. */
-  const blank2 = () => new Uint8Array(4);
-
-  it("applies the seed hook to the cube before any deduction runs", () => {
-    // Salad's ball/cross clues constrain a cell without placing a digit, so
-    // they cannot travel in the seeded grid. Ruling digit 1 out of (0,0) picks
-    // one of the two 2×2 squares, which nothing else in the config can do.
-    expect(latinSolver(blank2(), 2, cfg(4))).toBe(DIFF_AMBIGUOUS);
-
-    const grid = blank2();
-    const ret = latinSolver(grid, 2, {
-      ...cfg(4),
-      seed: (s) => {
-        s.strikeAt(0, 1);
-      },
-    });
-    expect(ret).not.toBe(DIFF_AMBIGUOUS);
-    expect([...grid]).toEqual([2, 1, 1, 2]);
-  });
-
-  /** A blank 4×4 whose `cells` keep only their listed digits. */
-  const seeded =
-    (cells: [number, number, number[]][]) =>
-    (s: LatinSolver): void => {
-      for (const [x, y, digits] of cells)
-        for (let n = 1; n <= 4; n++) if (!digits.includes(n)) s.strikeAt(y * 4 + x, n);
-    };
-  const cubeAt = (seed: (s: LatinSolver) => void, maxdiff: number): Uint8Array => {
-    const out = new Uint8Array(4 * 4 * 4);
-    latinSolver(new Uint8Array(16), 4, { ...cfg(maxdiff), seed, cubeOut: out });
-    return out;
-  };
-
-  it("weighs a wing at the single-number set level", () => {
+  it("the wing strikes what no set elimination can", () => {
     // (1,0) is 2 or 3; if 2, (0,0) in its row is 1, and if 3, (1,1) in its
     // column is 1. Either way (0,1), in line with both, cannot be 1, and no
     // line holds a set to say so.
-    const seed = seeded([
-      [0, 0, [1, 2]],
-      [1, 0, [2, 3]],
-      [1, 1, [1, 3]],
-    ]);
-    const oneAt01 = (0 * 4 + 1) * 4 + 1 - 1;
-    expect(cubeAt(seed, 1)[oneAt01]).not.toBe(0);
-    expect(cubeAt(seed, 2)[oneAt01]).toBe(0);
-  });
-
-  it("follows a forcing chain only at the recursive level", () => {
-    // A chain is a supposition, so no game may grade it below its search.
-    // (0,0) is 1 or 2; if 2, (2,0) is 3, (2,2) is 4 and (3,2) is 1, so (0,2),
-    // in line with both ends, cannot be 1. Four cells long, it is no wing.
-    const seed = seeded([
-      [0, 0, [1, 2]],
-      [2, 0, [2, 3]],
-      [2, 2, [3, 4]],
-      [3, 2, [1, 4]],
-    ]);
-    const oneAt02 = (0 * 4 + 2) * 4 + 1 - 1;
-    expect(cubeAt(seed, 3)[oneAt02]).not.toBe(0);
-    const chained = new LatinSolver(4);
-    chained.alloc(new Uint8Array(16));
-    seed(chained);
-    while (chained.forcing() > 0);
-    expect(chained.cubeGet(0, 2, 1)).toBe(false);
-  });
-
-  it("runs the game's answer check on a completed grid, and reports failure", () => {
-    // A game's rules (Keen's arithmetic, Unequal's inequalities) go beyond
-    // what its techniques read, so a grid that is a perfect Latin square can
-    // still be no answer at all.
-    const full = latinGenerate(4, randomNew("valid"));
-    const seeded = () => {
-      const g = Uint8Array.from(full, (v) => v);
-      g[5] = 0;
-      return g;
-    };
-    expect(latinSolver(seeded(), 4, { ...cfg(4), isAnswer: () => true })).not.toBe(
-      DIFF_IMPOSSIBLE,
-    );
-    expect(latinSolver(seeded(), 4, { ...cfg(4), isAnswer: () => false })).toBe(
-      DIFF_IMPOSSIBLE,
-    );
-  });
-
-  it("writes the final candidate cube to cubeOut, on the solved and rejected paths alike", () => {
-    // Unequal's generator grades a clue by how many possibilities remain, so
-    // it reads the cube rather than the grid. Both exits must fill it — the
-    // early one especially, since a caller reading a stale buffer there would
-    // grade against the *previous* board.
-    const full = latinGenerate(4, randomNew("cubeout"));
-    const grid = Uint8Array.from(full, (v) => v);
-    grid[5] = 0;
-    const out = new Uint8Array(4 * 4 * 4).fill(9);
-    expect(latinSolver(grid, 4, { ...cfg(4), cubeOut: out })).not.toBe(DIFF_AMBIGUOUS);
-    // Solved ⇒ exactly one surviving candidate per cell, and it is the answer.
-    for (let x = 0; x < 4; x++) {
-      for (let y = 0; y < 4; y++) {
-        const live = [1, 2, 3, 4].filter((n) => out[(x * 4 + y) * 4 + n - 1] !== 0);
-        expect(live).toEqual([grid[y * 4 + x]]);
-      }
-    }
-
-    // The `alloc` rejection path: contradictory givens, so no deduction ever
-    // runs, and the buffer must still be the (empty) cube rather than untouched.
-    const clash = new Uint8Array(16);
-    clash[0] = 1;
-    clash[1] = 1; // digit 1 twice in row 0
-    const out2 = new Uint8Array(4 * 4 * 4).fill(9);
-    expect(latinSolver(clash, 4, { ...cfg(4), cubeOut: out2 })).toBe(DIFF_IMPOSSIBLE);
-    expect(out2.some((v) => v === 9)).toBe(false);
-  });
-
-  it("reports contradictory givens as impossible without deducing", () => {
-    const clash = new Uint8Array(16);
-    clash[0] = 2;
-    clash[4] = 2; // digit 2 twice in column 0
-    expect(latinSolver(clash, 4, cfg(4))).toBe(DIFF_IMPOSSIBLE);
+    const s = blank(4);
+    only(s, 0, 0, [1, 2]);
+    only(s, 1, 0, [2, 3]);
+    only(s, 1, 1, [1, 3]);
+    while (LATIN_RUNGS["latin.set"](s) > 0);
+    expect(can(s, 0, 1, 1)).toBe(true);
+    while (can(s, 0, 1, 1) && LATIN_RUNGS["latin.wing"](s) > 0);
+    expect(can(s, 0, 1, 1)).toBe(false);
   });
 });
 

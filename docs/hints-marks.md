@@ -309,7 +309,7 @@ erase and repaint undo it.
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
   part too. Exemplar: `markBand` in
-  [`group/render.ts`](../src/games/group/render.ts).
+  [`undead/render.ts`](../src/games/undead/render.ts).
 - **Inset**, inside the cell body, where the cell border is where a wall
   lives and a mark there would read as one. Exemplars:
   [`galaxies/render.ts`](../src/games/galaxies/render.ts), the border grid

@@ -83,8 +83,8 @@ both ways: it can miss members and convict innocent ones.
   appears, a `?` on an interface member. Accept the superset that gives you
   and classify what it catches. Narrowing the scan is the error.
 - **When the population is small enough to read, read it.**
-- **The key can be the syntax after the name.** A search for `latinSolver(`
-  misses `latinSolver<Ctx>(`.
+- **The key can be the syntax after the name.** A search for `techniqueRung(`
+  misses `techniqueRung<M, H, Reason>(`.
 - **A search for a constant's name is blind to a copy that spells out its
   value.** When you change what a constant means, search for what it said.
 - **A spec scenario can key on a name too.** "No file contains a duplicate
@@ -112,7 +112,7 @@ the imports, or imports the fact outright; it does not match its text
 
 ## A count written in prose is a census nobody re-runs
 
-Write the query, not its answer. "The games that call `latinSolver`" cannot
+Write the query, not its answer. "The games that call `runCandidatePlan`" cannot
 go stale; "the eleven latin-family games" does. Where a number is the point,
 assert it in a test so it fails when it drifts. `AGENTS.md` holds no census
 of the tree.

@@ -163,7 +163,10 @@ export function checkInput(game: AnyGame, c: InputCase): string[] {
         else if (m === UI_UPDATE) returned = returned === "move" ? "move" : "ui";
         else {
           returned = "move";
+          const old = state;
           state = game.executeMove(state, m);
+          // The midend's step after a move, which may move the cursor.
+          game.changedState?.(ui, old, state);
         }
       }
     }

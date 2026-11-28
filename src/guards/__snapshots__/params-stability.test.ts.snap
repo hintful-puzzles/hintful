@@ -241,18 +241,19 @@ bump:h  full=7x8dn  brief=7x8"
 
 exports[`encoded params are byte-stable > group 1`] = `
 "default  full=6dn  brief=6
-preset:6x6 Easy  full=6dt  brief=6
-preset:8x8 Easy  full=8dt  brief=8
-preset:8x8 Normal  full=8dn  brief=8
-preset:8x8 Tricky  full=8dh  brief=8
-preset:8x8 Unreasonable  full=8du  brief=8
-preset:12x12 Normal  full=12dn  brief=12
-preset:8x8 Normal, identity hidden  full=8dni  brief=8i
+preset:Identity shown/Identity shown: 6x6 Easy  full=6dt  brief=6
+preset:Identity shown/Identity shown: 8x8 Easy  full=8dt  brief=8
+preset:Identity shown/Identity shown: 8x8 Normal  full=8dn  brief=8
+preset:Identity shown/Identity shown: 8x8 Tricky  full=8dh  brief=8
+preset:Identity shown/Identity shown: 8x8 Unreasonable  full=8du  brief=8
+preset:Identity shown/Identity shown: 12x12 Normal  full=12dn  brief=12
+preset:Identity hidden/Identity hidden: 8x8 Normal  full=8dni  brief=8i
 tier:2  full=6dh  brief=6
 tier:3  full=6dx  brief=6
 tier:4  full=6du  brief=6
 bump:w  full=7dn  brief=7
-flip:id  full=6dni  brief=6i"
+bump:h  full=6dn  brief=6
+bump:sizes.identity  full=6dni  brief=6i"
 `;
 
 exports[`encoded params are byte-stable > guess 1`] = `

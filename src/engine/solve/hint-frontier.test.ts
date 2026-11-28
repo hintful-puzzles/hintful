@@ -126,15 +126,12 @@ const SPEAKS_THE_WALK: readonly string[] = HINT_GAMES.map(([id]) => id).filter(
 
 /**
  * The games whose hint plans choose through a `HintFrontier` — derived from
- * each game's own code (it calls `runCandidatePlan` or the Latin preset over
- * it, either of which owns the frontier), never declared.
+ * each game's own code (it calls `runCandidatePlan`, which owns the
+ * frontier), never declared.
  */
 const FRONTIER_GAMES: readonly string[] = gamesUsing(
   SPEAKS_THE_WALK,
-  ["runCandidatePlan", "runLatinCandidatePlan"].map((name) => ({
-    module: "src/engine/hint/candidate-plan.ts",
-    name,
-  })),
+  [{ module: "src/engine/hint/candidate-plan.ts", name: "runCandidatePlan" }],
   "call",
 );
 

@@ -34,12 +34,6 @@ the section that says more.
    or `null`. See "The params codec and validation".
 5. **`transposeParams: transposeDimensions()`**, in `index.ts`. See "Portrait
    boards, and turning them to fit".
-
-   A board sized by one number differs from the skeleton in three places: the
-   size is `numberItem` with `label: { slot: "size", words: squareSize(field) }`,
-   its codec segment is `size(paramConfig, kw)`, and `index.ts` writes
-   `notApplicable: { transposeParams: SQUARE_GRID }`. Exemplar:
-   [`group/index.ts`](../src/games/group/index.ts).
 6. **The desc**: one `parseDesc` built on `readDesc`, and a `newState` that
    builds from `descValue(parseDesc(p, desc))`. See "Read a desc once".
 7. **`executeMove`**: clone the state, apply the move, and end the dispatch
@@ -406,8 +400,7 @@ the `blocks` setting in [`solo.description.yaml`](../src/games/solo/solo.descrip
   `dimensionParamConfig({ doc, bounds })`
   ([`engine/game-id/params.ts`](../src/engine/game-id/params.ts)). A game that spells its
   fields differently passes the field map (`fields: { w: "w2", h: "h2" }`)
-  and is not renamed to fit. A square game declares one `numberItem` labeled
-  with `squareSize(field)`.
+  and is not renamed to fit.
 - **A cross-field fold comes after the items it reads.** The midend applies
   each `set` in array order.
 - **Check labels and choice lists by eye, and assert a field map in the
@@ -917,7 +910,7 @@ when it is hidden").
 A game with candidate pencil marks carries all of the following, so that
 notes work with mouse and touch as well as the keyboard. The requirements
 are the `engine-notes` spec's. Exemplars:
-[`group/index.ts`](../src/games/group/index.ts), and for a born game
+[`rome/index.ts`](../src/games/rome/index.ts), and for a born game
 the fill board's ([`engine/fill/notes.ts`](../src/engine/fill/notes.ts),
 [`engine/fill/numbers.ts`](../src/engine/fill/numbers.ts)). The hint such a game
 wants is [`hints-candidates.md`](./hints-candidates.md) § "What every game

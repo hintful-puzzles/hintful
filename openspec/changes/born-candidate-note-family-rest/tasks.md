@@ -1,15 +1,10 @@
 ## Next
 
-2.4h, Group's flip. Its `breaches` are the `grouping` fixture's; its
-render's `failedTriple` and the hand-drawn annotations go. The deal is the `grouping` fixture's, with `groupdata.ts`'s
-77 groups as generator rows (machine-extracted), `hidden: In order`, the
-`keep` on the identity's lines. The tiers: `i` (least 4) takes
-`[Normal, Tricky, Hard, Unreasonable]`, its own menu section, `8x8i` at
-Normal; `sizeLacksTier` (`games/group/state.ts`) becomes `bounds.tiers`
-(shown: Normal, Unreasonable min 5, Tricky, Hard min 6; hidden: Hard min
-6, Unreasonable min 5); 8x8 `boardSkips` Hard. Group's three controls
-stay, as engine capabilities (design.md § "Decisions" 2). The figures of
-3.1 are taken again at the end.
+3.1, the family's figures with Group's row: `compare-cost --base` the gap
+list's baseline (design.md § "The figures (3.1)", its `--baseline`
+worktree), and Group's deal timed bundled on its menu boards against the
+100 ms bar (the quick run had it 2.6 times the hand-written game's
+instructions). Then 3.2 and 3.3.
 
 ## 1. Design
 
@@ -57,7 +52,7 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.3f The flip, its words, tests and specs, a ball's notes inside
         its ring, and the walk's hidden single in a line holding the empty
         square more than once: the commit that ticks 2.3f.
-- [ ] 2.4 Group born: the letters relabeled about the identity, `i` after
+- [x] 2.4 Group born: the letters relabeled about the identity, `i` after
       the tier, the hide's keep-set, an answer from shipped data, and its
       three controls kept (design.md § "Decisions" 2).
   - [x] 2.4a A selection a drag makes in a shape, typed once as one move:
@@ -80,9 +75,9 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.4g A rule's breach labeled at its squares (`breaches`), as
         Group's associativity draws `(ab)c` and `a(bc)`, on the `grouping`
         fixture: the commit that ticks 2.4g.
-  - [ ] 2.4h The flip: its words, tests in `cases.yaml`, specs, the help.
-        The selection's, the dividers' and a breach's labels' look are
-        checked in the browser here, the fixtures having no page.
+  - [x] 2.4h The flip, with `play.leadingDiagonal`, and the Latin
+        solver's driver and the row/column preset retired (Group their last
+        caller): the commit that ticks 2.4h.
 
 ## 3. Finish
 

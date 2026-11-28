@@ -103,9 +103,6 @@ const OWN_CONVERSIONS: Record<string, Record<string, typeof FOLDS | typeof SCALE
   "crossing/render.ts": {
     "return Math.trunc((pixel - border(ts)) / ts);": FOLDS,
   },
-  "group/render.ts": {
-    "return Math.trunc((px + (ts - border(ts) - legend(ts))) / ts) - 1;": FOLDS,
-  },
   "loopy/index.ts": {
     "const gx = Math.trunc(((p.x - border(tileSize)) * g.tileSize) / tileSize) + g.lowestX;":
       SCALE,

@@ -278,6 +278,15 @@ export function playOf(
         `play dividers: a divider rules two rows and two columns alike, and the grid is not square (${grid?.w} by ${grid?.h})`,
       );
   }
+  // The leading diagonal is where a row meets the same column, which only a
+  // square board has.
+  if (p.leadingDiagonal === true) {
+    const grid = json.space.grid;
+    if (grid === undefined || grid.w !== grid.h)
+      throw new CompileError(
+        `play leadingDiagonal: a row meets the same column on a square board, and the grid is not square (${grid?.w} by ${grid?.h})`,
+      );
+  }
   // An order moves a row and the same column together, its labels with
   // them, so it is offered only where nothing else is fixed to a line's
   // place: no unit but the lines, and no clue but at a cell.

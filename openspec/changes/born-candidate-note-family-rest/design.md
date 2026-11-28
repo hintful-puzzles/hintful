@@ -290,6 +290,22 @@ to the engine is in its commit.
   its notes say. Against the hand-written game (`compare-cost --quick`, 15
   boards): 1141 steps for 996, the walk 31% dearer in instructions, the
   deal 2.5 times (10.0 G instructions for 15 deals, some 50 ms each).
+- **Group** (2.4h): saves break (pre-approved); IDs read and write back as
+  before, and the params' encodings are unchanged. A label reads "Identity
+  shown: 6x6 Normal" for "6x6 Normal", and "Identity hidden: 8x8 Normal"
+  for "8x8 Normal, identity hidden", each mode its own section of the menu;
+  a refusal names the mode. The Custom box chooses the mode, where a "Show
+  identity" box was ticked. The copied text is the engine's boxed grid, and
+  no solution aux is written. Drag-select works in pencil mode too: it
+  notes the letter in each square of the diagonal, or strikes it from all,
+  where it marked only the first square. The sticky pencil preference is
+  offered. Shift and an arrow, `|` and `-`, the header drag, the dividers
+  and the leading diagonal are as before, as engine capabilities. The
+  hint's words are the description's; the not-identity step names the first
+  of `o·a` and `a·o`, in reading order, that shows it. Against the
+  hand-written game (`compare-cost --quick`, 7 boards): 236 steps for 239,
+  the same Unreasonable board left to a search in both, the walk 2.3 times
+  in instructions, the deal 2.6 times (4.9 G instructions for 7 deals).
 
 ## The figures (3.1)
 

@@ -1,0 +1,12 @@
+ok  group identity=0 associativity                  3  sound    (want sound   )     3 queries    0.1s
+ok  group identity=0 associativity (planted)        3  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  group identity=1 associativity                  3  sound    (want sound   )     3 queries    0.2s
+ok  src/games/group/group.description.yaml#associativity: recorded sound, proved whole on all 2 boards
+ok  group identity=0 identity                       3  sound    (want sound   )     1 queries    0.0s
+ok  group identity=0 identity (planted)             3  unsound  (want unsound )     1 queries    0.0s   at ?
+ok  group identity=1 identity                       3  sound    (want sound   )     1 queries    0.0s
+ok  src/games/group/group.description.yaml#identity: recorded sound, proved whole on all 2 boards
+ok  group identity=0 notIdentity                    3  sound    (want sound   )     3 queries    0.0s
+ok  group identity=0 notIdentity (planted)          3  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  group identity=1 notIdentity                    3  sound    (want sound   )     3 queries    0.0s
+ok  src/games/group/group.description.yaml#notIdentity: recorded sound, proved whole on all 2 boards

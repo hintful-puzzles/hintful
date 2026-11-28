@@ -1,8 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Group's rules, its own techniques, and the game's help page. `npm run
-# describe` compiles the techniques to group.compiled.ts, which solver.ts runs.
+# A group's Cayley table, dealt from the groups upstream group.c ships, its
+# identity shown first as `e` and its row and column given, or hidden.
 game: group
+catalog:
+  name: Group
+  description: Group theory puzzle
+  objective: Complete the unfinished Cayley table of a group.
+  collection: original
+  family: latin
 help:
   rules: |-
     Fill the grid with the letters along its top and left. With row *a*,
@@ -12,6 +18,10 @@ help:
     - **Identity**: one letter leaves every letter unchanged.
     - **Inverses**: each letter has a partner it makes the identity with.
     - **Associativity**: (*a·b*)·*c* and *a*·(*b·c*) are the same letter.
+
+    The Type menu has a section for each mode:
+
+    {{rulesets}}
   controls: |-
     To place a letter, click in a square to select it, then type the
     letter on the keyboard. To erase a letter, click to select a square
@@ -19,7 +29,12 @@ help:
 
     Right-click in a square and then type a letter to add or remove the
     letter as a pencil mark, indicating letters that you think
-    *might* go in that square.
+    *might* go in that square. {{sticky-pencil}}
+
+    To fill several squares at once, drag from a square along a diagonal:
+    every square from it to the pointer is selected, and the letter you
+    type goes into all of them as one move. In pencil mode the letter is
+    added to each of them, or taken off all of them where all have it.
 
     You can rearrange the order of elements in the rows and columns by
     dragging the column or row headings back and forth. (The rows and
@@ -56,11 +71,10 @@ help:
           exactly one of each letter.
         - **Identity**. There must be some letter *e* such
           that, for all *a*, the letter in row *e* column *a* and
-          the one in row *a* column *e* are both *a*. In the
-          default mode, this letter is always *e* and its row and column
-          are filled in for you; by reconfiguring the game using the Type menu,
-          you can select a mode in which you have to work out which letter is
-          the identity.
+          the one in row *a* column *e* are both *a*. Under
+          {{choice:ruleset:0}}, this letter is always *e* and its row and
+          column are filled in for you; under {{choice:ruleset:1}}, in the
+          Type menu, you have to work out which letter is the identity.
         - **Inverses**. For every letter *a*, there must be
           some letter *b* (which may sometimes be the same letter
           as *a*) such that the letters in row *a* column *b* and
@@ -105,16 +119,20 @@ help:
 produces: latin
 words:
   cell: cell
+  value: element
 sizes:
-  order: { min: 3, max: 26 }
+  # The group's order, as many letters as the alphabet holds.
+  w: { min: 3, max: 26 }
+  # 0 the identity shown, first as `e`; 1 hidden, the letters in order.
+  identity: { min: 0, max: 1 }
 space:
-  grid: { w: "order", h: "order" }
+  grid: { w: "w", h: "w" }
   units: [rows, cols]
 answer:
-  value: { sort: cell, domain: "range(1, order)" }
+  value: { sort: cell, domain: "range(1, w)" }
 given: [value]
 marks:
-  cand: { sort: cell, notation: "set of range(1, order)" }
+  cand: { sort: cell, notation: "set of range(1, w)" }
 define:
   # Row a, column b holds the product a·b, the elements numbered from 1.
   mul(a, b): "cell(b - 1, a - 1)"
@@ -129,10 +147,199 @@ rules:
   associative: >-
     forall a in domain, b in domain, c in domain:
     value(mul(value(mul(a, b)), c)) = value(mul(a, value(mul(b, c))))
+# A failed product drawn as its triple on its two sides, as upstream's.
+breaches:
+  associative:
+    - { at: "mul(value(mul(a, b)), c)", says: "({a}{b}){c}", place: above }
+    - { at: "mul(a, value(mul(b, c)))", says: "{a}({b}{c})", place: below }
 freedom: { kind: fill }
+play:
+  numbers: {}
+  labels: { start: "i + 1", glyph: true }
+  select: diagonal
+  dividers: true
+  order: true
+  leadingDiagonal: true
+  # Group's deductions are placements (associativity, the identity), so a
+  # Normal board needs no notes at all and a Tricky one needs them in a few
+  # cells.
+  hintNotes: implicit
+  # A 6x6 at Tricky and an 8x8 at Hard take ten seconds a board (48,000 and
+  # 6,400 tries, measured 2026-10-05 over 75 seconds a cell), and a 12x12
+  # up to two at Tricky and eleven at Hard (three deals each).
+  boards: [6x6, 8x8, 12x12, 8x8i]
+  defaultTier: Normal
+  boardTiers:
+    6x6: [Easy, Normal]
+    8x8: [Easy, Unreasonable]
+    12x12: [Normal, Normal]
+    8x8i: [Normal, Normal]
+  boardSkips: { 8x8: [Hard] }
+  hintMarks:
+    ring: the cell the step fills in with a letter.
+    strike: the pencil marks the step crosses out.
+    outline: >-
+      what the step reasons from: “this cell”, whose pencil marks it crosses
+      out, the three products an associativity step reads, the product that
+      gives away (or rules out) the identity, a group of cells that between
+      them already account for the letters being crossed out, the letter just
+      placed, or “the middle cell” a step weighs and the cells it reads.
+    stripes: >-
+      the row or column the sentence names: "in this row". Or the several it
+      names together, such as "these 2 columns", where one letter fits only
+      the outlined cells.
 deal:
-  givens: how many
+  answer: a group's table, from the shipped generators, its elements permuted
+  given: >-
+    every cell's element, then each hidden while the board still finishes; the
+    identity's row and column kept where it is shown
   tier: one of the tiers
+  # Upstream group.c's groups of order 3 to 26, each its generators as rows
+  # of letters, machine-extracted from its `groupdata[]`.
+  sample:
+    group:
+      hidden: Identity hidden
+      tables:
+        3:
+          - [BCA]
+        4:
+          - [BCDA]
+          - [BADC, CDAB]
+        5:
+          - [BCDEA]
+        6:
+          - [CFEBAD, BADCFE]
+          - [DCFEBA]
+        7:
+          - [BCDEFGA]
+        8:
+          - [BCEFDGHA]
+          - [BDEFGAHC, EGBHDCFA]
+          - [EGBHDCFA, BAEFCDHG]
+          - [BDEFGAHC, CHDGBEAF]
+          - [BAEFCDHG, CEAGBHDF, DFGAHBCE]
+        9:
+          - [BDECGHFIA]
+          - [BDEAGHCIF, CEFGHAIBD]
+        10:
+          - [CJEBGDIFAH, BADCFEHGJI]
+          - [DCFEHGJIBA]
+        11:
+          - [BCDEFGHIJKA]
+        12:
+          - [GLDKJEHCBIAF, BCEFAGIJDKLH]
+          - [EHIJKCBLDGFA]
+          - [BEFGAIJKCDLH, FJBKHLEGDCIA]
+          - [GLDKJEHCBIAF, BAEFCDIJGHLK]
+          - [FDIJGHLBKAEC, GIDKFLHCJEAB]
+        13:
+          - [BCDEFGHIJKLMA]
+        14:
+          - [ELGNIBKDMFAHCJ, BADCFEHGJILKNM]
+          - [FEHGJILKNMBADC]
+        15:
+          - [EGHCJKFMNIOBLDA]
+        16:
+          - [MKNPFOADBGLCIEHJ]
+          - [ILKCONFPEDJHGMAB, BDFGHIAKLMNCOEPJ]
+          - [MIHPFDCONBLAKJGE, BEFGHJKALMNOCDPI]
+          - [IFACOGLMDEJBNPKH, BEFGHJKALMNOCDPI]
+          - [MOHPFKCINBLADJGE, BDFGHIEKLMNJOAPC]
+          - [MIHPFDJONBLEKCGA, BDFGHIEKLMNJOAPC]
+          - [MOHPFDCINBLEKJGA, BAFGHCDELMNIJKPO]
+          - [MIHPFKJONBLADCGE, GDPHNOEKFLBCIAMJ]
+          - [MIBPFDJOGHLEKCNA, CLEIJGMPKAOHNFDB]
+          - [MCHPFAIJNBLDEOGK, BEFGHJKALMNOCDPI, GKLBNOEDFPHJIAMC]
+          - [MCHPFAIJNBLDEOGK, LOGFPKJIBNMEDCHA, CMAIJHPFDEONBLKG]
+          - [IPKCOGMLEDJBNFAH, BEFGHJKALMNOCDPI, CMEIJBPFKAOGHLDN]
+          - [IPDJONFLEKCBGMAH, FJBLMEOCGHPKAIND, DGIEKLHNJOAMPBCF]
+          - [EHJKAMNBOCDPFGIL, BAFGHCDELMNIJKPO, CFAIJBLMDEOGHPKN, DGIAKLBNCOEFPHJM]
+        17:
+          - [EFGHIJKLMNOPQABCD]
+        18:
+          - [MKIQOPNAGLRECDBJHF, BAEFCDJKLGHIOPMNRQ]
+          - [ECJKGHFOPDMNLRIQBA]
+          - [ECJKGHBOPAMNFRDQLI, KNOPQCFREIGHLJAMBD]
+          - [IFNAKLQCDOPBGHREMJ, NOQCFRIGHKLJAMPBDE, BAEFCDJKLGHIOPMNRQ]
+          - [ECJKGHBOPAMNFRDQLI, FDKLHIOPBMNAREQCJG]
+        19:
+          - [EFGHIJKLMNOPQRSABCD]
+        20:
+          - [GTDKREHOBILSFMPCJQAN, EABICDFMGHJQKLNTOPRS]
+          - [EHIJLCMNPGQRSKBTDOFA]
+          - [DJSHQNCLTRGPEBKAIFOM, EABICDFMGHJQKLNTOPRS]
+          - [GTDKREHOBILSFMPCJQAN, ECBIAGFMDKJQHONTLSRP]
+          - [IGFMDKJQHONTLSREPCBA, FDIJGHMNKLQROPTBSAEC]
+        21:
+          - [ITLSBOUERDHAGKCJNFMQP, EJHLMKOPNRSQAUTCDBFGI]
+          - [EGHCJKFMNIPQLSTOUBRDA]
+        22:
+          - [ETGVIBKDMFOHQJSLUNAPCR, BADCFEHGJILKNMPORQTSVU]
+          - [FEHGJILKNMPORQTSVUBADC]
+        23:
+          - [EFGHIJKLMNOPQRSTUVWABCD]
+        24:
+          - [QXEJWPUMKLRIVBFTSACGHNDO, HRNOPSWCTUVBLDIJXFGAKQME]
+          - [MQBTUDRWFGHXJELINOPKSAVC]
+          - [IOQRBEUVFWGHKLAXMNPSCDTJ, NJXOVGDKSMTFIPQELCURBWAH]
+          - [QUEJWVXFKLRIPGMNSACBOTDH, HSNOPWLDTUVBRIAKXFGCQEMJ]
+          - [QXEJWPUMKLRIVBFTSACGHNDO, TWHNXLRIOPUMSACQVBFDEJGK]
+          - [QUEJWVXFKLRIPGMNSACBOTDH, BAFGHCDEMNOPIJKLTUVQRSXW]
+          - [QXKJWVUMESRIPGFTLDCBONAH, JUEQRPXFKLWCVBMNSAIGHTDO, HSNOPWLDTUVBRIAKXFGCQEMJ]
+          - [QUKJWPXFESRIVBMNLDCGHTAO, JXEQRVUMKLWCPGFTSAIBONDH, TRONXLWCHVUMSAIJPGFDEQBK]
+          - [MRGTULWIOPFXSDJQBVNEKCHA, VKXHOQASNTPBCWDEUFGIJLMR]
+          - [MRGTULWIOPFXSDJQBVNEKCHA, RMLWIGTUSDJQOPFXEKCBVNAH]
+          - [IULQRGXMSDCWOPNTEKJBVFAH, GLMOPRSDTUBVWIEKFXHJQANC]
+          - [UJPXMRCSNHGTLWIKFVBEDQOA, NRUFVLWIPXMOJEDQHGTCSABK]
+          - [MIBTUAQRFGHXCDEWNOPJKLVS, OKXVFWSCGUTNDRQJBPMALIHE]
+          - [QXKJWVUMESRIPGFTLDCBONAH, JUEQRPXFKLWCVBMNSAIGHTDO, BAFGHCDEMNOPIJKLTUVQRSXW]
+          - [QTKJWONXESRIHVUMLDCPGFAB, JNEQRHTUKLWCOPXFSAIVBMDG, HENOPJKLTUVBQRSAXFGWCDMI]
+        25:
+          - [EHILMNPQRSFTUVBJWXDOYGAKC]
+          - [EHILMNPQRSCTUVBFWXDJYGOKA, BDEGHIKLMNAPQRSCTUVFWXJYO]
+        26:
+          - [EXGZIBKDMFOHQJSLUNWPYRATCV, BADCFEHGJILKNMPORQTSVUXWZY]
+          - [FEHGJILKNMPORQTSVUXWZYBADC]
+  hide:
+    given: { keep: "identity = 0 and (x(at) = 0 or y(at) = 0)" }
+# Measured 2026-10-05 by running the generator with nothing to stop it, a
+# quarter of a million tries a cell and more: no board of a size below each
+# bound needs the tier. A 4x4 and a 5x5 hiding the identity deal a Tricky
+# board at once, where upstream dealt the tier below; a 6x6 at Hard with its
+# identity shown gave none in 290,000 tries, which says only that its boards
+# are rare, so it is dealt.
+settings:
+  identity:
+    kind: choice
+    gives: size
+    after: tier
+    choices:
+      - name: Identity shown
+        code: ""
+        rule: The identity is *e*, and its row and column are filled in.
+        letters: eabcdfghijklmnopqrstuvwxyz
+        bounds:
+          tiers:
+            Normal: { shorter: { min: 5 } }
+            Tricky: { shorter: { min: 6 } }
+            Hard: { shorter: { min: 6 } }
+            Unreasonable: { shorter: { min: 5 } }
+      # Two rows and columns blank, which no Latin deduction tells apart, so
+      # no board is Easy, and none of three.
+      - name: Identity hidden
+        code: i
+        rule: You work out which letter is the identity.
+        letters: abcdefghijklmnopqrstuvwxyz
+        least: 4
+        tiers: [Normal, Tricky, Hard, Unreasonable]
+        bounds:
+          tiers:
+            Hard: { shorter: { min: 6 } }
+            Unreasonable: { shorter: { min: 5 } }
+id:
+  - digits: given
+    apart: _
+tierLetters: tnhxu
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 names:
   dup: "a placed element's row and column"
@@ -223,24 +430,22 @@ techniques:
       or (known(mul(a, j)) and value(mul(a, j)) != j))
       where o != none
     conclude: "forall j in domain: strike(mul(j, a), j) and (j = a or strike(mul(a, j), j))"
-    # The hint names the element and the least witness, and the product that
-    # shows it: o·a where that is not o, else a·o. The sentence opens on "The
-    # product", not the equation, so that its capital does not change an
-    # element's letter.
+    # The hint names the element and the least witness, and the first cell
+    # of o·a and a·o that shows it. The step is one rung, so the two
+    # products are wordings, not arms. The sentence opens on "The product",
+    # not the equation, so that its capital does not change an element's
+    # letter.
     says:
-      terms: { A: a, O: o }
+      terms:
+        A: a
+        O: o
+        shown: "first({x in {mul(o, a), mul(a, o)} where known(x) and value(x) != o})"
+        product: "value(first({x in {mul(o, a), mul(a, o)} where known(x) and value(x) != o}))"
       marks: {}
-      arms:
-        right:
-          when: "known(mul(o, a)) and value(mul(o, a)) != o"
-          terms: { shown: "mul(o, a)", product: "value(mul(o, a))" }
-          marks: {}
+      wordings:
+        - when: "first({x in {mul(o, a), mul(a, o)} where known(x) and value(x) != o}) = mul(o, a)"
           look: "The product {outline shown: {O}·{A} = {product}}, not {O} as it would be if {A} were the identity"
-        left:
-          when: "true"
-          terms: { shown: "mul(a, o)", product: "value(mul(a, o))" }
-          marks: {}
-          look: "The product {outline shown: {A}·{O} = {product}}, not {O} as it would be if {A} were the identity"
+        - look: "The product {outline shown: {A}·{O} = {product}}, not {O} as it would be if {A} were the identity"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

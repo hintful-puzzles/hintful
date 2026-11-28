@@ -70,9 +70,8 @@ declare const compiledLadder: unique symbol;
 
 /**
  * A ladder the runner takes: one `ladder-runtime.ts` made from a compiled
- * module's techniques, with a Search after them where a game has one no
- * description states (`withSearch`). The brand is a type alone, given only
- * there, so the runner refuses a list of techniques a game built itself.
+ * module's techniques. The brand is a type alone, given only there, so the
+ * runner refuses a list of techniques a game built itself.
  */
 export type CompiledTechniques = readonly DeductionTechnique[] & {
   readonly [compiledLadder]: true;

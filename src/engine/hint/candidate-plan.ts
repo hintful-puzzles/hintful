@@ -41,23 +41,8 @@ import {
   type Reach,
 } from "./candidate-hint.ts";
 import { CandidateWalk } from "./candidate-walk.ts";
-import {
-  type Conclusions,
-  candidateConclusions,
-  cleanObviousText,
-  noteText,
-  type Premise,
-  populateText,
-} from "./hint-text.ts";
-import {
-  type CellRegion,
-  type RowColRegion,
-  rowColRegions,
-  type SingleReason,
-  type SingleWhy,
-  singleReasonOf,
-  type WholeRegion,
-} from "./latin-hint.ts";
+import type { Conclusions, Premise } from "./hint-text.ts";
+import type { CellRegion, SingleWhy, WholeRegion } from "./latin-hint.ts";
 
 /** The rungs the walk speaks in every game: the setup's, and a placement's
  * cull ({@link DupReason}). */
@@ -321,103 +306,4 @@ export function runCandidatePlan<
   Reg extends CellRegion,
 >(plan: CandidatePlan<M, H, Reason, Reg>): void {
   new CandidateWalk(plan).run();
-}
-
-/** Whether a reason union can hold the `SingleReason` the row/column
- * preset synthesizes. `unknown` when it can (and so intersects away), `never`
- * when it cannot, which makes the plan unassignable — a game whose singles
- * narrate differently (Solo names a block or a diagonal) is turned back to
- * {@link runCandidatePlan} by the checker rather than by a convention. The
- * tuples stop the union distributing, so `Reason` is tested whole. */
-type NarratesSingles<Reason> = [SingleReason] extends [Reason] ? unknown : never;
-
-/** A {@link CandidatePlan} with the row/column family's answers taken out: see
- * {@link runLatinCandidatePlan} for why each one is not a parameter. */
-export type LatinCandidatePlan<M, H extends CandidateHighlights, Reason> = Omit<
-  CandidatePlan<M, H, Reason, RowColRegion>,
-  "regionsOf" | "singleReason" | "notes" | "conclude"
-> & {
-  /** The words the shared setup sentences and conclusions are built from: the
-   * game's singular noun for a cell's value ("number", "height", "element"), its
-   * verb for one already on the board ("standing", "placed"), how a value prints
-   * where it is not a plain number (Group's letters), and what it calls a cell
-   * where that is not "square" (Keen's cells). The region phrase is not among
-   * them — a game whose regions are a row and a column has no other answer. */
-  notes: {
-    noun: string;
-    placedVerb: string;
-    value?: (n: number) => string;
-    cell?: string;
-  };
-};
-
-/** The rungs every row/column Latin plan can speak: the walk's own, the three
- * singles, and the library's set elimination and wing (`latin-notes.ts`). A
- * game's list is these and its own reasons' kinds. */
-export const LATIN_RUNGS = [
-  ...CANDIDATE_RUNGS,
-  "single",
-  "regionsFull",
-  "hiddenSingle",
-  "set",
-  "wing",
-] as const;
-
-/**
- * The plain row/column Latin square's {@link runCandidatePlan}: a preset over
- * it, not a second entry point, so a game supplies its rungs and its own
- * words and nothing else.
- *
- * **What it fills in is what a row and a column *force*** — the test being
- * docs/doctrine.md § "Convention over configuration"'s, *can we say what a game would
- * legitimately want to do differently?*, asked per field:
- *
- * - `regionsOf` is {@link rowColRegions}. That is the one genuine choice, and
- *   taking it is what this preset *is*;
- * - `singleReason` is {@link singleReasonOf}. Once `Reg` is a
- *   {@link RowColRegion} it is the only inhabitant of that signature, so the
- *   question has one answer rather than every game agreeing;
- * - the setup sentences and the conclusions, from the game's `notes`
- *   vocabulary.
- *
- * A game whose regions, singles or setup genuinely differ stays on
- * {@link runCandidatePlan}, which every game may call and which the checker
- * sends it back to anyway ({@link NarratesSingles}).
- */
-export function runLatinCandidatePlan<M, H extends CandidateHighlights, Reason>(
-  plan: LatinCandidatePlan<M, H, Reason> & NarratesSingles<Reason>,
-): void {
-  const { w, notes, placeWords, ...rest } = plan;
-  const value = notes.value ?? String;
-  const cell = notes.cell ?? "square";
-  const vocab = {
-    noun: notes.noun,
-    placedVerb: notes.placedVerb,
-    regions: "row or column",
-    cell,
-  };
-  const full: CandidatePlan<M, H, Reason, RowColRegion> = {
-    ...rest,
-    w,
-    notes: {
-      populate: populateText(notes.noun, cell),
-      cleanObvious: cleanObviousText(notes.noun, notes.placedVerb, vocab.regions, cell),
-      note: (at, values, every) => noteText(at, values.map(value), every, vocab),
-    },
-    conclude: candidateConclusions({ value, cell }),
-    regionsOf: (x, y) => rowColRegions(x, y, w),
-    // Sound because `NarratesSingles` has already rejected a plan whose reason
-    // union cannot hold what `singleReasonOf` returns; the checker cannot
-    // narrow `Reason` from that constraint, which is all the cast says.
-    singleReason: singleReasonOf as CandidatePlan<
-      M,
-      H,
-      Reason,
-      RowColRegion
-    >["singleReason"],
-    // A hidden single's line ("in this row") is striped by the words that name
-    // it (`narrateLatinReason`), so the preset adds nothing to the placement.
-    placeWords,
-  };
-  runCandidatePlan(full);
 }

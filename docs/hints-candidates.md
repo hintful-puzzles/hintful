@@ -19,9 +19,10 @@ walk's own, the Latin library's strikes its ladder places (each by the
 rung its reason names, a fish a `set`), and its own techniques', so a
 rung no firing of the game's could reach is never declared.
 
-What a hand-written game with notes does beyond the skeleton, in order. The file that does
-each of these the shared way is
-[`group/index.ts`](../src/games/group/index.ts).
+What a hand-written game with notes does beyond the skeleton, in order.
+Rome does each of these ([`rome/index.ts`](../src/games/rome/index.ts),
+[`rome/hint.ts`](../src/games/rome/hint.ts)), in a move dialect of its own
+(§ "Moves or notes outside the Latin dialect").
 
 1. Take the cell's highlight, entry and pencil mode from
    `note-taking-cell.ts` (`pressNoteTakingCell`, `toggleNoteTakingMode`):
@@ -40,11 +41,9 @@ each of these the shared way is
 6. State the solver's techniques in the game's description, each saying
    the terms its step's words need, and make each a rung run on the notes:
    § "Deduce from the notes when the mistake check vouches for them".
-7. Write `buildSteps` as one call to `runLatinCandidatePlan` (rows and
-   columns) or `runCandidatePlan` (any other regions), handing it the
-   rungs, the words of a placement and of a strike, and any hooks the game
-   needs: § "The shared candidate-hint machinery", § "The row/column
-   preset".
+7. Write `buildSteps` as one call to `runCandidatePlan`, handing it the
+   regions, the rungs, the words of a placement and of a strike, and any
+   hooks the game needs: § "The shared candidate-hint machinery".
 8. Write `hint` as `candidateHint(state, ui ?? newUi(state), buildSteps)`,
    `hint.keepTrack` as `keepCandidateHintTrack` and `hint.refreshStep` as
    `refreshCandidateHintStep`.
@@ -61,7 +60,6 @@ each of these the shared way is
 | A value's reach depends on the value | what a placed value rules out is not a fixed set of cells |
 | A sentence names which kinds of region | your game has several kinds of region and a sentence must say which |
 | A strike's words are a premise | your game writes `strikeWords`, or a strike's ending reads wrong |
-| The row/column preset | your game is a plain Latin square, or you are choosing between the preset and `runCandidatePlan` |
 | Moves or notes outside the Latin dialect | your moves are not `{ type: "set" }` with a `1 << n` note bit, or a cell cannot note every value |
 | A rung of the game's own | you write a rung, or a deduction of your game is not a technique of its ladder |
 | Continue from the last step | a plan jumps across the board, or `hint-frontier.test.ts` fails |
@@ -88,12 +86,11 @@ each of these the shared way is
 ## The shared candidate-hint machinery
 
 Write `buildSteps` as one call to `runCandidatePlan`
-([`engine/hint/candidate-plan.ts`](../src/engine/hint/candidate-plan.ts)), or to
-`runLatinCandidatePlan` for a plain row/column Latin square (§ "The
-row/column preset"). The walk owns the loop and builds every step; the game
+([`engine/hint/candidate-plan.ts`](../src/engine/hint/candidate-plan.ts)).
+The walk owns the loop and builds every step; the game
 supplies what carries its meaning, each a field of `CandidatePlan`, whose
 docs say what each decides and, for an optional hook, the game-shaped fact
-that needs it. Exemplar: [`group/index.ts`](../src/games/group/index.ts)'s
+that needs it. Exemplar: [`rome/hint.ts`](../src/games/rome/hint.ts)'s
 `buildSteps`. Requirements: "A shared candidate-elimination hint plan", "The
 walk owns the ladder", "The walk builds every step from the game's words",
 "The game keeps what carries its meaning".
@@ -130,6 +127,40 @@ What the walk does, so a game does not:
 **Pass `w` as the row stride only.** The helpers read the board's length off
 `grid`, so a board that is not square needs nothing more.
 
+What the game shares with every other, so writes no copy of:
+
+- **A game joins by calling it.** `hint-frontier.test.ts` finds the
+  plan-walking games by their calls to `runCandidatePlan` and cross-checks
+  against who imports the module, so nothing is declared.
+- **The `hint` entry is shared**: `candidateHint(state, ui, buildSteps)`
+  owns the preference defaults and the empty-plan refusal ("A shared
+  candidate-elimination hint entry").
+- **The generic Latin narration arms are shared.** `narrateLatinReason(reason,
+  at, w, vocab?)` in `hint-text.ts` owns `single`, `hiddenSingle`, `dup` and
+  `set`; a game narrates its own arms and falls through to it.
+  Exemplar: the born board's `placeWords` in
+  [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts).
+- **The value vocabulary is a parameter**: `LatinVocab { noun, value(n),
+  cell?, be? }`. Omit it for plain numbers; `be` is the verb a square takes a
+  value by (Rome's arrows "point"). **The one-value-left steps are every
+  candidate game's words**, grid or not: the Latin library's `steps`
+  (`single`, `regionsFull`, `hiddenSingle`), spoken through
+  `narrateLatinReason`, or through its `voice` where the game's marks are not
+  squares (Map's regions, whose color values are `ColorWord`s, said whole). A
+  game that supplies the other values as `struck` with `named` has them
+  named ("its neighbors already hold pink, teal and violet"). The shared `dup` arm picks "a"/"an" by
+  the rendered value; check a letter value `a` after "There's already…",
+  which reads as the article.
+- **Use the shared narrator when the only difference is the vocabulary, and
+  keep a local `narrate` when an arm's shape differs** (it names a block as
+  well, or one value where the shared arm lists several). One vocabulary
+  cannot express a per-arm difference. A recorded local narrator conforms: "A
+  shared narrator for generic Latin placements and strike premises", "A game
+  whose generic wording diverges narrates its own arms". The same test
+  decides any extraction here: ask, per field, what a game would legitimately
+  do differently ([`doctrine.md`](./doctrine.md) § "Convention over
+  configuration").
+
 ## A cell's regions are one definition
 
 State which cells share a uniqueness constraint with `(x, y)` once, as the
@@ -139,8 +170,9 @@ cannot disagree. Requirements: "A cell's regions are one definition per
 relation", "Every notes cull reads every declared region", "Only two kinds of
 region are declared".
 
-- **A row/column game passes none**: the preset supplies `rowColRegions`
-  from [`engine/hint/latin-hint.ts`](../src/engine/hint/latin-hint.ts).
+- **A row/column game's are `rowColRegions`** from
+  [`engine/hint/latin-hint.ts`](../src/engine/hint/latin-hint.ts), and its
+  `singleReason` is `singleReasonOf` there.
 - **Return every region a value may not repeat in, as a `CellRegion`, and
   flag each `holdsEvery`.** "Holds every value" and "forbids repeats" are two
   relations. A hidden single needs the first (a value with one home left
@@ -213,8 +245,8 @@ citation repeats names, not regions".
   board**, so a cell on neither diagonal is still told its notes were cleaned
   against them.
 - **The name is the game's, not the engine's `CellRegion`'s.** A game with
-  one kind of region says "this area" and carries no name; a game on the
-  preset has a constant phrase.
+  one kind of region says "this area" and carries no name; a row/column
+  game has a constant phrase.
 
 Exemplar: the walk's `steps:` in
 [`solo.description.yaml`](../src/games/solo/solo.description.yaml), a
@@ -235,8 +267,8 @@ never the clause, since a reference is what the player presses
 Requirements: "A candidate strike SHALL end in the walk's conclusion", "A
 strike's conclusion names the struck values, even after its premise".
 
-- **`conclude` comes from the preset's `notes` vocabulary**, or from
-  `candidateConclusions` in the game's own value words, or is written by a
+- **`conclude` comes from `candidateConclusions`** in the game's own value
+  words, or is written by a
   game whose values are not listable that way (Rome's, in the ways a square
   points).
 - **Two optional fields of the premise say how the ending refers to the
@@ -251,55 +283,6 @@ strike's conclusion names the struck values, even after its premise".
   ([`hints-marks.md`](./hints-marks.md) § "Outline the evidence"). Never
   name the cell by its notes: `mark.this` over a note throws.
 
-## The row/column preset
-
-A game whose values may not repeat in a row or a column, and nowhere else,
-calls `runLatinCandidatePlan`
-([`engine/hint/candidate-plan.ts`](../src/engine/hint/candidate-plan.ts)) and supplies
-its rungs and its words. It is `runCandidatePlan` with
-the answers a row and a column force filled in; its doc lists each and why
-it is not a parameter. Exemplar:
-[`group/index.ts`](../src/games/group/index.ts)'s `buildSteps`.
-Requirements: "A row/column Latin square answers no question its regions
-already settle", "The fields the row/column preset supplies", "A game
-reasoning over other regions cannot take the preset".
-
-- **A game that differs is turned back by the checker.** The parameter type
-  carries `NarratesSingles<Reason>`, which is `never` unless the game's
-  reason union can hold the `SingleReason` the preset synthesizes. A game
-  whose hidden single names a block or a diagonal calls `runCandidatePlan`,
-  which every game may do, and says why in its change.
-- **A game joins by calling it.** `hint-frontier.test.ts` finds the
-  plan-walking games by the shape `CandidatePlan(` in their source and
-  cross-checks against who imports the module, so nothing is declared.
-- **The `hint` entry is shared**: `candidateHint(state, ui, buildSteps)`
-  owns the preference defaults and the empty-plan refusal ("A shared
-  candidate-elimination hint entry").
-- **The generic Latin narration arms are shared.** `narrateLatinReason(reason,
-  ns, vocab?)` in `hint-text.ts` owns `single`, `hiddenSingle`, `dup` and
-  `set`; a game narrates its own arms and falls through to it.
-  Exemplar: `narrate` in [`group/index.ts`](../src/games/group/index.ts).
-- **The value vocabulary is a parameter**: `LatinVocab { noun, value(n),
-  cell?, be? }`. Omit it for plain numbers; `be` is the verb a square takes a
-  value by (Rome's arrows "point"). **The one-value-left steps are every
-  candidate game's words**, grid or not: the Latin library's `steps`
-  (`single`, `regionsFull`, `hiddenSingle`), spoken through
-  `narrateLatinReason`, or through its `voice` where the game's marks are not
-  squares (Map's regions, whose color values are `ColorWord`s, said whole). A
-  game that supplies the other values as `struck` with `named` has them
-  named ("its neighbors already hold pink, teal and violet"). The shared `dup` arm picks "a"/"an" by
-  the rendered value; check a letter value `a` after "There's already…",
-  which reads as the article.
-- **Use the shared narrator when the only difference is the vocabulary, and
-  keep a local `narrate` when an arm's shape differs** (it names a block as
-  well, or one value where the shared arm lists several). One vocabulary
-  cannot express a per-arm difference. A recorded local narrator conforms: "A
-  shared narrator for generic Latin placements and strike premises", "A game
-  whose generic wording diverges narrates its own arms". The same test
-  decides any extraction here: ask, per field, what a game would legitimately
-  do differently ([`doctrine.md`](./doctrine.md) § "Convention over
-  configuration").
-
 ## Moves or notes outside the Latin dialect
 
 Never rename a game's moves to fit the helpers: a save replays the move log,
@@ -313,8 +296,8 @@ Requirement: "The shared track and refresh read a game's move dialect".
   `CandidateMove`, or `null` for "not one of these, so off-plan", and builds
   the game's own moves. `keepCandidateHintTrack`,
   `refreshCandidateHintStep` and the plan (`moves`) take it. Exemplars:
-  [`group/index.ts`](../src/games/group/index.ts) (moves carrying a cell
-  list), [`crossing/index.ts`](../src/games/crossing/index.ts) (a `kind`
+  [`rome/hint.ts`](../src/games/rome/hint.ts) (`romeCandidateMoves`: a `kind`
+  discriminator, and arrows as bits), [`crossing/index.ts`](../src/games/crossing/index.ts) (a `kind`
   discriminator and candidate `n` at bit `n − 1`).
 - **Emit the hint's placement as the game's native move**, so a player
   following the hint produces the exact move the plan expects. Add only the
@@ -446,12 +429,12 @@ check vouches for them".
   and a technique with a tier window (Keen's `cageEasy`, until Normal) runs
   only inside it. A game whose board keeps no tier (Rome) passes its top
   one.
-- **A Latin game's marks are a `LatinSolver`**: `latinNotesLadder`
-  (`engine/hint/latin-notes.ts`) builds them over the walk's grid, so its own
-  techniques read what they read when solving. The library's `set`, `fish`
-  and `wing` say their terms, and `latinStrikeRungs` makes each a rung whose
-  strikes carry the `LatinReason` that `latinPremise` narrates; the game
-  writes no legs for them.
+- **A plan's marks are built over the walk's grid** (`NotesLadder.marks`),
+  as the solver builds them, so the game's own techniques read what they
+  read when solving. The Latin library's `set`, `fish` and `wing` say their
+  terms, and `latinStrikeRungs` (`engine/hint/latin-notes.ts`) makes each a
+  rung whose strikes carry the `LatinReason` that `latinPremise` narrates;
+  the game writes no legs for them.
 - **A marker the board shows beside its notes is seeded on the marks**
   where the game builds them: Salad's cross is the hole symbol placed, and
   a ball's square has the X outside its full set (`NoteEncoding.all`). A
@@ -666,8 +649,8 @@ naked single shades its cell and a hidden single its region", "A placement
 is read against the candidates the board shows", "Every single a plan takes
 is one the notes show".
 
-- **The game names the kind in `singleReason`**, over its `regionsOf`; the
-  row/column preset supplies it.
+- **The game names the kind in `singleReason`**, over its `regionsOf`; a
+  row/column game's is `singleReasonOf`.
 - **A hidden single names its region** ("No other cell in this row can be
   3, so this cell must be 3") and shades the whole of it.
 - **A placement a technique makes keeps that technique's reason** (a clue, a
@@ -747,8 +730,11 @@ Where a game's signature deductions place values, lead with them and
 populate only when an elimination is the next thing to teach: each such
 technique is a `techniqueRung` with `leads`, which waits neither for the
 setup nor for earlier rungs; the walk's singles compete beside it.
-Requirement: "A game's placing technique may lead". Exemplar:
-[`group/index.ts`](../src/games/group/index.ts).
+Requirement: "A game's placing technique may lead". Exemplar: Towers'
+`fullLine` and `tallestNearest`
+([`towers.description.yaml`](../src/games/towers/towers.description.yaml)),
+which place, strike nothing and read no notes, so the compiler marks them
+`leads`.
 
 - **Never gate populate on a strike being available.** A strike counts only
   where its candidate is in the notes, so with no notes there is none, and

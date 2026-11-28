@@ -4,8 +4,8 @@
  * § "The runtime a ladder runs on").
  *
  * A game's solver extends {@link CellMarks} only where it keeps what no
- * description states, a Search (the Latin and Sudoku forcing chains and
- * recursion); a game whose whole solve is its ladder uses it as it is.
+ * description states; a game whose whole solve is its ladder uses it as it
+ * is.
  */
 
 import type { DeductionRecorder } from "./deduction-record.ts";
@@ -461,7 +461,7 @@ export class CellMarks implements Marks {
   fork(): CellMarks {
     if (this.relation !== null)
       throw new Error("marks that relate edges are not forked");
-    // A game's own marks keep what these do not copy (`LatinSolver`'s).
+    // A subclass's own state is not among what these copy.
     if (this.constructor !== CellMarks) throw new Error("only plain marks are forked");
     const m = new CellMarks(
       this.sp,

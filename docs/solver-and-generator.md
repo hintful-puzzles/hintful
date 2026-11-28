@@ -89,7 +89,7 @@ In this order, each step as the skeleton
 | – Edge games flag set edges only | the player draws walls or edges |
 | – Live rule errors and the re-solve are both | the game already draws rule errors as the player works |
 | – Self-validating games run their rule checker | the win check is a validity pass over the grid |
-| The Latin family | your game is on a Latin square and imports `engine/solve/latin.ts` |
+| The Latin family | your game is on a Latin square |
 
 ## One engine, two projections
 
@@ -136,7 +136,6 @@ The shapes that are not the plain one:
 | --- | --- |
 | a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
 | two scales, each capped and graded apart | `capsOf`, in [`engine/fill/board.ts`](../src/engine/fill/board.ts), and `scales:` in [`solo.description.yaml`](../src/games/solo/solo.description.yaml) |
-| a Search no description states, after the compiled techniques | `withSearch`, in [`engine/solve/latin.ts`](../src/engine/solve/latin.ts) |
 | a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`engine/hint/glance.ts`](../src/engine/hint/glance.ts) |
 | a count kept from the firings tally rather than a wrapped rung | [`undead/solver.ts`](../src/games/undead/solver.ts) `solveDeductive` |
 
@@ -609,8 +608,9 @@ mark for a supposition is ever added.
 | **Tactic** | a chain whose every link is a fact the game's ordinary marks record | Tricky, Hard, Extreme | ordinary steps, each writing its mark |
 | **Search** | run the whole solver from a hypothesis, branch and backtrack, or follow a chain of suppositions no mark records, however short | `Unreasonable` | refuse |
 
-**A supposition rung runs only at Unreasonable**: the Latin forcing chain
-runs at `diffRecursive`, and the config has no field to put it lower. Where
+**A supposition rung runs only at Unreasonable**: a deductive game's search
+is its Unreasonable tier
+([`answer-search.ts`](../src/engine/solve/answer-search.ts)). Where
 moving one would leave its tier with nothing to deal, find the markable
 technique that deals the tier first: every tier so far that a markable
 technique filled was filled by one element's value, weighed (the bullets below).
@@ -763,7 +763,7 @@ game omits it. Exemplar: `difficulty` in
   ladder is built inside a solve from board state, and a tier is often no
   rung at all.
 - **`solveAtCap` is written per game.** Only `newState(p, desc)` is shared;
-  the verdict mapping is the game's. `latinVerdict` is the one shared mapping.
+  the verdict mapping is the game's.
 - **Build a fresh state in `solveAtCap`.** A reused scratch carries an
   earlier candidate's side effects and under-rejects (`engine-difficulty`, "A
   tier probe runs on state uncontaminated by earlier candidates").
@@ -1560,56 +1560,44 @@ answer contradicts, and
 
 ## The Latin family
 
-**A game on a Latin square builds on
-[`engine/solve/latin.ts`](../src/engine/solve/latin.ts): it states its deductions and
-its ladder in a description, and its `solver.ts` deals the board as the
-compiled ladder reads it, pairs each technique with its reason, and passes
-the compiled `ladder` and the compiled `isAnswer` over that board to
-`latinSolver`** ([descriptions.md](./descriptions.md) § "The answer check"). `latin.ts`'s header
-says what the engine gives: the marks (`engine/solve/cell-marks.ts`'s
-`CellMarks`), the library's techniques
-([`latin.description.yaml`](../src/engine/solve/latin.description.yaml)), forcing
-chains and guess-and-verify recursion at `diffRecursive` (the recursion
-doubling as the uniqueness check), and the generator. The population is
-`git grep -l engine/solve/latin.ts src/games`. The hint side starts at
+**A game on a Latin square is its description: the fill engine deals,
+solves and hints it, with no solver of its own.** The description places the
+Latin library's techniques
+([`latin.description.yaml`](../src/engine/solve/latin.description.yaml):
+singles, sets, the fish and the wing) with `use: latin.…` among its own, and
+its rules are the answer check ([descriptions.md](./descriptions.md) § "The
+answer check"). [`engine/solve/latin.ts`](../src/engine/solve/latin.ts)
+pairs the library's techniques with the reasons a hint narrates
+(`LATIN_LIBRARY`) and holds the Latin-square generator a `sample: { latin:
+true }` deal draws its answer from. The population is
+`git grep -l "use: latin\." src/games`. The hint side starts at
 [hints-candidates.md](./hints-candidates.md) § "What every game does".
 
-Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
-game with no clues, its techniques reading the grid as a table;
+Exemplars: [`group.description.yaml`](../src/games/group/group.description.yaml)
+for a game with no clues, its techniques reading the grid as a table;
 [`adjacent.description.yaml`](../src/games/adjacent/adjacent.description.yaml)
-for one born from its description, its clues between the cells, which the
-fill board deals and solves with no solver of its own;
+for clues between the cells;
 [`towers.description.yaml`](../src/games/towers/towers.description.yaml)
-for clues beside the grid, born too; [`keen.description.yaml`](../src/games/keen/keen.description.yaml)
-for per-cage arithmetic, born too; [`salad.description.yaml`](../src/games/salad/salad.description.yaml)
-for a repeated symbol, born too.
+for clues beside the grid; [`keen.description.yaml`](../src/games/keen/keen.description.yaml)
+for per-cage arithmetic; [`salad.description.yaml`](../src/games/salad/salad.description.yaml)
+for a repeated symbol.
 
-- **Read a candidate as `has(c, n)` or `cubeGet(x, y, n)`.** Where
-  upstream works in a transposed index space with dense flat reads, port the
-  flat reads verbatim with a comment: re-deriving them moves solver verdicts.
-  The same holds for a generator that reads the cube through a transposed
-  index, and for one that shuffles two clue lists in two separate `shuffle`
-  calls: both decide the board, so reproduce them.
-- **A clue that constrains a cell without placing a digit uses the `seed`
-  hook.** `latinSolver` seeds its marks from the working grid, which covers
-  every given digit; `LatinSolverConfig.seed` is where a mark that only rules
-  candidates out is applied. It is not re-applied inside the recursion, so it
-  is sound only for a game that never recurses: check the recursion setting
-  before relying on it.
+- **Port upstream's flat reads verbatim.** Where upstream works in a
+  transposed index space with dense flat reads, port them verbatim with a
+  comment: re-deriving them moves solver verdicts. The same holds for a
+  generator that reads through a transposed index, and for one that shuffles
+  two clue lists in two separate `shuffle` calls: both decide the board, so
+  reproduce them.
 - **A game with a symbol that repeats in a line declares it; it does not
-  fake it.** `LatinSolverConfig.repeats` makes the last symbol repeat, and
-  its description says the same (`answer.value.repeat`, descriptions.md
+  fake it.** Its description says so (`answer.value.repeat`, descriptions.md
   § "The formula syntax"); the comments of
   [`latin.description.yaml`](../src/engine/solve/latin.description.yaml) say how
-  the library's techniques then read its multiplicity. Read the marker array back off the
-  final cube (`cubeOut`). A game with exactly one such symbol per line needs
-  no declaration.
-- **Three generator shapes.** Derive every clue from the full square, then
-  remove (Towers). Assemble clues greedily onto a blank board, reading the
-  solver's remaining-possibility counts through `latinSolver`'s optional
-  `cubeOut` (Unequal); omit `cubeOut` on the solve and hint path. Partition
-  structurally over a generated square, then solver-gate on exactly the
-  target difficulty (Keen's `deal.divide`,
+  the library's techniques then read its multiplicity. A game with exactly
+  one such symbol per line needs no declaration.
+- **Two deal shapes.** Derive every clue from the full square, then hide
+  each while the board still finishes (Towers, Unequal: `deal.hide`).
+  Partition structurally over a generated square, then gate on exactly the
+  target tier (Keen's `deal.divide`,
   [`engine/fill/divide.ts`](../src/engine/fill/divide.ts)).
 - **A cage or region game takes its minimal elements from the shared
   `Dsf`, and grows no min-tracking dsf of its own**: a map precomputed once

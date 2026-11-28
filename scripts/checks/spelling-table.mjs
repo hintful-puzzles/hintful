@@ -353,7 +353,6 @@ export const QUOTATIONS = {
   behaviour: ["src/utils/sentry.ts"],
   game_colours: [
     "openspec/specs/repo-layout/spec.md",
-    "src/games/group/render.ts",
     "src/games/loopy/render.ts",
     "src/games/map/render.ts",
     "src/games/pearl/render.ts",

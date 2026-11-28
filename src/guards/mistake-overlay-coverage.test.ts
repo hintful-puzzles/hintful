@@ -130,7 +130,6 @@ const NO_OVERLAY_TEST = [
   "bridges",
   "dominosa",
   "filling",
-  "group",
   "palisade",
   "undead",
 ];

@@ -1,51 +1,20 @@
 /**
  * A Latin game's hint plan deduced from the player's notes
  * (docs/hints-candidates.md § "Deduce from the notes when the mistake check
- * vouches for them"): its ladder run on {@link LatinSolver} marks, and the
- * library's strikes as the plan's rungs. Apart from `latin-hint.ts` because
- * it builds on `candidate-plan.ts`, which builds on that.
+ * vouches for them"): the library's strikes as the plan's rungs, and how a
+ * firing's strikes are cut into steps. Apart from `latin-hint.ts` because it
+ * builds on `candidate-plan.ts`, which builds on that.
  */
 
 import type { CellMarks } from "../solve/cell-marks.ts";
-import { type Ladder, TIERS } from "../solve/ladder-runtime.ts";
-import { type LatinReason, type LatinRepeats, LatinSolver } from "../solve/latin.ts";
-import type { Mark, NoteEncoding } from "./candidate-hint.ts";
+import type { LatinReason } from "../solve/latin.ts";
+import type { Mark } from "./candidate-hint.ts";
 import {
   type CandidateRung,
   type NotesLadder,
   strikesOf,
   techniqueRung,
 } from "./candidate-plan.ts";
-
-/**
- * A Latin game's ladder as a plan that deduces from the notes runs it
- * (`techniqueRung`): fresh {@link LatinSolver} marks each time, holding the
- * values on the walk's working `grid` as it stands, so a technique of the
- * game's own reads the solver it reads on the solve path. A note is the
- * solver's value of the same number, up to `enc.values`, which defaults to
- * every symbol. `cap` is the board's tier, which the hint teaches nothing
- * past, as the solver that graded the board ran nothing past it.
- */
-export function latinNotesLadder(
-  ladder: Ladder<LatinSolver>,
-  o: number,
-  grid: ArrayLike<number>,
-  cap: number,
-  opts: { repeats?: LatinRepeats | null; enc?: NoteEncoding } = {},
-): NotesLadder<LatinSolver> {
-  const repeats = opts.repeats ?? null;
-  const symbols = repeats ? o - repeats.times + 1 : o;
-  return {
-    ladder,
-    caps: { [TIERS]: cap },
-    marks: () => {
-      const m = new LatinSolver(o, repeats, ladder.placing);
-      m.grid.set(grid);
-      return m;
-    },
-    enc: { ...opts.enc, values: opts.enc?.values ?? symbols },
-  };
-}
 
 /** A firing's strikes, a leg a cell, in the order the cells first appear: for
  * a game whose sentence names one cell's notes. */
@@ -101,7 +70,7 @@ export function latinStrikeRungs<
   M,
   H,
   Reason = LatinStrikeReason,
-  S extends CellMarks = LatinSolver,
+  S extends CellMarks = CellMarks,
 >(
   on: NotesLadder<S>,
   o: number,

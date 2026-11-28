@@ -1160,6 +1160,22 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play dividers: a divider rules two rows and two columns alike/);
   });
 
+  it("draws the leading diagonal on a square board alone", () => {
+    const fixture = "src/engine/testing/fixtures/ruling/ruling.description.yaml";
+    const lead = (j: { play: { leadingDiagonal?: boolean } }) => {
+      j.play.leadingDiagonal = true;
+      return j;
+    };
+    expect(compileEdited(fixture, lead)).toContain('"leadingDiagonal":true');
+    expect(() =>
+      compileEdited(fixture, (j: { play: object; space: { grid: { h: string } } }) => {
+        j.space.grid.h = "w + 1";
+        (j.play as { dividers?: boolean }).dividers = undefined;
+        return lead(j as { play: { leadingDiagonal?: boolean } });
+      }),
+    ).toThrow(/play leadingDiagonal: a row meets the same column on a square board/);
+  });
+
   it("refuses an order off a square board of numbers with labels, or where a place is fixed", () => {
     const fixture = (name: string) =>
       `src/engine/testing/fixtures/${name}/${name}.description.yaml`;

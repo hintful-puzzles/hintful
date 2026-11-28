@@ -82,7 +82,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | – Show only what the board does not already say | a step restates what the player's own marks show |
 | The hooks a hinted game implements | you wire `hint`, `hint.keepTrack` or another hint hook into `Game` |
 | – Name the rung a step speaks | you add a deduction, or a test needs to know which one a step is |
-| – The candidate walk stamps its own rungs | your hint runs `runCandidatePlan` or `runLatinCandidatePlan` |
+| – The candidate walk stamps its own rungs | your hint runs `runCandidatePlan` |
 | – Every step is a gesture | you write `hint.targets` or `hint.gesture`, or a walk throws on a step's move |
 | – Where the plan loop comes from | your hint turns firings into a plan |
 | – Recording the deduction | the solver must say why each firing happened |
@@ -884,7 +884,7 @@ On the candidate walk the game writes no stamp
   returns that `rung` beside the words**, so the id and the sentence agree.
 - **A candidate game's pin scan gives `ui` a rule that splits its boards
   between the two readings**, since `populate` is spoken only under one and
-  `note` only under the other (`group-hint.test.ts`). A born game's cases
+  `note` only under the other (`rome-hint.test.ts`). A born game's cases
   list the one its reading never speaks in `hint.unreached`.
 
 ### Every step is a gesture

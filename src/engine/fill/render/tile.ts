@@ -39,7 +39,12 @@ import {
 import { paintNumeral } from "./layers/numerals.ts";
 import { labelsOf, paintPartClue } from "./layers/part-clues.ts";
 import { joinsOf, paintPiece } from "./layers/piece.ts";
-import { highlightOf, paintCornerCrosses, paintSurface } from "./layers/surface.ts";
+import {
+  highlightOf,
+  paintCornerCrosses,
+  paintLeadingDiagonal,
+  paintSurface,
+} from "./layers/surface.ts";
 import { washesOf } from "./layers/wash.ts";
 import type { FillSetup } from "./setup.ts";
 import { paintRaised, repainted } from "./three-d.ts";
@@ -217,6 +222,7 @@ function drawTile<C extends Clues<C>>(
   dr.clip(tile);
   paintSurface(pal, frame, highlightOf(typed, word, noteWord));
   if (crossed) paintCornerCrosses(frame, lay.f.boardW);
+  if (play.leadingDiagonal === true && x === y) paintLeadingDiagonal(frame);
   paintPiece(cx, frame, t.anim);
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;

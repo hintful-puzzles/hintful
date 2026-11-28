@@ -4,8 +4,8 @@
  *
  * **The instrument for taking a population by reference rather than by name**
  * (`docs/method.md` § "A scan that keys on a name"). A grep for `tierNames(<digit>`
- * found 21 tiered games where references find 29, and a grep for `latinSolver(`
- * misses every call written `latinSolver<Ctx>(`.
+ * found 21 tiered games where references find 29, and a grep for `techniqueRung(`
+ * misses every call written `techniqueRung<M, H, Reason>(`.
  *
  * **Why a script and not the agent's LSP tool.** That tool answers from a
  * language server that loads the project in the background, and a query issued

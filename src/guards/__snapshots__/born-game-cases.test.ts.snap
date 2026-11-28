@@ -73,6 +73,21 @@ exports[`clusters: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`group: pinned hint positions > says, at each pin 1`] = `
+{
+  "associativity": "In any group, (a·d)·f = a·(d·f), and a·d = c, d·f = e and a·(d·f) = a, so (a·d)·f must also be a.",
+  "clean": "Now clear the easy ones: cross out any element already standing in its cell's row or column.",
+  "dup": "The c just placed can't repeat in its row and column, so the c must go from the other cells.",
+  "hiddenSingle": "No other cell in this column can be d, so this cell must be d.",
+  "identityElim": "The product a·b = g, not b as it would be if a were the identity, so this cell can only be b, d, e or h.",
+  "identityFill": "The product e·a = a shows e is the identity, so row e and column e are just the element labels: this cell must be a.",
+  "note": "Only c, e, g and h aren't already standing in this cell's row or column, so pencil them in.",
+  "regionsFull": "This cell's row and column already hold every other element, so it can only be c.",
+  "set": "The outlined cells already account for a between them, so the a must go.",
+  "single": "Every other element has been ruled out in this cell, so it can only be b.",
+}
+`;
+
 exports[`kakurasu: pinned hint positions > says, at each pin 1`] = `
 {
   "everyWay": "This row still needs 22, and every way to make it from its open squares shades the ringed square, so it must be shaded.",

@@ -536,20 +536,6 @@ export function compiledTechniques(
 }
 
 /**
- * A compiled ladder with a Search after it, graded at `search.tier`: a
- * supposition no description states, which runs only once every technique
- * has nothing (the Latin and Sudoku forcing chain;
- * docs/solver-and-generator.md § "Check, Tactic, Search"). The one way a
- * technique the description does not hold joins a ladder.
- */
-export function withSearch(
-  ladder: CompiledTechniques,
-  search: DeductionTechnique,
-): CompiledTechniques {
-  return compiledTechniques([...ladder, search]);
-}
-
-/**
  * Run `techniques` on `m` to a fixpoint, each firing its own group, and say
  * whether one proved the marks inconsistent.
  */
