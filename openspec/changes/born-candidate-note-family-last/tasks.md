@@ -5,10 +5,10 @@ and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), and Subsets is born
 (2.5e, design.md § "Decisions" 26, and 2.5f): Map's pieces are planned
 (design.md § "Decisions" 28), the space is in (2.6a) and drawn (2.6b,
-design.md § "Decisions" 30), and aimed at (2.6c1, § "Decisions" 31);
-2.6c2, the drag that carries a part's value to another, is next. What 2.2f
-needs
-besides the owner's answer is § "Decisions" 7's last paragraph.
+design.md § "Decisions" 30), aimed at (2.6c1, § "Decisions" 31) and
+carried by a drag (2.6c2, § "Decisions" 32); 2.6d, a hint's ring and
+outline on a part and its gesture, is next. What 2.2f needs besides the
+owner's answer is § "Decisions" 7's last paragraph.
 
 ## 1. Design
 
@@ -146,17 +146,13 @@ order.
   - [x] 2.6b Drawn over its squares: values, borders, the diagonal
         smoothing, stipple notes, mistakes and live errors on a part
         (`parts-render.ts`, design.md § "Decisions" 30). In the app at 2.6g.
-  - [ ] 2.6c Played on its squares, in steps, each on `mapping`.
+  - [x] 2.6c Played on its squares, in steps, each on `mapping`.
     - [x] 2.6c1 A press and the cursor address a part, its band, color
           keys (design.md § "Decisions" 31). In the app at 2.6g: the band
           on a split square, and the notes corner.
-    - [ ] 2.6c2 The drag: a press picks a part's value up (its notes where
-          it has none), a release on another part puts it there, a right
-          drag of a value onto an open part toggles that note, and a
-          release that carries nothing is the tap that selects (the
-          hand-written `pickUp` and `drop`, `games/map/index.ts`); the
-          carried value drawn under the pointer, as the hand-written
-          Map's blob. A play key of its own, so a square board may take it.
+    - [x] 2.6c2 The drag that carries a part's value or notes to another,
+          drawn under the pointer (`play.carry`, design.md § "Decisions"
+          32). In the app at 2.6g: the disc, and a tap that selects.
   - [ ] 2.6d A hint's ring and outline on a part, and its gesture.
   - [ ] 2.6e The deal's rest: the hide keeping a value's last given, `n`
         defaulting to `w·h/8` and at most `w·h`, and the tier refusals.

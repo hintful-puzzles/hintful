@@ -29,12 +29,12 @@ import { rulesOf } from "./answer.ts";
 import type { Clues, FillBoard } from "./board.ts";
 import type { FillParams } from "./game-id.ts";
 import {
-  COL_CELL,
-  COL_ERRTEXT,
-  COL_INK,
-  fillPalette,
-  swatchOf,
-} from "./render/palette.ts";
+  carriedLook,
+  drawCarried,
+  eraseCarried,
+  newCarriedSprite,
+} from "./render/carried.ts";
+import { COL_ERRTEXT, COL_INK, fillPalette, swatchOf } from "./render/palette.ts";
 import { bandWidth, drawBands } from "./render/parts-bands.ts";
 import {
   BOTTOM,
@@ -82,22 +82,18 @@ export function partsRender<C extends Clues<C>>(
   const computeSize = (p: Pick<FillParams, "w" | "h">, ts: number) =>
     pencilIndicatorCanvas({ w: p.w * ts + 1, h: p.h * ts + 1 }, ts);
 
+  // Every value is a picture: a value or a note is drawn by its painter, as
+  // the carry's are.
+  const pictured = carriedLook(pal, (v) => {
+    throw new Error(`parts: no painter for value ${v}`);
+  });
   /** The surface a part holding `v` takes: its painter's, or the surface of
    * an undecided cell. */
-  const surfaceOf = (v: number): number => {
-    const placed = pal.byValue.get(v);
-    if (placed === undefined || placed.painter.surface === null) return COL_CELL;
-    return placed.slot[placed.painter.surface];
-  };
+  const surfaceOf = pictured.surface;
 
   /** Draw value `v`'s note as a dot of radius `r` at `(x, y)`. */
-  const drawNote = (dr: GameDrawing, v: number, x: number, y: number, r: number) => {
-    const placed = pal.byValue.get(v);
-    if (placed === undefined) throw new Error(`parts: no painter for value ${v}`);
-    const box = { x: x - r, y: y - r, w: 2 * r, h: 2 * r };
-    if (placed.painter.note !== undefined) placed.painter.note(dr, box, placed.slot);
-    else placed.painter.paint(dr, box, placed.slot, false);
-  };
+  const drawNote = (dr: GameDrawing, v: number, x: number, y: number, r: number) =>
+    pictured.note(dr, { x: x - r, y: y - r, w: 2 * r, h: 2 * r }, v);
 
   function drawSquare(
     dr: GameDrawing,
@@ -289,6 +285,7 @@ export function partsRender<C extends Clues<C>>(
         band: { shown: null },
         badges: none,
         pencilModeShown: null,
+        carried: newCarriedSprite(),
       };
     },
     redraw: (dr: GameDrawing, ds: FillDrawState, frame) => {
@@ -298,6 +295,7 @@ export function partsRender<C extends Clues<C>>(
       const wh = w * h;
       const ts = ds.tileSize;
       const o = origin(ts);
+      eraseCarried(dr, ds.carried, ts);
       if (ds.tiles.firstFrame())
         dr.drawRect({ x: o, y: o, w: w * ts + 1, h: h * ts + 1 }, COL_INK);
 
@@ -377,6 +375,7 @@ export function partsRender<C extends Clues<C>>(
         pencilIndicatorBox(computeSize(g, ts), ts),
         pal.PENCIL_STYLE,
       );
+      drawCarried(dr, ds.carried, ts, ui.carry ?? null, pictured);
     },
     numbersLeft: () => 0,
     keySwatch: (v) => swatchOf(pal.byValue, v),

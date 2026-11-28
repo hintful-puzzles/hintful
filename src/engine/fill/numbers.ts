@@ -7,7 +7,8 @@
  * the Marks key switches typing to notes, and a value typed may strike
  * itself from the notes it rules out (auto-pencil). A typed entry and a note
  * are the note-taking cell's moves (`notes.ts`). Where every piece points,
- * a drag or an armed arrow key chooses a value by its way (`pointing.ts`).
+ * a drag or an armed arrow key chooses a value by its way (`pointing.ts`);
+ * where values are carried, a drag carries one to another cell (`carry.ts`).
  * Where the values are features, a square's slots are pressed instead, and
  * nothing is typed (`features.ts`).
  */
@@ -69,6 +70,7 @@ import {
   spaceOf,
   topValue,
 } from "./board.ts";
+import { carryInput } from "./carry.ts";
 import {
   type DividerMove,
   dividerAt,
@@ -129,7 +131,7 @@ function keypadTop<C>(
  * none: it types nothing), the hint's reading the one `play` declares, and
  * a board of features its cursor's slot; and no drag of buttons, but where
  * every piece points the drag that chooses one by its way, and what a key
- * armed. */
+ * armed; where values are carried, what the pointer holds. */
 export function typedUi({ drag, ...rest }: FillUi, play: FillPlay): FillUi {
   const ui: FillUi = rest;
   ui.cursorFromKeyboard ??= false;
@@ -155,6 +157,7 @@ export function typedUi({ drag, ...rest }: FillUi, play: FillPlay): FillUi {
   if (play.numbers?.raised === true) ui.raised ??= true;
   if (play.numbers?.pictures !== undefined) ui.pictures ??= true;
   if (play.select !== undefined) ui.selected ??= [];
+  if (play.carry === true) ui.carry ??= null;
   if (play.order === true) ui.reorder ??= null;
   if (play.along !== undefined) {
     ui.way ??= "row";
@@ -312,6 +315,12 @@ export function numberInput<
     noteTaking,
     origin,
     gap,
+  );
+  const carry = carryInput<C, D>(
+    module,
+    (b, ds, p, ui) => geometry.pointerTarget(b, ds, p, ui),
+    noteTaking,
+    (b, ds, p, ui) => parts?.pressed(b, ds, p, ui),
   );
   const select = module.play?.select;
   const dividers = module.play?.dividers === true;
@@ -503,6 +512,8 @@ export function numberInput<
       const pointed =
         pointing === null ? PASS : pointing.interpret(b, fillUi, ds, p, button);
       if (pointed !== PASS) return pointed;
+      const carried = carry === null ? PASS : carry.interpret(b, fillUi, ds, p, button);
+      if (carried !== PASS) return carried;
       // A board of features is played on its slots; a key that marks a clue
       // done is the mark's.
       if (features !== null && !(done?.isKey(raw) ?? false)) {

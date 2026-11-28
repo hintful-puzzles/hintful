@@ -947,6 +947,15 @@ keys are each way's number pad digit, labeled by an arrow, and Enter or
 Space arms the selection (`ui.armed`, the tile's `ARMED`, a `?`) for the
 arrow key that says a way, so Enter switches no notes there.
 
+A board whose values are carried (`play.carry`, `carry.ts`, upstream
+map.c's drag) is the select-or-drag gesture's too: a press holds the
+cell's value, or its notes where it has none, in `ui.carry`, and the
+release puts it on the cell under it through the same moves a key makes
+(a typed value, a note toggled, an `Edit` writing an empty cell's notes),
+or is the tap's where it changes nothing. What is held is no cell of the
+board, so it is drawn as a sprite under the pointer behind a blitter
+(`render/carried.ts`), by either renderer.
+
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
 
 Reach for it where a value is drawn standing up out of its square, its top

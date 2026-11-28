@@ -1138,6 +1138,40 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play band: the band is drawn beneath the board/);
   });
 
+  it("refuses a carry where a press and a drag are another input's", () => {
+    type Json = { play: { carry?: true; select?: string } };
+    const compiled = (name: string, over: (j: Json) => void) => {
+      const source = `src/engine/testing/fixtures/${name}/${name}.description.yaml`;
+      const formal = sources.get(source);
+      if (formal === undefined || !isFormal(formal)) throw new Error(`no ${name}`);
+      const j = structuredClone(formal) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compiled("mapping", () => {})).toContain('"carry":true');
+    expect(() =>
+      compiled("mapping", (j) => {
+        j.play.select = "diagonal";
+      }),
+    ).toThrow(/play carry: a press and a drag are select's, and a carry's/);
+    expect(() =>
+      compiled("holding", (j) => {
+        j.play.carry = true;
+      }),
+    ).toThrow(/play carry: a press and a drag are numbers.features's/);
+    expect(() =>
+      compiled("pointing", (j) => {
+        j.play.carry = true;
+      }),
+    ).toThrow(/play carry: a press and a drag are pictures that point's/);
+  });
+
   it("writes a horseshoe in a record at the end it names, and refuses a number from 0 with no hidden", () => {
     const source = "src/engine/testing/fixtures/holding/holding.description.yaml";
     const holding = sources.get(source);

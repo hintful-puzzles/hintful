@@ -41,6 +41,13 @@ import {
   recordMiddle,
   recordTexts,
 } from "./record-list.ts";
+import {
+  type CarriedSprite,
+  carriedLook,
+  drawCarried,
+  eraseCarried,
+  newCarriedSprite,
+} from "./render/carried.ts";
 import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
 import { layoutOf, tallyBeneath } from "./render/geometry.ts";
@@ -164,6 +171,9 @@ export interface FillDrawState {
   /** Whether the pencil-mode indicator shows, on a board that keeps notes:
    * `null` before it is drawn. */
   pencilModeShown: boolean | null;
+  /** What a carry holds, drawn under the pointer, where values are
+   * carried. */
+  readonly carried: CarriedSprite;
 }
 
 export interface FillRender<C> {
@@ -300,6 +310,7 @@ export function fillRender<C extends Clues<C>>(
     );
     const shown = lines === null ? previewedStored : viewOf(previewedStored, lines);
 
+    eraseCarried(dr, ds.carried, ts);
     if (ds.tiles.firstFrame()) drawFrame(cx, lay, dr, ds, state);
 
     const viewed = lines === null ? live : viewedErrors(state.w, lines, live);
@@ -323,6 +334,8 @@ export function fillRender<C extends Clues<C>>(
 
     const f = { dr, ds, cx, lay, state, shown, ui, errors, hint, tiles, raisedInto };
     for (const site of sites) site.paint(f);
+    const look = carriedLook(cx.pal, cx.glyphOf(state));
+    drawCarried(dr, ds.carried, ts, ui.carry ?? null, look);
   }
 
   return {
@@ -376,6 +389,7 @@ export function fillRender<C extends Clues<C>>(
         band: { shown: null },
         badges: new TileCache(badged(cx) ? b.w * b.h : 0, { words: 2 }),
         pencilModeShown: null,
+        carried: newCarriedSprite(),
       };
     },
     redraw,

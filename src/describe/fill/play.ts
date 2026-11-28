@@ -5,6 +5,7 @@
  * mark may stand.
  */
 
+import { waysOf } from "../../engine/fill/glyphs.ts";
 import { EDGE_VALUE_PAINTERS } from "../../engine/render/pieces/edge-value.ts";
 import { PAINTERS } from "../../engine/render/pieces/index.ts";
 import { compileExpr } from "../compile-expr.ts";
@@ -138,6 +139,36 @@ const isValueAt = (e: Expr): boolean =>
 /** Whether `e` is `value(at) = v`, alone or as the first of a conjunction. */
 const fixesItsValue = (e: Expr): boolean =>
   isValueAt(e) || (e.k === "bin" && e.op === "and" && fixesItsValue(e.a));
+
+/** Refuses a carry (`carry`) off a board of numbers, or where a press and
+ * a drag are another input's: on features' slots, a pointing piece's way, a
+ * selection's shape, a record held along the list. */
+function checkCarry(p: PlayJson): void {
+  if (p.carry !== true) return;
+  if (p.numbers === undefined)
+    throw new CompileError(
+      "play carry: a carry holds a value, and play has no `numbers`",
+    );
+  const drags = [
+    ...(p.numbers.features === undefined ? [] : ["numbers.features"]),
+    ...(waysOf({
+      play: {
+        ...(p.numbers.pictures === undefined
+          ? {}
+          : { numbers: { pictures: p.numbers.pictures } }),
+        ...(p.given === undefined ? {} : { given: p.given }),
+      },
+    }) === null
+      ? []
+      : ["pictures that point"]),
+    ...(p.select === undefined ? [] : ["select"]),
+    ...(p.along === undefined ? [] : ["along"]),
+  ];
+  if (drags.length > 0)
+    throw new CompileError(
+      `play carry: a press and a drag are ${drags.join(", ")}'s, and a carry's`,
+    );
+}
 
 /** Refuses what a board whose rows and columns stand for the same things
  * offers off such a board: dividers, the leading diagonal, and an order. */
@@ -403,6 +434,7 @@ export function playOf(
     throw new CompileError(
       "play select: a selection is typed into, and play has no `numbers`",
     );
+  checkCarry(p);
   checkBeneath(json, d, measured);
   checkSquareLines(p, json, d);
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)

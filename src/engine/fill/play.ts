@@ -41,6 +41,15 @@ export interface FillHighlight {
   readonly on: boolean;
 }
 
+/** What a carry holds (`carry.ts`): a cell's value, 0 for none, and where
+ * it holds none the cell's notes; and the pointer, in pixels, where it is
+ * drawn. */
+export interface Carried {
+  readonly value: number;
+  readonly notes: number;
+  at: Point;
+}
+
 /** A fill game's `play:`, as its compiled module exports it. */
 export interface FillPlay {
   /** Where the values are the answer's domain, each drawn as its numeral and
@@ -99,6 +108,9 @@ export interface FillPlay {
   readonly list?: string;
   /** Whether every value is drawn as a band beneath the board (`band.ts`). */
   readonly band?: true;
+  /** Whether a drag carries a cell's value, or its notes where it holds
+   * none, to the cell it is let go on (`carry.ts`). */
+  readonly carry?: true;
   /** Where typing goes along the list's sites (`along.ts`): the player's
    * preferences that move the selection along a site and wash the sites
    * through it, by key and name; and where the list is also a reference
@@ -272,6 +284,9 @@ export interface FillUi {
    * or Space armed the selection to take from the next arrow key: a value,
    * or a note; `null` where nothing is armed. */
   armed?: "value" | "note" | null;
+  /** On a board whose values are carried (`FillPlay.carry`), what the
+   * pointer holds, `null` where it holds nothing. */
+  carry?: Carried | null;
   /** On a board whose counts' style is a preference (`FillPlay.countStyle`),
    * the player's choice, by its index in `COUNT_STYLES`. */
   countStyle?: number;

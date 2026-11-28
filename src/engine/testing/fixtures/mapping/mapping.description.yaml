@@ -5,7 +5,8 @@
 # cells are a partition's parts (`space.parts`): the regions grown from
 # seeds scattered over the squares (`deal.divide`'s `seeds`), which border
 # which read off them (`relations: sides`), and the ID as upstream map.c
-# writes it, the edge list (`borders`) and the colors from 0.
+# writes it, the edge list (`borders`) and the colors from 0; a region's
+# color carried to another by a drag (`play.carry`).
 game: mapping
 produces: coloring
 sizes:
@@ -30,6 +31,7 @@ play:
     pictures:
       paint: { 1: pink, 2: yellow, 3: teal, 4: violet }
       names: { 1: pink, 2: yellow, 3: teal, 4: violet }
+  carry: true
   boards: [4x4n6, 5x5n8]
   hintMarks:
     ring: the region the step decides.

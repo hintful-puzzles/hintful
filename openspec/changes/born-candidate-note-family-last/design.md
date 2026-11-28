@@ -762,6 +762,34 @@ A press selects, as on every typed board. The drag (2.6c2) makes it Map's
 select-or-drag gesture: the press picks the part's value up, and a release
 that carries nothing is the tap that selects.
 
+### 32. A carry is a play key of any board of numbers (2.6c2)
+
+`play.carry` (`carry.ts`) holds what a press picks up in the Ui (`carry`:
+the value, or an empty cell's notes, and the pointer), and its release
+makes the moves a key already makes: a typed value with auto-pencil's
+strike, a note toggled, a clear, or an `Edit` writing an empty cell's notes
+whole. So no move or save format is new, and the drop is checked against
+the cell's domain as typing is. It runs beside `pointing.ts`, before the
+press that selects, and refuses to share a board with another input that
+spends the press and the drag (features' slots, pointing pieces, a
+selection's shape, a record held along a list). It aims through the
+board's `TargetGeometry`, so a square board takes it as a board of parts
+does.
+
+What is held is no cell, so it is a sprite under the pointer behind a
+blitter (`render/carried.ts`, the hand-written Map's blob: a disc in the
+value's surface, an empty cell's notes dotted in map.c's formation of four,
+a grid beyond), drawn by both renderers from the palette's painters or the
+glyph. The blob's anchor is not kept: the release reads the cell under the
+pointer again, as the hand-written one does.
+
+Two differences from the hand-written Map, for 2.6g's list: a press off the
+board picks nothing up, where the hand-written one picked up an empty
+region whose drop cleared the region (a press off the board is any other
+input's on a square board); and Enter and Space do not pick a region up and
+put it down, the keys typing a color at the selection as on every board of
+numbers (the hand-written Map's keys did both).
+
 ## What each flip changed for a player
 
 Filled in by each flip.

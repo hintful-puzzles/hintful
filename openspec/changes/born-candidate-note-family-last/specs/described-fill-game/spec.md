@@ -1036,7 +1036,7 @@ of the border they share.
 
 ### Requirement: A born board of parts is played on its squares
 
-A press on a board of parts SHALL select the part of the square's triangle
+A tap on a board of parts SHALL select the part of the square's triangle
 it lands in, and an arrow SHALL move the cursor a square and select the part
 of the triangle on the side the arrow points to; a value or note typed SHALL
 go to the selected part. The selection SHALL be drawn as a band inside the
@@ -1044,7 +1044,7 @@ part's border, and while notes are typed as a corner in a square of it.
 
 #### Scenario: A split square's two parts
 
-- **WHEN** the player presses the bottom of the `mapping` board's square
+- **WHEN** the player taps the bottom of the `mapping` board's square
   split between its first and second regions, and types a color
 - **THEN** the first region is selected and takes the color
 
@@ -1058,3 +1058,30 @@ character it sends.
 
 - **WHEN** the `mapping` fixture's keypad is shown
 - **THEN** its keys 1 to 4 are painted pink, yellow, teal and violet
+
+### Requirement: A born board's values may be carried by a drag
+
+Where a born board of numbers carries its values (`play.carry`), a press
+SHALL pick up the value of the cell under it, or its notes where it holds
+none, and draw it under the pointer; the release SHALL put it on the open
+cell it is let go on, or with the right button or while notes are typed
+toggle the value carried as a note on an empty one. A release that changes
+nothing SHALL select as a tap. The compiler SHALL refuse a carry where a
+press and a drag are another input's.
+
+#### Scenario: A given's color carried to an open region
+
+- **WHEN** the player drags from a given region of the `mapping` board to
+  an open one
+- **THEN** the open region takes the given's color, and no selection shows
+
+#### Scenario: A right drag notes the color
+
+- **WHEN** the player drags a colored region onto an empty open one with
+  the right button
+- **THEN** the empty region's note of that color is toggled
+
+#### Scenario: A carry that changes nothing selects
+
+- **WHEN** the player presses an open region and lets go on it
+- **THEN** the region is selected, and nothing is placed

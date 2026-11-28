@@ -12,12 +12,18 @@ import { cellSurface } from "../color/palette.ts";
 import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
 import { validateDesc } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
+import type { Point } from "../contract/types.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_UP,
   LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  RIGHT_BUTTON,
+  RIGHT_DRAG,
+  RIGHT_RELEASE,
 } from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
@@ -277,8 +283,30 @@ describe("a board of parts drawn over its squares", () => {
     };
   };
   const KEY = (k: string) => k.charCodeAt(0);
+  type Ui = ReturnType<typeof game.newUi>;
+  type Ds = ReturnType<typeof game.newDrawState>;
+  /** A drag from `from` to `to`, by `button` (the left by default), and
+   * what its release makes. */
+  const drag = (
+    b: Board,
+    ui: Ui,
+    ds: Ds,
+    from: Point,
+    to: Point,
+    button: "left" | "right" = "left",
+  ) => {
+    const [press, move, release] =
+      button === "left"
+        ? [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE]
+        : [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE];
+    expect(game.interpretMove(b, ui, ds, from, press)).toBe(UI_UPDATE);
+    game.interpretMove(b, ui, ds, to, move);
+    return game.interpretMove(b, ui, ds, to, release);
+  };
+  /** A tap at `at`: a press and a release there. */
+  const tap = (b: Board, ui: Ui, ds: Ds, at: Point) => drag(b, ui, ds, at, at);
 
-  it("selects the region of the triangle a press lands in, and types into it", () => {
+  it("selects the region of the triangle a tap lands in, and types into it", () => {
     const b = board();
     const ds = game.newDrawState(b, TS);
     // Square 6's bottom and left are region 0's; square 7's bottom and
@@ -291,7 +319,7 @@ describe("a board of parts drawn over its squares", () => {
       [12, TOP, 3],
     ] as const) {
       const ui = game.newUi(b);
-      expect(game.interpretMove(b, ui, ds, pointIn(s, t), LEFT_BUTTON)).toBe(UI_UPDATE);
+      expect(tap(b, ui, ds, pointIn(s, t))).toBe(UI_UPDATE);
       expect(ui.cursor, `square ${s}`).toMatchObject({
         x: region,
         y: 0,
@@ -306,7 +334,7 @@ describe("a board of parts drawn over its squares", () => {
     }
     // A given is not selected.
     const ui = game.newUi(b);
-    game.interpretMove(b, ui, ds, pointIn(7, TOP), LEFT_BUTTON);
+    tap(b, ui, ds, pointIn(7, TOP));
     expect(ui.cursor.visible).toBe(false);
   });
 
@@ -315,8 +343,8 @@ describe("a board of parts drawn over its squares", () => {
     const ds = game.newDrawState(b, TS);
     const g = partsGeometry(b.dealt.map as Squares, DESC);
     const ui = game.newUi(b);
-    // Pressed on square 6's bottom, region 0.
-    game.interpretMove(b, ui, ds, pointIn(6, BOTTOM), LEFT_BUTTON);
+    // Tapped on square 6's bottom, region 0.
+    tap(b, ui, ds, pointIn(6, BOTTOM));
     const walk = (button: number, s: number, t: number) => {
       game.interpretMove(b, ui, ds, { x: 0, y: 0 }, button);
       expect(ui.cursor, `to square ${s}`).toMatchObject({
@@ -362,7 +390,7 @@ describe("a board of parts drawn over its squares", () => {
         null as never,
       );
       if (press === undefined || !("at" in press)) throw new Error("no press");
-      game.interpretMove(b, ui, ds, press.at, LEFT_BUTTON);
+      tap(b, ui, ds, press.at);
       expect(ui.cursor, `region ${region}`).toMatchObject({ x: region, visible: true });
     }
   });
@@ -409,5 +437,164 @@ describe("a board of parts drawn over its squares", () => {
         op.points.every(([x, y]) => x <= x0 + TS / 2 && y <= y0 + TS / 2),
     );
     expect(corner.length).toBeGreaterThan(0);
+  });
+
+  // Carried by a drag (2.6c2).
+  /** A point in a whole square of region `r`. */
+  const inRegion = (b: Board, r: number): Point => {
+    const s = Array.from({ length: 25 }, (_, i) => i).find(
+      (i) => b.dealt.map.of[i] === r && ![6, 7, 8].includes(i),
+    );
+    if (s === undefined) throw new Error(`no whole square of region ${r}`);
+    return pointIn(s, TOP);
+  };
+  /** Board `b` with region `r` colored `v`. */
+  const colored = (b: Board, r: number, v: number): Board => {
+    const values = Uint8Array.from(b.values);
+    values[r] = v;
+    return { ...b, values };
+  };
+  /** Board `b` with region `r` noted `notes`. */
+  const noted = (b: Board, r: number, notes: number): Board => {
+    const pencil = Int32Array.from(b.pencil ?? []);
+    pencil[r] = notes;
+    return { ...b, pencil };
+  };
+
+  it("carries a region's color to an open region, from a given as well", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const pink = b.values[4];
+    expect(b.fixed[4]).toBe(1);
+    const made = drag(b, ui, ds, inRegion(b, 4), inRegion(b, 0));
+    expect(made).toEqual({
+      type: "set",
+      x: 0,
+      y: 0,
+      n: pink,
+      pencil: false,
+      autoElim: false,
+    });
+    // The pointer let go of it, and an entry it made shows no selection.
+    expect(ui.carry).toBeNull();
+    expect(ui.cursor.visible).toBe(false);
+    if (made === null || made === UI_UPDATE) throw new Error("no move");
+    const after = game.executeMove(b, made);
+    expect(drag(after, ui, ds, inRegion(b, 0), inRegion(b, 3))).toMatchObject({
+      type: "set",
+      x: 3,
+      n: pink,
+      pencil: false,
+    });
+  });
+
+  it("taps where the carry changes nothing, and selects", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    // Onto a given, nothing, and a given is not selected.
+    expect(drag(b, ui, ds, inRegion(b, 4), inRegion(b, 1))).toBe(UI_UPDATE);
+    expect(ui.cursor.visible).toBe(false);
+    // Onto the region it came from: a tap, which selects it, and again
+    // puts the selection away.
+    expect(drag(b, ui, ds, inRegion(b, 0), pointIn(6, BOTTOM))).toBe(UI_UPDATE);
+    expect(ui.cursor).toMatchObject({ x: 0, y: 0, visible: true });
+    tap(b, ui, ds, inRegion(b, 0));
+    expect(ui.cursor.visible).toBe(false);
+    // A drag onto a region holding the color already changes nothing.
+    const both = colored(colored(b, 0, 3), 3, 3);
+    expect(drag(both, ui, ds, inRegion(b, 0), inRegion(b, 3))).toBe(UI_UPDATE);
+    expect(ui.cursor).toMatchObject({ x: 3, visible: true });
+  });
+
+  it("toggles the color carried as a note with the right button, or while notes are typed", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const v = b.values[5];
+    const note = { type: "set", x: 0, y: 0, n: v, pencil: true };
+    expect(drag(b, ui, ds, inRegion(b, 5), inRegion(b, 0), "right")).toEqual(note);
+    ui.pencilMode = true;
+    expect(drag(b, ui, ds, inRegion(b, 5), inRegion(b, 0))).toEqual(note);
+    // A colored region takes no note.
+    expect(drag(colored(b, 0, 1), ui, ds, inRegion(b, 5), inRegion(b, 0))).toBe(
+      UI_UPDATE,
+    );
+  });
+
+  it("carries an empty region's notes, or its emptiness", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const dots = (1 << 1) | (1 << 3);
+    const from = noted(b, 0, dots);
+    // Onto an empty region, its notes written whole; onto a colored one,
+    // emptied first; the same with the right button.
+    expect(drag(from, ui, ds, inRegion(b, 0), inRegion(b, 3))).toEqual({
+      notes: [3, dots],
+    });
+    expect(drag(colored(from, 3, 2), ui, ds, inRegion(b, 0), inRegion(b, 3))).toEqual({
+      set: [3, 0],
+      notes: [3, dots],
+    });
+    expect(drag(from, ui, ds, inRegion(b, 0), inRegion(b, 3), "right")).toEqual({
+      notes: [3, dots],
+    });
+    // An empty region with no notes empties the region it is let go on.
+    expect(drag(colored(b, 3, 2), ui, ds, inRegion(b, 0), inRegion(b, 3))).toEqual({
+      type: "set",
+      x: 3,
+      y: 0,
+      n: 0,
+      pencil: false,
+      autoElim: false,
+    });
+  });
+
+  it("draws what the pointer carries under it, and puts back what it covered", () => {
+    const b = noted(board(), 0, (1 << 2) | (1 << 4));
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+    // The double restores no pixels: where they are put back is recorded.
+    const loads: Point[] = [];
+    dr.blitterLoad = (_bl?: unknown, at?: Point) => {
+      if (at !== undefined) loads.push({ ...at });
+    };
+    const frame = () => {
+      dr.ops.length = 0;
+      game.redraw(dr, ds, {
+        state: b,
+        prev: null,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        mistakes: [],
+      });
+      return dr.ops.flatMap((op) => (op.op === "circle" ? [op] : []));
+    };
+    const at = { x: 40, y: 50 };
+    // A given's color, a disc of it at the pointer.
+    game.interpretMove(b, ui, ds, inRegion(b, 4), LEFT_BUTTON);
+    game.interpretMove(b, ui, ds, at, LEFT_DRAG);
+    const disc = frame().find((op) => op.cx === at.x && op.cy === at.y);
+    expect(disc?.fillRgb).toBe(rgbLabel(FOUR_FILLS[b.values[4] - 1]));
+    expect(disc?.r).toBe(TS / 2);
+    // Let go off the board, the next frame puts back what the disc covered.
+    game.interpretMove(b, ui, ds, { x: 0, y: 0 }, LEFT_RELEASE);
+    expect(frame().some((op) => op.cx === at.x && op.cy === at.y)).toBe(false);
+    expect(loads).toEqual([{ x: at.x - TS / 2 - 2, y: at.y - TS / 2 - 2 }]);
+    // An empty region's notes, dotted over an empty disc.
+    game.interpretMove(b, ui, ds, inRegion(b, 0), LEFT_BUTTON);
+    game.interpretMove(b, ui, ds, at, LEFT_DRAG);
+    const held = frame().filter(
+      (op) => Math.hypot(op.cx - at.x, op.cy - at.y) < TS / 2 && op.r < TS / 4,
+    );
+    expect(held.map((op) => op.fillRgb)).toEqual([
+      rgbLabel(FOUR_FILL_MARKS[1]),
+      rgbLabel(FOUR_FILL_MARKS[3]),
+    ]);
   });
 });
