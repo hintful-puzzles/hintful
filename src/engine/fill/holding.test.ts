@@ -106,6 +106,62 @@ describe("a horseshoe", () => {
   });
 });
 
+describe("a set drawn as its letters", () => {
+  const { w: W, h: H } = renderScenario({ game, id: idOf(ANSWER) }).size;
+  /** What each square's slots show, A's then B's: a letter, `x` for a
+   * cross, `.` for nothing, read off where each is drawn. */
+  const marksOf = (id: string, moves: FillMove[] = []) => {
+    const ops = renderScenario({ game, id, moves }).recording.ops;
+    const marks: { x: number; y: number; mark: string }[] = [
+      ...ops.flatMap((o) =>
+        o.op === "text" && (o.text === "A" || o.text === "B")
+          ? [{ x: o.x, y: o.y, mark: o.text }]
+          : [],
+      ),
+      // A cross is two ink lines through one middle; one of them stands for it.
+      ...ops.flatMap((o) =>
+        o.op === "line" && o.color === COL_INK && o.y1 < o.y2 && o.x1 < o.x2
+          ? [{ x: (o.x1 + o.x2) / 2, y: (o.y1 + o.y2) / 2, mark: "x" }]
+          : [],
+      ),
+    ];
+    return [0, 1, 2, 3].map((c) =>
+      marks
+        .filter(
+          (m) => Number(m.x >= W / 2) === c % 2 && Number(m.y >= H / 2) === c >> 1,
+        )
+        .sort((a, b) => a.x - b.x),
+    );
+  };
+  // Where each square's two slots are, A's left of B's: on the board with
+  // every set placed, each slot draws something.
+  const places = marksOf(idOf(ANSWER)).map((ms) => ms.map((m) => m.x));
+  const slots = (id: string, moves: FillMove[] = []): string[] =>
+    marksOf(id, moves).map((mine, c) =>
+      places[c]
+        .map((x) => mine.find((m) => Math.abs(m.x - x) <= 1)?.mark ?? ".")
+        .join(""),
+    );
+  const strike = (c: number, ...sets: number[]): FillMove => ({
+    type: "pencilStrike",
+    marks: sets.map((n) => ({ x: c % 2, y: Math.floor(c / 2), n })),
+  });
+
+  it("draws a placed set's letters, and a cross for each it lacks", () => {
+    expect(slots(idOf(ANSWER))).toEqual(["Ax", "xB", "xx", "AB"]);
+  });
+
+  it("draws on an open square what every set left in it agrees on", () => {
+    const id = idOf(ANSWER, [0]);
+    // Every set is left: they agree on no letter.
+    expect(slots(id)).toEqual(["..", "xB", "xx", "AB"]);
+    // {A} and {A, B} left: A is there, B open.
+    expect(slots(id, [strike(0, 1, 3)])).toEqual(["A.", "xB", "xx", "AB"]);
+    // {} and {A} left: B is not, A open.
+    expect(slots(id, [strike(0, 3, 4)])).toEqual([".x", "xB", "xx", "AB"]);
+  });
+});
+
 describe("notes full from the deal", () => {
   // Every set, bits 1 to 4.
   const EVERY = 0b11110;

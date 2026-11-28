@@ -28,6 +28,7 @@ import {
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
 import { answerEnv, param } from "./emit.ts";
+import { checkFeatures, featuresOfFn } from "./features.ts";
 import { checkGaps, checkSigns, marginsOf } from "./locations.ts";
 import { boundsOf, menuOf, sizeOf } from "./menu.ts";
 import { notesOf } from "./notes.ts";
@@ -454,6 +455,7 @@ export function playOf(
     if (glance?.includes(id))
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
   const { notes, fullNotes, distinctParts } = notesOf(json, d, env);
+  checkFeatures(p.numbers, fullNotes);
   checkSigns(p, d, env);
   checkGaps(p, d, env);
   // A clue is marked done by a press where it is drawn, and the engine finds
@@ -505,8 +507,14 @@ export function playOf(
   checkSquareLines(p, json, d);
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
+  const features = rest.numbers?.features;
   const plainPlay = {
     ...rest,
+    // A feature's formula is compiled to `featuresOf`; the engine reads the
+    // names alone.
+    ...(features === undefined
+      ? {}
+      : { numbers: { ...rest.numbers, features: { names: features.names } } }),
     ...(whole === undefined ? {} : { whole: { part: whole.part } }),
     ...(notes ? { notes } : {}),
     ...(fullNotes ? { fullNotes } : {}),
@@ -552,6 +560,7 @@ export function playOf(
     ...washedOf(wash?.when ?? null, env, measured),
     ...highlightedOf(highlights, env, measured),
     ...wholeOthersOf(whole?.others ?? null, env, measured),
+    ...featuresOfFn(features?.of ?? null, env, measured),
     ...recordHoldsOf(json, d, env, measured),
     ...(p.along === undefined || p.list === undefined
       ? []

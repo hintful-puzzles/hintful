@@ -155,9 +155,13 @@ export interface FillPlay {
    * value drawn by its painter in place of its glyph, a note small, unless
    * the player's preference `pref` draws the glyphs; `A` switches it. With
    * no `pref`, always pictures. Each is said by its name in `names`, and
-   * labeled by it on the keypad. */
+   * labeled by it on the keypad. `features`: each value a set of features
+   * (the module's `featuresOf`), feature `k` drawn as `names`' letter `k`
+   * in its slot of the square (`render/layers/features.ts`), over notes
+   * kept full. */
   readonly numbers?: {
     readonly raised?: true;
+    readonly features?: { readonly names: string };
     readonly letters?: true | string;
     readonly empty?: { readonly ball: string };
     readonly pictures?: {

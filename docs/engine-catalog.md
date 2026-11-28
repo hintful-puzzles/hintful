@@ -897,6 +897,13 @@ whatever the preference: it sits above every value the player places, so
 the keypad, the givens and the notes stop below it, and the domain may
 differ from cell to cell where its clue narrows it.
 
+A board of numbers whose values are sets of features
+(`play.numbers.features`, Subsets' sets of letters) draws no glyph, piece
+or note: each square is a grid of slots, a feature a slot, drawn by
+`render/layers/features.ts` from the value, or on an open square from what
+its notes agree on. It needs notes kept full (the mark's `full`), since an
+unnoted square would read as agreeing on every letter.
+
 A board whose every piece the player places points (`glyphs.ts`'s
 `waysOf`) is played by each piece's way, as upstream Rome is, with nothing
 to declare (`pointing.ts`). Its press is the select-or-drag gesture's

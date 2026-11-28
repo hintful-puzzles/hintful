@@ -1063,6 +1063,45 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/hintNotes: the notes are full/);
   });
 
+  it("refuses features over notes not kept full, or drawn another way too", () => {
+    const source = "src/engine/testing/fixtures/holding/holding.description.yaml";
+    const holding = sources.get(source);
+    if (holding === undefined || !isFormal(holding)) throw new Error("no holding");
+    type Json = {
+      marks: Record<string, { full?: true }>;
+      play: { numbers: { letters?: true; features: { of: string } } };
+    };
+    const compileHolding = (over: (j: Json) => void) => {
+      const j = structuredClone(holding) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const compiled = compileHolding(() => {});
+    expect(compiled).toContain('"features":{"names":"AB"}');
+    expect(compiled).toContain("export function featuresOf(d: number)");
+    expect(() =>
+      compileHolding((j) => {
+        delete j.marks["cand"].full;
+      }),
+    ).toThrow(/features: an open square's letters are its notes'/);
+    expect(() =>
+      compileHolding((j) => {
+        j.play.numbers.letters = true;
+      }),
+    ).toThrow(/features: and letters/);
+    expect(() =>
+      compileHolding((j) => {
+        j.play.numbers.features.of = "d";
+      }),
+    ).toThrow(/features of: not a set of numbers/);
+  });
+
   it("refuses {tally}, which only the library's fish is given, in a game's own wording", () => {
     const source = "src/games/solo/solo.description.yaml";
     const solo = sources.get(source);

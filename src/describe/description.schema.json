@@ -1437,6 +1437,21 @@
                   "$ref": "#/$defs/letters",
                   "description": "Each value is drawn, said and typed as a letter from A, which either case types, and a digit types the letter at its place (ABCD's); or, an alphabet, the letter at its place in it. Not raised."
                 },
+                "features": {
+                  "type": "object",
+                  "description": "Each value is a set of features, `of` it (a formula of `d`, a set of numbers from 0), each drawn as its letter in `names` at a fixed slot of its square, the letter at its place (Subsets' sets of letters): a placed value's features drawn and a cross in every other slot; on an open square, each feature every note has drawn, a cross where none has one, and nothing between. Over notes kept full (the mark's `full`), and not raised, lettered, pictured or with an empty square.",
+                  "required": ["of", "names"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "of": {
+                      "type": "string"
+                    },
+                    "names": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{1,16}$"
+                    }
+                  }
+                },
                 "pictures": {
                   "type": "object",
                   "description": "Each value is drawn by the painter named, in place of its glyph: placed, as a piece filling its square; noted, small in a two-by-two grid, or where every piece points (an arrow), on the side of its square it points to; in a row of counts, as its record's piece (upstream Undead's monsters). The player's preference `pref`, pictures by default, draws the glyphs instead, and `A` switches it, so no glyph is typed by A; with none, the board is always pictures (Rome's arrows). Every value the player places has a painter, from 1, and a name in `names`: what a hint calls it and its key's label on the keypad, capitalized. Not raised, and with no empty square.",

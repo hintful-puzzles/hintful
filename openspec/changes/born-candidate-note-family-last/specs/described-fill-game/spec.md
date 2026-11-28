@@ -745,3 +745,23 @@ the game SHALL offer no hint-notes preference.
 
 - **WHEN** a `holding` square's set is cleared
 - **THEN** its notes are every set again
+
+### Requirement: A born game's value may be drawn as its features
+
+A born board of numbers whose notes are full MAY declare each value a set
+of features, each drawn as its letter in a fixed slot of the square. A
+placed value SHALL draw each feature it has as its letter and a cross in
+each other slot; an open square SHALL draw a feature's letter where every
+note has it, a cross where no note has it, and nothing in the slot
+otherwise. The compiler SHALL refuse features over notes not kept full, or
+beside another way of drawing the values.
+
+#### Scenario: A placed set's letters
+
+- **WHEN** a `holding` square holds {A}
+- **THEN** its first slot shows A and its second a cross
+
+#### Scenario: What the notes agree on
+
+- **WHEN** a `holding` square's notes are {A} and {A, B}
+- **THEN** its first slot shows A and its second shows nothing

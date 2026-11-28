@@ -115,6 +115,9 @@ export interface FillModule<C> {
   /** What each other square of a part played whole (`play.whole`) holds
    * once one holds `d`. */
   wholeOthers?(d: number): number;
+  /** The features of value `d` (`play.numbers.features`), bit `k` feature
+   * `k`'s. */
+  featuresOf?(d: number): number;
   /** Whether cell `c` is washed on the values `g` (`play.wash`): an open one
    * then reads as the secondary value, which a piece there would break. */
   washed?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;

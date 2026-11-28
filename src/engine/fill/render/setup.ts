@@ -117,6 +117,19 @@ export function fillSetup<C extends Clues<C>>(
    * pictures (`play.numbers.pictures`), which only such a board has. */
   const pictured = (ui: FillUi): boolean =>
     play.numbers?.pictures !== undefined && ui.pictures !== false;
+  /** Where each value is a set of features (`play.numbers.features`), each
+   * one's letter and value `d`'s features, drawn in a square's slots in
+   * place of its glyph and its notes; `null` where the values are none. */
+  const features = ((): {
+    readonly names: string;
+    readonly of: (d: number) => number;
+  } | null => {
+    const names = play.numbers?.features?.names;
+    if (names === undefined) return null;
+    const of = module.featuresOf;
+    if (of === undefined) throw new Error("play numbers features: no featuresOf");
+    return { names, of };
+  })();
   /** The clue kind a link from a cell names the clue of. */
   const linkClues = play.links === undefined ? null : (play.links.clue as keyof C);
   const pal: FillPalette = fillPalette(
@@ -251,6 +264,7 @@ export function fillSetup<C extends Clues<C>>(
     notes,
     raises,
     pictured,
+    features,
     linkClues,
     onEdges,
     rimWall,

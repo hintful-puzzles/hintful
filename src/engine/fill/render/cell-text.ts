@@ -159,6 +159,30 @@ export function cellLayoutOf(
     }));
   };
 
+  /** Where each of `count` features goes in cell `(x, y)`, in reading order:
+   * square slots in a grid as near square as holds them, filling the cell
+   * inside a hint's band, as upstream subsets.c's letters fill a cell's
+   * block. A ring round one goes round its slot. */
+  const featureSlots = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    count: number,
+  ): Rect[] => {
+    const area = labeled ? belowClue(ts, at, walls) : markBand(ts, at, walls).box;
+    const across = Math.ceil(Math.sqrt(count));
+    const down = Math.ceil(count / across);
+    const side = Math.floor(Math.min(area.w / across, area.h / down));
+    const left = area.x + Math.floor((area.w - side * across) / 2);
+    const top = area.y + Math.floor((area.h - side * down) / 2);
+    return Array.from({ length: count }, (_, j) => ({
+      x: left + side * (j % across),
+      y: top + side * Math.floor(j / across),
+      w: side,
+      h: side,
+    }));
+  };
+
   /** Where a note of a piece pointing `[dx, dy]` goes in cell `(x, y)`: a
    * square a quarter of the cell inside a hint's band, on that side of its
    * middle, as upstream rome.c draws its small arrows. */
@@ -199,5 +223,13 @@ export function cellLayoutOf(
     };
   };
 
-  return { ...lay, labelText, noteSlots, pictureSlots, pointedSlot, valueText };
+  return {
+    ...lay,
+    labelText,
+    noteSlots,
+    pictureSlots,
+    featureSlots,
+    pointedSlot,
+    valueText,
+  };
 }

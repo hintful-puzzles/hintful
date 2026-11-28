@@ -27,6 +27,7 @@ import {
   paintEdgeValues,
 } from "./layers/edge-values.ts";
 import { ballsOf, emptyIn, paintEmpty } from "./layers/empty.ts";
+import { paintFeatures } from "./layers/features.ts";
 import type { TileFrame } from "./layers/layer.ts";
 import { paintLinkHalves } from "./layers/links.ts";
 import { paintBars, paintDiamonds } from "./layers/live-errors.ts";
@@ -265,7 +266,9 @@ function drawTile<C extends Clues<C>>(
   paintPiece(cx, frame, t.anim);
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;
-  if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord }, glyph);
+  if (cx.features !== null) paintFeatures(cx.features, pal.COL_ENTRY, frame);
+  else if (raised)
+    paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord }, glyph);
   else if (typed && v !== empty && frame.piece === null)
     paintNumeral(alongInk ?? pal.COL_ENTRY, glyph, frame);
   paintEmpty(pal.COL_ENTRY, empty, frame);
@@ -275,8 +278,10 @@ function drawTile<C extends Clues<C>>(
       ...frame,
       word: word | notesIn(noteWord)[0],
     });
-  // The empty square's note is its glyph, an X (upstream Salad's).
-  else paintNotes(alongInk ?? pal.COL_PENCIL, glyph, frame, pictured ? pieceOf : null);
+  // The empty square's note is its glyph, an X (upstream Salad's); a
+  // square's features are its notes, drawn above.
+  else if (cx.features === null)
+    paintNotes(alongInk ?? pal.COL_PENCIL, glyph, frame, pictured ? pieceOf : null);
   paintBreach(frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);

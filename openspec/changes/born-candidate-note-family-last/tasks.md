@@ -3,8 +3,10 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a and 2.5b1 are in, 2.5b2 is next (design.md §
-"Decisions" 16 is its model, and 17 how its notes stay full). Rome is born (2.3e). For 2.2f: the
+on meanwhile: 2.5a to 2.5b2 are in, 2.5b3 is next (design.md §
+"Decisions" 16 is its model, and 17 how its notes stay full; a slot's
+place is `featureSlots` in `render/cell-text.ts`, which the press reads). Controls
+to keep: `subsets/index.ts`'s `targetVerbs`. Rome is born (2.3e). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -115,9 +117,9 @@ order.
         unworded on a board with no row or column):
     - [x] 2.5b1 Notes full from the deal, and a cell narrowed to one set
           holding it (the mark's `full`, design.md § "Decisions" 17).
-    - [ ] 2.5b2 The features drawn: a slot a feature, a letter where every
-          candidate has it, a cross where none has, nothing between
-          (hand-written `subsets/render.ts` for the look).
+    - [x] 2.5b2 The features drawn, a slot each (`play.numbers.features`).
+          In the app at 2.5e: the letters' size against the hand-written
+          slot of a whole tile.
     - [ ] 2.5b3 A slot press and the keyboard over slots (hand-written
           `subsets/index.ts`, `iconHit` and the cursor).
     - [ ] 2.5b4 The mistake check's slot, and the hint's gesture.

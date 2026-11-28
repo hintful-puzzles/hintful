@@ -37,7 +37,8 @@ clues:
       and (v = 2) = holds(value(end2(at)), value(end1(at)))
 freedom: { kind: fill }
 play:
-  numbers: {}
+  # A set drawn as its letters, A in the first slot and B in the second.
+  numbers: { features: { of: "letters(d)", names: AB } }
   gaps: { shoe: shoe }
   boards: [2x2]
   hintMarks:

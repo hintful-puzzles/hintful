@@ -410,6 +410,18 @@ on such a board only a contradiction reaches it (Mark-all's clean around
 two wrongly placed sets), which the mistake check shows anyway. A walk's
 strike that leaves one set places it, so the walk owes no single after it.
 
+### 18. A value's features are a board of numbers' drawing, over full notes (2.5b2)
+
+`play.numbers.features` names a formula of `d` (Subsets' `letters(d)`,
+compiled to `featuresOf`) and a letter a feature, and a square of such a
+board is drawn as its slots alone, in place of its glyph and its notes: a
+second notation beside them would be the one Decision 16 refused. Its
+slots are a grid as near square as holds them, filling the cell inside a
+hint's band, as a picture's notes do. The compiler refuses features over
+notes not kept full, where an unnoted square would read as agreeing on
+every letter, and beside raised, lettered, pictured or empty-square
+drawing.
+
 ## What each flip changed for a player
 
 Filled in by each flip.
