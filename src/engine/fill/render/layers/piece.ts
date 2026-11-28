@@ -12,6 +12,7 @@ import {
   JOINED_OPEN,
   joinToward,
 } from "../../../render/piece.ts";
+import type { Partition } from "../../../solve/describe-runtime.ts";
 import { answerOf } from "../../answer.ts";
 import { type Clues, type FillBoard, spaceOf } from "../../board.ts";
 import { tallyPlaced } from "../../tally-display.ts";
@@ -20,9 +21,10 @@ import { DIRS, ERR_AT, FIXED, JOIN_SHIFT, SHAPE_OPEN } from "../tile-word.ts";
 import type { TileFrame } from "./layer.ts";
 
 /** Each cell's join, the side its other half is on: a joining piece and
- * one beside it alike, each beside no other. A run of three stays apart.
- * A piece that runs (`Painter.runs`) joins its line as {@link runJoins}
- * reads it. */
+ * one beside it alike, each beside no other, or on a part played whole
+ * (`play.whole`) the part's other square, once it holds a piece too. A run
+ * of three stays apart. A piece that runs (`Painter.runs`) joins its line
+ * as {@link runJoins} reads it. */
 export function joinsOf<C extends Clues<C>>(
   cx: FillSetup<C>,
   b: FillBoard<C>,
@@ -35,6 +37,9 @@ export function joinsOf<C extends Clues<C>>(
   const keys = [...byValue.keys()];
   if (!keys.some(joins) && !keys.some(runs)) return out;
   const sp = spaceOf(module, b);
+  const part = module.play?.whole?.part;
+  const whole =
+    part === undefined ? null : (b.dealt[part as keyof C] as unknown as Partition);
   const alike = (c: number) => sp.adj4[c].filter((d) => b.values[d] === b.values[c]);
   const answer = keys.some(runs) && b.fixed.some((f) => f) ? answerOf(module, b) : null;
   // Once the tally's pieces are all placed, an open square holds none.
@@ -51,6 +56,12 @@ export function joinsOf<C extends Clues<C>>(
       continue;
     }
     if (!joins(b.values[c])) continue;
+    if (whole !== null) {
+      const other = whole.cells[whole.of[c]]?.find((p) => p !== c);
+      if (other !== undefined && b.values[other] !== 0)
+        out[c] = joinToward(b.w, c, other);
+      continue;
+    }
     const mine = alike(c);
     if (mine.length === 1 && alike(mine[0]).length === 1)
       out[c] = joinToward(b.w, c, mine[0]);

@@ -14,6 +14,7 @@ import {
 } from "./monster.ts";
 import type { Painter } from "./painter.ts";
 import { block, disc } from "./pair.ts";
+import { minus, neutral, plus } from "./pole.ts";
 import { star } from "./star.ts";
 import { clear, cross, domino, ring, shade } from "./stock.ts";
 
@@ -35,6 +36,9 @@ export const PAINTERS = {
   goal,
   ground,
   hull,
+  minus,
+  neutral,
+  plus,
   rise: risePiece,
   ring,
   sea,

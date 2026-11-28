@@ -691,3 +691,9 @@ SHALL leave a square holding a value its list does not name.
 
 - **WHEN** a `poling` domino holding two 2s is clicked with the left button
 - **THEN** nothing changes
+
+#### Scenario: A placed tile is drawn as one
+
+- **WHEN** a `poling` domino holds a 1 and a 3
+- **THEN** its + half, red, reaches the line where its − half, ink, begins,
+  and a domino of 2s is drawn green at both ends, each with its cross

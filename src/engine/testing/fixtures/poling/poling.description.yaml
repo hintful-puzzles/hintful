@@ -27,9 +27,9 @@ given: [value]
 freedom: { kind: fill }
 play:
   values:
-    1: { does: put a block in it, key: "1", glyph: " 1 ", paint: block }
-    2: { does: put a disc in it, key: "2", glyph: " 2 ", paint: disc }
-    3: { does: put a ring in it, key: "3", glyph: " 3 ", paint: ring }
+    1: { does: put a + in it, key: "1", glyph: " + ", paint: plus }
+    2: { does: make it neutral, key: "2", glyph: " . ", paint: neutral }
+    3: { does: put a − in it, key: "3", glyph: " - ", paint: minus }
   primary: 1
   secondary: 2
   click: { primary: [1, 3], secondary: [2] }

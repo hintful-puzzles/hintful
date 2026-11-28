@@ -6,6 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 import * as poling from "../../generated/engine/testing/fixtures/poling/poling.compiled.ts";
+import { GREEN, RED } from "../color/colors.ts";
+import { INK } from "../color/palette.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
   LEFT_BUTTON,
@@ -14,6 +16,9 @@ import {
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
+import { NO_FLASH } from "../render/win-wave.ts";
+import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { applyEdit } from "./edit.ts";
 import { fillGame } from "./game.ts";
@@ -96,12 +101,54 @@ describe("a part played whole", () => {
     expect(ends(applyEdit(poling, given, { set: [0, 1] }))).toEqual([1, 2]);
   });
 
+  it("draws a placed tile's halves joined, red + to ink − or green both ends", () => {
+    const colors = game.colors(DEFAULT_BACKGROUND);
+    const draw = (b: Board) => {
+      const dr = new RecordingDrawing(colors);
+      game.redraw(dr, game.newDrawState(b, TS), {
+        state: b,
+        prev: null,
+        dir: 1,
+        ui: game.newUi(b),
+        animTime: 0,
+        flash: NO_FLASH,
+      } as never);
+      return dr.ops.filter(
+        (op): op is Extract<DrawOp, { op: "polygon" }> => op.op === "polygon",
+      );
+    };
+    /** Each piece's fill and its right edge, left to right. */
+    const pieces = (b: Board) =>
+      draw(b)
+        .map((op) => ({
+          fill: op.fill,
+          left: Math.min(...op.points.map(([x]) => x)),
+          right: Math.max(...op.points.map(([x]) => x)),
+        }))
+        .sort((a, z) => a.right - z.right);
+    const magnet = pieces(applyEdit(poling, board(), { set: [0, 1] }));
+    const neutral = pieces(applyEdit(poling, board(), { set: [0, 2] }));
+    expect([...magnet, ...neutral].map((m) => colors[m.fill])).toEqual([
+      RED,
+      INK,
+      GREEN,
+      GREEN,
+    ]);
+    // The + half reaches the line between the squares, where the − half
+    // begins, so the two read as one tile.
+    expect(magnet[0].right).toBe(magnet[1].left);
+    expect(neutral[0].right).toBe(neutral[1].left);
+    // An open half joins nothing: a given end alone stands in from its edge.
+    const lone = pieces(board({ 0: 2 }));
+    expect(lone[0].right).toBeLessThan(magnet[0].right);
+  });
+
   it("says each press of a cycle in its verb's words", () => {
     expect(input.targetVerbs.primary.does).toBe(
-      "put a block in it; again, put a ring in it; and again, empty it",
+      "put a + in it; again, put a − in it; and again, empty it",
     );
     expect(input.targetVerbs.secondary?.does).toBe(
-      "put a disc in it, or empty it if it is already filled",
+      "make it neutral, or empty it if it is already filled",
     );
   });
 

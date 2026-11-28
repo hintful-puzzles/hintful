@@ -11,6 +11,7 @@ import * as joining from "../../generated/engine/testing/fixtures/joining/joinin
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
 import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
+import * as poling from "../../generated/engine/testing/fixtures/poling/poling.compiled.ts";
 import * as tallying from "../../generated/engine/testing/fixtures/tallying/tallying.compiled.ts";
 import * as washing from "../../generated/engine/testing/fixtures/washing/washing.compiled.ts";
 import { YELLOW_WASH } from "../color/colors.ts";
@@ -230,10 +231,13 @@ describe("each painter a description may name", () => {
     given: true,
   }));
 
-  it("names every painter, with joining's, each once", () => {
+  it("names every painter, with joining's and poling's, each once", () => {
+    // A piece that joins is drawn by a fixture whose pieces join: alike
+    // neighbors (`joining`), or a part played whole (`poling`).
     const named = [
       ...[...placed, ...givens].map((p) => p.paint),
       ...Object.values(joining.play.values).map((p) => p.paint),
+      ...Object.values(poling.play.values).map((p) => p.paint),
     ];
     expect(named.sort()).toEqual(Object.keys(PAINTERS).sort());
   });

@@ -93,12 +93,14 @@ order.
         written a character a value (`alphabet`, `byValue`), on `ending`.
   - [x] 2.4c `play.whole` (any edit writes a part's other squares) and a
         `click` cycle by button, on `poling`.
-  - [ ] 2.4d Pole painters (+, −, neutral).
+  - [x] 2.4d Painters `plus`, `minus`, `neutral`, a tile's halves joined
+        across its part (`joinsOf`), on `poling`.
   - [ ] 2.4e The notes, by the owner's answer to § "Decisions" 15.
   - [ ] 2.4f The deal: a few neutral tiles first, then a magnet wherever
         one fits; clues stripped by `S`.
   - [ ] 2.4g The flip: the hint restated as `says`, cases, spec deltas,
-        guides.
+        guides. In the browser: an empty tile drawn as the partition's
+        pastel fill against upstream's rounded tile, and the hint's clicks.
 - [ ] 2.5 Subsets born.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
 
