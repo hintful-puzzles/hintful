@@ -147,16 +147,32 @@ export function buildAnswer<C extends Clues<C>>(
   else shuffle(order, rs);
   const open = order.filter((c) => board.fixed[c] === 0);
   // With a share, each cell in turn takes the build's value at that chance
-  // where it may, and another value otherwise; without, the value alone.
-  const only = build === null || build.share !== undefined ? null : build.value;
+  // where it may, and another value otherwise; with a count, the first
+  // cells the value and the rest any; without either, the value alone.
+  const only =
+    build === null || build.share !== undefined || build.count === true
+      ? null
+      : build.value;
+  let seeded = build?.count === true ? buildCount(module, sp, p) : 0;
   for (const c of order) {
     if (marks.grid[c] !== 0) continue;
+    if (seeded > 0 && build !== null) {
+      seeded--;
+      if (!marks.has(c, build.value)) return null;
+      marks.place(c, build.value);
+      const settled = settle();
+      if (settled === "past") return tooMany();
+      if (settled !== null) return settled;
+      continue;
+    }
     const values: number[] = [];
     for (let m = module.domainOf(sp, blank, c); m !== 0; m &= m - 1) {
       const v = 31 - Math.clz32(m & -m);
       if (marks.has(c, v) && (only === null || v === only)) values.push(v);
     }
-    if (values.length > 0) marks.place(c, pickValue(values, build, rs));
+    const preferred = build?.prefer?.find((v) => values.includes(v));
+    if (preferred !== undefined) marks.place(c, preferred);
+    else if (values.length > 0) marks.place(c, pickValue(values, build, rs));
     else if (fallback === null) {
       if (only === null) return DEAD_END;
       continue;
@@ -184,6 +200,17 @@ function fallbackMost<C extends Clues<C>>(
   if (module.fallbackMost === undefined)
     throw new Error("deal: a build's fallback with no fallbackMost");
   return module.fallbackMost(sp, sizesOf(p));
+}
+
+/** How many cells, the first in a build's order, take its value. */
+function buildCount<C extends Clues<C>>(
+  module: DealtFillModule<C>,
+  sp: GridSpace,
+  p: FillParams,
+): number {
+  if (module.buildCount === undefined)
+    throw new Error("deal: a build's count with no buildCount");
+  return module.buildCount(sp, sizesOf(p));
 }
 
 /** The value a build lays on a cell that may hold `values`: with a share,

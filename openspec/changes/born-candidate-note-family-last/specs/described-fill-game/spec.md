@@ -679,7 +679,9 @@ Where `play.whole` names a dealt partition, a value placed in one square of
 a part, by any edit, SHALL write each other open square of it `others` of
 that value, and emptying one SHALL empty them. A `click` given by button
 SHALL go round empty and that button's values from the square pressed, and
-SHALL leave a square holding a value its list does not name.
+SHALL leave a square holding a value its list does not name. A build's
+`count` SHALL give its value to that many first cells, and `prefer` each
+later cell the first value it may hold.
 
 #### Scenario: A magnet turned round
 
@@ -691,6 +693,13 @@ SHALL leave a square holding a value its list does not name.
 
 - **WHEN** a `poling` domino holding two 2s is clicked with the left button
 - **THEN** nothing changes
+
+#### Scenario: A few neutral tiles first
+
+- **WHEN** a `poling` 4x4 board is dealt, its build laying a tenth of the
+  squares 2s and then preferring a 1
+- **THEN** its answer holds two 2s, one domino's, and every other domino
+  is a magnet
 
 #### Scenario: A placed tile is drawn as one
 

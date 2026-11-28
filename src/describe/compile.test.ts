@@ -2201,6 +2201,13 @@ describe("what the fill board reads of a description", () => {
         j.play.whole.part = "box";
       }),
     ).toThrow(/play whole: box is no dealt partition/);
+    // A build's preference goes with its count of first cells.
+    expect(() =>
+      edited((j) => {
+        delete (j as { deal?: { sample: { build: { count?: string } } } }).deal?.sample
+          .build.count;
+      }),
+    ).toThrow(/deal sample build: a preference with no count/);
   });
 
   it("lays a clue of some values at a line's two ends, and writes it a character a value", () => {

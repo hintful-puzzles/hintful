@@ -152,6 +152,19 @@ describe("a part played whole", () => {
     );
   });
 
+  it("builds a tenth of the squares 2s first, then a 1 wherever one fits", () => {
+    // 16 squares: one seeded 2, its domino's other end a 2 by the ladder,
+    // and every later domino a magnet, which a 1 always fits.
+    for (const seed of ["a", "b", "c", "d", "e"]) {
+      const b = game.newState(p, game.newDesc(p, randomNew(seed)).desc);
+      const g = solveBoard(poling, b, 0).values;
+      expect(Array.from(g).filter((v) => v === 2).length).toBe(2);
+    }
+    expect(poling.buildCount(spaceOf(poling, board()), {})).toBe(1);
+    const big = { ...spaceOf(poling, board()), w: 11, h: 10 };
+    expect(poling.buildCount(big, {})).toBe(5);
+  });
+
   it("deals boards the ladder finishes, each domino a 1 and 3 or two 2s", () => {
     for (const seed of ["a", "b", "c"]) {
       const b = game.newState(p, game.newDesc(p, randomNew(seed)).desc);

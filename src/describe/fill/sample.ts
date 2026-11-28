@@ -220,6 +220,12 @@ export function withBuildReads<S extends object>(
       ? { sightlines: without(sample.sightlines, "open") }
       : {}),
     ...("fallback" in sample ? { fallback: without(sample.fallback, "most") } : {}),
+    ...("build" in sample &&
+    typeof sample.build === "object" &&
+    sample.build !== null &&
+    "count" in sample.build
+      ? { build: { ...sample.build, count: true } }
+      : {}),
     ...("first" in sample ? { first: without(sample.first, "keep") } : {}),
     ...("first" in sample && ("build" in sample || "uniform" in sample)
       ? { reads: [...kindsRead(d.domain, d.defs)].sort() }
@@ -241,6 +247,27 @@ export function fallbackMostOf(json: DescriptionJson, env: Env): string[] {
     "fallbackMost",
     "number",
     (term) => term(most),
+  );
+}
+
+/** `buildCount(sp, cl)`, how many cells, the first in a build's order, take
+ * its value on a board of these sizes; nothing where the build has no
+ * count. A build's `prefer` goes with a count alone. */
+export function buildCountOf(json: DescriptionJson, env: Env): string[] {
+  const sample = sampleOf(json);
+  if (sample === null || !("build" in sample) || typeof sample.build !== "object")
+    return [];
+  const { count, prefer } = sample.build;
+  if (prefer !== undefined && count === undefined)
+    throw new CompileError("deal sample build: a preference with no count");
+  if (count === undefined) return [];
+  return sizesFunction(
+    env,
+    "deal sample build count",
+    "/** How many cells, the first in the build's order, take its value on a board of these sizes. */",
+    "buildCount",
+    "number",
+    (term) => term(count),
   );
 }
 

@@ -1,8 +1,9 @@
 ## Next
 
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
-on § "Decisions" 15; 2.4a to 2.4d and 2.4f go on meanwhile, in order.
-Rome is born (2.3e). For 2.2f: the
+and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
+Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
+on meanwhile. Rome is born (2.3e). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -96,8 +97,8 @@ order.
   - [x] 2.4d Painters `plus`, `minus`, `neutral`, a tile's halves joined
         across its part (`joinsOf`), on `poling`.
   - [ ] 2.4e The notes, by the owner's answer to § "Decisions" 15.
-  - [ ] 2.4f The deal: a few neutral tiles first, then a magnet wherever
-        one fits; clues stripped by `S`.
+  - [x] 2.4f A build's `count` first cells and `prefer`, on `poling`; `S`
+        is `hide`'s `when`, as Boats'.
   - [ ] 2.4g The flip: the hint restated as `says`, cases, spec deltas,
         guides. In the browser: an empty tile drawn as the partition's
         pastel fill against upstream's rounded tile, and the hint's clicks.

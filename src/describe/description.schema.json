@@ -2724,6 +2724,16 @@
                               "exclusiveMinimum": 0,
                               "maximum": 1,
                               "description": "The least share of the cells no clue fixes that the answer gives `value`: a sample short of it is drawn again."
+                            },
+                            "count": {
+                              "$ref": "#/$defs/formula",
+                              "description": "How many cells, the first in the build's order, take `value`, a formula of the sizes; the rest take any value, or by `prefer` (upstream Magnets' neutral squares, a tenth of the board and no more than 5). A first cell that may not hold `value` draws the answer again."
+                            },
+                            "prefer": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": { "type": "integer", "minimum": 1 },
+                              "description": "With `count`, the values a later cell takes in order of preference: the first it may still hold (upstream Magnets' +, then −, then neutral)."
                             }
                           }
                         }

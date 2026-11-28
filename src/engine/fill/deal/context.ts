@@ -67,6 +67,9 @@ export type DealtFillModule<C> = SearchedFillModule<C> &
     /** The most cells a build gives its fallback value, read with the sizes
      * (`sample.fallback.most`). */
     fallbackMost?(sp: GridSpace, sizes: Readonly<Record<string, number>>): number;
+    /** How many cells, the first in a build's order, take its value, read
+     * with the sizes (`sample.build.count`). */
+    buildCount?(sp: GridSpace, sizes: Readonly<Record<string, number>>): number;
   };
 
 /** What a deal's board is, and how the ladder does on one. */

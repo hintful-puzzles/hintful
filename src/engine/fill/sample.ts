@@ -302,6 +302,11 @@ export interface BuiltSample {
         readonly share?: number;
         /** The least share of the open cells the answer gives `value`. */
         readonly least?: number;
+        /** Whether the first cells in the order, as many as the module's
+         * `buildCount`, take `value`, and the rest any value. */
+        readonly count?: true;
+        /** With `count`, the values a later cell takes, the first it may. */
+        readonly prefer?: readonly number[];
       };
   /** The value a cell takes where a placement leaves it none, outside its
    * domain if need be; the module's `fallbackMost` the most cells that may. */

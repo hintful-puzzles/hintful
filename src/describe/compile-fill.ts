@@ -50,6 +50,7 @@ import {
 import { markWhileOf, playOf } from "./fill/play.ts";
 import { keepsOf, refuseOf, refusePlacesOf } from "./fill/refuse.ts";
 import {
+  buildCountOf,
   checkFirst,
   checkSample,
   dealtSample,
@@ -250,6 +251,7 @@ function dealOf(
     ...keepsOf(json, d, env, measured),
     ...sightlinesOf(json, d, env, measured),
     ...fallbackMostOf(json, env),
+    ...buildCountOf(json, env),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
     ...hideFormulasOf(json, env, measured),
   ];
