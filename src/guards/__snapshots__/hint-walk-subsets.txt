@@ -1,2 +1,2 @@
-4x4 Size 4 Easy #0: 46 steps, solved, 34e9738718da4d93 [arrowKnown:4 arrowMask:8 collapse:24 hiddenSingle:4 ruleOut:6]
-4x4 Size 4 Normal #0: 52 steps, solved, 66ee46caef16222a [arrowKnown:8 arrowMask:4 collapse:19 hiddenSingle:13 ruleOut:8]
+4x4 Easy, 4 letters #0: 30 steps, solved, 5cf43d75d417d689 [carryIn:4 carryOut:9 hiddenSingle:2 noShoe:7 noShoeBeside:5 smaller:3]
+4x4 Normal, 4 letters #0: 40 steps, solved, f4d82ca5446489c1 [bigger:5 carryIn:9 carryOut:4 hiddenSingle:3 noShoe:8 noShoeBeside:7 smaller:4]

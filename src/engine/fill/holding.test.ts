@@ -73,6 +73,13 @@ const drawn = (id: string, moves: { set: number[] }[] = []): DrawOp[] =>
 // {A} {B}
 // {}  {A, B}
 const ANSWER = [2, 3, 1, 4];
+// Every square open: no set is placed, so every square's notes are every set.
+// A board that leaves {A}'s and {B}'s squares both open has two answers,
+// the letters swapped, so the midend loads none: a test drawing the board
+// gives one of them.
+const ALL = [0, 1, 2, 3];
+// {B} given: square 0 is {}, {A} or {A, B}, as are squares 2 and 3.
+const BUT_B = [0, 2, 3];
 
 describe("a horseshoe", () => {
   it("opens toward the square whose set holds the other's, and is none where neither does", () => {
@@ -240,13 +247,15 @@ describe("a set drawn as its letters", () => {
   });
 
   it("draws on an open square what every set left in it agrees on", () => {
-    const id = idOf(ANSWER, [0]);
-    // Every set is left: they agree on no letter.
-    expect(slots(id)).toEqual(["..", "xB", "xx", "AB"]);
+    const id = idOf(ANSWER, BUT_B);
+    // {}, {A} and {A, B} left: they agree on no letter.
+    expect(slots(id)).toEqual(["..", "xB", "..", ".."]);
     // {A} and {A, B} left: A is there, B open.
-    expect(slots(id, [strike(0, 1, 3)])).toEqual(["A.", "xB", "xx", "AB"]);
+    expect(slots(id, [strike(0, 1)])).toEqual(["A.", "xB", "..", ".."]);
     // {} and {A} left: B is not, A open.
-    expect(slots(id, [strike(0, 3, 4)])).toEqual([".x", "xB", "xx", "AB"]);
+    expect(slots(id, [strike(0, 4)])).toEqual([".x", "xB", "..", ".."]);
+    // Square 1 open beside the rest given: {B} alone left, placed at the deal.
+    expect(slots(idOf(ANSWER, [1]))).toEqual(["Ax", "xB", "xx", "AB"]);
   });
 });
 
@@ -295,27 +304,29 @@ describe("the band of every set", () => {
 
   it("grays a set once placed, unstruck, and reds one placed twice", () => {
     // The band's strike is kept for what the square in focus rules out.
-    // Every set but {A} given.
-    const id = idOf(ANSWER, [0]);
-    expect(bandOf(id)).toEqual(["__ done", "A_ ink", "_B done", "AB done"]);
-    expect(bandOf(id, [{ set: [0, 2] }])).toEqual([
+    // {A} and {A, B} given: squares 1 and 2 each {} or {B}.
+    const id = idOf(ANSWER, [1, 2]);
+    expect(bandOf(id)).toEqual(["__ ink", "A_ done", "_B ink", "AB done"]);
+    // {B} placed leaves square 2 {}, which it then holds.
+    expect(bandOf(id, [{ set: [1, 3] }])).toEqual([
       "__ done",
       "A_ done",
       "_B done",
       "AB done",
     ]);
     // {A, B} placed a second time.
-    expect(bandOf(id, [{ set: [0, 4] }])).toEqual([
-      "__ done",
-      "A_ ink",
-      "_B done",
+    expect(bandOf(id, [{ set: [1, 4] }])).toEqual([
+      "__ ink",
+      "A_ done",
+      "_B ink",
       "AB red",
     ]);
   });
 });
 
 describe("a press on the band", () => {
-  const id = idOf(ANSWER, [0]);
+  // Squares 0 and 3 open, each {A} or {A, B}.
+  const id = idOf(ANSWER, [0, 3]);
   /** Where set `text` is written in the band: a point on its text. */
   const pointOf = (text: string): { x: number; y: number } => {
     const o = drawn(id).find(
@@ -350,19 +361,19 @@ describe("a press on the band", () => {
   };
 
   it("spotlights the squares a set can still go in, the one holding it among them", () => {
-    // {A, B}: given in square 3, and among square 0's notes.
+    // {A, B}: among squares 0's and 3's notes.
     expect(spotlit("AB")).toEqual({ squares: 2, framed: true });
-    // {A}: square 0's notes alone.
-    expect(spotlit("A_")).toEqual({ squares: 1, framed: true });
+    // {}: given in square 2 alone.
+    expect(spotlit("__")).toEqual({ squares: 1, framed: true });
   });
 
   it("is put out by a second press on the set, and moved by a press on another", () => {
     expect(spotlit("AB", "AB")).toEqual({ squares: 0, framed: false });
-    expect(spotlit("AB", "A_")).toEqual({ squares: 1, framed: true });
+    expect(spotlit("AB", "__")).toEqual({ squares: 1, framed: true });
   });
 
   it("changes the Ui alone", () => {
-    const b = game.newState(PARAMS, descOf(ANSWER, [0]));
+    const b = game.newState(PARAMS, descOf(ANSWER, [0, 3]));
     const ui = game.newUi(b);
     const ds = game.newDrawState(b, 32);
     const at = pointOf("A_");
@@ -372,8 +383,8 @@ describe("a press on the band", () => {
 });
 
 describe("a square in focus", () => {
-  // Square 0 open, {A}; every other given.
-  const id = idOf(ANSWER, [0]);
+  const hidden = BUT_B;
+  const id = idOf(ANSWER, hidden);
   // A horseshoe is two circles at one middle, its ring and its hole; a badge
   // is a circle alone.
   const badgesOf = (ops: readonly DrawOp[]) => {
@@ -398,7 +409,7 @@ describe("a square in focus", () => {
     const [badge] = badgesOf(first.ops);
     // The game's own hooks beside the midend's, for the board and the Ui
     // the midend keeps to itself; the frame is drawn at its tile size.
-    let board = game.newState(PARAMS, descOf(ANSWER, [0]));
+    let board = game.newState(PARAMS, descOf(ANSWER, hidden));
     const ui = game.newUi(board);
     const ds = game.newDrawState(board, game.preferredTileSize);
     for (const t of targets) {
@@ -433,7 +444,7 @@ describe("a square in focus", () => {
   it("is offered by a badge above each open square alone, filled while in focus", () => {
     const { ops } = pressing();
     const badges = badgesOf(ops);
-    expect(badges.length).toBe(1);
+    expect(badges.length).toBe(3);
     // Above square 0's letters.
     const letters = ops.flatMap((o) =>
       o.op === "text" && o.text.length === 1 ? [o] : [],
@@ -447,32 +458,38 @@ describe("a square in focus", () => {
   });
 
   it("is where a press on the band strikes a set from, and gives it back", () => {
+    // Square 0's notes {}, {A} and {A, B}, bits 1, 2 and 4.
     const after = pressing("badge", "AB");
-    expect(Array.from(after.board.pencil ?? [])[0]).toBe(0b01110);
-    expect(struck(after.ops)).toEqual(["AB"]);
+    // The given {B} is struck too: the square's notes rule it out.
+    expect(Array.from(after.board.pencil ?? [])[0]).toBe(0b00110);
+    expect(struck(after.ops)).toEqual(["_B", "AB"]);
     // No spotlight: the press was the square's.
     expect(after.ui.spotlit ?? 0).toBe(0);
     const back = pressing("badge", "AB", "AB");
-    expect(Array.from(back.board.pencil ?? [])[0]).toBe(0b11110);
-    expect(struck(back.ops)).toEqual([]);
+    expect(Array.from(back.board.pencil ?? [])[0]).toBe(0b10110);
+    expect(struck(back.ops)).toEqual(["_B"]);
   });
 
   it("strikes nothing while out of focus, and places the last set left", () => {
     expect(struck(pressing("AB").ops)).toEqual([]);
-    const placed = pressing("badge", "__", "_B", "AB");
+    const placed = pressing("badge", "__", "AB");
     expect(placed.board.values[0]).toBe(2);
+    // Which leaves {A} in no other square.
+    expect(Array.from(placed.board.pencil ?? []).map((n) => n & 0b100)).toEqual([
+      0, 0, 0, 0,
+    ]);
   });
 
   it("keeps its badge drawn when the gap it sits in is drawn again", () => {
-    // Square 2 open: its badge is in the gap below square 0, whose horseshoe
-    // goes red once {A, B} is placed beneath it.
+    // Squares 2 and 3 open: square 2's badge is in the gap below square 0,
+    // whose horseshoe goes red once {A, B} is placed beneath it.
     const {
       midend,
       palette,
       recording: first,
     } = renderScenario({
       game,
-      id: idOf(ANSWER, [2]),
+      id: idOf(ANSWER, [2, 3]),
     });
     const [badge] = badgesOf(first.ops);
     midend.playMoves([{ set: [2, 4] }]);
@@ -497,8 +514,9 @@ describe("a square in focus", () => {
       ),
     ).toBe(true);
     expect(cleared).toBeGreaterThanOrEqual(0);
-    expect(badgesOf(ops.slice(cleared)).map((o) => [o.cx, o.cy])).toEqual([
-      [badge.cx, badge.cy],
+    expect(badgesOf(ops.slice(cleared)).map((o) => [o.cx, o.cy])).toContainEqual([
+      badge.cx,
+      badge.cy,
     ]);
   });
 
@@ -509,13 +527,14 @@ describe("a square in focus", () => {
 });
 
 describe("the keyboard in the band", () => {
-  // Square 2, the bottom row's left, open; every other given.
-  const id = idOf(ANSWER, [2]);
+  // Square 2, the bottom row's left, open with squares 0 and 3; {B} given.
+  const hidden = [0, 2, 3];
+  const id = idOf(ANSWER, hidden);
   /** The board, Ui and frame after `keys`, Down repeated until the cursor
    * is in the band first where `enter`. */
   const keying = (enter: boolean, ...keys: number[]) => {
     const { midend, palette } = renderScenario({ game, id });
-    let board = game.newState(PARAMS, descOf(ANSWER, [2]));
+    let board = game.newState(PARAMS, descOf(ANSWER, hidden));
     const ui = game.newUi(board);
     const ds = game.newDrawState(board, game.preferredTileSize);
     const press = (key: number) => {
@@ -582,26 +601,33 @@ describe("notes full from the deal", () => {
   const play = (hidden: readonly number[], ...moves: FillMove[]) =>
     moves.reduce((b, m) => game.executeMove(b, m), open(hidden));
 
-  it("are every set in each open square as dealt, and none in a given one", () => {
-    expect(Array.from(open([0, 3]).pencil ?? [])).toEqual([EVERY, 0, 0, EVERY]);
+  it("are every set not given in each open square as dealt, and none in a given one", () => {
+    expect(Array.from(open(ALL).pencil ?? [])).toEqual([EVERY, EVERY, EVERY, EVERY]);
+    // {B} and {} given: {A} and {A, B} left.
+    expect(Array.from(open([0, 3]).pencil ?? [])).toEqual([0b10100, 0, 0, 0b10100]);
   });
 
-  it("place the one set a square is narrowed to", () => {
-    const b = play([0, 3], strike(0, 1, 3, 4));
+  it("place the one set a square is narrowed to, and strike it from the others", () => {
+    const b = play(ALL, strike(0, 1, 3, 4));
     expect(b.values[0]).toBe(2);
-    expect(b.pencil?.[0]).toBe(0);
+    expect(Array.from(b.pencil ?? [])).toEqual([0, 0b11010, 0b11010, 0b11010]);
     // Two left stay notes.
-    expect(play([0, 3], strike(0, 1, 4)).pencil?.[0]).toBe(0b01100);
+    expect(play(ALL, strike(0, 1, 4)).pencil?.[0]).toBe(0b01100);
+    // A square left one set by another's placing holds it, and strikes it in
+    // turn: {} and {A, B} given leave {A} and {B}.
+    expect(Array.from(play([0, 1], { set: [0, 2] }).values)).toEqual([2, 3, 1, 4]);
   });
 
-  it("give every set back to a square whose set is cleared", () => {
-    const b = play([0, 3], strike(0, 1, 4), { set: [0, 3] }, { set: [0, 0] });
+  it("give every set back to a square whose set is cleared, but not to the others", () => {
+    const b = play(ALL, strike(0, 1, 4), { set: [0, 3] }, { set: [0, 0] });
     expect(b.values[0]).toBe(0);
     expect(b.pencil?.[0]).toBe(EVERY);
+    // {B}, struck as it was placed, stays struck: the player gives it back.
+    expect(b.pencil?.[1]).toBe(0b10110);
   });
 
   it("are not struck to nothing", () => {
-    const b = play([0, 3], strike(0, 1, 4), strike(0, 2, 3));
+    const b = play(ALL, strike(0, 1, 4), strike(0, 2, 3));
     expect(b.values[0]).toBe(0);
     expect(b.pencil?.[0]).toBe(0b01100);
   });
@@ -614,7 +640,9 @@ describe("notes full from the deal", () => {
   });
 
   it("are finished by the walk's strike alone where it leaves one set", () => {
-    const b = open([0]);
+    // {B} and {A, B} given: squares 0 and 2 each {} or {A}, and no horseshoe
+    // between square 0 and {B}.
+    const b = open([0, 2]);
     const plan = game.hint.plan(b);
     if (!plan.ok) throw new Error(`no plan: ${JSON.stringify(plan)}`);
     expect(game.status(game.executeMove(b, plan.steps[0].move))).toBe("solved");
@@ -689,7 +717,7 @@ describe("a slot press", () => {
   });
 
   it("goes round present, absent and undecided, striking and giving back halves", () => {
-    const first = press(open([0, 3]), 0, A);
+    const first = press(open(ALL), 0, A);
     // A present: the sets lacking it struck.
     expect(first.move).toEqual(strike(0, 1, 3));
     expect(sets(first.board, 0)).toBe(0b10100);
@@ -703,7 +731,7 @@ describe("a slot press", () => {
   });
 
   it("goes the other way round with the right button", () => {
-    const first = press(open([0, 3]), 0, B, RIGHT_BUTTON);
+    const first = press(open(ALL), 0, B, RIGHT_BUTTON);
     // B absent: {} and {A} left.
     expect(sets(first.board, 0)).toBe(0b00110);
     const second = press(first.board, 0, B, RIGHT_BUTTON);
@@ -712,7 +740,7 @@ describe("a slot press", () => {
 
   it("places the one set left, and from a placed set gives back what the other letter allows", () => {
     // {A, B} ruled out first: A present leaves {A} alone.
-    const ruled = game.executeMove(open([0, 3]), strike(0, 4));
+    const ruled = game.executeMove(open(ALL), strike(0, 4));
     const placed = press(ruled, 0, A).board;
     expect(placed.values[0]).toBe(2);
     // B undecided again, from absent: {A, B} back, though it was ruled out,
@@ -729,7 +757,7 @@ describe("a slot press", () => {
 
   it("is carried by a drag to a slot holding what the pressed one held", () => {
     // Square 0's A straight down to square 2's, which lies below it.
-    const b = open([0, 2]);
+    const b = open(ALL);
     const ds = game.newDrawState(b, TS);
     const ui = game.newUi(b);
     const pointAt = (c: number) =>
@@ -760,10 +788,12 @@ describe("a slot press", () => {
     expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([1, 0, B]);
     key(CURSOR_DOWN);
     expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([1, 1, B]);
-    // Square 3's B: present, then absent the other way round.
-    expect(key(CURSOR_SELECT)).toEqual(strike(3, 1, 2));
+    // Square 3's B, among {A}, {B} and {A, B} with {} given: present, then
+    // absent the other way round.
+    expect(key(CURSOR_SELECT)).toEqual(strike(3, 2));
     expect(key(CURSOR_SELECT2)).toEqual(strike(3, 3, 4));
-    const struck = game.executeMove(b, strike(3, 3, 4));
+    // Present, and erased back to undecided.
+    const struck = game.executeMove(b, strike(3, 2));
     expect(game.interpretMove(struck, ui, ds, { x: 0, y: 0 }, BACKSPACE)).toMatchObject(
       {
         type: "pencilAdd",
@@ -784,10 +814,12 @@ describe("a slot press", () => {
     expect(
       game.interpretMove(b, game.newUi(b), ds, { x: 0, y: 0 }, "2".charCodeAt(0)),
     ).toBeNull();
-    expect(game.requestKeys?.(PARAMS, b)).toEqual([]);
+    // No keypad, and no Marks key: the notes are the slots', with no mode.
+    expect(game.requestKeys).toBeUndefined();
+    expect(game.notesWithoutMode).toBe(true);
   });
 
-  it("draws the cursor as corners round its slot's middle, and no square highlighted", () => {
+  it("draws the cursor as corners round its slot's letter, and no square highlighted", () => {
     const b = open([0]);
     const ds = game.newDrawState(b, TS);
     const ui = game.newUi(b);
@@ -817,8 +849,8 @@ describe("a slot press", () => {
 });
 
 describe("Check & Save on a board of letters", () => {
-  // Every set, bits 1 to 4.
-  const EVERY = 0b11110;
+  // Every set but the given {B}: bits 1, 2 and 4.
+  const LEFT = 0b10110;
   const strike = (c: number, ...sets: number[]): FillMove => ({
     type: "pencilStrike",
     marks: sets.map((n) => ({ x: c % 2, y: c >> 1, n })),
@@ -826,14 +858,14 @@ describe("Check & Save on a board of letters", () => {
   const played = (...moves: FillMove[]) =>
     moves.reduce(
       (b, m) => game.executeMove(b, m),
-      game.newState(PARAMS, descOf(ANSWER, [0])),
+      game.newState(PARAMS, descOf(ANSWER, BUT_B)),
     );
   /** The red letters and crosses drawn on the squares, and whether any
    * outline is: the band's sets, two letters each, are its own. */
   const reds = (...moves: FillMove[]) => {
     const ops = renderScenario({
       game,
-      id: idOf(ANSWER, [0]),
+      id: idOf(ANSWER, BUT_B),
       moves,
       showMistakes: true,
     }).recording.ops;
@@ -848,11 +880,17 @@ describe("Check & Save on a board of letters", () => {
     };
   };
 
-  it("draws a wrong set's letters red where they differ, and no outline", () => {
-    // Square 0's set is {A}: {B} has B and lacks A.
-    const b = played({ set: [0, 3] });
-    expect(game.findMistakes?.(b)).toEqual([{ cell: 0, kind: "value", slots: 0b11 }]);
-    expect(reds({ set: [0, 3] })).toEqual({
+  it("draws a wrong set's letters red where they differ, and not what its strike decides", () => {
+    // Square 0's set is {A}: {A, B} has B too. Placed, it strikes {A, B}
+    // from squares 2 and 3, which leaves B decided absent in square 3,
+    // whose set has it: the board's strike, not the player's, so the one
+    // mistake is the placement.
+    const b = played({ set: [0, 4] });
+    expect(b.pencil?.[3]).toBe(0b00110);
+    expect(game.findMistakes?.(b)).toEqual([{ cell: 0, kind: "value", slots: 0b10 }]);
+    // The cross is the gap's: {A, B} holds {B} beside it, and no horseshoe
+    // says so.
+    expect(reds({ set: [0, 4] })).toEqual({
       letters: ["B"],
       crosses: 1,
       outlined: false,
@@ -860,25 +898,27 @@ describe("Check & Save on a board of letters", () => {
   });
 
   it("draws red a letter the notes decide wrongly, and outlines a square they leave wrong with none decided", () => {
-    // {} and {B} left: A decided absent, which {A} has.
-    const decided = strike(0, 2, 4);
+    // Square 3 is {A, B}: with it struck, {} and {A} are left, B decided
+    // absent.
+    const decided = strike(3, 4);
     expect(game.findMistakes?.(played(decided))).toEqual([
-      { cell: 0, kind: "note", slots: 0b01 },
+      { cell: 3, kind: "note", slots: 0b10 },
     ]);
     expect(reds(decided)).toEqual({ letters: [], crosses: 1, outlined: false });
-    // {A} alone struck: no letter is decided, so the square is outlined.
+    // Square 0's {A} struck: {} and {A, B} decide no letter, so the square
+    // is outlined.
     expect(game.findMistakes?.(played(strike(0, 2)))).toEqual([
       { cell: 0, kind: "note" },
     ]);
     expect(reds(strike(0, 2))).toEqual({ letters: [], crosses: 0, outlined: true });
   });
 
-  it("clears a square's wrong notes by giving every set back", () => {
-    const b = played(strike(0, 2, 4));
+  it("clears a square's wrong notes by giving back every set not placed", () => {
+    const b = played(strike(3, 4));
     const cleared = (
       game.clearMistakes?.(b, game.findMistakes?.(b) ?? []) ?? []
     ).reduce((at, m) => game.executeMove(at, m), b);
-    expect(cleared.pencil?.[0]).toBe(EVERY);
+    expect(cleared.pencil?.[3]).toBe(LEFT);
     expect(game.findMistakes?.(cleared)).toEqual([]);
   });
 });
@@ -888,12 +928,21 @@ describe("a hint's gesture on a board of letters", () => {
   const { gesture, keepTrack } = game.hint;
   if (gesture === undefined) throw new Error("holding: no hint gesture");
   /** The first step on the board `hidden` leaves open, its gesture, and
-   * each press of it judged by the hint's track as the midend judges it. */
-  const followed = (answer: readonly number[], hidden: readonly number[]) => {
+   * each press of it judged by the hint's track as the midend judges it;
+   * with `move`, the step made that strike instead, one the fixture's walk,
+   * a square a step, never makes. */
+  const followed = (
+    answer: readonly number[],
+    hidden: readonly number[],
+    move: FillMove | null = null,
+  ) => {
     const b = game.newState(PARAMS, descOf(answer, hidden));
     const plan = game.hint.plan(b);
     if (!plan.ok) throw new Error(`no plan: ${JSON.stringify(plan)}`);
-    const step = { ...plan.steps[0], move: structuredClone(plan.steps[0].move) };
+    const step = {
+      ...plan.steps[0],
+      move: structuredClone(move ?? plan.steps[0].move),
+    };
     const ui = game.newUi(b);
     const ds = game.newDrawState(b, game.preferredTileSize);
     const actions = gesture(b, ui, ds, step.move, step);
@@ -916,13 +965,25 @@ describe("a hint's gesture on a board of letters", () => {
       verdicts.push(keepTrack(move, step, at));
       at = game.executeMove(at, move);
     }
-    return { actions, verdicts, before: b, after: at, struck: plan.steps[0].move, ui };
+    return {
+      actions,
+      verdicts,
+      before: b,
+      after: at,
+      struck: move ?? plan.steps[0].move,
+      ui,
+    };
   };
+  const strike = (cells: readonly number[], ...sets: number[]): FillMove => ({
+    type: "pencilStrike",
+    marks: cells.flatMap((c) => sets.map((n) => ({ x: c % 2, y: c >> 1, n }))),
+  });
 
   it("strikes a square's sets as the letters whose halves they are, one press each", () => {
-    // Square 0 is {A}: {}, {B} and {A, B} struck, A's lacking half by A
-    // present and B's holding half by B absent.
-    const { actions, verdicts, after } = followed(ANSWER, [0]);
+    // Square 0 holds {}, {A} or {A, B}, {B} given beside it with no
+    // horseshoe between: {} and {A, B} struck, A's lacking half by A present
+    // and B's holding half by B absent.
+    const { actions, verdicts, after } = followed(ANSWER, [0, 2, 3]);
     expect(actions.map((a) => (a.kind === "click" ? a.button : a.kind))).toEqual([
       "primary",
       "secondary",
@@ -932,8 +993,12 @@ describe("a hint's gesture on a board of letters", () => {
   });
 
   it("presses each square the strike reaches, and leaves the struck notes as the step does", () => {
-    // Squares 0 and 3, {A} and {A, B}: {} and {B} struck from both, A present.
-    const { actions, verdicts, before, after, struck } = followed(ANSWER, [0, 3]);
+    // Squares 0 and 1 holding any set: {} and {B} struck from both, A present.
+    const { actions, verdicts, before, after, struck } = followed(
+      ANSWER,
+      ALL,
+      strike([0, 1], 1, 3),
+    );
     expect(actions).toHaveLength(2);
     expect(verdicts).toEqual(["onTrack", "completed"]);
     const stepped = game.executeMove(before, struck);
@@ -941,9 +1006,13 @@ describe("a hint's gesture on a board of letters", () => {
   });
 
   it("strikes on the band what no union of letter halves strikes, each square in focus in turn", () => {
-    // Every square open but square 3: {A, B} struck alone from squares
-    // 0 to 2, which no letter's half is.
-    const { verdicts, before, after, struck, ui } = followed(ANSWER, [0, 1, 2]);
+    // Every square open: {A, B} struck alone from squares 0 to 2, which no
+    // letter's half is.
+    const { verdicts, before, after, struck, ui } = followed(
+      ANSWER,
+      ALL,
+      strike([0, 1, 2], 4),
+    );
     expect(verdicts).toEqual([
       "focus 0",
       "onTrack",
@@ -958,8 +1027,8 @@ describe("a hint's gesture on a board of letters", () => {
     expect(ui.spotlit ?? 0).toBe(0);
   });
 
-  it("rings on the band each set the step strikes", () => {
-    const ringed = (hidden: readonly number[]) => {
+  it("crosses out on the band each set the step strikes, in its own ink", () => {
+    const crossed = (hidden: readonly number[]) => {
       const { recording } = renderScenario({
         game,
         id: idOf(ANSWER, hidden),
@@ -969,17 +1038,22 @@ describe("a hint's gesture on a board of letters", () => {
       return ["__", "A_", "_B", "AB"].filter((text) => {
         const t = ops.find((o) => o.op === "text" && o.text === text);
         if (t?.op !== "text") throw new Error(`no ${text}`);
-        return ops.some(
+        // Two lines across the text, rising and falling, in the text's ink.
+        const across = ops.filter(
           (o) =>
-            o.op === "ring" &&
-            o.x <= t.x &&
-            o.x + o.w >= t.x + 4 &&
-            o.y <= t.y - 4 &&
-            o.y + o.h >= t.y - 4,
+            o.op === "line" &&
+            o.color === t.color &&
+            Math.min(o.x1, o.x2) <= t.x &&
+            Math.max(o.x1, o.x2) > t.x + 4 &&
+            Math.min(o.y1, o.y2) < t.y - 4 &&
+            Math.max(o.y1, o.y2) >= t.y - 4 &&
+            o.y1 !== o.y2,
         );
+        return across.length === 2;
       });
     };
-    // Square 0 is {A}: the rest struck from it.
-    expect(ringed([0])).toEqual(["__", "_B", "AB"]);
+    // Square 0 holds {}, {A} or {A, B}, beside {B} with no horseshoe: {}
+    // and {A, B} struck from it.
+    expect(crossed([0, 2, 3])).toEqual(["__", "AB"]);
   });
 });

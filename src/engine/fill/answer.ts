@@ -262,7 +262,7 @@ export function findMistakes<C>(
     if (board.values[c] !== 0 && board.values[c] !== answer[c])
       out.push({ cell: c, kind: "value" });
   const cells = (): FillMistake[] =>
-    [...out, ...noteMistakes(board, answer)].map((m) =>
+    [...out, ...noteMistakes(module, board, answer)].map((m) =>
       slotted(module, board, answer, m),
     );
   const { marksHold } = module;
@@ -297,13 +297,23 @@ function slotted<C>(
 
 /** Each open cell whose notes leave out its answer: a note set the hint would
  * reason from falsely (`entryMistake`). */
-function noteMistakes<C>(board: FillBoard<C>, answer: Uint8Array): FillMistake[] {
+function noteMistakes<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+  answer: Uint8Array,
+): FillMistake[] {
   const notes = board.pencil;
   if (notes === null) return [];
   const read = { answer, entry: board.values, notes };
+  // Kept full, the notes lose a value wherever it is placed, by the board's
+  // hand and not the player's: the wrong placement is the one mistake, and
+  // the answer it took from its own cell is no second.
+  const placedElsewhere = (c: number): boolean =>
+    module.play?.fullNotes === true &&
+    board.values.some((v, d) => d !== c && v === answer[c]);
   const out: FillMistake[] = [];
   for (let c = 0; c < answer.length; c++)
-    if (!board.fixed[c] && entryMistake(read, c) === "note")
+    if (!board.fixed[c] && entryMistake(read, c) === "note" && !placedElsewhere(c))
       out.push({ cell: c, kind: "note" });
   return out;
 }

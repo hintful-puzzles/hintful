@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { difficultyChoiceItem, withTier } from "../engine/contract/difficulty.ts";
 import type { Game, ParamConfigItem } from "../engine/contract/game.ts";
+import { isFixedField } from "../engine/game-id/fixed-field.ts";
 import { presetMenu, type TitledPresetMenu } from "../engine/game-id/param-label.ts";
 import { paramsError } from "../engine/game-id/params.ts";
 import { MENU_LINES, MENU_SECTION_LINES } from "../engine/game-id/preset-grid.ts";
@@ -195,7 +196,9 @@ describe("a game that takes rectangles offers them", () => {
 
 describe("a game with a size offers at least three boards", () => {
   it.each(GAMES)("%s", (id, g) => {
-    const sized = g.paramConfig.some((i) => i.label?.slot === "size");
+    const sized = g.paramConfig.some(
+      (i) => i.label?.slot === "size" && !isFixedField(i),
+    );
     if (!sized) return;
     expect(leafPresets(g).length, id).toBeGreaterThanOrEqual(3);
   });

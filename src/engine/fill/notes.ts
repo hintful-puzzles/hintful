@@ -137,35 +137,48 @@ export function applyMove<C>(
 }
 
 /**
- * `after`, a move's board from `before`, on a board whose notes are what
- * each open cell can still hold: a cell narrowed to one value holds it, a
- * cell cleared of its value can hold its whole domain again, and a strike
- * that would leave an open cell nothing keeps the notes it had, since a
- * cell with no notes would read as one never noted.
+ * `after`, a move's board from `before` (a fresh board's from itself), on a
+ * board whose notes are what each open cell can still hold: a placed value
+ * is struck from where it reaches (`reachOf`), as auto-pencil strikes it; a
+ * cell narrowed to one value holds it, which may strike that value in turn;
+ * a cell cleared of its value can hold its whole domain again, less what is
+ * placed; and a strike that would leave an open cell nothing keeps the notes
+ * it had, since a cell with no notes would read as one never noted. Only a
+ * contradiction, which the mistake check shows, leaves an open cell a value
+ * placed where it reaches.
  */
-function settleFullNotes<C>(
+export function settleFullNotes<C>(
   module: LadderedFillModule<C>,
   before: FillBoard<C>,
   after: FillBoard<C>,
 ): FillBoard<C> {
-  const notes = after.pencil;
-  if (notes === null) return after;
+  if (after.pencil === null) return after;
   const sp = spaceOf(module, after);
-  const pencil = notes.slice();
-  const narrowed: number[] = [];
-  for (const c of sp.cells) {
-    if (after.fixed[c] || after.values[c] !== 0) continue;
-    if (pencil[c] === 0) {
-      const had = before.values[c] === 0 ? (before.pencil?.[c] ?? 0) : 0;
-      pencil[c] = had !== 0 ? had : module.domainOf(sp, after.dealt, c);
+  let board = after;
+  let had = (c: number): number =>
+    before.values[c] === 0 ? (before.pencil?.[c] ?? 0) : 0;
+  for (;;) {
+    const pencil = (board.pencil ?? after.pencil).slice();
+    const reach = reachOf(module, board);
+    const ruled = new Int32Array(pencil.length);
+    for (const p of sp.cells) {
+      const v = board.values[p];
+      if (v !== 0) for (const q of Array.from(reach(p, v))) ruled[q] |= 1 << v;
     }
-    if ((pencil[c] & (pencil[c] - 1)) === 0)
-      narrowed.push(c, 31 - Math.clz32(pencil[c]));
+    const narrowed: number[] = [];
+    for (const c of sp.cells) {
+      if (board.fixed[c] || board.values[c] !== 0) continue;
+      if (pencil[c] === 0) pencil[c] = had(c) || module.domainOf(sp, board.dealt, c);
+      if ((pencil[c] & ~ruled[c]) !== 0) pencil[c] &= ~ruled[c];
+      if ((pencil[c] & (pencil[c] - 1)) === 0)
+        narrowed.push(c, 31 - Math.clz32(pencil[c]));
+    }
+    board = { ...board, pencil };
+    if (narrowed.length === 0) return board;
+    board = applyEdit(module, board, { set: narrowed });
+    // A cell left nothing after the first pass is one a placement emptied.
+    had = () => 0;
   }
-  const settled = { ...after, pencil };
-  return narrowed.length === 0
-    ? settled
-    : applyEdit(module, settled, { set: narrowed });
 }
 
 const applyAnyMove = <C>(

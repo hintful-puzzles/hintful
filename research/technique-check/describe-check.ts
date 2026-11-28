@@ -3280,6 +3280,14 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
   )
     return [];
   const { grid } = d.json.space;
+  // A grid of one size is checked at that order alone: at another it is a
+  // board the game never deals (Subsets' 3x3 places only nine of its sixteen
+  // sets). A side that only starts past the order is still checked there,
+  // which costs a small board nothing.
+  for (const side of grid === undefined ? [] : [grid.w, grid.h]) {
+    const s = side in d.json.sizes ? d.json.sizes[side] : undefined;
+    if (s !== undefined && s.min === s.max && order !== s.min) return [];
+  }
   const fixed = new Set([
     "order",
     "w",

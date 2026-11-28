@@ -1636,8 +1636,7 @@ no rule yet passes it, and Check & Save then has nothing to point at.
 for the gap in every game by entering things blind and asking whether Check
 & Save can name what the answer contradicts. Exemplars: `findMistakes` in
 [`fill/answer.ts`](../src/engine/fill/answer.ts), which names each cell the
-answer contradicts, and
-[`subsets/solver.ts`](../src/games/subsets/solver.ts).
+answer contradicts, a letter slot of a board of features among them.
 
 ## The Latin family
 

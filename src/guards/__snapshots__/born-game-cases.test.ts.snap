@@ -280,6 +280,18 @@ exports[`sticks: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`subsets: pinned hint positions > says, at each pin 1`] = `
+{
+  "bigger": "This square's set must lie inside a bigger one its neighbor can still hold, so {B,C,D} must go.",
+  "carryIn": "This square's set holds its neighbor's, whose sets all contain {D}, so D must be present.",
+  "carryOut": "This square's set lies inside its neighbor's, whose sets have none of {A}, so A must be crossed out.",
+  "hiddenSingle": "None of the other squares can still be {A,B,C,D}, so this square must be {A,B,C,D}.",
+  "noShoe": "With no horseshoe to its neighbor, neither set lies inside the other, so the empty set and {A,B,C,D} must go.",
+  "noShoeBeside": "With no horseshoe to its neighbor, which can only be {A,B,C}, neither set holds the other, so D must be present.",
+  "smaller": "This square's set must hold a smaller one its neighbor can still hold, so {B} and {C} must go.",
+}
+`;
+
 exports[`tents: pinned hint positions > says, at each pin 1`] = `
 {
   "betweenThem": "This row fits only the 4 tents it needs, so every ringed square must be a tent, and the square between them grass.",

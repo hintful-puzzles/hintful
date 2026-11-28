@@ -1,6 +1,13 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: subsets
+catalog:
+  name: Subsets
+  description: Set-defining puzzle
+  objective: Place each set once, in accordance with the subset clues.
+  collection: unreleased
+  family: numbers
+  similar: Sabusettorinku (サブセットリンク)
 help:
   rules: |-
     You are given a grid and a list of sets. Place every set into the grid exactly once. Some sets are given.
@@ -8,33 +15,35 @@ help:
     1. A horseshoe symbol ⊃ points from a superset to a subset. In other words, the set on the open end must contain every letter in the set on the closed rounded end.
     2. All possible horseshoe symbols are given. This means that each set must contain a letter that doesn't appear in the adjacent set, if there is no symbol between them.
   controls: |-
-    Every letter has a fixed position in each cell. A position shows its letter once the letter is marked present, a cross once it is cleared, and nothing while it is undecided. A cell whose set is given sits on a lighter surface than the ones you fill.
+    Every letter has a fixed position in each square. A position shows its letter once every set the square can still hold has it, a cross once none has, and nothing while they differ. A square whose set is given sits on a lighter surface than the ones you fill.
 
     {{controls}}
 
+    Each square starts able to hold every set not given. A set placed in a square, given or yours, drops out of every other square by itself, and a square left one set holds it.
+
     ### Where can this go?
 
-    The tally band beside the grid works in both directions. Click a set in the tally and every cell it could still legally go in is spotlighted; if it's already placed, the cell it lives in is shown in a different color. Going the other way, the inspect badge above a cell — or simply moving the keyboard cursor onto it — highlights every set that cell could still hold.
+    The tally band beneath the grid lists every set, a placed one in gray. Click a set in the tally and every square that can still hold it is spotlighted. Going the other way, the inspect badge above a square puts it in focus, and the tally strikes through every set it can no longer hold.
 
-    The answers come from what's visible on the board: the cell's own marks and rule-outs, the horseshoes to its decided neighbors, and the rule that each set appears once. The horseshoes rule out two sets on their own: the empty set sits inside every set, so it can only go in a cell that every neighbor's horseshoe points into, and the full set only in a cell whose horseshoes all point out. Nothing is read off the solution, so the aid can't do the deducing for you.
+    The answers come from the squares' own possibilities, which your letters and rule-outs narrow, and from the sets already placed. The horseshoes rule nothing out by themselves, so the aid can't do the deducing for you.
 
-    ### Ruling a set out of a cell
+    ### Ruling a set out of a square
 
-    Some deductions are about whole sets rather than letters: "{A,C} can't go in this cell". To record one, focus the cell (tap its inspect badge), then tap the set in the tally. It is struck through, and drops out of the sets the aid lists for that cell. Tap it again to take it back. While a cell is in focus, tapping the tally rules sets out of it; to spotlight a set instead, tap the badge again to let go of the cell first.
+    Some deductions are about whole sets rather than letters: "{A,C} can't go in this square". To record one, focus the square (tap its inspect badge), then tap the set in the tally. It is struck through, and the square's letters show what its remaining sets agree on. Tap it again to take it back. While a square is in focus, tapping the tally rules sets out of it; to spotlight a set instead, tap the badge again to let go of the square first.
 
-    With a keyboard, move the cursor down past the bottom row of the grid into the tally, keeping the cell you were on in focus. The arrow keys move between sets, Enter or Space rules one out, Backspace takes a rule-out back, and moving up from the tally's top row returns to the grid.
+    With a keyboard, move the cursor down past the bottom row of the grid into the tally, keeping the square you were on in focus. The arrow keys move between sets, Enter or Space rules one out or takes it back, as a click does, Backspace takes a rule-out back, and moving up from the tally's top row returns to the grid.
 
-    **Check & save** treats a letter marked or crossed out against the solution as a mistake, and draws it in red. It treats a set ruled out of the cell it belongs in the same way.
+    **Check & save** treats a letter marked or crossed out against the solution as a mistake, and draws it in red. It treats a set ruled out of the square it belongs in the same way.
   origins: |-
     This puzzle type was invented by Inaba Naoki under the name *サブセットリンク*, released as a [Java Applet](http://inabapuzzle.com/honkaku/subset.html) with a puzzle generator.
   hints: |-
-    **Hint** explains the next step rather than simply making it, one letter or one ruled-out set at a time. It reasons only from the horseshoes, the given sets and your own letters and rule-outs, so it carries on from wherever you are, as long as none of those is wrong. If one is, whether or not it breaks a rule yet, it asks you to fix the highlighted mistakes first.
+    **Hint** explains the next step rather than simply making it, a square at a time. It reasons only from the horseshoes, the placed sets and your own letters and rule-outs, so it carries on from wherever you are, as long as none of those is wrong. If one is, whether or not it breaks a rule yet, it asks you to fix the highlighted mistakes first.
 
-    In its words, to *mark* a letter *present* is to add it (left-click its position, or Enter), and to *clear* a letter is to rule it out (right-click, or Space).
+    In its words, a letter that *must be present* is added to the square's set (left-click its position, or Enter), and one that *must be crossed out* is ruled out (right-click, or Space). Where no letter says it, the step names the sets that must go, written by their letters, as {A,C}, and you rule them out in the tally.
 
     {{hint-marks}}
 
-    While a hint is on show, the tally strikes through the sets already ruled out of the cell the step is about, just as it does for a cell in focus.
+    Where no letter says it, the tally crosses out each set the step rules out.
 
     The hint rules sets out too, when a deduction needs it, and says why. The usual reason is a horseshoe: the set at its open end must be strictly bigger than the set at its closed end. So a set can't go at the open end if none of the sets that can still go at the closed end fits inside it with room to spare, and a set can't go at the closed end if none of the sets that can still go at the open end holds it and more.
   parameters:
@@ -46,12 +55,17 @@ help:
       *Easy* puzzles can be solved by reading the horseshoes forwards: a set placed on the closed end of a horseshoe tells you letters the open end must contain, and a letter ruled out of the open end is ruled out of the closed end too.
 
       *Normal* puzzles also need the argument run backwards. Because a horseshoe forces the closed end to be a **strictly smaller** set than the open end — two cells can never hold the same set, since each set is placed exactly once — a candidate for the closed end is only viable if some candidate for the open end still contains it. Rule out the last set that could sit on the open end above it, and the closed end loses that option, even though nothing about it changed directly.
+words:
+  value: set
 produces: regions
-sizes: {}
-space:
+sizes:
   # The one board there is: the sixteen sets over four letters exactly fill
   # sixteen squares.
-  grid: { w: "4", h: "4" }
+  w: { min: 4, max: 4 }
+  h: { min: 4, max: 4 }
+  n: { min: 4, max: 4 }
+space:
+  grid: { w: "w", h: "h" }
   edges: true
   units: []
 answer:
@@ -59,8 +73,10 @@ answer:
   # C as 4 and D as 8, since the marks hold no value 0.
   value: { sort: cell, domain: "range(1, 16)" }
 given: [value]
+# The sets a square can still hold, every one from the deal: a letter shows
+# where they all agree.
 marks:
-  cand: { sort: cell, notation: "set of range(1, 16)" }
+  cand: { sort: cell, notation: "set of range(1, 16)", full: true }
 define:
   # The letters of set d, A as 0 up to D as 3.
   letters(d): "bits(d - 1)"
@@ -87,6 +103,24 @@ clues:
       (v = 1) = holds(value(end1(at)), value(end2(at)))
       and (v = 2) = holds(value(end2(at)), value(end1(at)))
 freedom: { kind: fill }
+play:
+  # A set drawn as its letters, A to D in the slots of a square.
+  numbers: { features: { of: "letters(d)", names: ABCD, none: the empty set } }
+  # Every set beneath the board, upstream's tally.
+  band: true
+  gaps: { shoe: shoe }
+  boards: [4x4n4]
+  hintMarks:
+    ring: >-
+      what the step decides: the letters it marks present or clears in a
+      square.
+    strike: >-
+      the sets the step rules out of a square, crossed out in the tally where
+      no letter says it.
+    outline: >-
+      what the step reasons from: the square across a horseshoe, or the sets
+      in the tally that still fit.
+    stripes: the square the step is about.
 deal:
   answer: every set in a square, shuffled
   shoe: every edge's, read off the answer
@@ -99,11 +133,20 @@ deal:
 id:
   - { records: given, sides: shoe, hidden: _, from: 0, closed: false }
 tiers: [Easy, Normal]
-# What a horseshoe's rule-out says; the walk names the sets the neighbor has
-# open in the tally (`open`).
-kindWords:
-  link: the horseshoe
-  cell: "{stripes: this cell}"
+# Upstream's params, `4x4n4`; the hand-written port wrote Normal as `t`.
+tierLetters: et
+settings:
+  n:
+    kind: number
+    gives: size
+    letter: n
+    kw: letters
+    name: Letters
+    doc: The letters a set is made of.
+    min: 4
+    max: 4
+    default: 4
+    words: "{n} letters"
 names:
   carryIn: "letters the bigger set must hold"
   carryOut: "letters the smaller set can't hold"
@@ -113,6 +156,15 @@ names:
   onlyCell: "the only cell left for a set"
   smaller: "room for a smaller set inside"
   bigger: "room for a bigger set around"
+# The walk's words for a set with one square left: the board holds every set
+# once, so it is the walk's one part.
+steps:
+  hiddenSingle:
+    ring: cell
+    terms: { n: number, size: number }
+    marks: { stripes: [cell] }
+    look: "None of {stripes cell: the other squares} can still be {n}"
+    move: "{ring} must be {n}"
 techniques:
   # A placed set goes in no other square.
   - kind: peer.placed
@@ -128,6 +180,13 @@ techniques:
       e in edges, a in ends(e) where opens(e, a), b = other(e, a),
       K = {l in alphabet where forall u in cand(b): l in letters(u)}
     conclude: "forall d in cand(a) where not (K subset letters(d)): strike(a, d)"
+    # `common` is the set of the letters every set at the closed end has.
+    says:
+      terms: { common: "first({d in domain where letters(d) = K})" }
+      marks: { outline: "{b}" }
+      look: >-
+        {ring}'s set holds {outline: its neighbor}'s, whose sets all contain
+        {common}
   # A letter no set the open end of a horseshoe can hold has, the set at its
   # closed end lacks too.
   - id: carryOut
@@ -137,6 +196,13 @@ techniques:
       L = {l in alphabet where forall u in cand(a): l not in letters(u)}
     conclude: >-
       forall d in cand(b) where (exists l in L: l in letters(d)): strike(b, d)
+    # `lacks` is the set of the letters no set at the open end has.
+    says:
+      terms: { lacks: "first({d in domain where letters(d) = L})" }
+      marks: { outline: "{a}" }
+      look: >-
+        {ring}'s set lies inside {outline: its neighbor}'s, whose sets have
+        none of {lacks}
   # Neither of two squares side by side with no horseshoe between them holds
   # the empty set, which every set holds, or the set of every letter, which
   # holds every set.
@@ -146,12 +212,22 @@ techniques:
     conclude: >-
       forall d in cand(c) where |letters(d)| = 0 or letters(d) = alphabet:
       strike(c, d)
+    says:
+      marks: { outline: "{other(e, c)}" }
+      look: >-
+        With no horseshoe to {outline: its neighbor}, neither set lies inside
+        the other
   # Beside a square down to one set, with no horseshoe between them, a square
   # holds no set that holds that one or lies inside it.
   - kind: rel.support
     as: noShoeBeside
     tier: Easy
-    says: false
+    says:
+      terms: { only: "first(cand(k))" }
+      marks: { outline: "{k}" }
+      look: >-
+        With no horseshoe to {outline: its neighbor}, which can only be
+        {only}, neither set holds the other
     with:
       group: >-
         e in edges where clue(shoe, e) = 0, k in ends(e) where |cand(k)| = 1,
@@ -179,99 +255,30 @@ techniques:
   - kind: rel.support
     as: smaller
     tier: Easy
+    says:
+      marks: { outline: "{b}" }
+      look: >-
+        {ring}'s set must hold a smaller one {outline: its neighbor} can
+        still hold
     with:
       group: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
       end: a
       partner: b
       rel: "holds(d, u)"
-      none: "{outline open: no smaller outlined set}"
-      fits: inside
-      marks: { stripes: "{a}" }
-      terms: { open: { supplied: elements } }
+      marks: {}
   # The closed end of a horseshoe holds a set only where the open end can
   # hold a bigger one holding it.
   - kind: rel.support
     as: bigger
     tier: Normal
+    says:
+      marks: { outline: "{a}" }
+      look: >-
+        {ring}'s set must lie inside a bigger one {outline: its neighbor} can
+        still hold
     with:
       group: "e in edges, a in ends(e) where opens(e, a), b = other(e, a)"
       end: b
       partner: a
       rel: "holds(u, d)"
-      none: "{outline open: no bigger outlined set}"
-      fits: holding
-      marks: { stripes: "{b}" }
-      terms: { open: { supplied: elements } }
-# Subsets' own sentences, spoken through the hint's voice (`index.ts`): a
-# firing decides one cell's letters, a letter a step. Its first leg says why;
-# each later leg says its own letter, pointing back at the same reason. A
-# step rings the letter it decides (`ring`), stripes the cell it fills
-# (`here`: a hidden single's one home, else the letter's cell) and outlines
-# what it reasons from: the neighbor across a horseshoe, or the sets in the
-# tally that still fit. A value is a set, said as the tally draws it.
-phrases:
-  # The move on the step's letter: mark it present, or clear it.
-  act: "{if known: mark {ring: {letter}} present | clear {ring: {letter}}}"
-  thisCell: "{stripes here: this cell}"
-steps:
-  # The neighbor at the closed end of a horseshoe has the letter marked, and
-  # this cell, at its open end, holds every letter it has.
-  arrowKnown:
-    ring: slot
-    terms: { letter: [A, B, C, D], known: flag }
-    marks: { outline: [neighbor], stripes: [here] }
-    look: "{outline neighbor: the outlined cell}'s set lies inside {thisCell}'s and has {letter} marked"
-    follows: "{letter} must be in both"
-    move: "{act}"
-    again: "{outline neighbor: the outlined cell}'s {letter} is marked"
-    later: "{act} in {thisCell} too"
-  # The neighbor at the open end of a horseshoe has the letter cleared, and
-  # this cell, at its closed end, has no letter it lacks.
-  arrowMask:
-    ring: slot
-    terms: { letter: [A, B, C, D], known: flag }
-    marks: { outline: [neighbor], stripes: [here] }
-    look: "{thisCell}'s set lies inside {outline neighbor: the outlined cell}'s, which has no {letter}"
-    follows: "{letter} can't be in either"
-    move: "{act}"
-    again: "{outline neighbor: the outlined cell} has no {letter}"
-    later: "{act} in {thisCell} too"
-  # The outlined set can go in this cell alone.
-  hiddenSingle:
-    ring: slot
-    terms: { letter: [A, B, C, D], known: flag }
-    marks: { outline: [sets], stripes: [here] }
-    look: >-
-      {outline sets: the outlined set} can go nowhere but {thisCell}, and
-      {if known: it contains {letter} | it has no {letter}}
-    move: "{act}"
-    again: "{outline sets: the outlined set} {if known: contains {letter} | has no {letter}}"
-    later: "{act} in {thisCell} too"
-  # Only the outlined sets fit this cell (`plural` where there are several),
-  # and they agree on the letter. A set that would also fit but is already
-  # placed elsewhere (`set`, in the outlined cell) is the example given, where
-  # there is one.
-  collapse:
-    ring: slot
-    terms: { letter: [A, B, C, D], known: flag, plural: flag, set: number }
-    marks: { outline: [sets, blocker], stripes: [here] }
-    move: "{act}"
-    again: >-
-      {if known: {if plural: {outline sets: the outlined sets} all contain | {outline sets: the outlined set} contains} {letter}
-      | {if plural: none of {outline sets: the outlined sets} has | {outline sets: the outlined set} has no} {letter}}
-    later: "{act} in {thisCell} too"
-    wordings:
-      - when: "|outlineBlocker| = 1"
-        look: >-
-          only {outline sets: the outlined set | the outlined sets} {if plural: fit | fits} {thisCell}
-          ({set}, say, is {outline blocker: already placed}), and
-          {if known: {if plural: all contain | it contains} {letter} | {if plural: none has | it has no} {letter}}
-      - look: >-
-          only {outline sets: the outlined set | the outlined sets} {if plural: fit | fits} {thisCell}, and
-          {if known: {if plural: they all contain | it contains} {letter} | {if plural: none of them has | it has no} {letter}}
-  # The move a rule-out closes on, after its horseshoe's `smaller` or `bigger`
-  # look: the set it rules out, ringed in the tally, where the player presses.
-  ruledOut:
-    ring: sets
-    terms: { set: number }
-    move: "{ring: {set}} must go"
+      marks: {}

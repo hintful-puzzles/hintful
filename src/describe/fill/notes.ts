@@ -4,7 +4,13 @@
  * a step of the walk to be named.
  */
 
-import { PART_STEPS, REPEAT_STEPS, WALK_STEPS } from "../../engine/fill/walk-steps.ts";
+import {
+  PART_STEPS,
+  REPEAT_STEPS,
+  WALK_STEPS,
+  WHOLE_BOARD,
+  walkStepsOf,
+} from "../../engine/fill/walk-steps.ts";
 import { CompileError, type Env } from "../compile-sorts.ts";
 import { clauseOf } from "../compile-stated.ts";
 import { concludes } from "../compile-technique.ts";
@@ -74,7 +80,6 @@ export function notesOf(
       "play hintNotes: the hint reads notes, and `marks` declares none",
     );
   const distinctParts = notes ? distinctPartsOf(json, env) : [];
-  if (notes) checkWalkSteps(json, d, distinctParts);
   return { notes, fullNotes, distinctParts };
 }
 
@@ -82,13 +87,36 @@ export function notesOf(
  * The dealt partitions a rule holds distinct, each stated as `forall r in P:
  * distinct(value(c) over c in cells(r))`: the walk of the notes reads a
  * value's places in each part, as in a row. A partition whose rule says more
- * (a cage's sum) is no such region, and is not listed.
+ * (a cage's sum) is no such region, and is not listed. The whole board, held
+ * distinct as `distinct(value(c) over c in cells)`, is the part `WHOLE_BOARD`.
  */
 function distinctPartsOf(json: DescriptionJson, env: Env): string[] {
   const answer = Object.keys(json.answer);
   const parts = new Set<string>();
+  /** Whether `t` is an answer read at the binder `c` alone. */
+  const valueAt = (t: ReturnType<typeof parse> | null, c: string): boolean =>
+    t !== null &&
+    t.k === "call" &&
+    answer.includes(t.fn) &&
+    t.args.length === 1 &&
+    t.args[0].k === "name" &&
+    t.args[0].name === c;
   for (const src of [...(json.shape ?? []), ...Object.values(json.rules ?? {})]) {
     const e = parse(src);
+    if (
+      e.k === "agg" &&
+      e.fn === "distinct" &&
+      e.where === null &&
+      e.binders.length === 1 &&
+      e.binders[0].kind === "in" &&
+      e.binders[0].where === null &&
+      e.binders[0].of.k === "name" &&
+      e.binders[0].of.name === "cells" &&
+      valueAt(e.term, e.binders[0].name)
+    ) {
+      parts.add(WHOLE_BOARD);
+      continue;
+    }
     if (e.k !== "quant" || e.q !== "forall" || e.binders.length !== 1) continue;
     const [r] = e.binders;
     if (r.kind !== "in" || r.where !== null || r.of.k !== "name") continue;
@@ -102,10 +130,7 @@ function distinctPartsOf(json: DescriptionJson, env: Env): string[] {
     if (over.fn !== "cells" || over.args.length !== 1) continue;
     const [of] = over.args;
     if (of.k !== "name" || of.name !== r.name) continue;
-    const t = b.term;
-    if (t === null || t.k !== "call" || !answer.includes(t.fn)) continue;
-    if (t.args.length !== 1 || t.args[0].k !== "name" || t.args[0].name !== c.name)
-      continue;
+    if (!valueAt(b.term, c.name)) continue;
     parts.add(r.of.name);
   }
   return [...parts];
@@ -120,12 +145,15 @@ function distinctPartsOf(json: DescriptionJson, env: Env): string[] {
  * description words the walk's steps that say how far (`WALK_STEPS`), each
  * over the terms the walk supplies and the board's sizes; and where a unit
  * holds a value more than once, the step its cull says (`REPEAT_STEPS`).
+ * Notes kept full leave no cell unnoted, so their walk has no step about one.
  */
-function checkWalkSteps(
+export function checkWalkSteps(
   json: DescriptionJson,
   d: Description,
   distinctParts: readonly string[],
+  fullNotes: boolean,
 ): void {
+  const walkSteps = walkStepsOf(fullNotes);
   // Every variation's units, as the compiled module lists them.
   const { units } = d.json.space;
   const lines = units.every((u) => u === "rows" || u === "cols" || u === "lines");
@@ -144,7 +172,7 @@ function checkWalkSteps(
       checkWalkStep(d, id, supplied, why, marks, sizes, flags);
   };
   if (units.length === 0 || !lines || distinctParts.length > 0)
-    check(WALK_STEPS, "the notes' reach is no row and column", []);
+    check(walkSteps, "the notes' reach is no row and column", []);
   if (json.answer?.value?.repeat !== undefined)
     check(REPEAT_STEPS, "a unit holds a value more than once", ["outline"]);
   // Optional: worded only where a part's hidden single needs its own reason.
@@ -159,13 +187,13 @@ function checkWalkSteps(
   );
   for (const s of d.steps)
     if (
-      !Object.hasOwn(WALK_STEPS, s.id) &&
+      !Object.hasOwn(walkSteps, s.id) &&
       !Object.hasOwn(REPEAT_STEPS, s.id) &&
       !(distinctParts.length > 0 && Object.hasOwn(PART_STEPS, s.id)) &&
       !spokenBy.has(s.id)
     )
       throw new CompileError(
-        `steps ${s.id}: the walk reads no step of that name, and speaks it in the engine's words (it reads ${[...Object.keys(WALK_STEPS), ...Object.keys(REPEAT_STEPS), ...(distinctParts.length > 0 ? Object.keys(PART_STEPS) : [])].join(", ")})`,
+        `steps ${s.id}: the walk reads no step of that name${fullNotes && Object.hasOwn(WALK_STEPS, s.id) ? " where the notes are full" : ""}, and speaks it in the engine's words (it reads ${[...Object.keys(walkSteps), ...Object.keys(REPEAT_STEPS), ...(distinctParts.length > 0 ? Object.keys(PART_STEPS) : [])].join(", ")})`,
       );
 }
 

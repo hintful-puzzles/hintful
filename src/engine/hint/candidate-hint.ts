@@ -849,13 +849,23 @@ export function keepCandidateHintTrack<M, H extends CandidateHighlights>(
   if (pm === null || sm === null) return "off";
   if (sm.type === "pencilAll") return pm.type === "pencilAll" ? "completed" : "off";
   if (sm.type === "set") {
-    return pm.type === "set" &&
-      !pm.pencil &&
-      pm.x === sm.x &&
-      pm.y === sm.y &&
-      pm.n === sm.n
-      ? "completed"
-      : "off";
+    if (pm.type === "set")
+      return !pm.pencil && pm.x === sm.x && pm.y === sm.y && pm.n === sm.n
+        ? "completed"
+        : "off";
+    // Striking the square's other candidates narrows it to the value: a
+    // board of features places a set by its letters' presses, and a square
+    // left one note holds it.
+    if (
+      pm.type === "pencilStrike" &&
+      pm.marks.length > 0 &&
+      pm.marks.every((k) => k.x === sm.x && k.y === sm.y && k.n !== sm.n)
+    ) {
+      let left = pencil[sm.y * w + sm.x];
+      for (const k of pm.marks) left &= ~bit(k.n);
+      return left === bit(sm.n) ? "completed" : "onTrack";
+    }
+    return "off";
   }
   if (sm.type === "pencilStrike" || sm.type === "pencilAdd") {
     const same = (a: Mark, b: Mark) => a.x === b.x && a.y === b.y && a.n === b.n;

@@ -34,7 +34,7 @@ import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { inSweep } from "../engine/testing/slow.ts";
 
-const noteTaking = enrolledIn((g) => takesNotes(g.state, g.ui));
+const noteTaking = enrolledIn((g) => takesNotes(g.state, g.ui, g.game));
 
 /** Every corner a draw op touches. `clip`/`unclip` bound nothing themselves. */
 function cornersOf(op: DrawOp): { x: number; y: number }[] {

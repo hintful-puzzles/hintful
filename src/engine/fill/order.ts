@@ -16,7 +16,7 @@
  * reordered while its drag is live.
  */
 
-import type { HintStep } from "../contract/game.ts";
+import { type HintStep, UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { Point } from "../contract/types.ts";
 import type { LiveErrors } from "../render/live-errors.ts";
 import { type ClueList, clueList } from "../solve/describe-runtime.ts";
@@ -259,11 +259,28 @@ function across(move: FillMove, seen: Seen, back: boolean): FillMove {
 
 /** A move made on the view drawn in the order `lines`, as the board takes
  * it. */
-export const fromView = <C>(
+const fromView = <C>(
   board: FillBoard<C>,
   lines: Int32Array,
   move: FillMove,
 ): FillMove => across(move, new Seen(lines, board.w), true);
+
+/** What `interpret` makes of a press on the board as the player sees it, in
+ * the order the Ui holds, as the board takes it. */
+export function interpretOnView<C, M extends FillMove | UiUpdate | null>(
+  board: FillBoard<C>,
+  ui: FillUi,
+  interpret: (viewed: FillBoard<C>) => M,
+): M | FillMove | UiUpdate {
+  const lines = orderOf(board, ui);
+  if (lines === null) return interpret(board);
+  const made = interpret(viewOf(board, lines));
+  if (made === null || made === UI_UPDATE) return made;
+  // A line put back at its own place moves nothing.
+  if ("type" in made && made.type === "reorder" && board.order?.[made.to] === made.line)
+    return UI_UPDATE;
+  return fromView(board, lines, made);
+}
 
 /** A move of the board, as the view drawn in the order `lines` shows it. */
 export const toView = <C>(

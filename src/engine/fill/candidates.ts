@@ -85,13 +85,14 @@ import {
   listOf,
   spaceOf,
 } from "./board.ts";
+import { featuresSaid, strikePressesSaid } from "./features.ts";
 import { boardGlyphs, emptyOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { variationFlags } from "./params/settings.ts";
 import { recordPoint } from "./record-list.ts";
 import { slotPoint } from "./slots.ts";
 import { marginPoint, marginSidesOf } from "./value-margin.ts";
-import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
+import { type WalkStep, WHOLE_BOARD, walkStepsOf } from "./walk-steps.ts";
 
 /** What a step of the candidate walk marks: the shared highlights. */
 export type CandidateFillHint = CandidateHighlights;
@@ -100,10 +101,14 @@ export type CandidateFillHint = CandidateHighlights;
  * own and the singles. A hidden single needs a unit, so a board with none
  * (ABCD's) has no such rung. The library's strikes are rungs where the
  * ladder places them. */
-const candidateFillRungs = (hasUnit: boolean): readonly string[] => [
-  ...CANDIDATE_RUNGS,
-  "single",
-  "regionsFull",
+const candidateFillRungs = (
+  hasUnit: boolean,
+  fullNotes: boolean,
+): readonly string[] => [
+  // Full notes are never unnoted, strike a placed value as it is placed
+  // (`walkStepsOf`) and place a square's last value (the plan's `autoPlace`):
+  // their walk populates, cleans, notes, culls and places a single never.
+  ...(fullNotes ? [] : [...CANDIDATE_RUNGS, "single", "regionsFull"]),
   ...(hasUnit ? ["hiddenSingle"] : []),
 ];
 
@@ -271,11 +276,11 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     .map((e) => e.id);
   const steps = module.STEPS;
   // The steps the description words for the walk, where it words them all.
-  const walkSteps =
-    steps !== undefined &&
-    Object.keys(WALK_STEPS).every((id) => Object.hasOwn(steps, id))
-      ? steps
-      : null;
+  const walkSteps = Object.keys(walkStepsOf(module.play?.fullNotes === true)).every(
+    (id) => steps !== undefined && Object.hasOwn(steps, id),
+  )
+    ? (steps ?? {})
+    : null;
   if (
     walkSteps === null &&
     (!rowsAndCols(module.units) || (module.distinctParts?.length ?? 0) > 0)
@@ -306,13 +311,18 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
   /** The words a hint on `board` says its values and squares by: each value
-   * its glyph or its picture's name, and what a value is called, by the
-   * board's ruleset. */
+   * its glyph, its picture's name or its features, and what a value is
+   * called, by the board's ruleset. */
+  const features = module.play?.numbers?.features;
+  const { featuresOf } = module;
   const vocabOf = (board: FillBoard<C>): LatinVocab => {
     const glyphs = boardGlyphs(module, spaceOf(module, board), board.dealt);
     return {
       noun: module.WORDS?.value ?? glyphs.noun,
-      value: glyphs.say,
+      value:
+        features === undefined || featuresOf === undefined
+          ? glyphs.say
+          : (d: number) => featuresSaid(d, features, featuresOf),
       cell: module.WORDS?.cell ?? "square",
       // A picture's name is a thing a square is ("a ghost"), unless the
       // square takes it by a verb of its own, as a way ("point up").
@@ -506,7 +516,11 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       // The empty square is placed by the description's techniques, which
       // say why a square is empty; a single would call it a value.
       ...(empty === null ? {} : { placeable: (m: Mark) => m.n !== empty }),
-      autoClean,
+      // Full notes strike a placed value as it is placed, as auto-pencil
+      // does (`notes.ts`'s `settleFullNotes`).
+      autoClean: autoClean || module.play?.fullNotes === true,
+      // And place a square's last value as it is left one.
+      ...(module.play?.fullNotes === true ? { autoPlace: true } : {}),
       reading,
       ...(judging === undefined ? {} : { judging }),
       label: "fill candidate plan",
@@ -546,21 +560,28 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         return { words: reason.say(continues) };
       },
       strikeWords: (marks, reason) => {
-        if (!isOwn(reason)) {
-          const where = `from the other ${vocab.cell}s`;
-          if (reason.kind === "dup" && last !== null && reason.n === repeat?.value)
-            return { premise: last(reason, marks), where };
-          return words !== null && reason.kind === "dup"
-            ? { premise: placedRulesOut(reason, value, words.cull(reason.n)), where }
-            : latinPremise(reason, marks, vocab);
-        }
-        if (reason.premise === undefined)
-          throw new Error(`${reason.kind} places, and strikes nothing`);
-        return {
-          premise: reason.premise,
-          ...(reason.long === undefined ? {} : { long: reason.long }),
-          ...(reason.reads === undefined ? {} : { reads: reason.reads }),
-        };
+        const pressed =
+          features === undefined || featuresOf === undefined
+            ? null
+            : strikePressesSaid(marks, w, pencil, features, featuresOf);
+        const said = (() => {
+          if (!isOwn(reason)) {
+            const where = `from the other ${vocab.cell}s`;
+            if (reason.kind === "dup" && last !== null && reason.n === repeat?.value)
+              return { premise: last(reason, marks), where };
+            return words !== null && reason.kind === "dup"
+              ? { premise: placedRulesOut(reason, value, words.cull(reason.n)), where }
+              : latinPremise(reason, marks, vocab);
+          }
+          if (reason.premise === undefined)
+            throw new Error(`${reason.kind} places, and strikes nothing`);
+          return {
+            premise: reason.premise,
+            ...(reason.long === undefined ? {} : { long: reason.long }),
+            ...(reason.reads === undefined ? {} : { reads: reason.reads }),
+          };
+        })();
+        return pressed === null ? said : { ...said, pressed };
       },
       conclude: candidateConclusions({
         value,
@@ -634,10 +655,16 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       return { name, cells, holdsEvery: every };
     });
     const unitAt = new Map(sp.units.map((L, k) => [L, units[k]]));
-    const parts = (module.distinctParts ?? []).map((name) =>
-      (board.dealt[name as keyof C] as Partition).cells.map(
+    // The whole board is one part, every cell's.
+    const partition = (name: string): Pick<Partition, "cells" | "of"> =>
+      name === WHOLE_BOARD
+        ? { cells: [sp.cells], of: new Int32Array(sp.cells.length) }
+        : (board.dealt[name as keyof C] as Partition);
+    const partitions = (module.distinctParts ?? []).map(partition);
+    const parts = partitions.map((p, k) =>
+      p.cells.map(
         (cells): FillRegion => ({
-          name,
+          name: (module.distinctParts ?? [])[k],
           cells: [...cells],
           holdsEvery: holdsEvery(cells),
         }),
@@ -645,9 +672,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     );
     return sp.cells.map((c) => [
       ...sp.unitsOf[c].map((L) => unitAt.get(L) as FillRegion),
-      ...(module.distinctParts ?? []).map(
-        (name, k) => parts[k][(board.dealt[name as keyof C] as Partition).of[c]],
-      ),
+      ...partitions.map((p, k) => parts[k][p.of[c]]),
     ]);
   }
 
@@ -655,7 +680,8 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
    * board's sizes beside its own terms; `null` where it states none, and
    * the walk says a row and a column. */
   function walkWords(board: FillBoard<C>) {
-    if (walkSteps === null) return null;
+    // Full notes leave the walk none of these steps (`walkStepsOf`).
+    if (walkSteps === null || module.play?.fullNotes === true) return null;
     const { voice, said } = stepsOn(board, walkSteps);
     const sentence = (id: WalkStep, ring: readonly Point[], terms: object): Sentence =>
       voice.sentence(id, said(ring, terms));
@@ -765,6 +791,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     rungs: [
       ...candidateFillRungs(
         module.units.length > 0 || (module.distinctParts ?? []).length > 0,
+        module.play?.fullNotes === true,
       ),
       ...libraryKinds,
       ...ownKinds,

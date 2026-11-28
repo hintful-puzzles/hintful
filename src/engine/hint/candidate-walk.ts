@@ -949,10 +949,14 @@ export class CandidateWalk<
     words: RungStrikeWords<H, Reason>,
   ): HintStep<M, H, PlanRung<Reason>> {
     const marks = [...struck];
-    const { premise, where, struck: noun, long, rung, ...rest } = words;
+    const { premise, where, struck: noun, pressed, long, rung, ...rest } = words;
     // The ending names the notes it strikes, and re-renders from them when a
     // refresh finds some already gone.
-    const { what, after } = this.plan.conclude.strike({ where, struck: noun });
+    const { what, after } = this.plan.conclude.strike({
+      where,
+      struck: noun,
+      ...(pressed === undefined ? {} : { pressed }),
+    });
     const struckNotes = mark.as("strike", NOTE, marks, (live) => what(valuesOf(live)));
     const said = so({
       look: struckCellsOutlined(premise, marks),
@@ -985,8 +989,15 @@ export class CandidateWalk<
   }
 
   private clear(marks: readonly Mark[]): void {
-    const { pencil, w } = this.plan;
+    const { grid, pencil, w } = this.plan;
     for (const m of marks) pencil[m.y * w + m.x] &= ~this.bit(m.n);
+    if (this.plan.autoPlace !== true) return;
+    for (const m of marks) {
+      const i = m.y * w + m.x;
+      const left = pencil[i];
+      if (grid[i] === 0 && left !== 0 && (left & (left - 1)) === 0)
+        this.placeOnBoard({ x: m.x, y: m.y, n: this.valuesIn(left)[0] });
+    }
   }
 
   /** Write a placement to the working board and strike its value from the cells

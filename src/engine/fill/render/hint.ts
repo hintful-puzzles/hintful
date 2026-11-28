@@ -25,6 +25,7 @@ import type { FillDrawState, FillFrame } from "../render.ts";
 import type { CellLayout } from "./cell-text.ts";
 import { numberText } from "./geometry.ts";
 import { ballsOf, emptyIn } from "./layers/empty.ts";
+import { featureTexts } from "./layers/features.ts";
 import { notesIn } from "./layers/notes.ts";
 import { labelsOf } from "./layers/part-clues.ts";
 import { wallsAt } from "./layers/surface.ts";
@@ -90,6 +91,17 @@ function cellText<C extends Clues<C>>(
     enclose,
     avoid,
   });
+  // A square of features draws its notes and its value as letters in its
+  // slots: the ring goes round every slot's letter, drawn or not, so it is
+  // one size whatever the square holds.
+  const features = cx.features;
+  if (features !== null)
+    return enclosing(
+      featureTexts(
+        lay.featureSlots(ts, [x, y, h], walls, features.names.length),
+        lay.markBand(ts, [x, y, h], walls),
+      ).map(({ origin, options }, k) => textBox(origin, options, features.names[k])),
+    );
   const v = b.values[at];
   const glyph = cx.glyphOf(b);
   if (lay.f.threeD && v !== 0) {

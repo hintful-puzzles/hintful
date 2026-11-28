@@ -12,7 +12,7 @@ import {
   COL_HINT_OUTLINE,
 } from "../../../color/roles.ts";
 import type { DrawTextOptions } from "../../../contract/types.ts";
-import { drawRectCorners } from "../../../render/draw.ts";
+import { drawBoxCorners } from "../../../render/draw.ts";
 import { drawMarkSides, MARK_ALL } from "../../../render/hint-mark.ts";
 import { textBox } from "../../../render/ring.ts";
 import { canHold, placedCounts } from "../../band.ts";
@@ -35,10 +35,11 @@ export const band: FillSite = {
     const { values, texts, area, pixels } = cx.bandOf(b, ts, lay.f.depth);
     const focus = ui.focus ?? -1;
     const open = focus >= 0 && b.values[focus] === 0;
-    // What the hint's step strikes from any square, packed by the hint pass
-    // before the sites paint.
+    // What the hint's step strikes from any square and the square still
+    // holds, packed by the hint pass before the sites paint: a strike made is
+    // no longer shown.
     let hinted = 0;
-    for (const m of ds.struck.struck) hinted |= m;
+    for (const [c, m] of ds.struck.struck.entries()) hinted |= m & (b.pencil?.[c] ?? 0);
     const states = placedCounts(b, values).map(
       (n, k) =>
         (n > 1 ? BROKEN : n === 1 ? PLACED : 0) |
@@ -72,28 +73,20 @@ export const band: FillSite = {
       // a hint reasons from is.
       if (s & SPOTLIT)
         drawMarkSides(dr, { box, outer: thick, inner: 0 }, MARK_ALL, COL_HINT_OUTLINE);
-      // A value the hint's step strikes is ringed, as a list's record the
-      // step changes is: a strike no letters' halves make is read here.
-      if (s & HINTED) {
-        const avoid = origins.flatMap((q, j) =>
-          j === k ? [] : [textBox(q, opts, texts[j])],
-        );
-        dr.drawRing(box, { enclose: [textBox(o, opts, texts[k])], avoid }, thick, {
-          room: area,
-        });
-      }
-      // The keyboard cursor, as the board's: corners, inside a frame.
-      if (s & CURSOR)
-        drawRectCorners(
-          dr,
-          box.x + Math.floor(box.w / 2),
-          box.y + Math.floor(box.h / 2),
-          Math.floor(Math.max(box.w, box.h) / 2) - 1,
-          COL_CURSOR,
-          Math.max(1, ts >> 4),
-        );
+      // The keyboard cursor, as the board's: corners, at the value's box,
+      // which the band's area holds.
+      if (s & CURSOR) drawBoxCorners(dr, box, COL_CURSOR, Math.max(1, ts >> 4));
       const ink = s & BROKEN ? COL_ERROR : s & PLACED ? cx.pal.COL_DONE : COL_INK;
       dr.drawText(o, opts, ink, texts[k]);
+      // A value the hint's step strikes is crossed out from corner to corner
+      // in its own ink, as every strike is (docs/hints-marks.md): a strike no
+      // letters' halves make is read here.
+      if (s & HINTED) {
+        const t = textBox(o, opts, texts[k]);
+        const w = Math.max(2, Math.round(font / 8));
+        dr.drawLine({ x: t.x, y: t.y }, { x: t.x + t.w, y: t.y + t.h }, ink, w);
+        dr.drawLine({ x: t.x, y: t.y + t.h }, { x: t.x + t.w, y: t.y }, ink, w);
+      }
       // Struck through the letters' middle, in the player's ink: a mark
       // they made, as a note is.
       if (s & RULED) {

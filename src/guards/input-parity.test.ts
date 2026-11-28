@@ -376,7 +376,9 @@ describe("every on-screen key a game offers reaches that game", () => {
         game.newDesc(params, randomNew(`keypad-${id}`)).desc,
       );
       const needs =
-        hasPencilArray(state) || TYPED_ROW.has(id) || id in KEYPAD_WITHOUT_PENCIL;
+        (hasPencilArray(state) && game.notesWithoutMode !== true) ||
+        TYPED_ROW.has(id) ||
+        id in KEYPAD_WITHOUT_PENCIL;
       expect(
         offersKeypad(game),
         needs

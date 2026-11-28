@@ -1830,9 +1830,11 @@ the check. What a small board cannot cover:
   relation it deals is every relation on them, each pair in it or not, a
   cell with itself too: the description states no symmetry, so none is
   assumed, and a technique sound on every relation is sound on a map's.
-- **A grid of fixed size is checked as itself at every order**: Subsets'
-  4×4 is checked whole, its sixteen sets at once. Its encoding is timed on
-  that board first, since z3's first query there, whether any board has an
+- **A grid of fixed size is checked at its own order alone** (`sizings`):
+  Subsets' 4×4 is checked whole, its sixteen sets at once, and not at 3×3,
+  a board it never deals, where nine squares hold no set of sixteen once
+  and a set's only square reads unsound. Its encoding is timed on that
+  board first, since z3's first query there, whether any board has an
   answer, has no deadline.
 - **A tiling is checked on the boards `TILINGS` names at each order**, which
   between them hold dots and faces of each size a technique tells apart (a

@@ -341,3 +341,26 @@ export function drawRectCorners(
     }
   }
 }
+
+/** {@link drawRectCorners} round a box that is not square, such as a word:
+ * the cursor's corners at the box's own, each arm half its shorter side, so
+ * nothing is drawn outside it. */
+export function drawBoxCorners(
+  dr: GameDrawing,
+  box: Rect,
+  color: number,
+  thickness = 1,
+): void {
+  const arm = Math.floor(Math.min(box.w, box.h) / 2);
+  for (const [px, sx] of [
+    [box.x, 1],
+    [box.x + box.w - 1, -1],
+  ])
+    for (const [py, sy] of [
+      [box.y, 1],
+      [box.y + box.h - 1, -1],
+    ]) {
+      dr.drawLine({ x: px, y: py }, { x: px, y: py + sy * arm }, color, thickness);
+      dr.drawLine({ x: px, y: py }, { x: px + sx * arm, y: py }, color, thickness);
+    }
+}

@@ -1,0 +1,137 @@
+# Subsets' cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): the hand-written port's IDs read and
+# written back, its params, the horseshoes broken, its slots, and a position
+# for every rung its hint takes.
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0}
+    - {w: 4, h: 4, diff: 1}
+  pins:
+    # Held on 556 of 690 positions walked.
+    hiddenSingle:
+      id: "4x4n4de:_,_RL,_,5D,_U,_D,_URDL,0,14UR,_,4,_UL,_,_L,10,12"
+      moves:
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}, {x: 2, y: 1, n: 9}, {x: 2, y: 1, n: 10}, {x: 2, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 2}, {x: 3, y: 2, n: 3}, {x: 3, y: 2, n: 4}, {x: 3, y: 2, n: 9}, {x: 3, y: 2, n: 10}, {x: 3, y: 2, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 2}, {x: 0, y: 1, n: 4}, {x: 0, y: 1, n: 8}, {x: 0, y: 1, n: 10}, {x: 0, y: 1, n: 12}, {x: 0, y: 1, n: 14}, {x: 0, y: 1, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 4}, {x: 0, y: 0, n: 8}, {x: 0, y: 0, n: 10}, {x: 0, y: 0, n: 12}, {x: 0, y: 0, n: 14}, {x: 0, y: 0, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 4}, {x: 1, y: 2, n: 8}, {x: 1, y: 2, n: 10}, {x: 1, y: 2, n: 12}, {x: 1, y: 2, n: 14}, {x: 1, y: 2, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 16}]}
+    # Held on 547 of 690 positions walked.
+    carryIn: "4x4n4de:_R,_,11RL,_,5,_U,_,_UDL,_,_RDL,8,_,10,_,_RL,4"
+    # Held on 535 of 690 positions walked.
+    carryOut:
+      id: "4x4n4de:14D,7R,_,_DL,_,12,_UD,_,1,_,_,15UDL,13U,10,_URL,_"
+      moves:
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}, {x: 2, y: 3, n: 6}, {x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 9}, {x: 2, y: 3, n: 10}]}
+    # Held on 275 of 690 positions walked.
+    noShoe:
+      id: "4x4n4de:_R,_,11RL,_,5,_U,_,_UDL,_,_RDL,8,_,10,_,_RL,4"
+      moves:
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 1}, {x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 3}, {x: 1, y: 2, n: 4}, {x: 1, y: 2, n: 7}, {x: 1, y: 2, n: 8}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 2}, {x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 10}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 7}, {x: 1, y: 0, n: 8}, {x: 1, y: 0, n: 13}, {x: 1, y: 0, n: 14}, {x: 1, y: 0, n: 15}, {x: 1, y: 0, n: 16}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 7}, {x: 3, y: 0, n: 8}, {x: 3, y: 0, n: 13}, {x: 3, y: 0, n: 14}, {x: 3, y: 0, n: 15}, {x: 3, y: 0, n: 16}]}
+    # Held on 605 of 690 positions walked.
+    noShoeBeside:
+      id: "4x4n4dt:_D,7R,_,_DL,_,_,9UD,_,1,_,_,15UDL,13U,10,_URL,_"
+      moves:
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}, {x: 2, y: 3, n: 6}, {x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 9}, {x: 2, y: 3, n: 13}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 9}, {x: 2, y: 0, n: 12}, {x: 2, y: 0, n: 13}, {x: 2, y: 0, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 4}, {x: 2, y: 0, n: 5}, {x: 2, y: 0, n: 6}, {x: 2, y: 0, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}, {x: 2, y: 2, n: 5}, {x: 2, y: 2, n: 6}, {x: 2, y: 2, n: 7}, {x: 2, y: 2, n: 12}, {x: 2, y: 2, n: 13}, {x: 2, y: 2, n: 15}]}
+    # Held on 535 of 690 positions walked.
+    smaller:
+      id: "4x4n4dt:_D,7R,_,_DL,_,_,9UD,_,1,_,_,15UDL,13U,10,_URL,_"
+      moves:
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}, {x: 2, y: 3, n: 6}, {x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 9}, {x: 2, y: 3, n: 13}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 9}, {x: 2, y: 0, n: 12}, {x: 2, y: 0, n: 13}, {x: 2, y: 0, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 4}, {x: 2, y: 0, n: 5}, {x: 2, y: 0, n: 6}, {x: 2, y: 0, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}, {x: 2, y: 2, n: 5}, {x: 2, y: 2, n: 6}, {x: 2, y: 2, n: 7}, {x: 2, y: 2, n: 12}, {x: 2, y: 2, n: 13}, {x: 2, y: 2, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 3}, {x: 0, y: 0, n: 4}, {x: 0, y: 0, n: 5}, {x: 0, y: 0, n: 6}, {x: 0, y: 0, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 4}, {x: 1, y: 1, n: 5}, {x: 1, y: 1, n: 6}, {x: 1, y: 1, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 4}, {x: 0, y: 1, n: 6}, {x: 0, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 4}, {x: 1, y: 2, n: 6}, {x: 1, y: 2, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 13}, {x: 1, y: 2, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}]}
+    # Held on 341 of 690 positions walked.
+    bigger:
+      id: "4x4n4dt:_D,7R,_,_DL,_,_,9UD,_,1,_,_,15UDL,13U,10,_URL,_"
+      moves:
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}, {x: 2, y: 3, n: 6}, {x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 9}, {x: 2, y: 3, n: 13}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 9}, {x: 2, y: 0, n: 12}, {x: 2, y: 0, n: 13}, {x: 2, y: 0, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 4}, {x: 2, y: 0, n: 5}, {x: 2, y: 0, n: 6}, {x: 2, y: 0, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}, {x: 2, y: 2, n: 5}, {x: 2, y: 2, n: 6}, {x: 2, y: 2, n: 7}, {x: 2, y: 2, n: 12}, {x: 2, y: 2, n: 13}, {x: 2, y: 2, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 3}, {x: 0, y: 0, n: 4}, {x: 0, y: 0, n: 5}, {x: 0, y: 0, n: 6}, {x: 0, y: 0, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 4}, {x: 1, y: 1, n: 5}, {x: 1, y: 1, n: 6}, {x: 1, y: 1, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 4}, {x: 0, y: 1, n: 6}, {x: 0, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 4}, {x: 1, y: 2, n: 6}, {x: 1, y: 2, n: 12}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 13}, {x: 1, y: 2, n: 15}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 5}]}
+
+ids:
+  # Boards the hand-written port dealt, read and written back.
+  - {id: "4x4n4de:13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9", writesBack: true}
+  - {id: "4x4n4de:_,_RL,_,_,3,_D,9D,6,10,_R,_,13L,12,_UR,1U,_UL", writesBack: true}
+  - {id: "4x4n4dt:12D,_R,_,_DL,_,4L,7RL,2,10U,_,_,_UDL,_,9,_,_", writesBack: true}
+  - {id: "4x4n4dt:4,_RDL,9,_D,_D,_,_UDL,10,_D,_,_D,_D,_,_URL,8,_", writesBack: true}
+  # A square too many or too few; a set past the sixteen; a character the
+  # code has no use for.
+  - {id: "4x4n4de:_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_", refused: DESC_TOO_LONG}
+  - {id: "4x4n4de:1,2,", refused: DESC_TOO_SHORT}
+  - {id: "4x4n4de:16,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_", refused: DESC_OUT_OF_RANGE}
+  - {id: "4x4n4de:x,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_", refused: "This game ID has \"x\" where it can't have one."}
+  # A horseshoe off the board, and two on one edge opening both ways.
+  - {id: "4x4n4de:0U,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_", refused: DESC_OUT_OF_RANGE}
+  - {id: "4x4n4de:0R,1L,_,_,_,_,_,_,_,_,_,_,_,_,_,_", refused: DESC_CONTRADICTORY}
+  # The spec's board, and its letters out of upstream's order.
+  - {id: "4x4n4de:13RD,_,6R,_,_,_,_D,_UL,_R,12D,_,_DL,_UR,_,3U,10", writesBack: true}
+  - {id: "4x4n4de:13DR,_,6R,_,_,_,_D,_UL,_R,12D,_,_DL,_UR,_,3U,10", refused: "This game ID has \"R\" where it can't have one."}
+  # A set given twice, which no answer holds: the hand-written reader named
+  # it a repeat.
+  - {id: "4x4n4de:3,3,_,_,_,_,_,_,_,_,_,_,_,_,_,_", refused: DESC_CONTRADICTORY}
+
+params:
+  # Upstream's form: the board, its letters, then the tier; Normal is `t`.
+  - {read: "4x4n4de", full: "4x4n4de", brief: "4x4n4", label: "4x4 Easy, 4 letters"}
+  - {read: "4x4n4dt", full: "4x4n4dt", label: "4x4 Normal, 4 letters"}
+  - {read: "4x4n4", full: "4x4n4de"}
+  - {read: "4x4", full: "4x4n4de"}
+  # Upstream's only board is 4x4 of four letters; its encoder writes others.
+  - {read: "6x6n5", refused: "Width must be at most 4."}
+  - {read: "4x4n3", refused: "Letters must be at least 4."}
+
+positions:
+  # The board solved.
+  - id: "4x4n4de:13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9"
+    solve: true
+    status: solved
+  # The top left square's set placed again beside it: every set once, and
+  # the horseshoe between them, are broken.
+  - id: "4x4n4de:13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9"
+    moves: [{set: [1, 14]}]
+    breaks: [shape.0, clue.shoe]
+
+input:
+  # The first arrow shows the cursor on the top left square's A, a given;
+  # the next walks on to the A of the square beside it. Enter marks it
+  # present, striking the sets that lack A, then absent, striking those that
+  # hold it, then leaves it undecided: the sets the givens leave, each time.
+  - id: "4x4n4de:13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9"
+    events:
+      - {key: right}
+      - {key: right}
+      - {key: select, holds: {pencil.1: 69908}}
+      - {key: select, holds: {pencil.1: 10786}}
+      - {key: select, holds: {pencil.1: 80694}}

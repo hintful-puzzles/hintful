@@ -64,6 +64,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | `game-id/` — descs and params |
 | – `obfuscate.ts` — solution masking in descs |
 | – `run-length.ts` — the letter-run desc grammar |
+| – `fixed-field.ts` — a params field that allows one value |
 | – `wall-runs.ts` — a region layout as a run-length wall list |
 | – `block-structure.ts` — a partition as upstream Keen's block structure |
 | – `dot-runs.ts` — blanks and dots of two kinds |
@@ -648,6 +649,13 @@ writes. Exemplar: `slant/state.ts`.
 - **A desc is a player promise.** `run-length.test.ts` pins the bytes at
   every run boundary.
 
+### `fixed-field.ts` — a params field that allows one value
+
+Reach for it to ask whether a `paramConfig` field offers a choice.
+`isFixedField(item)` is true where its bounds allow one value: the Custom
+dialog leaves it out and the preset menu's shape guard does not count it as
+a size. Exemplar: Subsets' width, height and letters, each bounded to 4.
+
 ### `wall-runs.ts` — a region layout as a run-length wall list
 
 Reach for it for a desc that ships a region partition as walls.
@@ -908,14 +916,23 @@ press or Enter cycles a slot through present, absent and undecided, the
 right button or Space the other way, by striking or giving back the half
 of the notes that lack or hold the feature; the arrows walk the slots of
 every square as one grid. Nothing is typed, so the board has no keypad, no
-pencil mode and no note preferences, and a slot's move that both strikes
-and gives back writes the square's notes whole (an edit's `notes`). Check &
+pencil mode, no Marks key (the game's `notesWithoutMode`, which
+`takesNotes` reads) and no note preferences, and a slot's move that both
+strikes and gives back writes the square's notes whole (an edit's `notes`).
+A square's letters sit in the part of their slots a hint's ring round the
+square keeps clear (`featureTexts`), so the ring goes round all four, and
+a press and the cursor go to the letter. Check &
 Save draws red the slots a square decides against the answer (a mistake's
-`slots`), outlining it only where none is, and Clear gives a wrong square
-its whole domain back. A hint's strike is shown as slot presses, each a
-half of the notes the step strikes, which the candidate track takes as a
-part of its step; a strike no letters' halves make throws, so a game
-needs a way to strike one set (the band of every value) before it ships.
+`slots`), outlining it only where none is, and not a square whose answer
+is placed elsewhere, which that placement struck and is the mistake; Clear
+gives a wrong square every value of its domain no square holds. A hint's
+strike is shown as slot presses, each a half of the notes the step
+strikes, which the candidate track takes as a part of its step, and a
+placement as the strike of the square's other notes; where the presses go
+one way, the step says them by their letters (`pressesSaid`). A strike no
+letters' halves make is pressed on the band of every value, where it is
+crossed out in the value's own ink while a square still holds it, so a
+game needs a band before it ships.
 At most four features: the tile's edge word holds four slots' mistakes.
 
 A board whose every piece the player places points (`glyphs.ts`'s

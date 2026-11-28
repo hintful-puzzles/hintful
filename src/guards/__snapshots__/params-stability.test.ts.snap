@@ -846,10 +846,10 @@ bump:settings.symmetry  full=7x7b20s3de  brief=7x7"
 
 exports[`encoded params are byte-stable > subsets 1`] = `
 "default  full=4x4n4de  brief=4x4n4
-preset:4x4 Size 4 Normal  full=4x4n4dt  brief=4x4n4
+preset:4x4 Normal, 4 letters  full=4x4n4dt  brief=4x4n4
 bump:w  full=5x4n4de  brief=5x4n4
 bump:h  full=4x5n4de  brief=4x5n4
-bump:n  full=4x4n5de  brief=4x4n5"
+bump:sizes.n  full=4x4n5de  brief=4x4n5"
 `;
 
 exports[`encoded params are byte-stable > tents 1`] = `

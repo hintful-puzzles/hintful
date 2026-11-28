@@ -6,6 +6,7 @@ import type {
   PresetMenuEntry,
   Size,
 } from "../contract/types.ts";
+import { isFixedField } from "../game-id/fixed-field.ts";
 import { configNarrowing, onlyError } from "../game-id/only.ts";
 import {
   describeParams,
@@ -140,6 +141,8 @@ export class ChosenParams<Params> {
   public customConfig(): ConfigDescription {
     const items: ConfigDescription["items"] = {};
     for (const item of this.game.paramConfig) {
+      // Unsubmitted, a field with one value keeps the params'.
+      if (isFixedField(item)) continue;
       items[item.kw] =
         item.type === "boolean"
           ? { type: "boolean", name: item.name }

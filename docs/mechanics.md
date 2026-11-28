@@ -271,7 +271,9 @@ each member.
 - **`doc`** names every word choice of a choices field.
 - **`bounds`** is an unconditional range only. A limit that depends on
   another field, or holds only when generating (`full`), stays in
-  `validateParams`, which never restates a bound.
+  `validateParams`, which never restates a bound. A field whose bounds
+  leave one value is no choice (`isFixedField`): the Custom dialog leaves
+  it out, and the preset menu owes it no range of boards (Subsets' 4x4).
 - **`label`**'s `words` returning `null` leaves a default unsaid; a checkbox
   must give words.
 

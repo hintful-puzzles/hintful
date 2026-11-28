@@ -27,6 +27,11 @@ export const WALK_STEPS = {
  * arrows), which the Latin words for a unit ("no other square in this area
  * can be 3") take as read. Unworded, the walk says those.
  */
+/** The part that is the whole board, among `distinctParts` where a rule
+ * holds every cell distinct (Subsets' sixteen sets, each once), as
+ * `distinct(value(c) over c in cells)` says it. */
+export const WHOLE_BOARD = "cells";
+
 export const PART_STEPS = {
   /** `n` has one place left, the ring, in the part striped as `cell`, of
    * `size` squares, which holds every value its squares can. */
@@ -35,6 +40,17 @@ export const PART_STEPS = {
 
 /** A step of the walk's that a description words. */
 export type WalkStep = keyof typeof WALK_STEPS;
+
+/** The steps of {@link WALK_STEPS} the walk reads on a board whose notes are
+ * kept full (the mark's `full`) or not. Full notes are what each open cell
+ * can still hold, a placed value struck from where it reaches as it is
+ * placed (`notes.ts`'s `settleFullNotes`), so the walk has no cell without
+ * notes to speak of and no placed value to strike: none. */
+export function walkStepsOf(
+  fullNotes: boolean,
+): Readonly<Record<string, Readonly<Record<string, string>>>> {
+  return fullNotes ? {} : WALK_STEPS;
+}
 
 /**
  * The step of the walk a description words where a unit holds a value more

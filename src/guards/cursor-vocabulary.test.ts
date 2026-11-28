@@ -125,9 +125,12 @@ describe("one keyboard-cursor vocabulary", () => {
 
       const before = { ...c };
       expect(before.visible, `${id} starts with a hidden cursor`).toBe(false);
+      // A board of features' cursor rests on a slot of its square, the fill
+      // engine's `FillUi.slot`, and the arrows move it slot to slot.
+      const slotBefore = ui["slot"];
       game.interpretMove(state, ui, ds, { x: 0, y: 0 }, CURSOR_RIGHT);
       checked++;
-      const moved = c.x !== before.x || c.y !== before.y;
+      const moved = c.x !== before.x || c.y !== before.y || ui["slot"] !== slotBefore;
       if (!moved) {
         stalled.push(
           `${id}: one arrow press revealed the cursor without moving it ` +

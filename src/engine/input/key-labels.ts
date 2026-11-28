@@ -33,7 +33,8 @@ export const pencilModeKey: KeyLabel = { button: PENCIL_MODE_BUTTON, label: "Mar
  * note-taking *board* uses; Loopy and Slant take notes with no such array
  * (their marks are edge and line states) and are known by the flag. Every game
  * either arm catches wants the key, so the union is exact rather than a
- * convenient over-reach.
+ * convenient over-reach, save a game whose notes are pressed with no mode
+ * (`Game.notesWithoutMode`).
  *
  * **Deliberately not a game-declared boolean.** A declaration can be forgotten
  * by a new game and left behind by a changed one with nothing noticing, which
@@ -41,7 +42,12 @@ export const pencilModeKey: KeyLabel = { button: PENCIL_MODE_BUTTON, label: "Mar
  * Rome and Map carried notes with no key for their whole lives (docs/doctrine.md
  * § "One source of truth").
  */
-export function takesNotes(state: unknown, ui: unknown): boolean {
+export function takesNotes(
+  state: unknown,
+  ui: unknown,
+  game: { readonly notesWithoutMode?: true },
+): boolean {
+  if (game.notesWithoutMode === true) return false;
   if (hasPencilArray(state)) return true;
   return typeof (ui as { pencilMode?: unknown } | undefined)?.pencilMode === "boolean";
 }

@@ -70,7 +70,7 @@ const NO_MODE: Record<string, string> = {};
 let flippedByOtherInput = 0;
 
 /** Every note-taking game, derived from what each game *is*. */
-const noteTaking = builtGames().filter((g) => takesNotes(g.state, g.ui));
+const noteTaking = builtGames().filter((g) => takesNotes(g.state, g.ui, g.game));
 
 /** The keypad the app renders — through the `Midend`, not off the game. */
 function renderedKeys(id: string): { button: number; label: string }[] {

@@ -27,7 +27,7 @@ import { answerEnv, param } from "./emit.ts";
 import { checkFeatures, featuresOfFn } from "./features.ts";
 import { checkGaps, checkSigns, marginsOf } from "./locations.ts";
 import { boundsOf, menuOf, sizeOf } from "./menu.ts";
-import { notesOf } from "./notes.ts";
+import { checkWalkSteps, notesOf } from "./notes.ts";
 import { recordSitesOf } from "./records.ts";
 import { partBound } from "./values.ts";
 import { checkClick, checkWhole, wholeOthersOf } from "./whole.ts";
@@ -354,7 +354,9 @@ export function playOf(
     if (glance?.includes(id))
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
   const { notes, fullNotes, distinctParts } = notesOf(json, d, env);
+  // Features want notes kept full before the walk's steps are asked for.
   checkFeatures(p.numbers, fullNotes);
+  if (notes) checkWalkSteps(json, d, distinctParts, fullNotes);
   checkSigns(p, d, env);
   checkGaps(p, d, env);
   // A clue is marked done by a press where it is drawn, and the engine finds
@@ -409,10 +411,18 @@ export function playOf(
   const plainPlay = {
     ...rest,
     // A feature's formula is compiled to `featuresOf`; the engine reads the
-    // names alone.
+    // words alone.
     ...(features === undefined
       ? {}
-      : { numbers: { ...rest.numbers, features: { names: features.names } } }),
+      : {
+          numbers: {
+            ...rest.numbers,
+            features: {
+              names: features.names,
+              ...(features.none === undefined ? {} : { none: features.none }),
+            },
+          },
+        }),
     ...(whole === undefined ? {} : { whole: { part: whole.part } }),
     ...(notes ? { notes } : {}),
     ...(fullNotes ? { fullNotes } : {}),

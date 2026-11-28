@@ -39,7 +39,7 @@ freedom: { kind: fill }
 play:
   # A set drawn as its letters, A in the first slot and B in the second.
   numbers: { features: { of: "letters(d)", names: AB } }
-  # Every set beneath the board, struck once placed.
+  # Every set beneath the board, gray once placed.
   band: true
   gaps: { shoe: shoe }
   boards: [2x2]
@@ -61,9 +61,43 @@ tiers: [Easy]
 names:
   placed: "a set already placed"
   lone: "the only set left for a square"
-# A board loads only where deduction solves it, so it has the two steps that
-# solve the boards its tests load.
+  noShoe: "no empty or full set by a gap"
+  smaller: "room for a smaller set inside"
+# A board loads only where deduction solves it, so it has the steps that
+# solve the boards its tests load. A placed set strikes itself, the notes
+# being full, so the hint's steps are `noShoe`'s strikes and the singles.
 techniques:
+  # Neither of two squares side by side with no horseshoe between them holds
+  # the empty set, which every set holds, or {A, B}, which holds every set.
+  - id: noShoe
+    tier: Easy
+    for: "e in edges where clue(shoe, e) = 0, c in ends(e)"
+    conclude: >-
+      forall d in cand(c) where |letters(d)| = 0 or |letters(d)| = 2:
+      strike(c, d)
+    says:
+      marks: { outline: "{other(e, c)}" }
+      look: >-
+        With no horseshoe to {outline: its neighbor}, neither set lies inside
+        the other
+  # The open end of a horseshoe holds a set only where the closed end can
+  # hold a smaller one inside it.
+  - kind: rel.support
+    as: smaller
+    tier: Easy
+    says:
+      marks: { outline: "{b}" }
+      look: >-
+        {ring}'s set must hold a smaller one {outline: its neighbor} can
+        still hold
+    with:
+      group: >-
+        e in edges, a in ends(e) where (clue(shoe, e) = 1 and a = end1(e))
+        or (clue(shoe, e) = 2 and a = end2(e)), b = other(e, a)
+      end: a
+      partner: b
+      rel: "holds(d, u)"
+      marks: {}
   - kind: peer.placed
     as: placed
     tier: Easy
@@ -72,27 +106,3 @@ techniques:
   - kind: one.cell
     as: lone
     tier: Easy
-# The walk's steps, worded since a placed set rules itself out of every
-# other square and no row or column says so.
-steps:
-  clean:
-    ring: cell
-    move: "any set already placed in another square"
-  note:
-    ring: cell
-    terms: { unruled: flag, vs: values }
-    wordings:
-      - when: unruled
-        look: "No set is placed yet"
-        move: "pencil in every one"
-      - look: "Only {vs} {vs: isn't | aren't} placed yet"
-        move: "pencil {vs: it | them} in"
-  regionsFull:
-    ring: cell
-    terms: { n: number }
-    look: "Every other set is placed"
-    move: "{ring} can only be {n}"
-  cull:
-    ring: cell
-    terms: { n: number }
-    move: "other square"

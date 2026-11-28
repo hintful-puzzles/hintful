@@ -1,0 +1,8 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # The empty set and {A, B} struck beside a horseshoe too.
+  noShoe:
+    for: e in edges, c in ends(e)

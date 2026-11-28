@@ -523,9 +523,10 @@ the cursor out of the band.
 A hint's strike that no union of letter halves makes is made on the band:
 each square put in focus by its badge, each value pressed, then the focus
 the player had given back, since a gesture leaves the Ui as it found it
-where it can. Every value a step strikes from any square is ringed on the
-band, as a list ringed a step's target, so a strike the letters cannot
-show is still read off the board.
+where it can. Every value a step strikes from any square, while a square
+still holds it, is crossed out on the band, so a strike the letters cannot
+show is still read off the board (first ringed, as a list rings a step's
+target; Decision 26 says why it is crossed).
 
 ### 25. Every set once is a sample, and the ID is Unequal's record (2.5d)
 
@@ -550,6 +551,66 @@ it, as the fixture's, and its nine techniques were checked sound again.
 For the flip: a set given twice reads, and the board is refused at load by
 its answer check, as on every born board, where the hand-written reader
 refused it as a number given twice.
+
+### 26. Full notes keep what is placed out of every other cell (2.5e)
+
+The weighed question of 2.5e is decided: yes. Notes kept full are dealt
+without the values the givens rule out, and a value placed, given, the
+player's or settled, is struck from every cell it rules out as it is
+placed; a square left one value holds it at once. The hand-written aid's
+`canHold` read placed sets out, and a board that kept them would ask a
+player to strike fifteen squares by hand after every placement, which no
+technique teaches. The walk follows the board: it has no populate, clean,
+note, cull, regions-full or single step under full notes (`walkStepsOf`,
+`candidateFillRungs`), and a strike that leaves its square one value
+places it unsaid (the plan's `autoPlace`). Mark-all is not offered, since
+there is nothing to mark, nor the hint-notes preference.
+
+What follows from it, each held by a test: clearing a value gives its
+square every value no square holds, and does not give the value back to
+the squares its placing struck; a wrong placement strikes its value from
+its own square, which Check & Save does not count again (the placement is
+the one mistake, `noteMistakes`); and a hint's strike that leaves one value
+decides the square.
+
+The rest the flip needed:
+
+- **A strike said as its presses.** Where every press goes one way, the
+  step names them by letters ("A and D must be present", `pressesSaid`),
+  of the notes still live when it is shown; a mixed strike names its sets.
+  A set the description gives words to (`none: the empty set`) is said in
+  them, with no second article, and struck as "the struck empty set".
+- **The whole board is a part.** `distinct(value(c) over c in cells)` is
+  the walk's `WHOLE_BOARD` part, so a set with one square left is a hidden
+  single in the words the description gives a part's (`steps.hiddenSingle`).
+- **A placement is a strike of the square's other notes** on a board of
+  features, kept on track until the square holds the value.
+- **No Marks key and no keypad.** A board of features' notes are pressed
+  with no mode (`Game.notesWithoutMode`), which `takesNotes` reads, so the
+  Marks key the pencil array asked for, inert on this board, is gone; the
+  guard that found it inert keeps it out.
+- **A params field with one value is no choice** (`isFixedField`): the
+  Custom dialog leaves it out and the menu owes it no three boards, so
+  Subsets' dialog offers the tier alone, as the hand-written one did.
+- **A strike on the band is crossed out**, corner to corner in the value's
+  own ink, as every strike is (`docs/hints-marks.md`): a ring is drawn only
+  in the ring ink, which the ink guard refused for a strike. It is drawn
+  while a square still holds the value, so a strike made leaves the band.
+  The band's cursor is corners at the value's own box (`drawBoxCorners`):
+  a square round a wide value reached past the band's area and stayed.
+- **A square's letters keep clear of a ring round it.** A hint rings a
+  square of features round all four letters, which sit in the part of their
+  slot a ring keeps clear (`featureTexts`, as every cell's text keeps to
+  `ringTextBox`), nudged toward the middle; the slots, lines and crosses
+  fill the square as before, and a press and the cursor go to the letter.
+- **The soundness check skips an order a grid side's bounds refuse.**
+  Subsets' 3x3 places nine of sixteen sets, so `onlyCell` read unsound
+  there; the check now asks a description only of the sizes it allows. It
+  also drops order 3 for every description whose width starts at 4
+  (Kakurasu, Norinori, Pearl, Seismic, Tracks, Tents, Unruly, Star Battle),
+  which order 4 still covers.
+- **The `holding` fixture gained `noShoe` and `smaller`**, with a plant,
+  since its hint had no step left once clean was the board's.
 
 ## What each flip changed for a player
 
@@ -610,6 +671,32 @@ Filled in by each flip.
   squares, is refused** as a board deduction cannot finish, where the
   hand-written reader named what was wrong. Neither has an answer, and
   upstream's generator writes neither.
+
+### Subsets (2.5e)
+
+- **The presets read "4x4 Easy, 4 letters"** and "4x4 Normal, 4 letters",
+  where they read "4x4 Size 4 Easy"; the IDs and params are as before.
+- **A placed set drops out of every other square by itself**, and a square
+  left one set holds it. A given set is in no square's notes from the
+  start. The hand-written board left the player's letters as they were.
+- **Check & Save counts a wrong set once**: the set it took from its own
+  square is not a second mistake. A note mistake is cleared by giving the
+  square back every set no square holds.
+- **There is no Update marks button and no Marks key**: nothing is left to
+  mark, and letters are pressed with no mode.
+- **The horseshoes no longer rule anything out in the aid** by themselves;
+  the spotlight and a square's struck sets read its notes, which the
+  player's letters and rule-outs and the placed sets narrow. The help says
+  so.
+- **The hint is the candidate walk's**, a square at a time, worded in
+  letters and sets: "This square's set holds its neighbor's, whose sets all
+  contain {B,C}, so B and C must be present." A strike no letter says is
+  crossed out on the tally. A walk is shorter: 30 and 40 steps on the
+  presets' first boards, against 46 and 52.
+- **A square's letters sit a little toward its middle**, clear of a hint's
+  ring round the square.
+- **An ID giving one set twice is refused as clues that contradict each
+  other**, where the hand-written reader named the repeat.
 
 ## Risks / Trade-offs
 

@@ -1449,6 +1449,10 @@
                     "names": {
                       "type": "string",
                       "pattern": "^[A-Z]{1,16}$"
+                    },
+                    "none": {
+                      "type": "string",
+                      "description": "What a hint calls the value with no feature (Subsets' \"the empty set\"); any other value it calls by its features' letters in braces, \"{A,C}\". Absent, that value is \"{}\"."
                     }
                   }
                 },

@@ -230,6 +230,10 @@ export interface CandidatePlan<
   moves?: CandidateMoveAdapter<M>;
   /** The auto-pencil preference: a placement's cull is silent rather than taught. */
   autoClean: boolean;
+  /** A strike that leaves an empty cell one value places it, unsaid, as the
+   * board does when its notes are kept full (`engine/fill/notes.ts`'s
+   * `settleFullNotes`): no later step places what is already placed. */
+  autoPlace?: boolean;
   /** Where the walk judges a move rather than writes a hint
    * (`candidate-hint.ts`'s `CandidatePlanPrefs`). */
   judging?: PlanJudging;

@@ -7,13 +7,7 @@
  */
 
 import { descValue } from "../contract/desc-error.ts";
-import {
-  type Game,
-  type GamePref,
-  type HintStep,
-  type PresetBoards,
-  UI_UPDATE,
-} from "../contract/game.ts";
+import type { Game, GamePref, HintStep, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
 import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
@@ -84,12 +78,18 @@ import {
   linkedCell,
   tierOfBoard,
 } from "./hint.ts";
-import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
+import {
+  applyMove,
+  type FillMove,
+  fillMoveOf,
+  markAll,
+  settleFullNotes,
+} from "./notes.ts";
 import { type NumberInput, numberInput, typedUi } from "./numbers.ts";
 import {
   boardCellOf,
   followedCursor,
-  fromView,
+  interpretOnView,
   orderOf,
   toView,
   viewOf,
@@ -455,13 +455,17 @@ export function fillGame<C extends Clues<C> & object>(
         glyphsIn(module, sp, given),
       ),
     );
-    return newBoard<C>(
+    const board = newBoard<C>(
       module,
       size.w,
       size.h,
       { ...clues, ...givenOf(deal, p) },
       variationsOf(p),
     );
+    // Full notes leave out what the givens rule out from the start.
+    return module.play?.fullNotes === true
+      ? settleFullNotes(module, board, board)
+      : board;
   };
   // The renderer previews the input's drag, and the input reads the board
   // where the renderer puts it: each is read only once both are built.
@@ -498,6 +502,7 @@ export function fillGame<C extends Clues<C> & object>(
             ? null
             : {
                 slotsOf: render.featureSlots,
+                lettersOf: render.featureLetters,
                 bandGrid: render.bandGrid,
                 bandPoint: render.bandPoint,
                 badgePoint: render.badgePoint,
@@ -505,25 +510,6 @@ export function fillGame<C extends Clues<C> & object>(
         );
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
-  /** The typed board's input, given the view of a board in an order
-   * (`order.ts`), each move it makes taken back to the board's lines. */
-  const typedMove = (
-    input: NumberInput<C, FillDrawState>,
-    b: FillBoard<C>,
-    ui: FillUi,
-    ds: FillDrawState,
-    p: Point,
-    button: number,
-  ) => {
-    const lines = orderOf(b, ui);
-    if (lines === null) return input.interpretMove(b, ui, ds, p, button);
-    const made = input.interpretMove(viewOf(b, lines), ui, ds, p, button);
-    if (made === null || made === UI_UPDATE) return made;
-    // A line put back at its own place moves nothing.
-    if ("type" in made && made.type === "reorder" && b.order?.[made.to] === made.line)
-      return UI_UPDATE;
-    return fromView(b, lines, made);
-  };
   const inputs =
     buttons !== null
       ? { targetVerbs: buttons.targetVerbs, interpretMove: buttons.interpretMove }
@@ -537,9 +523,23 @@ export function fillGame<C extends Clues<C> & object>(
             ds: FillDrawState,
             p: Point,
             button: number,
-          ) => typedMove(typed as NumberInput<C, FillDrawState>, b, ui, ds, p, button),
-          requestKeys: (p: FillParams, board?: FillBoard<C>) =>
-            (typed as NumberInput<C, FillDrawState>).requestKeys(p, board),
+          ) =>
+            interpretOnView(b, ui, (v) =>
+              (typed as NumberInput<C, FillDrawState>).interpretMove(
+                v,
+                ui,
+                ds,
+                p,
+                button,
+              ),
+            ),
+          // A board of features types nothing: its notes are its slots'.
+          ...(play.numbers?.features === undefined
+            ? {
+                requestKeys: (p: FillParams, board?: FillBoard<C>) =>
+                  (typed as NumberInput<C, FillDrawState>).requestKeys(p, board),
+              }
+            : { notesWithoutMode: true as const }),
         };
   /** The key that places value `v` on board `b`: a button board's own key
    * for it, a typed board's glyph's. */
@@ -626,7 +626,11 @@ export function fillGame<C extends Clues<C> & object>(
     interpretMove,
     ...(typed === null || typed.done === null ? {} : { doneClues: typed.done.verbs }),
     executeMove: (b, m) => applyMove(module, b, fillMoveOf(m, `${id}: executeMove`)),
-    ...(!notes ? {} : { markAll: (b: FillBoard<C>) => markAll(module, b) }),
+    // Full notes are never unnoted and strike a placed value as it is
+    // placed, so Mark-all would find nothing to do.
+    ...(!notes || module.play?.fullNotes === true
+      ? {}
+      : { markAll: (b: FillBoard<C>) => markAll(module, b) }),
     ...(!notes && !ordered
       ? {}
       : {

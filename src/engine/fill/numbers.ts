@@ -145,7 +145,9 @@ export function typedUi({ drag, ...rest }: FillUi, play: FillPlay): FillUi {
     ui.pencilKeepHighlight ??= true;
     ui.autoPencil ??= false;
   }
-  if (play.notes === true) {
+  // Full notes leave no square unnoted, so how the hint reads one is no
+  // choice (the preference is not offered).
+  if (play.notes === true && play.fullNotes !== true) {
     ui.candidateReading ??= play.hintNotes ?? DEFAULT_CANDIDATE_READING;
   }
   if (play.numbers?.raised === true) ui.raised ??= true;
@@ -608,8 +610,6 @@ export function numberInput<
       return typeInto(b, fillUi, c, n);
     },
     requestKeys(p, board) {
-      // No value of a board of features is typed: its slots are pressed.
-      if (features !== null) return [];
       const sp = paramSpaceOf(module, p);
       const top = keypadTop(module, sp, p.sizes ?? {});
       // A board from another ID may hold a part larger than any the deal

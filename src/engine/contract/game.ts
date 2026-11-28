@@ -692,6 +692,13 @@ export interface Game<
    * from elsewhere); the app's key panel reloads with each board. It takes
    * no ui, and a caller with no board yet passes none. Absent ⇒ no keypad. */
   requestKeys?(p: Params, state?: State): KeyLabel[];
+
+  /** The game's notes are pressed where they are drawn, with no mode to
+   * write them in: a board of features, whose slots narrow its notes. Its
+   * `pencil` array then asks for no Marks key and no keypad
+   * (`takesNotes`). Left off by mistake, the Marks key it gains is inert,
+   * which `input-parity.test.ts` refuses. */
+  readonly notesWithoutMode?: true;
   /** What the board has shown of the value each key types, for a game whose
    * scores say it of a value as a whole (Wordguess: a letter in the word, in
    * its place, or not in it). Sent with every move, so the keypad keeps up

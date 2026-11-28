@@ -449,8 +449,9 @@ packed key, and draw it in the cell repaint.** The old cell repaints when
 the cursor leaves, with no save and restore, and the recording double sees
 real ops. Keep a blitter for a sprite that crosses cell boundaries mid-drag
 (Pegs' and Signpost's drag sprites). Exemplar:
-[`subsets/render.ts`](../src/games/subsets/render.ts) (a cursor-slot field
-of the cell key).
+the fill engine's `FEATURE_CURSOR_SHIFT` in
+[`render/tile-word.ts`](../src/engine/fill/render/tile-word.ts) (a
+cursor-slot field of the tile's word).
 
 - **The exception is a cell repaint that does not clear the whole cell.**
   Folding the cursor into the key erases it only because the repaint paints

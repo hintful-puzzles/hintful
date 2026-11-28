@@ -1,28 +1,9 @@
-ok  subsets    placed                         3  sound    (want sound   )    16 queries    0.3s
-ok  subsets    placed (planted)               3  unsound  (want unsound )     1 queries    0.4s   at cell 0
-ok  src/games/subsets/subsets.description.yaml#placed: recorded sound, proved whole on all 1 boards
-ok  subsets    carryIn                        3  sound    (want sound   )    24 queries    2.5s
-ok  subsets    carryIn (planted)              3  unsound  (want unsound )     1 queries    2.0s   at edge 0
-ok  src/games/subsets/subsets.description.yaml#carryIn: recorded sound, proved whole on all 1 boards
-ok  subsets    carryOut                       3  sound    (want sound   )    24 queries    1.9s
-ok  subsets    carryOut (planted)             3  unsound  (want unsound )     1 queries    0.3s   at edge 0
-ok  src/games/subsets/subsets.description.yaml#carryOut: recorded sound, proved whole on all 1 boards
-ok  subsets    noShoe                         3  sound    (want sound   )    24 queries    1.2s
-ok  subsets    noShoe (planted)               3  unsound  (want unsound )     1 queries    0.6s   at edge 0
-ok  src/games/subsets/subsets.description.yaml#noShoe: recorded sound, proved whole on all 1 boards
-ok  subsets    noShoeBeside                   3  sound    (want sound   )    24 queries    2.2s
-ok  subsets    noShoeBeside (planted)         3  unsound  (want unsound )     1 queries    0.4s   at edge 0
-ok  src/games/subsets/subsets.description.yaml#noShoeBeside: recorded sound, proved whole on all 1 boards
-ok  subsets    lone                           3  sound    (want sound   )    16 queries    2.8s
-ok  subsets    lone (planted)                 3  unsound  (want unsound )     1 queries    0.3s   at cell 0
-ok  src/games/subsets/subsets.description.yaml#lone: recorded sound, proved whole on all 1 boards
-..  subsets    onlyCell: not proved whole in time, asked on 56 boards: no defect
-ok  subsets    onlyCell                       3  held     (want sound   )   896 queries  120.0s
-ok  subsets    onlyCell (planted)             3  unsound  (want unsound )     1 queries    2.7s   at 1
-ok  src/games/subsets/subsets.description.yaml#onlyCell: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest
-ok  subsets    smaller                        3  sound    (want sound   )    24 queries    1.8s
-ok  subsets    smaller (planted)              3  unsound  (want unsound )     1 queries    0.3s   at edge 0
-ok  src/games/subsets/subsets.description.yaml#smaller: recorded sound, proved whole on all 1 boards
-ok  subsets    bigger                         3  sound    (want sound   )    24 queries    1.9s
-ok  subsets    bigger (planted)               3  unsound  (want unsound )     1 queries    0.9s   at edge 0
-ok  src/games/subsets/subsets.description.yaml#bigger: recorded sound, proved whole on all 1 boards
+ok  subsets    placed                         current: recorded src/games/subsets/subsets.description.yaml#placed a5127965b069b9b7
+ok  subsets    carryIn                        current: recorded src/games/subsets/subsets.description.yaml#carryIn 98635989542cc733
+ok  subsets    carryOut                       current: recorded src/games/subsets/subsets.description.yaml#carryOut 74b0ffa83e809b78
+ok  subsets    noShoe                         current: recorded src/games/subsets/subsets.description.yaml#noShoe 5ff34cbf677af4e3
+ok  subsets    noShoeBeside                   current: recorded src/games/subsets/subsets.description.yaml#noShoeBeside 540215743f39fd30
+ok  subsets    lone                           current: recorded src/games/subsets/subsets.description.yaml#lone fb215b38445274f0
+ok  subsets    onlyCell                       current: recorded src/games/subsets/subsets.description.yaml#onlyCell 1ab136b8fa432f04 held
+ok  subsets    smaller                        current: recorded src/games/subsets/subsets.description.yaml#smaller 85984037e48ffd0f
+ok  subsets    bigger                         current: recorded src/games/subsets/subsets.description.yaml#bigger c107190e3c0da990

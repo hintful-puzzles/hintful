@@ -47,6 +47,7 @@ import { layoutOf, tallyBeneath } from "./render/geometry.ts";
 import { hintPass } from "./render/hint.ts";
 import { breachesOf } from "./render/layers/breaches.ts";
 import { edgeWordsOf } from "./render/layers/edge-values.ts";
+import { featureTexts } from "./render/layers/features.ts";
 import { addLinks } from "./render/layers/links.ts";
 import { errorWords } from "./render/layers/live-errors.ts";
 import { addMistakes } from "./render/layers/mistakes.ts";
@@ -208,6 +209,8 @@ export interface FillRender<C> {
   /** Where cell `c`'s feature slots are drawn, where the values are features
    * (`play.numbers.features`), a slot a feature. */
   featureSlots(board: FillBoard<C>, ds: FillDrawState, c: number): readonly Rect[];
+  /** Where cell `c`'s feature letters are drawn, slot by slot. */
+  featureLetters(board: FillBoard<C>, ds: FillDrawState, c: number): readonly Point[];
 }
 
 const PREFERRED_TILE_SIZE = 32;
@@ -448,6 +451,16 @@ export function fillRender<C extends Clues<C>>(
         partsOf(cx, b)?.walls[c] ?? null,
         cx.features.names.length,
       );
+    },
+    featureLetters: (b, ds, c) => {
+      if (cx.features === null) throw new Error("play numbers: no features");
+      const at = [c % b.w, Math.floor(c / b.w), b.h] as const;
+      const lay = layoutFor(b, false, 1);
+      const walls = partsOf(cx, b)?.walls[c] ?? null;
+      return featureTexts(
+        lay.featureSlots(ds.tileSize, at, walls, cx.features.names.length),
+        lay.markBand(ds.tileSize, at, walls),
+      ).map((t) => t.origin);
     },
   };
 

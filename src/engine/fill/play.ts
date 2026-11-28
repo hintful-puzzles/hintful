@@ -59,10 +59,10 @@ export interface FillPlay {
    * labeled by it on the keypad. `features`: each value a set of features
    * (the module's `featuresOf`), feature `k` drawn as `names`' letter `k`
    * in its slot of the square (`render/layers/features.ts`), over notes
-   * kept full. */
+   * kept full, and said in a hint by its letters (`featuresSaid`). */
   readonly numbers?: {
     readonly raised?: true;
-    readonly features?: { readonly names: string };
+    readonly features?: { readonly names: string; readonly none?: string };
     readonly letters?: true | string;
     readonly empty?: { readonly ball: string };
     readonly pictures?: {

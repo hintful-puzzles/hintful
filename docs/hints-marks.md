@@ -674,8 +674,8 @@ true.
 - **`() => true`** dismisses on any UI change. It is enough when the hint
   marks nothing the player has to select in order to follow it.
 - **Answer by step** to keep the hint while the player works inside it. A
-  step followed by touching the suppressed surface stays, by its kind
-  ([`subsets/index.ts`](../src/games/subsets/index.ts)); a step followed by
+  step followed by touching the suppressed surface stays, by its kind; a
+  step followed by
   selecting its squares stays while the selection is on one of them, which
   its marks already say, so nothing new is stored
   ([`crossing/index.ts`](../src/games/crossing/index.ts)).
@@ -1136,8 +1136,8 @@ derivations".
 
 Exemplars: `planSteps`, `sentenceExpires` and `sentenceHolds` in
 [`loopy/hint.ts`](../src/games/loopy/hint.ts), whose player's notes are the
-walk's roots; `markRuleOuts` and `canHold` in
-[`subsets/solver.ts`](../src/games/subsets/solver.ts), where one predicate
+walk's roots; and the fill engine's full notes
+([`fill/notes.ts`](../src/engine/fill/notes.ts)), where one set of notes
 answers the aid, the hint's premises and "is this already on the board".
 
 ### Place the notes a fixpoint rests on

@@ -223,7 +223,11 @@ library's `placed` strikes it from a unit once the unit holds every copy,
 the walk's working board's copies counted, and the description words that
 strike as the unit's last (`steps.last`, `REPEAT_STEPS`). A unit holds every
 value for a hidden single where its domain's values, the repeated one's
-copies counted, are as many as its cells. A born board may have no
+copies counted, are as many as its cells. A board whose rules hold every
+cell distinct (`distinct(value(c) over c in cells)`, Subsets') has the
+whole board as a part (`WHOLE_BOARD`, `distinctPartsOf`), where a value
+with one cell left is a hidden single in the words the description gives
+a part's (`steps.hiddenSingle`). A born board may have no
 unit at all (ABCD's, whose lines count rather than forbid a repeat): its
 reach is then its techniques' alone, it has no hidden single, and its
 description words the walk's steps (`WALK_STEPS`), as the `counting`
@@ -587,8 +591,12 @@ A born board whose notes are what a cell can still hold, never a jotting
 (Subsets', where the letters drawn are a view of them), has no unmarked
 cell and so neither reading: its notes mark says `full`, and
 `settleFullNotes` in [`engine/fill/notes.ts`](../src/engine/fill/notes.ts)
-keeps every open cell noted after each move. A walk's strike that narrows
-a cell to one value places it, so the walk owes no single after it.
+keeps every open cell noted after each move. A value placed is struck from
+every cell it rules out as it is placed, and a given's from the deal, so
+the walk has no populate, clean, note or cull step (`walkStepsOf`) and the
+game no Mark-all. A strike that narrows a cell to one value places it, on
+the board and in the walk (the plan's `autoPlace`), so the walk owes no
+single after it and has no single rung.
 
 ### Joining the preference
 
@@ -874,9 +882,11 @@ cell's value and its own.
 
 Where the solver reasons over candidates the player never sees (a cube of
 whole-cell values behind per-slot marks), do not narrate a collapse by the
-candidates eliminated: the list is long and dishonestly precise. Exemplars:
-[`subsets/solver.ts`](../src/games/subsets/solver.ts),
-[`subsets/index.ts`](../src/games/subsets/index.ts).
+candidates eliminated: the list is long and dishonestly precise. Say the
+presses that make the strike where some do. Exemplar: `pressesSaid` in
+[`fill/features.ts`](../src/engine/fill/features.ts), where a strike a
+square's letter slots make reads "A and D must be present", and only a
+strike no press makes names its sets.
 
 - **Start the plan's candidates from the player's own marks, and let the
   ladder find what a neighbor rules out.** Seeded from the whole shallow

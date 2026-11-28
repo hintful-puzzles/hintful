@@ -172,6 +172,11 @@ export interface Premise {
   /** Why the step needs more room than a glance gives (`Sentence.long`), as
    * the premise's stated wording says. */
   long?: string;
+  /** The strike as the presses that make it, where the board makes it so
+   * (on a board of features, "A and D", which "must be present"): what is
+   * pressed, of the live values, and what follows it, in place of the
+   * struck values and "must go". */
+  pressed?: { what(values: readonly number[]): string; after: string };
 }
 
 /**
@@ -229,7 +234,8 @@ export function candidateConclusions(vocab: {
   };
   return {
     cell,
-    strike: ({ where, struck }) => {
+    strike: ({ where, struck, pressed }) => {
+      if (pressed !== undefined) return pressed;
       const from = where?.startsWith("from ") ?? false;
       const values = (values: readonly number[]): string => {
         const ns = distinct([...values]);
@@ -249,6 +255,11 @@ export function candidateConclusions(vocab: {
         // as the letter, so it stays "the a".
         if (ns.length === 1) {
           const word = v(ns[0]);
+          // A value said with its own article (Subsets' "the empty set")
+          // says which mark it is after it.
+          if (word.startsWith("the ")) return `the struck ${word.slice(4)}`;
+          // A set said by its members ("{B}") is a value, and takes none.
+          if (word.startsWith("{")) return word;
           return values.length > 1 && !/^[a-z]$/.test(word)
             ? `the ${word}s`
             : `the ${word}`;

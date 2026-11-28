@@ -2117,7 +2117,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private takesNotes(): boolean {
     // Before a game is loaded there is no board to read, and the keypad is
     // requested then (the app asks as it builds the panel). No board, no notes.
-    return takesNotes(this.state, this.ui);
+    return takesNotes(this.state, this.ui, this.game);
   }
 
   getParams(): string {

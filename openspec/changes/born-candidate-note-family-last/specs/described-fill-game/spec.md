@@ -731,20 +731,41 @@ error color.
 
 A born game's candidate notes MAY be declared full: what each open cell
 can still hold, never a cell left unnoted. Every open cell's notes SHALL
-be its domain as dealt and again wherever its value is cleared; a move
+be its domain as dealt, and again wherever its value is cleared; a move
 that leaves a cell one note SHALL place that value there; a strike that
-would leave an open cell no note SHALL leave its notes as they were; and
-the game SHALL offer no hint-notes preference.
+would leave an open cell no note SHALL leave its notes as they were. The
+game SHALL offer no hint-notes preference and no Mark-all.
 
 #### Scenario: Narrowed to one set
 
 - **WHEN** a `holding` square's notes are struck down to {A}
 - **THEN** the square holds {A}
 
+### Requirement: A value placed on full notes leaves every cell it rules out
+
+On a born board whose notes are full, a value placed, given or settled
+SHALL be struck from every cell it rules out as it is placed, a given's
+from the deal, and a cell it leaves one note SHALL hold that value in turn.
+Clearing a value SHALL NOT give it back to the cells its placing struck it
+from. The hint SHALL have no step that notes a cell, strikes a placed
+value or places a cell's last value.
+
+#### Scenario: Placed, and gone from the rest
+
+- **WHEN** a `holding` square's notes are struck down to {A}
+- **THEN** no other square can hold {A}
+
+#### Scenario: A given set is in no square's notes
+
+- **WHEN** a `holding` board is dealt with {B} and {} given
+- **THEN** each open square's notes are {A} and {A, B}
+
 #### Scenario: A set cleared
 
-- **WHEN** a `holding` square's set is cleared
-- **THEN** its notes are every set again
+- **WHEN** a `holding` square's set {B} is cleared, on a board with no set
+  given
+- **THEN** its notes are every set again, and {B} stays struck from the
+  other squares
 
 ### Requirement: A born game's value may be drawn as its features
 
@@ -805,15 +826,16 @@ no keypad, no pencil mode and no preference that acts on typing.
 #### Scenario: No keypad
 
 - **WHEN** a `holding` board is in play
-- **THEN** it offers no key to type a set with
+- **THEN** it offers no key to type a set with, and no Marks key
 
 ### Requirement: Check & Save on a born board of features marks the wrong slots
 
 On a born board whose values are features, Check & Save SHALL draw red
 each slot whose letter or cross the square's value or notes decide against
 the answer, in place of the square's outline, and SHALL outline a square
-whose notes leave its answer out with no slot decided wrongly. Clearing the
-mistakes SHALL give such a square every value its domain has. The compiler
+whose notes leave its answer out with no slot decided wrongly, unless its
+answer is placed elsewhere, the one mistake. Clearing the mistakes SHALL
+give such a square every value of its domain no square holds. The compiler
 SHALL refuse more than four features.
 
 #### Scenario: A wrong set's letters
@@ -824,9 +846,16 @@ SHALL refuse more than four features.
 
 #### Scenario: Notes cleared of a mistake
 
-- **WHEN** a `holding` square whose answer is {A} has notes {} and {B}, and
-  the player clears the mistakes
-- **THEN** its notes are every set
+- **WHEN** a `holding` square whose answer is {A, B} has notes {} and {A},
+  {B} given elsewhere, and the player clears the mistakes
+- **THEN** its notes are {}, {A} and {A, B}
+
+#### Scenario: A wrong set's strike is not a second mistake
+
+- **WHEN** a `holding` square whose answer is {A} holds {A, B}, which strikes
+  {A, B} from the square whose answer it is, and the player checks
+- **THEN** the one mistake is the wrong set: the board's strike is not
+  counted, and the other square's B, decided absent by it, is not red
 
 ### Requirement: A born hint's strike on a board of features is shown as slot presses
 
@@ -834,11 +863,14 @@ On a born board whose values are features, a hint's strike SHALL be shown
 as presses on the square's undecided slots, each to present or absent,
 each striking only notes the step strikes; and a strike of part of a hint
 step's notes SHALL keep the hint on its step, shrunk to the rest. A strike
-that no such presses make SHALL be made on the band of every value.
+that no such presses make SHALL be made on the band of every value. A
+placement SHALL be shown as the strike of the square's other notes, kept
+on its step until the square holds the value.
 
 #### Scenario: A strike as two presses
 
-- **WHEN** the hint strikes {}, {B} and {A, B} from a `holding` square
+- **WHEN** the hint strikes {} and {A, B} from a `holding` square that can
+  hold {}, {A} and {A, B}
 - **THEN** its gesture presses A to present and B to absent, and the first
   press keeps the hint on its step
 
@@ -854,8 +886,14 @@ A born board whose values are features and which declares `play.band`
 SHALL draw every value beneath it, gray once a square holds it and red
 where two do. A press on a value SHALL spotlight the squares that can
 still hold it, and a second press put the spotlight out. The values a
-hint's step strikes SHALL be ringed on the band. The compiler SHALL refuse
-a band on a board not of numbers, or beside a list or counts.
+hint's step strikes SHALL be crossed out on the band, corner to corner in
+their own ink, as every strike is. The compiler SHALL refuse a band on a
+board not of numbers, or beside a list or counts.
+
+#### Scenario: A hint's strike on the band
+
+- **WHEN** the hint strikes {} and {A, B} from a `holding` square
+- **THEN** "__" and "AB" are crossed out on the band, and no other value
 
 #### Scenario: A spotlight
 
@@ -912,3 +950,35 @@ ends SHALL be refused. The compiler SHALL refuse `from: 0` with no
 - **WHEN** the `holding` board {A} {B} over {} {A, B}, {A} hidden, is
   written
 - **THEN** its ID is `_D,2,0,3UL`, and it reads back to the same board
+
+### Requirement: A born hint says a value of features by its letters
+
+On a born board whose values are features, a hint SHALL say a value as the
+letters of its features in braces ("{A,C}"), and a value with none as the
+words the description gives it (`none`), "{}" where it gives none. A
+value said with its own article SHALL take no second one, and where it names
+a struck note SHALL say so ("the struck empty set"). A strike whose presses
+go one way SHALL be said as their letters, of the notes still live.
+
+#### Scenario: A strike said as its presses
+
+- **WHEN** a Subsets hint strikes every set that lacks A or D from a square
+- **THEN** its words end "so A and D must be present"
+
+#### Scenario: The empty set struck alone
+
+- **WHEN** a Subsets hint strikes the empty set alone from a square
+- **THEN** its words end "so the struck empty set must go"
+
+### Requirement: A born board held distinct whole is a part the walk reads
+
+Where a born game's rules hold every cell distinct
+(`distinct(value(c) over c in cells)`), its hint SHALL read the whole board
+as one part, as it reads a row, and place a value with one cell left on the
+board there, in the words the description gives a part's hidden single.
+
+#### Scenario: A set with one square left
+
+- **WHEN** only one Subsets square can still hold {A}
+- **THEN** the hint places {A} there, saying "None of the other squares can
+  still be {A}, so this square must be {A}."

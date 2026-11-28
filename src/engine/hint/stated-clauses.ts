@@ -223,7 +223,9 @@ function slot(body: string, src: string): Piece {
       throw new Error(`"{${body}}" is no fit of two forms or more, in "${src}"`);
     return { name: "", role: "fit", words };
   }
-  if (head.length === 1 && SLOT_ROLES.has(head[0]))
+  // A mark's own role alone; a role over a term (`has`, `if`, a number's)
+  // without one is no slot, and a term named as a role is refused here.
+  if (head.length === 1 && Object.hasOwn(DRAWN, head[0]))
     return { name: "", role: head[0], words };
   if (head[0] === "has") {
     if (
