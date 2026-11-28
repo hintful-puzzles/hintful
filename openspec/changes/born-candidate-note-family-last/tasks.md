@@ -1,9 +1,13 @@
 ## Next
 
-2.2b, Crossing's list drawn beneath the board (the split is 2.2's
-subtasks). A record is struck where its meaning holds of the board as
-placed, red where the rules break it; a hint rings and outlines records,
-which needs a mark kind for a record. Then 2.2c to 2.2f in turn.
+2.2b on `listing`, read 2026-11-28 at `b946f87e6`: `play.list: <kind>`; a
+compiled `recordHolds(g, sp, cl, k)` off the kind's `means`, two-valued,
+for the strike; upstream's `draw_numbers` layout (Crossing `render.ts`'s
+`layoutNumbers`) as a `Beneath` of fixed height beside `countsBeneath`;
+errors as `countErrors` gathers them, for either kind. A hint marks a
+record where it is drawn: `candidates.ts`'s `clueSquare` gives a board
+kind a point beneath the grid, off every slot, and `hint.ts` keeps rings
+off the grid out of its tiles. Then 2.2c to 2.2f.
 
 ## 1. Design
 
