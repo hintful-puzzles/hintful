@@ -186,7 +186,6 @@ function checkCodes(
   }
 }
 
-/** What the compiler reads of a stream, by either of its keys. */
 /** Refuses `sides` that name a side twice, one way and the other. */
 function checkSides(sides: readonly string[]): void {
   const named = sides.map((s) => s.split(" ")[0]);
@@ -194,6 +193,7 @@ function checkSides(sides: readonly string[]): void {
     throw new CompileError(`id: sides ${sides.join(", ")}, a side named twice`);
 }
 
+/** What the compiler reads of a stream, by either of its keys. */
 const STREAM: SegmentRead<SegmentOf<"codes">> = {
   names: streamNames,
   check(seg, cx) {
