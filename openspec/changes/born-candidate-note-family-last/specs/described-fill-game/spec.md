@@ -150,7 +150,9 @@ values below them.
 
 A clue a sampled deal derives whose meaning reads another clue kind SHALL
 be handed the clues dealt before it, and the compiler SHALL refuse one
-reading a kind dealt after it.
+reading a kind dealt after it. A clue at the board read a binding whose
+binding or fields read a clue kind, directly or through a definition,
+SHALL be handed the clues dealt before it the same way.
 
 #### Scenario: Sightlines through mirrors
 
@@ -158,6 +160,12 @@ reading a kind dealt after it.
   its mirrors, and again before them
 - **THEN** the first deals the numbers through the mirrors, and the second
   is refused
+
+#### Scenario: Runs between walls
+
+- **WHEN** an `opening` board is dealt, its list read along the runs a
+  definition finds between its walls
+- **THEN** the list holds each run's digits
 
 ### Requirement: A born game's ID may write slots side by side, a side backwards
 
@@ -192,9 +200,9 @@ clue kinds the answer's domain reads.
 ### Requirement: A born game's deal may refuse its first cells and its board by tier
 
 A first cells' `keep`, one formula or one a tier, SHALL draw the first
-cells again before the build unless it holds of the clues they deal and
-the sizes, and the compiler SHALL refuse one reading a kind the domain does
-not read. A deal's `keep` SHALL draw a board again unless it holds of the
+cells again before the build or the uniform draw unless it holds of the
+clues they deal and the sizes, and the compiler SHALL refuse one reading a
+kind the domain does not read. A deal's `keep` SHALL draw a board again unless it holds of the
 clues its answer derives, before any is hidden. The compiler SHALL refuse
 a keep by tier that leaves a tier out, and one that is no truth.
 
@@ -265,12 +273,73 @@ whose members are not digits.
 
 A deal whose sample is `uniform` SHALL draw each cell a value from 1 to the
 top of the answer's domain at random, each alike, after its first cells,
-whose values it lays on no other cell.
+whose values it lays on no other cell. The top SHALL be read with the
+clues the first cells deal, where the domain reads them.
 
 #### Scenario: A board drawn with nothing to steer it
 
 - **WHEN** a `listing` board is dealt, whose list no build can read
 - **THEN** a board is dealt, and the ladder finishes it
+
+### Requirement: A born game's first cells may be what an opening leaves
+
+First cells `opened` SHALL be laid on every cell an opening leaves: the
+cells opened one at a time in a random order, tried before each opening
+and after the last, until every two by two block holds an open cell and
+the open cells are joined, the opening begun again where it tries every
+cell and never gets there. Each try SHALL lay any cell whose block's other
+three are open, opened or not.
+
+#### Scenario: Upstream Crossing's walls
+
+- **WHEN** `opening` boards are dealt at 5x4, 7x7 and 9x6
+- **THEN** every two by two block of each holds a wall and an open square,
+  and every open square has an open neighbor
+
+#### Scenario: A layout the keep refuses
+
+- **WHEN** `opening` boards are dealt at 7x7, its keep refusing a run
+  longer than four squares
+- **THEN** no board holds one, and layouts were refused before an answer
+  was drawn on them
+
+### Requirement: A born game's opening may keep a symmetry
+
+With first cells `opened` under a `symmetry`, on where flag `when` is on
+or always with no `when`, a cell the opening opens or lays SHALL open or
+lay its orbit with it.
+
+#### Scenario: Symmetric walls on a board even in a side
+
+- **WHEN** `opening` boards are dealt at 7x6 with the symmetric flag on,
+  and with it off
+- **THEN** every board with it on is the same turned half round, and some
+  with it off are not
+
+### Requirement: The compiler refuses an opening laid any other way besides
+
+The compiler SHALL refuse first cells `opened` with a share, a symmetry
+of their own, a chance or a bound, a `when` that is no flag the settings
+give, and a `when` with no symmetry.
+
+#### Scenario: An opening at a chance
+
+- **WHEN** the `opening` description's first cells are given a chance
+  beside their opening, and then a `when` naming a size
+- **THEN** each is refused
+
+### Requirement: A born game's ID may write a marker's cells as runs
+
+The ID's `spans` segment of a cell's one-valued marker SHALL write every
+cell in a run: a run of the marker's cells a letter, `a` one to `z` 26,
+letters side by side adding, and a run of the other cells its length as a
+number. It SHALL refuse runs past the board or short of it. The compiler
+SHALL refuse the segment of a kind that is no one-valued marker.
+
+#### Scenario: Upstream Crossing's wall runs
+
+- **WHEN** a 9x4 `opening` ID writes 27 walls and then 9 open squares
+- **THEN** it reads `za9`, and `yb9` reads the same walls
 
 ### Requirement: A born game's clue at the board may be drawn as a list
 

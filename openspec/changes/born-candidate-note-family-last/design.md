@@ -137,6 +137,35 @@ machine, in ms (the hand-written generator's in brackets): 4x4 Easy 0 to 5
 concept it uses, sightlines through a kind's cells read at both ends, so
 another game whose clues look along sightlines takes it as it is.
 
+### 7. Crossing's walls are joined and symmetric, and four shapes have none (2.2c), for the owner
+
+`openspec/specs/crossing/spec.md` says a dealt board's open squares are
+joined and no 2x2 block is all walls, and the symmetric-walls setting says
+the walls are the same turned half round. Upstream's opening, which the
+hand-written generator copies, keeps neither promise every time: it lays
+squares it never opens, so a fifth of 7x7 openings never join and are dealt
+as they stand (about one dealt 7x7 in twenty is apart), and it lays one
+square of a symmetric pair, so a tenth of symmetric 7x6 boards come out
+asymmetric. Both are measured 2026-11-28. The engine's opening
+(`deal/opened.ts`) keeps both: an opening that never joins is begun again,
+and a square laid lays its orbit. The presets are unaffected: the number of
+draws a deal takes is unchanged at 11x13, 15x15S and 9x11 Unreasonable.
+
+The cost: some symmetric Custom sizes have no board at all. A board two
+squares wide whose length is even (2x4, 2x6, 2x8, and turned) has no joined
+symmetric layout: its middle block must hold one of its two pairs of
+partners open and the other walled, which leaves two open squares on a
+diagonal with no way round. A symmetric 4x4 has two joined layouts and no
+board with one answer on either. Today the game deals those sizes, each
+board breaking one of the two promises.
+
+**The owner's call, asked at 2.2c**: (a), recommended, keep both promises
+and refuse those sizes in the Custom dialog with a sentence, so the
+setting means what its help says; or (b) keep upstream's opening, and
+correct the spec and the help to say what it deals. The hand-written game
+is left as it was until the answer; the flip (2.2f) needs it, and 2.2d and
+2.2e do not.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

@@ -39,7 +39,8 @@ type Keep = string | Readonly<Record<string, string>>;
  * same of `sample.first.keep` on the clues the first cells derive, which it
  * reads alone. Refused where a keep names a tier the description lacks or
  * leaves one out, or a formula is no truth; and a first cells' keep reading
- * a kind the domain does not, or kept by no build.
+ * a kind the domain does not, or kept by neither a build nor a uniform
+ * sample.
  */
 export function keepsOf(
   json: DescriptionJson,
@@ -49,9 +50,12 @@ export function keepsOf(
 ): string[] {
   const sample = sampleOf(json);
   const first = sample !== null && "first" in sample ? sample.first?.keep : undefined;
-  if (first !== undefined && !(sample !== null && "build" in sample))
+  if (
+    first !== undefined &&
+    !(sample !== null && ("build" in sample || "uniform" in sample))
+  )
     throw new CompileError(
-      "deal sample first keep: a layout a build keeps, and no build",
+      "deal sample first keep: a layout a build or a uniform sample keeps, and neither",
     );
   if (first !== undefined) {
     const dealt = kindsRead(d.domain, d.defs);

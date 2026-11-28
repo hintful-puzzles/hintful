@@ -12,6 +12,7 @@
  */
 
 import { shuffle } from "../board/shuffle.ts";
+import type { Symmetry } from "../generate/symmetry.ts";
 import { type RandomState, randomBits, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { latinGenerate, matching } from "../solve/latin.ts";
@@ -227,13 +228,21 @@ export function samplePicture(
 /** A value dealt on a share of the cells before the rest is drawn, as
  * symmetric as asked, each by the name of the option that gives it, the
  * share going up by `ramp` as draws fail; or on each cell alone at `chance`,
- * the cells drawn again until the share laid is `within`'s. Of a list of
- * values, each cell is laid one at random. */
+ * the cells drawn again until the share laid is `within`'s; or on every
+ * cell `opened` leaves. Of a list of values, each cell is laid one at
+ * random. */
 export interface FirstCells {
   readonly value: number | readonly number[];
   readonly share?: string;
   readonly symmetry?: string;
   readonly chance?: number;
+  /** Cells opened at random until the rest may be laid (`opened.ts`), each
+   * with its orbit under `symmetry` where flag `when` is on, or always with
+   * no `when`. */
+  readonly opened?: {
+    readonly symmetry?: Symmetry;
+    readonly when?: string;
+  };
   readonly within?: { readonly min: number; readonly max: number };
   readonly ramp?: {
     readonly every: number;
@@ -248,6 +257,9 @@ export interface FirstCells {
 export interface UniformSample {
   readonly uniform: true;
   readonly first?: FirstCells;
+  /** With `first`, the clue kinds the answer's domain reads, which the
+   * first cells' keep reads alone. */
+  readonly reads?: readonly string[];
 }
 
 /** `first`'s values, which a uniform sample lays nowhere else. */

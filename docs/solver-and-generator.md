@@ -1368,6 +1368,19 @@ the boards a seed deals move").
   (Crossing's numbers, `deal.records`, the `listing` fixture). A square
   board whose rows and columns read alike is never unique: its mirror on
   the leading diagonal reads the same list.
+- **Walls dealt apart from the answer are first cells an opening leaves**
+  (`first.opened`, `deal/opened.ts`, upstream crossing.c's walls). Upstream
+  stops at joined open squares but does not promise them: a square it lays
+  is never opened, so about a fifth of 7x7 openings never join, every
+  square is tried, and upstream deals the board as it stands, apart about
+  one dealt board in twenty (2026-11-28). The opening begins again there
+  instead, and under a symmetry a square laid lays its orbit, which
+  upstream's does not, leaving a tenth of its symmetric 7x6 boards
+  asymmetric. So some shapes have no opening at all: a symmetric board two
+  squares wide and even in length cannot be joined, and the opening's
+  retry guard gives up there. A layout the deal refuses for its runs is
+  the first cells' keep, read before an answer is drawn on it (the
+  `opening` fixture).
 - **A derived clue reads only the kinds dealt before it**, in the order the
   description lists its clues: Undead's sightlines through its mirrors
   list the mirrors first, and the compiler refuses the other order.

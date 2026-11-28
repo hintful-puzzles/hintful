@@ -124,11 +124,34 @@
     },
     "firstCells": {
       "type": "object",
-      "description": "A value dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational); or with `chance`, on each cell alone at that chance (upstream undead.c's mirrors). A list of values lays each cell one of them at random.",
+      "description": "A value dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational); or with `chance`, on each cell alone at that chance (upstream undead.c's mirrors); or with `opened`, on every cell the opening leaves (upstream crossing.c's walls). A list of values lays each cell one of them at random.",
       "required": ["value"],
-      "oneOf": [{ "required": ["share", "symmetry"] }, { "required": ["chance"] }],
+      "oneOf": [
+        { "required": ["share", "symmetry"] },
+        { "required": ["chance"] },
+        { "required": ["opened"] }
+      ],
       "additionalProperties": false,
       "properties": {
+        "opened": {
+          "type": "object",
+          "description": "Cells opened one at a time in a random order, and the value laid on every cell left, from the moment no two by two block lacks an open cell and the open cells are joined; a cell opened whose two by two block is then open on its other three sides is laid at once, so no such block is open whole (upstream crossing.c's crossing_gen_walls). With `symmetry`, each cell opened opens its orbit, where flag `when` is on or with no `when` always.",
+          "additionalProperties": false,
+          "properties": {
+            "symmetry": {
+              "type": "string",
+              "enum": [
+                "halfTurn",
+                "mirrorLeftRight",
+                "mirrorTopBottom",
+                "mirrorBothWays"
+              ]
+            },
+            "when": {
+              "type": "string"
+            }
+          }
+        },
         "value": {
           "oneOf": [
             {
@@ -154,7 +177,7 @@
         },
         "keep": {
           "$ref": "#/$defs/byTier",
-          "description": "For a build: first cells drawn again unless this holds of the clues they deal and the sizes, one formula or one by tier, each tier named, before the rest is built (upstream undead.c's sightlines no longer than the tier allows). It reads only the kinds the answer's domain reads."
+          "description": "For a build or a uniform sample: first cells drawn again unless this holds of the clues they deal and the sizes, one formula or one by tier, each tier named, before the rest is drawn (upstream undead.c's sightlines no longer than the tier allows). It reads only the kinds the answer's domain reads."
         },
         "chance": {
           "type": "number",
@@ -1899,6 +1922,17 @@
                 "additionalProperties": false,
                 "properties": {
                   "runs": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["spans"],
+                "additionalProperties": false,
+                "description": "Where a cell's one-valued marker sits, every cell in a run: a run of the marker's cells a letter, `a` one to `z` 26, letters side by side adding, and a run of the other cells its length as a number (upstream crossing.c's walls).",
+                "properties": {
+                  "spans": {
                     "type": "string"
                   }
                 }

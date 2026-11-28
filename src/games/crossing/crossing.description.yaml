@@ -115,6 +115,35 @@ deal:
   answer: a digit a square, at random
   numbers: every run's, sorted by length and then by digit; a board two runs read alike on is dealt again
   tier: one of the tiers
+  sample:
+    # Upstream crossing.c's walls: what an opening leaves.
+    first:
+      value: 10
+      opened: { symmetry: halfTurn, when: symmetric }
+      # No run longer than nine squares, as the hand-written generator kept
+      # them. The open squares are joined, so each is in a run.
+      keep: "forall L in lines, c in cells(L) where head(L, c): |run(L, c)| <= 9"
+    uniform: true
+  records:
+    numbers:
+      for: "L in lines, c in cells(L) where head(L, c)"
+      digits: "run(L, c)"
+  # The list names each number once.
+  keep: "forall k in clues(numbers), j in clues(numbers) where j != k: digits(j) != digits(k)"
+settings:
+  symmetric:
+    kind: flag
+    letter: S
+    kw: symmetric-walls
+    name: Symmetric walls
+    doc: When enabled, all walls form a rotationally symmetric pattern.
+    words: symmetric
+# Upstream crossing.c's: the walls, a run of them a letter and a run of open
+# squares a number, then the list after a comma.
+id:
+  - spans: blank
+  - numbers: numbers
+    before: ","
 tiers: [Easy, Unreasonable]
 names:
   onlyNumber: "a run only one number fits"

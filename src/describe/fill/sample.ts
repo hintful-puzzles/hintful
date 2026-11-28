@@ -197,9 +197,9 @@ export function checkSample(
   }
 }
 
-/** A build on first cells, given the clue kinds the answer's domain reads:
- * the clues those cells derive that the build reads (Undead's mirrors, Light
- * Up's walls). Every other kind derived from first cells alone is no
+/** A build or a uniform sample on first cells, given the clue kinds the
+ * answer's domain reads: the clues those cells derive that the build and
+ * the first cells' keep read (Undead's mirrors, Light Up's walls). Every other kind derived from first cells alone is no
  * answer's: a sightline's count of a board of mirrors and nothing else. The
  * first cells' `keep` is the module's `firstKeeps` and the sightlines' `open`
  * its `sightlinesOpen`, so the deal holds neither. */
@@ -218,7 +218,7 @@ export function withBuildReads<S extends object>(
       ? { sightlines: without(sample.sightlines, "open") }
       : {}),
     ...("first" in sample ? { first: without(sample.first, "keep") } : {}),
-    ...("first" in sample && "build" in sample
+    ...("first" in sample && ("build" in sample || "uniform" in sample)
       ? { reads: [...kindsRead(d.domain, d.defs)].sort() }
       : {}),
   };
@@ -226,17 +226,34 @@ export function withBuildReads<S extends object>(
 
 /** Refuses first cells whose share is no number the options give, or whose
  * symmetry is no option of the symmetries first cells keep; first cells at a
- * chance with a share or a symmetry besides, or a bound on the share laid
- * and no chance; and a first value no clue kind the domain reads fixes, for
- * a build, which reads those alone. */
+ * chance, or those an opening leaves, with a share or a symmetry besides, a
+ * bound on the share laid and no chance, an opening's symmetry turned on by
+ * no flag or a flag that turns on none; and a first value no clue kind the
+ * domain reads fixes, for a build, which reads those alone. */
 export function checkFirst(
   sample: SampleJson | null,
   settings: readonly SettingOut[],
   d: Description,
 ): void {
   if (sample === null || !("first" in sample) || sample.first === undefined) return;
-  const { share, symmetry, chance, within } = sample.first;
-  if (chance !== undefined) {
+  const { share, symmetry, chance, within, opened, ramp } = sample.first;
+  if (opened !== undefined) {
+    if ([share, symmetry, chance, within, ramp].some((x) => x !== undefined))
+      throw new CompileError(
+        "deal sample first: cells an opening leaves, and a share, a symmetry or a chance",
+      );
+    if (
+      opened.when !== undefined &&
+      !settings.some((s) => s.id === opened.when && s.kind === "flag")
+    )
+      throw new CompileError(
+        `deal sample first opened: when ${opened.when}, which is no flag the settings give`,
+      );
+    if (opened.when !== undefined && opened.symmetry === undefined)
+      throw new CompileError(
+        "deal sample first opened: a flag that turns on no symmetry",
+      );
+  } else if (chance !== undefined) {
     if (share !== undefined || symmetry !== undefined)
       throw new CompileError(
         "deal sample first: cells laid each at a chance, and a share or a symmetry",

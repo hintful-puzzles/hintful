@@ -1252,6 +1252,63 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play leadingDiagonal: a row meets the same column on a square board/);
   });
 
+  describe("first cells an opening leaves, under a uniform sample", () => {
+    const fixture = "src/engine/testing/fixtures/opening/opening.description.yaml";
+    type Opening = {
+      deal: { sample: { first: Record<string, unknown> } };
+      clues: { wall: { value: string } };
+    };
+    const edit = (f: (j: Opening) => void) => (j: Opening) => {
+      f(j);
+      return j;
+    };
+
+    it("hands the keep the kinds the domain reads, and the deal the opening", () => {
+      const out = compileEdited(fixture, (j) => j);
+      expect(out).toContain('"reads":["wall"]');
+      expect(out).toContain('"opened":{"symmetry":"halfTurn","when":"symmetric"}');
+      expect(out).toContain("export function firstKeeps(");
+    });
+
+    it("refuses an opening with a chance, a symmetry no flag turns on, and a flag turning on none", () => {
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.deal.sample.first["chance"] = 0.5;
+          }),
+        ),
+      ).toThrow(/cells an opening leaves, and a share, a symmetry or a chance/);
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.deal.sample.first["opened"] = { symmetry: "halfTurn", when: "w" };
+          }),
+        ),
+      ).toThrow(/when w, which is no flag the settings give/);
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.deal.sample.first["opened"] = { when: "symmetric" };
+          }),
+        ),
+      ).toThrow(/a flag that turns on no symmetry/);
+    });
+
+    it("refuses spans of a kind that is no one-valued marker", () => {
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.clues.wall.value = "range(0, 1)";
+          }),
+        ),
+      ).toThrow(/id: spans of wall, which is not a cell's one-valued marker/);
+    });
+  });
+
   describe("records a clue at the board reads a binding", () => {
     const fixture = "src/engine/testing/fixtures/listing/listing.description.yaml";
     type Listing = {

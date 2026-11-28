@@ -308,6 +308,15 @@ const SEGMENTS: { readonly [K in SegmentKey]: SegmentRead<SegmentOf<K>> } = {
         );
     },
   ),
+  spans: numbers(
+    (seg) => seg.spans,
+    (_seg, { d }, { kind }) => {
+      if (!markerKind(d, kind))
+        throw new CompileError(
+          `id: spans of ${kind}, which is not a cell's one-valued marker`,
+        );
+    },
+  ),
   dots: numbers(
     (seg) => seg.dots,
     (seg, { id, i }, { kind, c, values }) => {

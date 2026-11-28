@@ -1,0 +1,17 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A run's first fitting number left out of what it allows.
+  narrow:
+    conclude: >-
+      forall d in cand(x) where not (exists k in K - {first(K)}: digit(k, x, R)
+      = d): strike(x, d)
+  # A number placed in a run it does not fit.
+  onlyRun:
+    for: >-
+      k in clues(numbers)
+      where count(M in lines, b in cells(M) where head(M, b) and fits(k, run(M, b))) = 1,
+      L in lines, c in cells(L) where head(L, c) and not fits(k, run(L, c)), R = run(L, c)
+      where |digits(k)| = |R| and (exists x in R: not known(x))

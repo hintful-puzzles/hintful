@@ -29,6 +29,7 @@ import { searchedPositions } from "../search.ts";
 import { buildAnswer, climbBuild, DEAD_END } from "./build.ts";
 import type { DealContext, Grown } from "./context.ts";
 import { firstLaid } from "./first-laid.ts";
+import { keepingAll } from "./keeping.ts";
 import { divided } from "./partition.ts";
 
 /** The positions the search for an answer under a divided partition may try
@@ -138,7 +139,15 @@ const SAMPLERS: {
       sample.first === undefined
         ? null
         : firstLaid(sample.first, cx.deal, cx.p, cx.rs, cx.layouts++);
-    const top = topValue(cx.module, cx.sp, cx.sizes as unknown as C);
+    // The domain may read what the first cells deal (Crossing's digits, on
+    // squares that are no wall), so its top is read with them.
+    const laid =
+      first === null
+        ? (cx.sizes as unknown as C)
+        : firstClues(cx, sample.reads ?? [], first);
+    if (first !== null && cx.module.firstKeeps?.(cx.sp, laid, cx.p.diff) === false)
+      return drawRejected("fill: the first cells' keep refuses them");
+    const top = topValue(cx.module, cx.sp, laid);
     return answer(sampleUniform(sample, cx.sp.cells.length, top, first, cx.rs));
   },
   scatter: (sample, cx) => {
@@ -157,6 +166,23 @@ const SAMPLERS: {
     );
   },
 };
+
+/** The clues `first` derives of the kinds `reads` names, with the sizes:
+ * every other kind derived from first cells alone is no answer's. */
+function firstClues<C extends Clues<C>>(
+  cx: DealContext<C>,
+  reads: readonly string[],
+  first: Uint8Array,
+): C {
+  const laid = keepingAll(
+    cx.module.deriveClues(first, cx.sp, {}, cx.given),
+    cx.deal,
+    Object.keys(cx.deal.universes).filter((k) => !reads.includes(k)),
+    cx.sp,
+    [],
+  );
+  return { ...laid, ...cx.sizes };
+}
 
 /**
  * `kept`, with each cell of a hexagon's store outside the hexagon holding the

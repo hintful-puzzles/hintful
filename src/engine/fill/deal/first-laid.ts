@@ -9,15 +9,16 @@ import { placeSymmetricBlacks } from "../../generate/symmetric-blacks.ts";
 import { SET_BLACKS_SYMM } from "../../generate/symmetry.ts";
 import { type RandomState, randomUpto } from "../../random/index.ts";
 import type { FillDeal, FillParams } from "../game-id.ts";
-import { settingOf, symmetryOf } from "../params/settings.ts";
+import { isOn, settingOf, symmetryOf } from "../params/settings.ts";
 import { type FirstCells, rampedShare } from "../sample.ts";
+import { opening } from "./opened.ts";
 
 /** The resolution a cell's chance is drawn at. */
 const CHANCE = 1 << 20;
 
-/** The cells `first` deals its value on, 0 on every other: at its chance a
- * cell, or by the share and the symmetry the options give (upstream's
- * lightup.c `set_blacks`). */
+/** The cells `first` deals its value on, 0 on every other: those an opening
+ * leaves, at its chance a cell, or by the share and the symmetry the
+ * options give (upstream's lightup.c `set_blacks`). */
 export function firstLaid(
   first: FirstCells,
   deal: FillDeal,
@@ -28,6 +29,11 @@ export function firstLaid(
   const values = typeof first.value === "number" ? [first.value] : first.value;
   const pick = (): number =>
     values.length === 1 ? values[0] : values[randomUpto(rs, values.length)];
+  if (first.opened !== undefined) {
+    const { symmetry, when } = first.opened;
+    const kept = when === undefined || isOn(deal, p, when) ? symmetry : undefined;
+    return opening(p.w, p.h, kept ?? "none", rs).map((on) => (on ? pick() : 0));
+  }
   return first.chance === undefined
     ? setBlacks(first, deal, p, rs, draw, pick)
     : byChance(first.chance, first.within, p, rs, pick);

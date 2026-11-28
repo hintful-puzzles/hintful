@@ -29,6 +29,7 @@ import { parts } from "./segments/parts.ts";
 import { records } from "./segments/records.ts";
 import { runs } from "./segments/runs.ts";
 import { placeCount, type SegmentKind } from "./segments/segment.ts";
+import { spans } from "./segments/spans.ts";
 import { stream } from "./segments/stream.ts";
 import { walls } from "./segments/walls.ts";
 
@@ -45,6 +46,7 @@ const SEGMENT_KINDS = {
   parts,
   records,
   runs,
+  spans,
   walls,
   codes: stream,
   digits: stream,

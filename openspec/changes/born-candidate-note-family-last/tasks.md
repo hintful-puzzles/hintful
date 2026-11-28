@@ -1,10 +1,14 @@
 ## Next
 
-2.2c, Crossing's walls dealt apart from the answer, then 2.2d to 2.2f. For
-2.2f: Crossing's draft techniques were checked sound with two records,
-which no board answers (`docs/solver-and-generator.md`, the records
-bullet); check them again, now a record a line. The list's press (pick up,
-place whole) is 2.2d's: `record-list.ts` lays out the slots it hits.
+2.2d, typing along a run, then 2.2e and 2.2f. 2.2f waits on the owner's
+answer to design.md § "Decisions" 7. For 2.2f: Crossing's draft
+techniques were checked sound with two records, which no board answers
+(`docs/solver-and-generator.md`, the records bullet); check them again,
+now a record a line. The list's press (pick up, place whole) is 2.2d's:
+`record-list.ts` lays out the slots it hits. The draft deals once it has
+`play:` (with `marks:` and the walk's steps, which its bespoke `steps:`
+then refuse until restated); its `blank` clue is then `play.given` at 10,
+painted `wall`, as the `opening` fixture's.
 
 ## 1. Design
 
@@ -49,11 +53,9 @@ order.
   - [x] 2.2b The list drawn beneath the board, each record struck where
         the answer holds it and red where the rules break it; a hint's
         ring and outline on a record. In the app at 2.2f.
-  - [ ] 2.2c Walls dealt apart from the answer: first cells opened at
-        random, symmetric as asked, until no two by two block is open and
-        the open cells are joined, on `sample.uniform`; the
-        ID's wall runs (a number a run of open cells, a letter a run of
-        walls).
+  - [x] 2.2c Walls dealt apart from the answer, opened until joined, and
+        the ID's wall runs, on `opening` (`first.opened`, `spans`); open:
+        design.md § "Decisions" 7, the owner's, which 2.2f needs.
   - [ ] 2.2d Typing along a run: a typed value advances the selection
         along the run it is filling, its way snapped or switched at a
         crossing; a record placed whole from the list, held and previewed;

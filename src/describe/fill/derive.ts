@@ -109,10 +109,13 @@ function recordsBound(
     derive.emit(
       `const ${handed} = { ${[...dealt, ...[...env.sizes.read].map((n) => `${n}: sizes.${n}`)].join(", ")} } as unknown as Dealt;`,
     );
+  // The binding runs in `deriveClues`, which holds no `cl`: a clue read, and
+  // the clues handed to a definition that reads one (Crossing's runs between
+  // its walls), are the ones dealt so far.
+  const handedFor = (text: string): string => text.replace(/\bcl\b/g, handed);
   for (const e of loops.entries)
-    for (const line of "text" in e ? [e] : e.lines)
-      line.text = line.text.replace(/\bcl\./g, `${handed}.`);
-  for (const s of scratch) derive.emit(s);
+    for (const line of "text" in e ? [e] : e.lines) line.text = handedFor(line.text);
+  for (const s of scratch) derive.emit(handedFor(s));
   derive.append(loops);
   // Each record's place in the sorted order, its fields compared in turn.
   const order = `_order_${kind}`;
