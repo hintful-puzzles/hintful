@@ -43,14 +43,14 @@ export function listRecords<C>(
 
 /** Where one record lies, in tiles from the list's top left: its text's
  * left and baseline, and how wide it is. */
-export interface ListSlot {
+interface ListSlot {
   readonly x: number;
   readonly y: number;
   readonly w: number;
 }
 
 /** The list's font and row pitch, in tiles, and each record's slot. */
-export interface ListLayout {
+interface ListLayout {
   readonly font: number;
   readonly row: number;
   readonly slots: readonly ListSlot[];
@@ -62,7 +62,7 @@ export interface ListLayout {
  * font, until the widest record of each column fits, then spreads the slack
  * between the columns.
  */
-export function listLayout(lengths: readonly number[], across: number): ListLayout {
+function listLayout(lengths: readonly number[], across: number): ListLayout {
   const count = lengths.length;
   if (count === 0) return { font: 0, row: 0, slots: [] };
   let rows = 4;
@@ -101,6 +101,63 @@ export function listLayout(lengths: readonly number[], across: number): ListLayo
     y += row;
   }
   return { font, row, slots };
+}
+
+/** Each record of board `b`'s clue `kind` as drawn, its members' glyphs. */
+export const recordTexts = <C>(
+  b: FillBoard<C>,
+  kind: string,
+  glyph: (v: number) => string,
+): string[] => listRecords(b, kind).map((r) => Array.from(r, glyph).join(""));
+
+/** Where each record lies on the canvas at tile size `ts`, the list's top
+ * left at `(x, y)`: its text's left, baseline and width; with the font and
+ * a row's pitch, in pixels. */
+export interface ListPixels {
+  readonly font: number;
+  readonly row: number;
+  readonly origins: readonly {
+    readonly x: number;
+    readonly y: number;
+    readonly w: number;
+  }[];
+}
+
+export function listPixels(
+  texts: readonly string[],
+  across: number,
+  ts: number,
+  x: number,
+  y: number,
+): ListPixels {
+  const list = listLayout(
+    texts.map((t) => t.length),
+    across,
+  );
+  return {
+    font: Math.max(1, Math.trunc(list.font * ts)),
+    row: list.row * ts,
+    origins: list.slots.map((s) => ({
+      x: x + Math.trunc(s.x * ts),
+      y: y + Math.trunc(s.y * ts),
+      w: Math.max(1, Math.ceil(s.w * ts)),
+    })),
+  };
+}
+
+/** The record a press at `p` lands on, `-1` where none: its text, from a
+ * font above its baseline down to the next row's, so the list has no dead
+ * gap between two rows. */
+export function recordAtPixel({ font, row, origins }: ListPixels, p: Point): number {
+  return origins.findIndex(
+    (o) => p.x >= o.x && p.x < o.x + o.w && p.y >= o.y - font && p.y < o.y - font + row,
+  );
+}
+
+/** The middle of record `k`'s text, where a hint's gesture presses it. */
+export function recordMiddle({ font, origins }: ListPixels, k: number): Point {
+  const o = origins[k];
+  return { x: o.x + Math.floor(o.w / 2), y: Math.round(o.y - font * 0.35) };
 }
 
 /** The point beneath a `h` high board's grid that a hint marks record `k`

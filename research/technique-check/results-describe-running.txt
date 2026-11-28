@@ -1,0 +1,9 @@
+ok  running    single                         3  sound    (want sound   )     9 queries    0.4s
+ok  running    single (planted)               3  unsound  (want unsound )     1 queries    0.2s   at cell 0
+ok  src/engine/testing/fixtures/running/running.description.yaml#single: recorded sound, proved whole on all 1 boards
+ok  running    onlyRun                        3  sound    (want sound   )     6 queries    3.2s
+ok  running    onlyRun (planted)              3  unsound  (want unsound )     1 queries    0.3s   at clue numbers 0
+ok  src/engine/testing/fixtures/running/running.description.yaml#onlyRun: recorded sound, proved whole on all 1 boards
+ok  running    narrow                         3  sound    (want sound   )     6 queries    3.4s
+ok  running    narrow (planted)               3  unsound  (want unsound )     1 queries    0.3s   at line 0
+ok  src/engine/testing/fixtures/running/running.description.yaml#narrow: recorded sound, proved whole on all 1 boards

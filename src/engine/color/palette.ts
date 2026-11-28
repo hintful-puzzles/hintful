@@ -309,6 +309,11 @@ export function lineMaybeColor(background: Color): Color {
  * {@link REGION_DONE}, which Palisade and Separate paint under a finished
  * region, so a ruled-out edge across a completed region still shows.
  */
+/** **Not placed yet** — a value previewed where a held record would go
+ * (Crossing's numbers), light enough to read as provisional and dark enough
+ * to read at all. */
+export const previewInk = (background: Color): Color => scale(background, 0.55);
+
 export function lineNoColor(background: Color): Color {
   return token(scale(background, 0.6), [0.5, 0.5, 0.5]);
 }

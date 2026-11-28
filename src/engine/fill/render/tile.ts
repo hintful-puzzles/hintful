@@ -6,6 +6,7 @@
 
 import { COL_CURSOR } from "../../color/roles.ts";
 import type { GameDrawing } from "../../contract/game.ts";
+import { HIGHLIGHT_NONE } from "../../mechanics/note-taking-cell.ts";
 import { drawRectCorners } from "../../render/draw.ts";
 import { JOINED_OPEN } from "../../render/piece.ts";
 import { wallHalf } from "../../render/region-walls.ts";
@@ -17,6 +18,7 @@ import { draggedCells } from "../order.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import { typedCells } from "../select.ts";
 import type { CellLayout } from "./cell-text.ts";
+import { alongOf } from "./layers/along.ts";
 import { type Breach, breachKey, paintBreach } from "./layers/breaches.ts";
 import { paintDot } from "./layers/dots.ts";
 import {
@@ -29,7 +31,7 @@ import type { TileFrame } from "./layers/layer.ts";
 import { paintLinkHalves } from "./layers/links.ts";
 import { paintBars, paintDiamonds } from "./layers/live-errors.ts";
 import { drawMistake } from "./layers/mistakes.ts";
-import { noteKey, paintNotes } from "./layers/notes.ts";
+import { noteKey, notesIn, paintNotes } from "./layers/notes.ts";
 import {
   numberStates,
   paintNumber,
@@ -49,6 +51,8 @@ import { washesOf } from "./layers/wash.ts";
 import type { FillSetup } from "./setup.ts";
 import { paintRaised, repainted } from "./three-d.ts";
 import {
+  ALONG_COLUMN,
+  ALONG_ROW,
   ARMED,
   BALL_BARE,
   CURSOR,
@@ -60,6 +64,7 @@ import {
   NOTES_MODE,
   NUMBER_UNDER,
   PICTURED,
+  PREVIEWED,
   RAISED,
   type RaisedAt,
   SHAPE_OPEN,
@@ -80,7 +85,7 @@ export function tileWordsOf<C extends Clues<C>>(
   cx: FillSetup<C>,
   lay: CellLayout,
   ds: FillDrawState,
-  { state, prev, animTime, ui, flash }: FillFrame<C>,
+  { state, prev, animTime, ui, flash, hint }: FillFrame<C>,
   shown: FillBoard<C>,
   words: {
     readonly word: Int32Array;
@@ -108,6 +113,7 @@ export function tileWordsOf<C extends Clues<C>>(
   const states = numberStates(cx, shown);
   const joins = joinsOf(cx, shown);
   const washes = washesOf(cx, shown, ui);
+  const along = alongOf(cx, shown, ui, hint !== undefined);
   const labels = labelsOf(cx, state);
   const balls = ballsOf(cx, shown, emptyIn(cx, shown));
   const { parts } = ds;
@@ -132,6 +138,8 @@ export function tileWordsOf<C extends Clues<C>>(
         ((joins[i] & 0xf) << JOIN_SHIFT) |
         (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
         washes[i] |
+        along.line[i] |
+        (along.preview[i] !== 0 ? PREVIEWED : 0) |
         balls[i] |
         pictured |
         (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0) |
@@ -149,8 +157,14 @@ export function tileWordsOf<C extends Clues<C>>(
             };
       if (lay.f.threeD) lk |= THREE_D | (v !== 0 ? RAISED : 0);
       const noted = noteKey(shown, i, (k & CURSOR) !== 0, ui);
-      // A bare ball says its notes: every value but the empty square.
-      const nk = lk & BALL_BARE ? noted & NOTES_MODE : noted;
+      // A bare ball says its notes: every value but the empty square; and a
+      // previewed value stands in place of the notes.
+      const nk =
+        lk & PREVIEWED
+          ? (noted & NOTES_MODE) | (1 << along.preview[i])
+          : lk & BALL_BARE
+            ? noted & NOTES_MODE
+            : noted;
       const ek = words.edgeWord[i] | (cx.onEdges ? edgeCursorBits(ui.cursor, x, y) : 0);
       // A growing piece is no key's: its tile is drawn every frame.
       const grows = before !== null && before[i] !== v;
@@ -231,7 +245,14 @@ function drawTile<C extends Clues<C>>(
   };
 
   dr.clip(tile);
-  paintSurface(pal, frame, highlightOf(typed, word, noteWord));
+  const highlight = highlightOf(typed, word, noteWord);
+  paintSurface(pal, frame, highlight);
+  // A site's wash is a strong fill, which the ink on it is paper against;
+  // the selection's own wash is not.
+  const alongInk =
+    lineWord & (ALONG_ROW | ALONG_COLUMN) && highlight === HIGHLIGHT_NONE
+      ? pal.COL_ALONG_INK
+      : null;
   if (crossed) paintCornerCrosses(frame, lay.f.boardW);
   if (play.leadingDiagonal === true && x === y) paintLeadingDiagonal(frame);
   paintPiece(cx, frame, t.anim);
@@ -239,10 +260,16 @@ function drawTile<C extends Clues<C>>(
   const raised = (lineWord & RAISED) !== 0;
   if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord }, glyph);
   else if (typed && v !== empty && frame.piece === null)
-    paintNumeral(pal.COL_ENTRY, glyph, frame);
+    paintNumeral(alongInk ?? pal.COL_ENTRY, glyph, frame);
   paintEmpty(pal.COL_ENTRY, empty, frame);
+  // A held record's value previewed, where the cell's notes would be.
+  if (lineWord & PREVIEWED)
+    paintNumeral(pal.COL_PREVIEW, glyph, {
+      ...frame,
+      word: word | notesIn(noteWord)[0],
+    });
   // The empty square's note is its glyph, an X (upstream Salad's).
-  paintNotes(pal.COL_PENCIL, glyph, frame, pictured ? pieceOf : null);
+  else paintNotes(alongInk ?? pal.COL_PENCIL, glyph, frame, pictured ? pieceOf : null);
   paintBreach(frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);

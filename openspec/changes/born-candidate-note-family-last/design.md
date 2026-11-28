@@ -166,6 +166,29 @@ correct the spec and the help to say what it deals. The hand-written game
 is left as it was until the answer; the flip (2.2f) needs it, and 2.2d and
 2.2e do not.
 
+### 8. Typing goes along the sites the deal reads the list off (2.2d)
+
+Where a record of the list may be written, and where the selection goes as
+a value is typed, are the runs the deal reads each number off. So
+`play.along` declares only the two preferences, and the sites are the cells
+each binding of `deal.records` reads (the compiled `recordSites`), never a
+second statement of what a run is that could drift from the deal's. Its
+way is a row's or a column's, read off each site's cells, so a site that
+bends would still be typed along in its order; none does yet. A record's
+fit is read off the values alone, as the hand-written game's is
+(`openspec/specs/crossing/spec.md`, "A clue's availability is decided from
+the player's entries alone").
+
+The preview colors are the hand-written game's: blue and orange bold each
+way with paper ink on them, and its ghost gray, now the shared palette's
+`previewInk`. A held record's box is the list site's.
+
+Left to the flip (2.2f), which reads them against the hand-written game:
+its hint is dismissed by a press outside the squares it is about
+(`hint.uiUpdateClears`), where an engine board keeps a hint through any
+press; and its `keepTrack` follows a whole-run step typed a digit at a
+time.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

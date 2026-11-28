@@ -34,10 +34,10 @@ import {
   PAPER,
   PENCIL_BODY,
   pencilColor,
+  previewInk,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
-import { crossingGhost } from "../../engine/color/palette-games.ts";
 import {
   COL_BACKGROUND,
   COL_ERROR,
@@ -182,7 +182,7 @@ export function colors(background: Color): Color[] {
   // Towers): clearly subordinate to an entered digit without vanishing.
   out[COL_PENCIL] = pencilColor(background);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_GHOST] = crossingGhost(background);
+  out[COL_GHOST] = previewInk(background);
   // Not `HELD`: green is a hint's outline, and blue would say "across" round a
   // down clue. Held is a box, not a color — see `COL_HELD`'s declaration.
   out[COL_HELD] = INK;

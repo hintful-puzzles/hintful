@@ -29,6 +29,8 @@ import type { FillDrawState } from "../../render.ts";
 import { COL_CELL, COL_GRID, type FillPalette, REGION_SURFACES } from "../palette.ts";
 import type { FillSetup } from "../setup.ts";
 import {
+  ALONG_COLUMN,
+  ALONG_ROW,
   CURSOR,
   DIVIDER_SHIFT,
   DIVIDER_SIDES,
@@ -143,15 +145,28 @@ export function paintSurface(
   const { boardW } = frame.lay.f;
   const { listed } = frame.lay.m;
   const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
+  // A cell selected for notes keeps its plain surface under the notes'
+  // triangle, a gap in a site's wash as the selection's own is, so the
+  // notes stay in the pencil's ink on the surface it is tuned for.
+  const along =
+    highlight === HIGHLIGHT_NOTES
+      ? null
+      : lineWord & ALONG_ROW
+        ? pal.COL_ALONG_ROW
+        : lineWord & ALONG_COLUMN
+          ? pal.COL_ALONG_COLUMN
+          : null;
   const ground = tone
     ? winSlot(tone)
-    : piece !== null && piece.painter.surface !== null
-      ? piece.slot[piece.painter.surface]
-      : word & FIXED
-        ? pal.COL_GIVEN
-        : lineWord & WASHED
-          ? pal.COL_WASH
-          : (part?.fill ?? COL_CELL);
+    : along !== null
+      ? along
+      : piece !== null && piece.painter.surface !== null
+        ? piece.slot[piece.painter.surface]
+        : word & FIXED
+          ? pal.COL_GIVEN
+          : lineWord & WASHED
+            ? pal.COL_WASH
+            : (part?.fill ?? COL_CELL);
   // Under the content, so the piece stays whole.
   const lay = (surface: Rect) => {
     drawCellBackground(dr, surface, highlight, pal.COL_HIGHLIGHT, ground);

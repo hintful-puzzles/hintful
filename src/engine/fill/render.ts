@@ -33,6 +33,13 @@ import type { FillMove } from "./notes.ts";
 import { orderOf, viewedErrors, viewedMistakes, viewedStep, viewOf } from "./order.ts";
 import { tallyIn, tallyOf } from "./params/tally.ts";
 import type { FillPlay, FillUi } from "./play.ts";
+import {
+  type ListPixels,
+  listPixels,
+  recordAtPixel,
+  recordMiddle,
+  recordTexts,
+} from "./record-list.ts";
 import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
 import { layoutOf, tallyBeneath } from "./render/geometry.ts";
@@ -170,6 +177,11 @@ export interface FillRender<C> {
   /** The value of the record of the row of counts a press at `p` lands on,
    * or `null` where it lands on none or the board has no row. */
   countPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
+  /** The record of the list beneath the board a press at `p` lands on,
+   * `null` where it lands on none or the board has no list. */
+  recordPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
+  /** The middle of record `k` of the list, where a press on it lands. */
+  recordPoint(board: FillBoard<C>, ds: FillDrawState, k: number): Point;
 }
 
 const PREFERRED_TILE_SIZE = 32;
@@ -344,5 +356,24 @@ export function fillRender<C extends Clues<C>>(
       const i = countPressed(lay, x, y, ts, p.x, p.y);
       return i < 0 ? null : records[i].value;
     },
+    recordPressed: (b, ds, p) => {
+      const at = listPixelsOf(b, ds);
+      const k = at === null ? -1 : recordAtPixel(at, p);
+      return k < 0 ? null : k;
+    },
+    recordPoint: (b, ds, k) => {
+      const at = listPixelsOf(b, ds);
+      if (at === null) throw new Error("play list: the board has no list");
+      return recordMiddle(at, k);
+    },
   };
+
+  /** Where each record of board `b`'s list lies, as its site draws it;
+   * `null` where the board has no list. */
+  function listPixelsOf(b: FillBoard<C>, ds: FillDrawState): ListPixels | null {
+    if (cx.listed === null) return null;
+    const ts = ds.tileSize;
+    const { x, y } = metrics.beneathAt(ts, metrics.depthOf(b, cx.marginValues(b)), b.h);
+    return listPixels(recordTexts(b, cx.listed, cx.glyphOf(b)), b.w, ts, x, y);
+  }
 }

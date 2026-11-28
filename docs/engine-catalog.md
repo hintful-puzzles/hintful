@@ -1213,6 +1213,13 @@ A list (`record-list.ts`, `play.list`) is struck by the compiled
 hint marks a record of a clue at the board at `recordPoint`, a point beneath
 the grid off every slot: `render/hint.ts` keeps rings off the grid out of
 its tiles, so the site drawing the records draws the marks round them.
+Typing along a list's sites (`along.ts`, `play.along`) reads them off the
+compiled `recordSites`, the cells each binding of `deal.records` reads, so
+where a record may be written and where the deal read it from are one
+statement. Its hint gesture plays each tap and key through the input on a
+copy of the `Ui`, since a value typed moves the selection: a gesture worked
+out by the note-taking cell's rules taps the next square again, which
+deselects it.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

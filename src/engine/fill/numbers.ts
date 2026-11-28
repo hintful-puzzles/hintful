@@ -17,7 +17,7 @@ import {
   candidateGesture,
   DEFAULT_CANDIDATE_READING,
 } from "../hint/candidate-hint.ts";
-import type { PointerAction } from "../input/hint-gesture.ts";
+import { click, key, type PointerAction } from "../input/hint-gesture.ts";
 import { clearKey } from "../input/key-labels.ts";
 import {
   CURSOR_DOWN,
@@ -29,8 +29,10 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
+  LEFT_RELEASE,
   MOD_SHFT,
   moveCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
 } from "../input/pointer.ts";
@@ -42,6 +44,7 @@ import {
   sweepTo,
 } from "../input/target-verb.ts";
 import {
+  highlightIsOn,
   type NoteTakingUi,
   noOpEntryResult,
   noteEntryGesture,
@@ -51,6 +54,7 @@ import {
 } from "../mechanics/note-taking-cell.ts";
 import { pressedRaised } from "../render/raised.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
+import { type AlongInput, alongInput, arrowWay, NONE_HELD } from "./along.ts";
 import {
   type Clues,
   type FillBoard,
@@ -68,6 +72,7 @@ import {
   KEY_MINUS,
 } from "./dividers.ts";
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
+import type { Edit } from "./edit.ts";
 import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
@@ -127,6 +132,12 @@ export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi 
   if (play.numbers?.pictures !== undefined) ui.pictures ??= true;
   if (play.select !== undefined) ui.selected ??= [];
   if (play.order === true) ui.reorder ??= null;
+  if (play.along !== undefined) {
+    ui.way ??= "row";
+    ui.held ??= NONE_HELD;
+    ui.advance ??= true;
+    ui.runWash ??= true;
+  }
   return ui;
 }
 
@@ -198,16 +209,27 @@ export interface NumberInput<C, D> {
   ):
     | CandidateMove
     | SetCellsMove
+    | Edit
     | DoneMove
     | DividerMove
     | ReorderMove
     | UiUpdate
+    | null;
+  /** Where typing goes along the list's sites (`play.along`), record `k`
+   * pressed on the list (`AlongInput.take`); `null` on any other board. */
+  readonly takeRecord:
+    | ((board: FillBoard<C>, ui: FillUi, k: number) => Edit | UiUpdate)
     | null;
   /** A key a value, then the clear key, for a board of the params `p`, and
    * of `board` where it is in play. */
   requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
   gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
+
+/** Where a press on record `k` of the list lands on a board drawn at the
+ * draw state `ds`, which a hint's gesture presses to put a held record
+ * down. */
+export type RecordPoint<C, D> = (board: FillBoard<C>, ds: D, k: number) => Point;
 
 export function numberInput<
   C extends Clues<C>,
@@ -217,9 +239,15 @@ export function numberInput<
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
   clueSites: ClueSites<C> = {},
+  recordPoint: RecordPoint<C, D> | null = null,
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
+  const listed = module.play?.list;
+  const along: AlongInput<C> | null =
+    module.play?.along === undefined || listed === undefined
+      ? null
+      : alongInput(module, listed);
   const pictured = module.play?.numbers?.pictures !== undefined;
   const select = module.play?.select;
   const dividers = module.play?.dividers === true;
@@ -330,8 +358,45 @@ export function numberInput<
     if (drag.moved) return { type: "reorder", line: drag.line, to: drag.to };
     return (dividers ? dividerAt(b, o, pitch, drag.press) : null) ?? UI_UPDATE;
   }
-  return {
+  /** Value `n`, a value the cell holds or 0 for a clear, typed into the
+   * selected cell `c`, as a value or a note as the mode says. */
+  function typeInto(
+    b: FillBoard<C>,
+    fillUi: FillUi,
+    c: number,
+    n: number,
+  ): CandidateMove | UiUpdate | null {
+    const ui = noteTaking(fillUi);
+    const { x, y } = ui.cursor;
+    if (b.fixed[c]) return null;
+    // A note goes on an empty cell alone.
+    if (ui.pencilMode && b.values[c] !== 0) return null;
+    const noted = b.pencil?.[c] ?? 0;
+    // A value typed along a site moves the selection on, the highlight kept
+    // so the next lands where it shows; also over a value the cell holds
+    // already, or a number typed over it would put its next value here.
+    const next = along !== null && n > 0 ? along.next(b, fillUi, c) : null;
+    const moveOn = (): void => {
+      if (next === null) return;
+      ui.cursor.x = next % b.w;
+      ui.cursor.y = Math.floor(next / b.w);
+      ui.cursor.visible = true;
+    };
+    if ((!ui.pencilMode || n === 0) && b.values[c] === n && noted === 0) {
+      if (next === null) return noOpEntryResult(ui);
+      moveOn();
+      return UI_UPDATE;
+    }
+    const pencil = ui.pencilMode && n > 0;
+    if (next === null) releaseHighlightAfterEntry(ui);
+    else moveOn();
+    return pencil
+      ? { type: "set", x, y, n, pencil }
+      : { type: "set", x, y, n, pencil, autoElim: fillUi.autoPencil ?? false };
+  }
+  const input: NumberInput<C, D> = {
     done,
+    takeRecord: along === null ? null : along.take,
     interpretMove(b, fillUi, ds, p, raw) {
       const ui = noteTaking(fillUi);
       const button = stripModifiers(raw);
@@ -392,16 +457,27 @@ export function numberInput<
       ) {
         const c = at.y * b.w + at.x;
         const open = b.fixed[c] === 0;
-        pressNoteTakingCell(ui, button, at.x, at.y, {
+        // A left press drops a held record, or turns the way; a press on a
+        // fixed cell leaves the record held.
+        if (along !== null && open && button === LEFT_BUTTON) {
+          const made = along.press(b, fillUi, c, highlightIsOn(ui, at.x, at.y));
+          if (made !== null) return made;
+        }
+        const pressed = pressNoteTakingCell(ui, button, at.x, at.y, {
           canEnter: open,
           canMark: notes && open && b.values[c] === 0,
         });
+        if (along !== null && pressed === "moved") along.snap(b, fillUi, c);
         return UI_UPDATE;
       }
       if (isCursorMove(button)) {
         if (select !== undefined) fillUi.selected = [];
         ui.cursorFromKeyboard = true;
-        return moveCursor(ui.cursor, button, b.w, b.h) ? UI_UPDATE : null;
+        const moved = moveCursor(ui.cursor, button, b.w, b.h);
+        if (along === null) return moved ? UI_UPDATE : null;
+        // The arrow says the way the player works along.
+        along.snap(b, fillUi, ui.cursor.y * b.w + ui.cursor.x, arrowWay(button));
+        return UI_UPDATE;
       }
       if (notes) {
         const toggled = toggleNoteTakingMode(ui, button);
@@ -445,6 +521,8 @@ export function numberInput<
               );
       // The empty square's glyph's key types nothing: it is drawn a cross.
       if (n === null || (n === empty && !emptyKey)) return null;
+      // A value or a clear typed puts a held record down.
+      if (along !== null) fillUi.held = NONE_HELD;
       const holds = (cell: number) =>
         (module.domainOf(sp, b.dealt, cell) & (1 << n)) !== 0;
       const cells = typedCells(c, fillUi.selected);
@@ -464,17 +542,7 @@ export function numberInput<
       }
       // A number the cell cannot hold is not typed (Seismic's past its area).
       if (n > 0 && !holds(c)) return null;
-      if (b.fixed[c]) return null;
-      // A note goes on an empty cell alone.
-      if (ui.pencilMode && b.values[c] !== 0) return null;
-      const noted = b.pencil?.[c] ?? 0;
-      if ((!ui.pencilMode || n === 0) && b.values[c] === n && noted === 0)
-        return noOpEntryResult(ui);
-      const pencil = ui.pencilMode && n > 0;
-      releaseHighlightAfterEntry(ui);
-      return pencil
-        ? { type: "set", x, y, n, pencil }
-        : { type: "set", x, y, n, pencil, autoElim: fillUi.autoPencil ?? false };
+      return typeInto(b, fillUi, c, n);
     },
     requestKeys(p, board) {
       const sp = paramSpaceOf(module, p);
@@ -499,19 +567,26 @@ export function numberInput<
       return [...keys, clearKey];
     },
     gesture(b, fillUi, ds, move) {
-      const ui = noteTaking(fillUi);
       const pointAt = (x: number, y: number) =>
         geometry.pointAt(b, ds, { x, y }, fillUi);
       const { keyCode } = boardGlyphs(module, spaceOf(module, b), b.dealt);
+      // Along a board's sites the gesture starts with any record held put
+      // down, which a press on the board would drop.
+      const { lead, ui: from } =
+        along === null ? { lead: [], ui: fillUi } : putDown(b, fillUi, ds);
+      const ui = noteTaking(from);
       if (isCandidateMove(move))
-        return candidateGesture(
-          move,
-          ui,
-          pointAt,
-          keyCode,
-          undefined,
-          markAll(module, b),
-        );
+        return [
+          ...lead,
+          ...candidateGesture(
+            move,
+            ui,
+            pointAt,
+            keyCode,
+            undefined,
+            markAll(module, b),
+          ),
+        ];
       // A hint marks no clue done.
       if ("type" in move) throw new Error(`no gesture for ${JSON.stringify(move)}`);
       const set = move.set ?? [];
@@ -525,7 +600,58 @@ export function numberInput<
           pencil: false,
         });
       }
-      return noteEntryGesture(ui, pointAt, entries);
+      if (along === null) return noteEntryGesture(ui, pointAt, entries);
+      // A value typed along a site moves the selection on, so each tap and
+      // key is played through the input on a copy of the Ui, a cell tapped
+      // only where the selection is not on it already.
+      const out: PointerAction[] = [...lead];
+      const play = (action: PointerAction, ...buttons: number[]) => {
+        out.push(action);
+        for (const button of buttons)
+          input.interpretMove(
+            b,
+            from,
+            ds,
+            "at" in action ? action.at : { x: 0, y: 0 },
+            button,
+          );
+      };
+      const pressKey = (code: number) => play(key(code), code);
+      for (const e of entries) {
+        if (!highlightIsOn(ui, e.x, e.y))
+          play(click(pointAt(e.x, e.y)), LEFT_BUTTON, LEFT_RELEASE);
+        if (ui.pencilMode) pressKey(PENCIL_MODE_BUTTON);
+        pressKey(e.code);
+      }
+      if (ui.pencilMode !== (fillUi.pencilMode ?? false)) pressKey(PENCIL_MODE_BUTTON);
+      return out;
     },
   };
+
+  /** The taps that put a record held on board `b` down, and a copy of the
+   * Ui as they leave it: a press on the record in the list, after switching
+   * to notes where a cell is selected for typing, where the press would
+   * write the record in. */
+  function putDown(
+    b: FillBoard<C>,
+    fillUi: FillUi,
+    ds: D,
+  ): { lead: PointerAction[]; ui: FillUi } {
+    const ui = structuredClone(fillUi);
+    const held = ui.held ?? NONE_HELD;
+    if (held === NONE_HELD || along === null) return { lead: [], ui };
+    if (recordPoint === null)
+      throw new Error("play along: no point a record is pressed at");
+    const lead: PointerAction[] = [];
+    if (ui.cursor.visible && ui.pencilMode !== true) {
+      if (!notes)
+        throw new Error("play along: a held record over a selection, and no notes");
+      lead.push(key(PENCIL_MODE_BUTTON));
+      input.interpretMove(b, ui, ds, { x: 0, y: 0 }, PENCIL_MODE_BUTTON);
+    }
+    lead.push(click(recordPoint(b, ds, held)));
+    along.take(b, ui, held);
+    return { lead, ui };
+  }
+  return input;
 }

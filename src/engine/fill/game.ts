@@ -298,6 +298,23 @@ export function fillGame<C extends Clues<C> & object>(
             },
           } satisfies GamePref<FillUi>,
         ]),
+    ...(play.along === undefined
+      ? []
+      : (
+          [
+            [play.along.wash, "runWash"],
+            [play.along.advance, "advance"],
+          ] as const
+        ).map(
+          ([pref, field]): GamePref<FillUi> => ({
+            ...pref,
+            type: "boolean",
+            get: (ui) => ui[field] !== false,
+            set: (ui, v) => {
+              ui[field] = v;
+            },
+          }),
+        )),
     ...(play.countStyle === undefined
       ? []
       : [
@@ -456,11 +473,17 @@ export function fillGame<C extends Clues<C> & object>(
   const typed =
     play.numbers === undefined
       ? null
-      : numberInput<C, FillDrawState>(module, render.origin, render.gap, {
-          partClue: render.partClueBox,
-          slotKinds: module.slotClues ?? [],
-          marginKinds: module.valueMargins ?? [],
-        });
+      : numberInput<C, FillDrawState>(
+          module,
+          render.origin,
+          render.gap,
+          {
+            partClue: render.partClueBox,
+            slotKinds: module.slotClues ?? [],
+            marginKinds: module.valueMargins ?? [],
+          },
+          render.recordPoint,
+        );
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
   /** The typed board's input, given the view of a board in an order
@@ -478,7 +501,8 @@ export function fillGame<C extends Clues<C> & object>(
     const made = input.interpretMove(viewOf(b, lines), ui, ds, p, button);
     if (made === null || made === UI_UPDATE) return made;
     // A line put back at its own place moves nothing.
-    if (made.type === "reorder" && b.order?.[made.to] === made.line) return UI_UPDATE;
+    if ("type" in made && made.type === "reorder" && b.order?.[made.to] === made.line)
+      return UI_UPDATE;
     return fromView(b, lines, made);
   };
   const inputs =
@@ -503,17 +527,20 @@ export function fillGame<C extends Clues<C> & object>(
       return (typeof key === "string" ? key : key[0]).charCodeAt(0);
     return boardGlyphs(module, spaceOf(module, b), b.dealt).keyCode(v);
   };
+  const takeRecord = typed?.takeRecord ?? null;
   /** The input, a left press on a record of the row of counts typing its
-   * value's key (`counts.ts`); a right one is the right button's anywhere,
-   * which under the sticky preference switches notes on and off. */
+   * value's key (`counts.ts`), and one on a record of the list taking it
+   * where typing goes along the list's sites (`along.ts`); a right one is
+   * the right button's anywhere, which under the sticky preference
+   * switches notes on and off. */
   const interpretMove =
-    counted === null
+    counted === null && takeRecord === null
       ? inputs.interpretMove
       : (b: FillBoard<C>, ui: FillUi, ds: FillDrawState, p: Point, button: number) => {
-          const v =
-            stripModifiers(button) === LEFT_BUTTON
-              ? render.countPressed(b, ds, p)
-              : null;
+          const left = stripModifiers(button) === LEFT_BUTTON;
+          const k = left && takeRecord !== null ? render.recordPressed(b, ds, p) : null;
+          if (k !== null && takeRecord !== null) return takeRecord(b, ui, k);
+          const v = left ? render.countPressed(b, ds, p) : null;
           return inputs.interpretMove(b, ui, ds, p, v === null ? button : keyOf(b, v));
         };
   const newUi = (b: FillBoard<C>): FillUi => {

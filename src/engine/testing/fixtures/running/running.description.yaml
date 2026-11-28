@@ -1,0 +1,145 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: walls, and a digit on every other square, with a
+# list at the board of the numbers the runs between the walls read, each
+# read once; for the fill engine's tests of typing along the runs
+# (`play.along`): the selection moved along the run being filled, its way
+# snapped and turned, a number placed whole from the list, held and
+# previewed, and the runs through the selection washed, on a description
+# that names no game.
+game: running
+produces: numbers
+sizes:
+  # A 2x2 opens one square, alone, and its keep refuses every layout.
+  w: { min: 3, max: 9 }
+  h: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # A digit, and 10 on a wall.
+  value: { sort: cell, domain: "{d in range(1, 10) where (d = 10) = (clue(wall, c) >= 0)}" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, 10)" }
+define:
+  open: "{c in cells where clue(wall, c) < 0}"
+  # The run along line L through square c, and whether c is its first square.
+  run(L, c): "stretch(L, c, open)"
+  head(L, c): "clue(wall, c) < 0 and |run(L, c)| >= 2 and first(run(L, c)) = c"
+  digit(k, x, R): "nth(digits(k), index(x, R))"
+  reads(k, R): "|digits(k)| = |R| and (forall x in R: value(x) = digit(k, x, R))"
+  fits(k, R): "|digits(k)| = |R| and (forall x in R: digit(k, x, R) in cand(x))"
+shape:
+  - "forall L in lines, c in cells(L) where head(L, c): exists k in clues(numbers): reads(k, run(L, c))"
+clues:
+  wall:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 10"
+  # A number of the list, its digits first to last, read in one run.
+  numbers:
+    at: board
+    fields:
+      digits: { list: true, value: "range(1, 9)" }
+    means: "count(L in lines, c in cells(L) where head(L, c) and reads(k, run(L, c))) = 1"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  given:
+    10: { glyph: "###", paint: wall }
+  list: numbers
+  # Typing goes along the runs the list's numbers are read in.
+  along:
+    advance: { kw: auto-advance, name: Typing a digit moves the selection along its run }
+    wash: { kw: highlight-runs, name: Wash the runs through the selected square }
+  boards: [5x4]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the digits the step crosses out.
+    stripes: the run the step is about.
+deal:
+  wall: walls the opening leaves, symmetric as asked
+  answer: a digit a square, at random
+  numbers: every run's
+  tier: the one tier
+  sample:
+    first:
+      value: 10
+      opened: { symmetry: halfTurn, when: symmetric }
+      # No run longer than four squares, whose numbers the list would hold.
+      keep: "forall L in lines, c in cells(L) where head(L, c): |run(L, c)| <= 4"
+    uniform: true
+  records:
+    numbers:
+      for: "L in lines, c in cells(L) where head(L, c)"
+      digits: "run(L, c)"
+  keep: "forall k in clues(numbers), j in clues(numbers) where j != k: digits(j) != digits(k)"
+settings:
+  symmetric:
+    kind: flag
+    letter: S
+    kw: symmetric-walls
+    name: Symmetric walls
+    doc: The walls are the same turned half round.
+id:
+  - spans: wall
+  - numbers: numbers
+    before: ","
+tiers: [Easy]
+names:
+  single: "the only digit left in a square"
+  narrow: "the digits a run's numbers allow"
+  onlyRun: "a number only one run fits"
+techniques:
+  - kind: one.cell
+    as: single
+    tier: Easy
+    with:
+      square: "true"
+      move: "(known(c) or place(c, first(U)))"
+  # A number that fits one run alone is read there.
+  - id: onlyRun
+    tier: Easy
+    for: >-
+      k in clues(numbers)
+      where count(M in lines, b in cells(M) where head(M, b) and fits(k, run(M, b))) = 1,
+      L in lines, c in cells(L) where head(L, c) and fits(k, run(L, c)), R = run(L, c)
+      where (exists x in R: not known(x))
+    conclude: "forall x in R where not known(x): place(x, digit(k, x, R))"
+    says:
+      terms: { k: k }
+      marks: { stripes: "R" }
+      look: "{ring k: this number} fits only {stripes: this run}"
+  - id: narrow
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L) where head(L, c), R = run(L, c),
+      K = {k in clues(numbers) where fits(k, R)},
+      x in R where not known(x)
+    conclude: "forall d in cand(x) where not (exists k in K: digit(k, x, R) = d): strike(x, d)"
+    says:
+      terms: { K: K }
+      marks: { stripes: "R" }
+      look: "{outline K: no number} that still fits {stripes: this run} puts {struckOr} in {ring}"
+steps:
+  clean:
+    ring: cell
+    move: "nothing, since a digit rules out no other square"
+  note:
+    ring: cell
+    terms: { unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "Nothing rules out a digit in {ring} yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: is | are} still possible in {ring}"
+        move: "pencil {vs: it | them} in"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other digit is ruled out in {ring}"
+    move: "it can only be {n}"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "no other square"

@@ -118,6 +118,9 @@ export interface FillModule<C> {
   /** Whether record `k` of the list beneath the board (`play.list`) holds of
    * the values `g` as placed, which strikes it. */
   recordHolds?(g: ArrayLike<number>, sp: GridSpace, cl: C, k: number): boolean;
+  /** The ordered cells each record of the list is read along, which typing
+   * goes along (`play.along`, `along.ts`). */
+  recordSites?(sp: GridSpace, cl: C): Int32Array[];
   /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
    * every cell of the store outside it holds. */
   readonly hexagon?: { readonly outside: string };

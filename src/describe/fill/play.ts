@@ -31,6 +31,7 @@ import { answerEnv, param } from "./emit.ts";
 import { checkGaps, checkSigns, marginsOf } from "./locations.ts";
 import { boundsOf, menuOf, sizeOf } from "./menu.ts";
 import { notesOf } from "./notes.ts";
+import { recordSitesOf } from "./records.ts";
 import { partBound } from "./values.ts";
 
 /** Refuses pictures (`numbers.pictures`) a board cannot draw: a painter no
@@ -178,6 +179,19 @@ function checkCounts(
         `play counts: ${k}'s ${field} is a range of values the player places`,
       );
   }
+}
+
+/** Refuses typing along a list's sites (`along`) on a board that is not one
+ * of numbers with a list, or whose drag selects several squares, which a
+ * value typed fills at once. */
+function checkAlong(p: PlayJson): void {
+  if (p.along === undefined) return;
+  if (p.numbers === undefined || p.list === undefined)
+    throw new CompileError(
+      "play along: typing goes along a list's sites on a board of numbers, and play has no `numbers` or no `list`",
+    );
+  if (p.select !== undefined)
+    throw new CompileError("play along: a selection is typed into at once");
 }
 
 /**
@@ -406,6 +420,7 @@ export function playOf(
     throw new CompileError(
       "play select: a selection is typed into, and play has no `numbers`",
     );
+  checkAlong(p);
   // A divider is toggled by a press between two labels, and keyed by a line
   // both of rows and of columns, the same two of each.
   if (p.dividers === true) {
@@ -499,6 +514,9 @@ export function playOf(
     ...repeatOf(d, env, measured),
     ...washedOf(wash?.when ?? null, env, measured),
     ...recordHoldsOf(json, d, env, measured),
+    ...(p.along === undefined || p.list === undefined
+      ? []
+      : recordSitesOf(json, d, p.list, env, measured)),
     "",
     "/** How the player fills the board: the engine's `FillPlay`. */",
     `export const play = ${JSON.stringify(play)} as const;`,

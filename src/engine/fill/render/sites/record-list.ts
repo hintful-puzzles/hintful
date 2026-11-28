@@ -5,28 +5,38 @@
 import { COL_BACKGROUND, COL_ERROR, COL_HINT_OUTLINE } from "../../../color/roles.ts";
 import { CELL } from "../../../contract/hint-words.ts";
 import type { DrawTextOptions } from "../../../contract/types.ts";
+import { drawRectOutline } from "../../../render/draw.ts";
 import { drawMarkSides, MARK_ALL } from "../../../render/hint-mark.ts";
 import { textBox } from "../../../render/ring.ts";
+import { NONE_HELD } from "../../along.ts";
 import { spaceOf } from "../../board.ts";
-import { LIST_HEIGHT, listLayout, listRecords, recordAt } from "../../record-list.ts";
+import {
+  LIST_HEIGHT,
+  listPixels,
+  listRecords,
+  recordAt,
+  recordTexts,
+} from "../../record-list.ts";
 import { COL_INK } from "../palette.ts";
 import type { FillSite } from "./site.ts";
 
-/** A record's state: struck, red, outlined, ringed. */
+/** A record's state: struck, red, outlined, ringed, held (`play.along`). */
 const STRUCK = 1;
 const BROKEN = 2;
 const OUTLINED = 4;
 const RINGED = 8;
+const HELD = 16;
 
 export const recordList: FillSite = {
   on: (cx) => cx.listed !== null,
-  paint({ dr, ds, cx, lay, state: b, errors, hint }) {
+  paint({ dr, ds, cx, lay, state: b, ui, errors, hint }) {
     const kind = cx.listed;
     if (kind === null) return;
     const holds = cx.module.recordHolds;
     if (holds === undefined)
       throw new Error("play list: the module has no recordHolds");
     const records = listRecords(b, kind);
+    const held = ui.held ?? NONE_HELD;
     const sp = spaceOf(cx.module, b);
     const marked = (role: "outline" | "ring"): ReadonlySet<number> =>
       new Set(hint.marks.of(role, CELL).map((p) => recordAt(b.h, p)));
@@ -40,14 +50,14 @@ export const recordList: FillSite = {
             ? STRUCK
             : 0) |
         (outlined.has(k) ? OUTLINED : 0) |
-        (ringed.has(k) ? RINGED : 0),
+        (ringed.has(k) ? RINGED : 0) |
+        (k === held ? HELD : 0),
     );
     const key = states.join(",");
     if (ds.recordList.shown === key) return;
     ds.recordList.shown = key;
     const ts = ds.tileSize;
-    const glyph = cx.glyphOf(b);
-    const texts = records.map((r) => Array.from(r, glyph).join(""));
+    const texts = recordTexts(b, kind, cx.glyphOf(b));
     const { x, y } = cx.metrics.beneathAt(ts, lay.f.depth, b.h);
     // A mark reaches past a record's text, the first column's into the
     // board's left margin.
@@ -59,11 +69,7 @@ export const recordList: FillSite = {
       h: Math.ceil(LIST_HEIGHT * ts),
     };
     dr.drawRect(area, COL_BACKGROUND);
-    const list = listLayout(
-      texts.map((t) => t.length),
-      b.w,
-    );
-    const font = Math.max(1, Math.trunc(list.font * ts));
+    const { font, origins } = listPixels(texts, b.w, ts, x, y);
     const opts: DrawTextOptions = {
       align: "left",
       baseline: "alphabetic",
@@ -72,11 +78,6 @@ export const recordList: FillSite = {
     };
     const pad = Math.max(2, Math.round(font * 0.15));
     const thick = Math.max(2, Math.round(font / 8));
-    const origins = list.slots.map((s) => ({
-      x: x + Math.trunc(s.x * ts),
-      y: y + Math.trunc(s.y * ts),
-      w: Math.max(1, Math.ceil(s.w * ts)),
-    }));
     // The ink of each record's state.
     const done = cx.typed ? cx.pal.COL_DONE : COL_INK;
     for (const [k, o] of origins.entries()) {
@@ -99,6 +100,9 @@ export const recordList: FillSite = {
       }
       const ink = s & BROKEN ? COL_ERROR : s & STRUCK ? done : COL_INK;
       dr.drawText(o, opts, ink, texts[k]);
+      // A held record is boxed, its ink left saying what it is; a hint's
+      // outline lies outside the box, so a record both shows both.
+      if (s & HELD) drawRectOutline(dr, box.x, box.y, box.w, box.h, COL_INK);
       if (s & STRUCK) {
         const at = Math.round(o.y - font * 0.3);
         dr.drawLine(

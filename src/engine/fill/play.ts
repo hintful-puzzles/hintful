@@ -54,6 +54,7 @@ import {
   hexShift,
   inHexagon,
 } from "../solve/describe-runtime.ts";
+import type { Way } from "./along.ts";
 import {
   type Clues,
   type FillBoard,
@@ -175,6 +176,13 @@ export interface FillPlay {
   /** The clue at the board whose records are lists, drawn as a list beneath
    * it (`record-list.ts`). */
   readonly list?: string;
+  /** Where typing goes along the list's sites (`along.ts`): the player's
+   * preferences that move the selection along a site and wash the sites
+   * through it, by key and name. */
+  readonly along?: {
+    readonly advance: { readonly kw: string; readonly name: string };
+    readonly wash: { readonly kw: string; readonly name: string };
+  };
   /** The player's preference for how the row of counts reads (`counts.ts`'s
    * `COUNT_STYLES`), by its key and name; absent, each count is its total. */
   readonly countStyle?: { readonly kw: string; readonly name: string };
@@ -303,6 +311,14 @@ export interface FillUi {
   /** On a board whose counts' style is a preference (`FillPlay.countStyle`),
    * the player's choice, by its index in `COUNT_STYLES`. */
   countStyle?: number;
+  /** On a board typed along its list's sites (`FillPlay.along`): the way a
+   * typed value moves the selection; the record of the list picked up,
+   * `-1` where none is; and the two preferences, moving the selection and
+   * washing the sites through it. */
+  way?: Way;
+  held?: number;
+  advance?: boolean;
+  runWash?: boolean;
 }
 
 export function newFillUi(): FillUi {

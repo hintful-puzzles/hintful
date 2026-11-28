@@ -370,3 +370,82 @@ records are not one list each.
 - **WHEN** a step of a `listing` board rings the number only one line fits
 - **THEN** the ring goes round that number in the list, and none is drawn
   on the grid for it
+
+### Requirement: A born game's typing may go along its list's sites
+
+`play.along` SHALL make a value typed on a board of numbers move the
+selection to the next square of the site it is filling, a site being the
+ordered cells a binding of `deal.records` reads a record of the list off.
+It SHALL NOT move for a note, a clear or with the `advance` preference off,
+and after a site's last square a selection the pointer placed SHALL be put
+away.
+
+#### Scenario: A whole number after one press
+
+- **WHEN** the first square of a `running` board's three-square row is
+  pressed and its three digits typed
+- **THEN** each digit fills the next square, and after the last no square
+  is selected
+
+#### Scenario: A value the square holds already
+
+- **WHEN** a square holding 8 is selected and 8 is typed
+- **THEN** no move is made and the selection moves on
+
+### Requirement: The way typing goes along a site is the player's
+
+On a board typed along its list's sites, the way the selection moves, a
+row's or a column's, SHALL be set by the arrow last pressed, snapped to the
+one site through a square that lies in one, and turned by a second press on
+a square selected for typing that two sites cross; a second press elsewhere
+SHALL put the selection away, as on any board of numbers.
+
+#### Scenario: A second press turns the way
+
+- **WHEN** a square where a row and a column cross is pressed twice and a
+  digit typed
+- **THEN** the selection moves down the column
+
+### Requirement: A born game's list may be written whole into a site
+
+On a board typed along its list's sites, a press on a record of the list
+SHALL write it into a site through the square selected for typing that it
+fits, or else pick it up, or put it down where it was held. A record SHALL
+fit a site as long as it, agreeing with every value placed there, and read
+along no other site; where both sites through the square take it, the one
+holding more values SHALL, a tie going the selection's way. In notes a
+press on a record SHALL only hold it.
+
+#### Scenario: The run more written in takes it
+
+- **WHEN** a `running` square where an empty row crosses a column holding
+  one of 813's digits is selected, the way the row's, and 813 is pressed
+- **THEN** 813 is written down the column
+
+### Requirement: A held record is dropped into a site or put down
+
+A press on a square of a site a held record fits SHALL write it there and
+leave the square selected; a press on an open square it fits no site
+through, or a value or clear typed, SHALL put it down; a press on a fixed
+square, a right press and an arrow SHALL leave it held.
+
+#### Scenario: A press where it cannot go
+
+- **WHEN** the four-digit number of a `running` board is held and a square
+  of three-square runs is pressed
+- **THEN** nothing is written, no number is held, and the square is
+  selected
+
+### Requirement: A born game's sites through the selection are washed
+
+On a board typed along its list's sites, the sites through the selection
+SHALL be washed, the row's and the column's each its own color, unless the
+`wash` preference is off or a hint shows. A held record's sites SHALL be
+washed: the one it is read along, else every one it fits, its values
+previewed on the empty squares where one site alone takes it.
+
+#### Scenario: A number one run takes
+
+- **WHEN** the one four-digit number of a `running` board is held
+- **THEN** the four-square column is washed and the number's digits are
+  previewed down it

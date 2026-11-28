@@ -125,12 +125,6 @@ export const guessBoard = (defaultBackground: Color): Color => {
 export const guessAnswerWell = (defaultBackground: Color): Color =>
   token(scale(guessBoard(defaultBackground), 0.3), [0.09, 0.09, 0.09]);
 
-// --- crossing -----------------------------------------------------------
-
-/** **Not placed yet** — a ghosted word, light enough to read as provisional and
- * dark enough to read at all. */
-export const crossingGhost = (background: Color): Color => scale(background, 0.55);
-
 // --- galaxies -----------------------------------------------------------
 
 /** **This region is black** — one of Galaxies' two region fills, at three tenths

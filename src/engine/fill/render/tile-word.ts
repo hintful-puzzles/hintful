@@ -93,6 +93,14 @@ export const DIVIDER_SIDES = 0xf << DIVIDER_SHIFT;
  * player's preference draws them so: the cell's value and notes are its
  * painters', not its glyphs. */
 export const PICTURED = 1 << 27;
+/** On a board typed along its list's sites (`play.along`), the cell lies on
+ * a site washed going along a row, or a column: one through the selection,
+ * or one a held record fits. */
+export const ALONG_ROW = 1 << 28;
+export const ALONG_COLUMN = 1 << 29;
+/** The cell is empty, and a held record's value is previewed on it: its
+ * note word holds that value's bit in place of its notes. */
+export const PREVIEWED = 1 << 30;
 
 // --- the edge word: on an answer on the edges, the tile's four sides --------
 /** Side `d`'s value (up, right, down, left), {@link EDGE_VALUE_BITS} a side

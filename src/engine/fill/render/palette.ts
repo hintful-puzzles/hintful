@@ -6,7 +6,9 @@
 
 import {
   BLACK,
+  BLUE_BOLD,
   GRAY_WASH,
+  ORANGE_BOLD,
   REGION_FILLS,
   WHITE,
   YELLOW_WASH,
@@ -20,9 +22,11 @@ import {
   givenSurface,
   highlightWash,
   INK,
+  PAPER,
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  previewInk,
   regionHighlightWash,
   surfaceGrid,
 } from "../../color/palette.ts";
@@ -132,6 +136,10 @@ export interface FillPalette {
   readonly COL_PENCIL: number;
   readonly COL_PENCIL_BODY: number;
   readonly COL_DONE: number;
+  readonly COL_ALONG_ROW: number;
+  readonly COL_ALONG_COLUMN: number;
+  readonly COL_ALONG_INK: number;
+  readonly COL_PREVIEW: number;
   readonly PENCIL_STYLE: PencilIndicatorStyle;
   colors(background: Color): Color[];
 }
@@ -181,11 +189,21 @@ export function fillPalette(
   const COL_PENCIL_BODY = COL_ENTRY + 2;
   /** Where the player marks clues done (`play.done`, a board of numbers'),
    * a done clue's gray, after the notes' slots where the board keeps them;
-   * a row of counts grays a value all placed in it too. */
+   * a row of counts grays a value all placed in it too, and a list a record
+   * it strikes. */
   const marksDone =
     Object.keys(play.done ?? {}).length > 0 ||
-    Object.keys(play.counts ?? {}).length > 0;
+    Object.keys(play.counts ?? {}).length > 0 ||
+    play.list !== undefined;
   const COL_DONE = notes ? COL_PENCIL_BODY + 1 : COL_ENTRY + 1;
+  /** Where typing goes along the list's sites (`play.along`), the washes of
+   * the row's site and the column's through the selection, the ink on
+   * them, and a held record's values previewed, after the done gray. */
+  const along = play.along !== undefined;
+  const COL_ALONG_ROW = COL_DONE + 1;
+  const COL_ALONG_COLUMN = COL_DONE + 2;
+  const COL_ALONG_INK = COL_DONE + 3;
+  const COL_PREVIEW = COL_DONE + 4;
   const PENCIL_STYLE: PencilIndicatorStyle = {
     background: COL_BACKGROUND,
     body: COL_PENCIL_BODY,
@@ -231,6 +249,14 @@ export function fillPalette(
         out[COL_PENCIL_BODY] = PENCIL_BODY;
       }
       if (marksDone) out[COL_DONE] = clueDoneColor(bg);
+      if (along) {
+        // A strong fill each way, which the ink on it is paper against in
+        // both schemes, as the selection's own wash is not.
+        out[COL_ALONG_ROW] = BLUE_BOLD;
+        out[COL_ALONG_COLUMN] = ORANGE_BOLD;
+        out[COL_ALONG_INK] = PAPER;
+        out[COL_PREVIEW] = previewInk(bg);
+      }
     }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
@@ -256,6 +282,10 @@ export function fillPalette(
     COL_PENCIL,
     COL_PENCIL_BODY,
     COL_DONE,
+    COL_ALONG_ROW,
+    COL_ALONG_COLUMN,
+    COL_ALONG_INK,
+    COL_PREVIEW,
     PENCIL_STYLE,
     colors,
   };
