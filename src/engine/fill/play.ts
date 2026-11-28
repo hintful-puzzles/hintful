@@ -143,8 +143,9 @@ export interface FillPlay {
    * cross, and a square whose notes lack it is drawn in the ball the clue
    * kind `ball` is drawn as (`glyphs.ts`'s `emptyOf`). `pictures`: each
    * value drawn by its painter in place of its glyph, a note small, unless
-   * the player's preference `pref` draws the glyphs; `A` switches it. Each
-   * is said by its name in `names`, and labeled by it on the keypad. */
+   * the player's preference `pref` draws the glyphs; `A` switches it. With
+   * no `pref`, always pictures. Each is said by its name in `names`, and
+   * labeled by it on the keypad. */
   readonly numbers?: {
     readonly raised?: true;
     readonly letters?: true | string;
@@ -152,7 +153,7 @@ export interface FillPlay {
     readonly pictures?: {
       readonly paint: Readonly<Record<number, string>>;
       readonly names: Readonly<Record<number, string>>;
-      readonly pref: { readonly kw: string; readonly name: string };
+      readonly pref?: { readonly kw: string; readonly name: string };
     };
   };
   /** Whether a board of numbers keeps the player's candidate notes, a set of

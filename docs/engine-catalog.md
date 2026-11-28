@@ -882,7 +882,11 @@ the square (`render/layers/notes.ts`). A note's tile is a third larger than
 its slot, which a piece drawn in three quarters of its tile fills, as the
 monsters are (`monster.ts`); a painter that fills its whole tile would
 overrun its slot there. A painter takes its sizes from its tile alone, so
-a caller may draw it at any size. Each picture is named (`names`), and the
+a caller may draw it at any size. A piece that points (`Painter.points`,
+the arrows of `arrow.ts`) is noted on the side of its square it points to,
+where every piece of the board points, and a painter whose piece would not
+read as a note small draws its own (`Painter.note`, an arrow in pencil).
+Each picture is named (`names`), and the
 name is the value everywhere a word stands for it: the hint says it with
 its article ("can only be a ghost", the vocabulary's `article`), and the
 keypad labels its key with it, capitalized (`glyphs.ts`'s `say` and

@@ -159,6 +159,27 @@ export function cellLayoutOf(
     }));
   };
 
+  /** Where a note of a piece pointing `[dx, dy]` goes in cell `(x, y)`: a
+   * square a quarter of the cell inside a hint's band, on that side of its
+   * middle, as upstream rome.c draws its small arrows. */
+  const pointedSlot = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    [dx, dy]: readonly [number, number],
+  ): Rect => {
+    const area = labeled ? belowClue(ts, at, walls) : markBand(ts, at, walls).box;
+    const side = Math.floor(Math.min(area.w, area.h) / 4);
+    const x = area.x + Math.floor(area.w / 2) + dx * Math.floor(area.w / 4);
+    const y = area.y + Math.floor(area.h / 2) + dy * Math.floor(area.h / 4);
+    return {
+      x: x - Math.floor(side / 2),
+      y: y - Math.floor(side / 2),
+      w: side,
+      h: side,
+    };
+  };
+
   /** Where a typed value goes in cell `(x, y)`, its tile at `(tx, ty)`: the
    * tile's middle; on a board of clues at parts, the middle of the cell below
    * a clue's line, at half a tile as upstream keen.c's, so a clue never sits
@@ -178,5 +199,5 @@ export function cellLayoutOf(
     };
   };
 
-  return { ...lay, labelText, noteSlots, pictureSlots, valueText };
+  return { ...lay, labelText, noteSlots, pictureSlots, pointedSlot, valueText };
 }

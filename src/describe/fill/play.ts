@@ -38,8 +38,8 @@ import { partBound } from "./values.ts";
  * description may name; values painted that are not 1 up, or not those
  * named, or an alphabet
  * they do not each have a letter of; a raised value, a block as tall as its
- * number; an empty square, which is a cross; and a letter A, whose key
- * switches the pictures. */
+ * number; an empty square, which is a cross; and, where the player may
+ * switch the pictures for the glyphs, a letter A, whose key switches them. */
 function checkPictures(numbers: PlayJson["numbers"]): void {
   const pictures = numbers?.pictures;
   if (pictures === undefined) return;
@@ -59,7 +59,10 @@ function checkPictures(numbers: PlayJson["numbers"]): void {
     throw new CompileError(
       `play numbers pictures: ${values.length} values painted, and the alphabet ${letters} has ${letters.length} letters`,
     );
-  if (letters === true || (typeof letters === "string" && /a/i.test(letters)))
+  if (
+    pictures.pref !== undefined &&
+    (letters === true || (typeof letters === "string" && /a/i.test(letters)))
+  )
     throw new CompileError(
       "play numbers pictures: A switches the pictures, and types a letter",
     );

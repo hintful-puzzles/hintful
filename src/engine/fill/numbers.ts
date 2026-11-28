@@ -246,7 +246,8 @@ export function numberInput<
     module.play?.along === undefined || listed === undefined
       ? null
       : alongInput(module, listed);
-  const pictured = module.play?.numbers?.pictures !== undefined;
+  // Pictures the player may switch for the glyphs.
+  const switched = module.play?.numbers?.pictures?.pref !== undefined;
   const select = module.play?.select;
   const dividers = module.play?.dividers === true;
   const ordered = module.play?.order === true;
@@ -483,7 +484,7 @@ export function numberInput<
       }
       // A switches pictures and glyphs, a letter no value of such a board
       // is typed by (upstream Undead's).
-      if (pictured && (button === KEY_A || button === KEY_a)) {
+      if (switched && (button === KEY_A || button === KEY_a)) {
         fillUi.pictures = fillUi.pictures === false;
         return UI_UPDATE;
       }

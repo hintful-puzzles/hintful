@@ -1410,8 +1410,8 @@
                 },
                 "pictures": {
                   "type": "object",
-                  "description": "Each value is drawn by the painter named, in place of its glyph: placed, as a piece filling its square; noted, small in a two-by-two grid; in a row of counts, as its record's piece (upstream Undead's monsters). The player's preference `pref`, pictures by default, draws the glyphs instead, and `A` switches it, so no glyph is typed by A. Every value the player places has a painter, from 1, and a name in `names`: what a hint calls it and its key's label on the keypad, capitalized. Not raised, and with no empty square.",
-                  "required": ["paint", "names", "pref"],
+                  "description": "Each value is drawn by the painter named, in place of its glyph: placed, as a piece filling its square; noted, small in a two-by-two grid, or where every piece points (an arrow), on the side of its square it points to; in a row of counts, as its record's piece (upstream Undead's monsters). The player's preference `pref`, pictures by default, draws the glyphs instead, and `A` switches it, so no glyph is typed by A; with none, the board is always pictures (Rome's arrows). Every value the player places has a painter, from 1, and a name in `names`: what a hint calls it and its key's label on the keypad, capitalized. Not raised, and with no empty square.",
+                  "required": ["paint", "names"],
                   "additionalProperties": false,
                   "properties": {
                     "paint": {

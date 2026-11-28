@@ -2,7 +2,8 @@
  * An open cell's notes (`play.notes`), in a grid within it, each the hint
  * strikes crossed through in its own color, so it still reads as the
  * player's. On a board drawn as pictures each note is its value's piece,
- * small, in a two-by-two grid (`cell-text.ts`'s `pictureSlots`).
+ * small, in a two-by-two grid (`cell-text.ts`'s `pictureSlots`), or, where
+ * every piece points, each on the side it points to (`pointedSlot`).
  */
 
 import { drawStrike, glyphFont } from "../../../render/draw.ts";
@@ -40,15 +41,24 @@ export function paintNotes(
   if ((word & 0xff) !== 0) return;
   const shown = notesIn(noteWord);
   if (pieceOf !== null) {
-    lay.pictureSlots(ts, at, part?.walls ?? null, shown.length).forEach((box, j) => {
-      const placed = pieceOf(shown[j]);
+    const walls = part?.walls ?? null;
+    const pieces = shown.map(pieceOf);
+    // Where every piece points, each note sits on the side it points to,
+    // whatever else the cell notes; else they fill the cell in turn.
+    const ways = pieces.map((p) => p?.painter.points ?? null);
+    const boxes = ways.every((way): way is readonly [number, number] => way !== null)
+      ? ways.map((way) => lay.pointedSlot(ts, at, walls, way))
+      : lay.pictureSlots(ts, at, walls, shown.length);
+    boxes.forEach((box, j) => {
+      const placed = pieces[j];
       // The piece is drawn in three quarters of its tile: a tile a third
       // larger than the slot fills it.
       const grown = Math.floor((box.w * 4) / 3);
       const inset = Math.floor((grown - box.w) / 2);
       const piece = { x: box.x - inset, y: box.y - inset, w: grown, h: grown };
       const middle = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
-      if (placed !== null) placed.painter.paint(dr, piece, placed.slot, false);
+      if (placed?.painter.note !== undefined) placed.painter.note(dr, box, placed.slot);
+      else if (placed !== null) placed.painter.paint(dr, piece, placed.slot, false);
       else
         dr.drawText(
           middle,
@@ -57,13 +67,13 @@ export function paintNotes(
           glyph(shown[j]),
         );
       // A piece's own ink is its outline's, which a strike through it
-      // keeps; a glyph's is the pencil's.
+      // keeps; a glyph's, and a note drawn as one, the pencil's.
       if (struck & (1 << shown[j]))
         drawStrike(
           dr,
           middle,
           Math.floor((box.w * 2) / 3),
-          placed === null ? COL_PENCIL : COL_INK,
+          placed === null || placed.painter.note !== undefined ? COL_PENCIL : COL_INK,
           tile,
           { slant: true },
         );

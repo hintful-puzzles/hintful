@@ -283,7 +283,7 @@ export function fillGame<C extends Clues<C> & object>(
           noted(pencilKeepHighlightPref()),
           noted(candidateReadingPref()),
         ]),
-    ...(play.numbers?.pictures === undefined
+    ...(play.numbers?.pictures?.pref === undefined
       ? []
       : [
           {

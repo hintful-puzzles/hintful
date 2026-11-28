@@ -1,5 +1,6 @@
 /** The painters a description's `paint:` may name, by name. */
 
+import { arrowDown, arrowLeft, arrowRight, arrowUp, goal } from "./arrow.ts";
 import { across, down } from "./bar.ts";
 import { ground, tent, tree } from "./camp.ts";
 import { hull, sea } from "./fleet.ts";
@@ -18,6 +19,10 @@ import { clear, cross, domino, ring, shade } from "./stock.ts";
 
 export const PAINTERS = {
   across,
+  arrowDown,
+  arrowLeft,
+  arrowRight,
+  arrowUp,
   block,
   bulb,
   clear,
@@ -27,6 +32,7 @@ export const PAINTERS = {
   down,
   fall: fallPiece,
   ghost: ghostPiece,
+  goal,
   ground,
   hull,
   rise: risePiece,

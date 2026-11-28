@@ -81,6 +81,27 @@ instead, and `A` SHALL switch it.
 - **THEN** it draws three small monsters, the first two side by side and
   the third beneath the first
 
+### Requirement: A board of numbers may be drawn as arrows
+
+A painter that points SHALL note its piece small on the side of its square
+it points to, where every piece of the board points. An arrow SHALL be
+drawn in the player's entry color, in ink where the puzzle gave it, and as
+a note in pencil. Where `play.numbers.pictures` names no preference, the
+board SHALL always be drawn as pictures, offer no preference for the
+glyphs, and `A` SHALL switch nothing.
+
+#### Scenario: Arrows noted on their sides
+
+- **WHEN** an open square of a `pointing` board is noted each arrow in turn
+- **THEN** each is three pencil strokes under a third of the square across,
+  above its middle for up, below it for down, left of it for left and right
+  of it for right
+
+#### Scenario: A board that is only pictures
+
+- **WHEN** a `pointing` board's preferences are asked for, and `A` is typed
+- **THEN** none chooses pictures or glyphs, and the board is still pictures
+
 ### Requirement: A picture's name is how a player is told its value
 
 Each picture SHALL have a name, which the hint says its value by, with its
@@ -99,7 +120,8 @@ whatever the alphabet's letters.
 
 The compiler SHALL refuse `play.numbers.pictures` naming a painter no
 description may name, painting values that are not every value from 1,
-beside an alphabet of another length or holding A, or beside a raised
+beside an alphabet of another length, or holding A where the player may
+switch the pictures for the glyphs, or beside a raised
 value or an empty square.
 
 #### Scenario: An alphabet holding A

@@ -12,7 +12,7 @@ space:
   grid: { w: "w", h: "h" }
   units: []
 answer:
-  value: { sort: cell, domain: "range(1, 20)" }
+  value: { sort: cell, domain: "range(1, 25)" }
 define:
   open(L): "{c in cells(L) where not known(c)}"
   need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
@@ -41,11 +41,16 @@ play:
     16: { does: put a ghost in it, key: K, glyph: " G ", paint: ghost }
     17: { does: put a vampire in it, key: M, glyph: " V ", paint: vampire }
     18: { does: put a zombie in it, key: Z, glyph: " Z ", paint: zombie }
+    21: { does: point it up, key: U, glyph: " ^ ", paint: arrowUp }
+    22: { does: point it down, key: N, glyph: " v ", paint: arrowDown }
+    23: { does: point it left, key: I, glyph: " < ", paint: arrowLeft }
+    24: { does: point it right, key: J, glyph: " > ", paint: arrowRight }
   given:
     14: { glyph: " T ", paint: tree }
     15: { glyph: "###", paint: wall }
     19: { glyph: " \\ ", paint: fall }
     20: { glyph: " / ", paint: rise }
+    25: { glyph: " O ", paint: goal }
   primary: 1
   secondary: 2
   straight: true

@@ -1,7 +1,8 @@
 ## Next
 
 2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.3
-(Rome) goes on meanwhile: it needs nothing of Crossing's. For 2.2f: the
+(Rome) goes on meanwhile: it needs nothing of Crossing's. Rome's next is
+the first of 2.3a–e not ticked. For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -67,7 +68,26 @@ order.
         filtered by what fits the selection (`play.along.panel`, on
         `running`, design.md § "Decisions" 9). In the app at 2.2f.
   - [ ] 2.2f The flip.
-- [ ] 2.3 Rome born.
+- [ ] 2.3 Rome born. Read against `0a9b3969b`: met beyond `gaps.md`,
+      picture notes (`numbers.pictures`, 2.1b), values only the deal
+      places (`play.given`, the goal), and a wash behind a preference
+      (`play.wash`, over open cells only).
+  - [x] 2.3a Arrows and goals drawn as pictures, an arrow's note on the
+        side it points (`Painter.points`, `Painter.note`), and a board
+        always pictured where `pictures` names no preference. On `pointing`.
+  - [ ] 2.3b A value chosen by its way: a drag from a square onto the
+        neighbor a value's piece points at, back onto it clearing; Enter
+        (Space for a note) arming the selection for an arrow key; the
+        numpad digits 8, 2, 4 and 6; keys labeled by the arrows. On
+        `pointing`.
+  - [ ] 2.3c Washes over placed cells, each behind a preference (Rome's
+        squares leading home, on by default, and its loops, off).
+  - [ ] 2.3d The build's fallback value where a cell has none left, and a
+        cap on how many; a dealt partition read as each cell alone while
+        the answer is built, then merged at random on it while the answer
+        keeps its rules (upstream rome.c's `generate_regions`).
+  - [ ] 2.3e The ID (the walls, then the clue stream with `U D L R X`),
+        read against what is met, and the flip.
 - [ ] 2.4 Magnets born.
 - [ ] 2.5 Subsets born.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.

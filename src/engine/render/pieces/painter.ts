@@ -36,10 +36,18 @@ export interface Painter {
    * hull: {@link paint} is told the sides it runs on to, or `JOINED_OPEN`
    * where the board does not yet say which way it runs. */
   readonly runs?: boolean;
+  /** The way the piece points, a step across the grid (`[0, -1]` up), where
+   * it is an arrow: a note of it sits on that side of its cell, where every
+   * piece of the board points. */
+  readonly points?: readonly [number, number];
   /** What a cell the puzzle gave holding the piece draws in place of
    * {@link paint}, to tell it from one the player placed (Boats' waves on
    * given water, where the player's water takes the cross). */
   given?(dr: GameDrawing, tile: Rect, slot: readonly number[]): void;
+  /** What a note of the piece draws in `box`, in place of {@link paint}
+   * small, where the piece in the player's colors would not read as a note
+   * (Rome's arrow, a stroke the same weight whoever drew it). */
+  note?(dr: GameDrawing, box: Rect, slot: readonly number[]): void;
   /**
    * Draw the piece in `tile`, the cell's whole box, the color at index `i`
    * of {@link colors} in slot `slot[i]`. `error` where a rule breaks at the
