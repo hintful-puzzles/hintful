@@ -2970,6 +2970,14 @@
             "alongside": {
               "type": "string",
               "description": "How a deduction's cells share a unit with the one it decides, in the game's units; default \"in line with\"."
+            },
+            "be": {
+              "type": "string",
+              "description": "The verb a square takes a value by, `{be}` in a hint's words and the walk's \"must be\", where it is not \"be\" (Rome's arrows \"point\"): a value is then said bare, a way and not a thing, with no article."
+            },
+            "note": {
+              "type": "string",
+              "description": "What a struck value is called where its word alone would not say it is a note, a value that is a word and no numeral (Rome's \"mark\": \"this square's up mark must go\")."
             }
           }
         },

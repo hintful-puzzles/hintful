@@ -104,9 +104,10 @@ const DETERMINER =
 const DEICTIC = /^(?:this|these|those|that)\s+(.+)$/i;
 
 /** Words that name a thing by another: an end is an end of the line or chain
- * a sentence has just named ("one end", "the other end"). */
+ * a sentence has just named ("one end", "the other end"), and a value "just
+ * placed" is the one the move before the step placed, whatever its word. */
 const RELATION =
-  /\b(?:its|their|other|ends?|between them|beside it|to (?:its|the) (?:left|right)|above|below|across|in it|there)\b|^the same\b/i;
+  /\b(?:its|their|other|ends?|between them|beside it|to (?:its|the) (?:left|right)|above|below|across|in it|there|just placed)\b|^the same\b/i;
 
 /** The noun a deictic reference says, singular, so "this cell" and "these
  * cells" are one. */

@@ -910,7 +910,7 @@ when it is hidden").
 A game with candidate pencil marks carries all of the following, so that
 notes work with mouse and touch as well as the keyboard. The requirements
 are the `engine-notes` spec's. Exemplars:
-[`rome/index.ts`](../src/games/rome/index.ts), and for a born game
+[`crossing/index.ts`](../src/games/crossing/index.ts), and for a born game
 the fill board's ([`engine/fill/notes.ts`](../src/engine/fill/notes.ts),
 [`engine/fill/numbers.ts`](../src/engine/fill/numbers.ts)). The hint such a game
 wants is [`hints-candidates.md`](./hints-candidates.md) § "What every game

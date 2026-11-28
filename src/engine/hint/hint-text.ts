@@ -230,10 +230,13 @@ export function candidateConclusions(vocab: {
   return {
     cell,
     strike: ({ where, struck }) => {
+      const from = where?.startsWith("from ") ?? false;
       const values = (values: readonly number[]): string => {
         const ns = distinct([...values]);
+        // A `where` that says what they go from follows the reference, so
+        // the reference says which notes by their role.
         if (note !== undefined)
-          return `${where ? "the" : `this ${cell}'s`} ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
+          return `${where ? (from ? "the struck" : "the") : `this ${cell}'s`} ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
         // A value said as a word (Undead's monsters) names a thing the board
         // also shows placed, so it says which mark it is, as `stated.ts`'s
         // closing does: "the struck ghost", "the struck ghosts" from
@@ -255,7 +258,6 @@ export function candidateConclusions(vocab: {
       // "Must go" is the necessity voice in the fewest words. A where that
       // says what they go from follows it; one that picks them out ("beyond
       // that") stays with them.
-      const from = where?.startsWith("from ") ?? false;
       const named = struck ? () => struck : values;
       return {
         what: where && !from ? (ns) => `${named(ns)} ${where}` : named,

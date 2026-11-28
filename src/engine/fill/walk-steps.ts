@@ -20,6 +20,19 @@ export const WALK_STEPS = {
   regionsFull: { n: "number" },
 } as const satisfies Readonly<Record<string, Readonly<Record<string, string>>>>;
 
+/**
+ * The step of the walk a description may word where its rules hold the parts
+ * of a dealt partition distinct: a part holds every value only where its
+ * squares can hold no more between them (Rome's area of four, of four
+ * arrows), which the Latin words for a unit ("no other square in this area
+ * can be 3") take as read. Unworded, the walk says those.
+ */
+export const PART_STEPS = {
+  /** `n` has one place left, the ring, in the part striped as `cell`, of
+   * `size` squares, which holds every value its squares can. */
+  hiddenSingle: { n: "number", size: "number" },
+} as const satisfies Readonly<Record<string, Readonly<Record<string, string>>>>;
+
 /** A step of the walk's that a description words. */
 export type WalkStep = keyof typeof WALK_STEPS;
 

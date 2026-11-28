@@ -595,3 +595,38 @@ no dealt partition, and one beside a grow or a divide.
 - **THEN** each area holds each arrow at most once and a goal alone, and
   any two neighboring areas joined would hold an arrow twice or a goal
   with another square
+
+### Requirement: A born game's hint may say a value with the verb a cell takes it by
+
+`words.be` MAY name the verb a cell takes a value by; the candidate walk's
+own sentences SHALL then say a value with that verb and no article.
+`words.note` MAY name what a struck value is called, which the walk's
+strikes SHALL say in place of the value alone.
+
+#### Scenario: A square that can point only one way
+
+- **WHEN** a Rome hint places the one arrow left in a square with marks
+- **THEN** its sentence says the square must point that way, with no
+  article before the way
+
+#### Scenario: A struck way
+
+- **WHEN** a Rome hint strikes, from the rest of an area, a way a square
+  of it was just given
+- **THEN** its sentence says the struck mark of that way must go
+
+### Requirement: A hint says why a distinct part must hold a value
+
+Where a description's parts are distinct and its `steps` word
+`hiddenSingle`, a hidden single in a part SHALL be said with that step's
+words, the part striped and its size a term, so a sentence can say why the
+part must hold the value: it has as many cells as values, or its cells can
+take no more values between them than it has cells. The compiler SHALL
+refuse a `hiddenSingle` step that marks anything but the part's stripes.
+
+#### Scenario: An area of three at the board's edge
+
+- **WHEN** a Rome hint places the one arrow only one square of a
+  three-square area on the left edge can still point
+- **THEN** its sentence says the area's three squares can point only three
+  ways between them, and the area is striped

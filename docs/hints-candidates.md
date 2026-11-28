@@ -20,9 +20,10 @@ rung its reason names, a fish a `set`), and its own techniques', so a
 rung no firing of the game's could reach is never declared.
 
 What a hand-written game with notes does beyond the skeleton, in order.
-Rome does each of these ([`rome/index.ts`](../src/games/rome/index.ts),
-[`rome/hint.ts`](../src/games/rome/hint.ts)), in a move dialect of its own
-(§ "Moves or notes outside the Latin dialect").
+No hand-written game walks the plan now: the fill board does steps 6 to 8
+([`fill/candidates.ts`](../src/engine/fill/candidates.ts)), and Crossing
+the rest ([`crossing/index.ts`](../src/games/crossing/index.ts)), in a move
+dialect of its own (§ "Moves or notes outside the Latin dialect").
 
 1. Take the cell's highlight, entry and pencil mode from
    `note-taking-cell.ts` (`pressNoteTakingCell`, `toggleNoteTakingMode`):
@@ -90,8 +91,8 @@ Write `buildSteps` as one call to `runCandidatePlan`
 The walk owns the loop and builds every step; the game
 supplies what carries its meaning, each a field of `CandidatePlan`, whose
 docs say what each decides and, for an optional hook, the game-shaped fact
-that needs it. Exemplar: [`rome/hint.ts`](../src/games/rome/hint.ts)'s
-`buildSteps`. Requirements: "A shared candidate-elimination hint plan", "The
+that needs it. Exemplar: [`fill/candidates.ts`](../src/engine/fill/candidates.ts)'s
+call. Requirements: "A shared candidate-elimination hint plan", "The
 walk owns the ladder", "The walk builds every step from the game's words",
 "The game keeps what carries its meaning".
 
@@ -191,9 +192,9 @@ region are declared".
 
 Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts)'s
 `regionsOf` (a described board's units, a block's `holdsEvery` read off its
-cells' domains);
-`romeRegions` in [`rome/state.ts`](../src/games/rome/state.ts) (areas from a
-`Dsf`, `holdsEvery` only at four squares).
+cells' domains: Rome's areas hold every arrow only at four squares, or
+where their squares at the board's edge can point no more ways between
+them than there are squares).
 
 ## A value's reach depends on the value
 
@@ -299,9 +300,8 @@ Requirement: "The shared track and refresh read a game's move dialect".
   "pencilStrike" | "pencilAll" }`: it reads a game move as the canonical
   `CandidateMove`, or `null` for "not one of these, so off-plan", and builds
   the game's own moves. `keepCandidateHintTrack`,
-  `refreshCandidateHintStep` and the plan (`moves`) take it. Exemplars:
-  [`rome/hint.ts`](../src/games/rome/hint.ts) (`romeCandidateMoves`: a `kind`
-  discriminator, and arrows as bits), [`crossing/index.ts`](../src/games/crossing/index.ts) (a `kind`
+  `refreshCandidateHintStep` and the plan (`moves`) take it. Exemplar:
+  [`crossing/index.ts`](../src/games/crossing/index.ts) (a `kind`
   discriminator and candidate `n` at bit `n − 1`).
 - **Emit the hint's placement as the game's native move**, so a player
   following the hint produces the exact move the plan expects. Add only the
@@ -468,8 +468,7 @@ check vouches for them".
 
 Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts), every
 born game's walk (Seismic's areas, and ABCD's board with no unit, among
-them, and Salad's, whose empty square a line holds more than once),
-[`rome/hint.ts`](../src/games/rome/hint.ts).
+them, and Salad's, whose empty square a line holds more than once).
 
 ## A premise names everything its deduction reads
 
@@ -788,7 +787,7 @@ The walk scans a dense ordinal, `for (v = 1; v <= values; v++)`, and a
 gives a `NoteEncoding` saying how the ordinal maps to its note bit (`bit` as
 a lookup, `values` the count) and never passes its bits as values:
 `nakedSingles` would test `pencil & 12` on its way past. Exemplar:
-[`rome/hint.ts`](../src/games/rome/hint.ts).
+[`crossing/solver.ts`](../src/games/crossing/solver.ts)'s `noteBit`.
 
 - **Name a candidate by its word and its relation, not its glyph**: "up",
   "the square above", "point straight back". A glyph is smaller in prose
@@ -854,8 +853,10 @@ Where a sentence says that following something leads somewhere ("Following
 the arrows from the square above leads back here"), compute the walk and
 throw if it does not arrive, with the termination argument written beside
 it. Outline the walk's cells on the board, with no number on them ("A
-premise that asserts a walk is computed and outlined"). Exemplar:
-`arrowPath` in [`rome/hint.ts`](../src/games/rome/hint.ts).
+premise that asserts a walk is computed and outlined"). A described game
+has it by construction: Rome's loop outlines `chain(q)`, the walk the
+description's `chain` computes
+([`describe-runtime/lines.ts`](../src/engine/solve/describe-runtime/lines.ts)).
 
 **A test of a named walk holds each step to the one before it**, not only to
 its own cell: a check that each named value is among its cell's candidates

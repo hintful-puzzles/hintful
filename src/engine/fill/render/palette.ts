@@ -86,6 +86,10 @@ export function fillSlots(
   const byValue = new Map<number, Placed>();
   const edgeByValue = new Map<number, Placed<EdgeValuePainter>>();
   const slotOf = new Map<Color, number>();
+  // Painters sharing one `colors` draw in its colors whatever the
+  // background, so they share its slots: a color derived from the
+  // background is a new array each call, which `slotOf` cannot match.
+  const slotsOf = new Map<Painter["colors"], number[]>();
   let next = FIRST_PAINTER_SLOT;
   const place = <P extends Painter | EdgeValuePainter>(
     name: string,
@@ -93,12 +97,16 @@ export function fillSlots(
   ): Placed<P> => {
     const got = painted.get(name);
     if (got !== undefined) return got as Placed<P>;
-    const slot = painter.colors([0, 0, 0]).map((c) => {
-      const known = slotOf.get(c);
-      if (known !== undefined) return known;
-      slotOf.set(c, next);
-      return next++;
-    });
+    const shared = slotsOf.get(painter.colors);
+    const slot =
+      shared ??
+      painter.colors([0, 0, 0]).map((c) => {
+        const known = slotOf.get(c);
+        if (known !== undefined) return known;
+        slotOf.set(c, next);
+        return next++;
+      });
+    slotsOf.set(painter.colors, slot);
     const placed = { painter, slot };
     painted.set(name, placed);
     return placed;

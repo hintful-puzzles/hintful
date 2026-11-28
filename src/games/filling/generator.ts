@@ -110,7 +110,7 @@ function mergeOnes(board: number[], w: number, h: number): void {
  * conflicting equal-size neighbors merged, then size-1 absorption. The
  * returned `number[]` holds each cell's region size (the full solution).
  *
- * Not the engine's `mergeNeighbors`, whose rule permits a join: here two
+ * Not a merge whose rule permits a join (`generate/divide.ts`): here two
  * neighboring regions of one size must become one, and nothing else joins.
  *
  * A draw is thrown away whole at the first pair of equal neighbors it cannot

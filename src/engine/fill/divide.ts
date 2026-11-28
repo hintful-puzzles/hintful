@@ -7,10 +7,9 @@
  * - Into small parts, upstream keen.c's cages. Each cell in a random order
  *   is joined, at the odds `pairs`, to the first of its neighbors in that
  *   order still alone; then each cell left alone is joined to the first of
- *   its neighbors' parts under `most` cells. It is not
- *   `engine/generate/divide.ts`'s `mergeNeighbors` under a largest size,
- *   which deals parts at that size: Keen's difference and quotient sit on
- *   two cells, so the pairs are laid first and most parts stay pairs.
+ *   its neighbors' parts under `most` cells. The pairs are laid
+ *   first, so most parts stay pairs: Keen's difference and quotient sit on
+ *   two cells, and a join under a largest size would deal parts at it.
  * - A part at a time, each grown to a size drawn from a list
  *   (`growToSize`): Seismic's areas, dealt before any number is.
  * - Into parts of one size that tile the board (`divvyRectangle`, upstream

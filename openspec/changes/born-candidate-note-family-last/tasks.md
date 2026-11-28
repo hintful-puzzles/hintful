@@ -1,12 +1,8 @@
 ## Next
 
-2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.3
-(Rome) goes on meanwhile: it needs nothing of Crossing's. Rome's next is
-2.3e; what the flip weighs is design.md § "Decisions" 10's, 11's and 12's
-"Left to the flip". At the flip, Rome's draft takes `play.highlights` with
-`home` as `exists g in chain(c): clue(goal, g) >= 0` (a cell, so no set is
-built a cell) and the loop as `pointing`'s; its deal `merging`'s `sample`
-and `merge`, its goal `play.given` at 5. For 2.2f: the
+2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.4
+(Magnets) goes on meanwhile: it needs nothing of Crossing's. Rome is born
+(2.3e). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -86,8 +82,9 @@ order.
   - [x] 2.3d A build's fallback value and its cap; a partition merged on
         the answer by its rules (`sample.fallback`, `deal.merge`, on
         `merging`, design.md § "Decisions" 12).
-  - [ ] 2.3e The ID (the walls, then the clue stream with `U D L R X`),
-        read against what is met, and the flip.
+  - [x] 2.3e The ID (the walls, then the clue stream with `U D L R X`),
+        read against what is met, and the flip (design.md § "Decisions"
+        13; § "What each flip changed for a player", Rome).
 - [ ] 2.4 Magnets born.
 - [ ] 2.5 Subsets born.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.

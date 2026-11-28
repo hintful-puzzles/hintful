@@ -45,15 +45,19 @@ function drawArrow(
     dr.drawLine(p(x + s * dy * side, y + s * dx * side), tip, color, thick);
 }
 
-/** The arrow pointing `way`. Its colors are the player's entry, the ink a
- * given is drawn in, and the pencil a note is. */
+/** An arrow's colors, whichever way it points: the player's entry, the ink a
+ * given is drawn in, and the pencil a note is. One function, so the four
+ * arrows share their slots. */
+const arrowColors: Painter["colors"] = (background) => [
+  playerEntryColor(background),
+  INK,
+  pencilColor(background),
+];
+
+/** The arrow pointing `way`. */
 function arrow(way: readonly [number, number]): Painter {
   return {
-    colors: (background) => [
-      playerEntryColor(background),
-      INK,
-      pencilColor(background),
-    ],
+    colors: arrowColors,
     surface: null,
     points: way,
     paint(dr, tile, slot, error) {

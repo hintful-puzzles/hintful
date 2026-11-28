@@ -930,8 +930,8 @@ label where its values are drawn as pictures (Undead's).
 per-cell set**: select a cell, tap a value, and in notes mode the same key
 toggles it as a mark. Send the character codes typed entry already answers, so
 the keys cost no input path. Exemplars:
-[`rome/index.ts`](../src/games/rome/index.ts),
-[`map/index.ts`](../src/games/map/index.ts), `guess/index.ts`.
+[`map/index.ts`](../src/games/map/index.ts), `guess/index.ts`, and a born
+board of pictures, Rome's arrows (`play.numbers.pictures`).
 
 - **A panel key enters at the keyboard cursor, so a tap must be able to place
   one.** Put the selection on a tap that is otherwise a no-op (press and
@@ -1011,7 +1011,7 @@ Exemplar: `keypadTop` and `requestKeys` in
 pencil-mode indicator" gives. Growing the canvas moves every drawing site
 onto an `origin(ts)` and shifts `fromCoord` by the same margin, and a game
 whose tiles never painted outside the board paints the new margin once.
-Exemplar: [`rome/render.ts`](../src/games/rome/render.ts).
+Exemplar: [`map/render.ts`](../src/games/map/render.ts)'s `origin`.
 
 **A note on the side two squares share has one gesture set.** A tap marks the
 side of the square it lands nearest. From the keyboard a select picks a

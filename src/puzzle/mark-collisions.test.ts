@@ -14,7 +14,7 @@
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { COL_INK, fillSlots } from "../engine/fill/render/palette.ts";
+import { COL_INK, fillPalette, fillSlots } from "../engine/fill/render/palette.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
 import * as ballsort from "../games/ballsort/render.ts";
@@ -25,6 +25,7 @@ import * as untangle from "../games/untangle/render.ts";
 import * as wordtrail from "../games/wordtrail/render.ts";
 import * as boats from "../generated/games/boats/boats.compiled.ts";
 import * as mosaic from "../generated/games/mosaic/mosaic.compiled.ts";
+import * as rome from "../generated/games/rome/rome.compiled.ts";
 import * as sticks from "../generated/games/sticks/sticks.compiled.ts";
 import { puzzleIds } from "./catalog.ts";
 import {
@@ -102,6 +103,14 @@ const DECLARED: Record<string, Declared[]> = {
     {
       among: [path.COL_TEXT, ...family(path.COL_PAIR_TEXT, path.PAIRS)],
       why: "one number, in ink on an open disc or on a pale filled one, whose color says which pair it is",
+    },
+  ],
+  // A picture board with no numerals, its areas walled.
+  rome: [
+    {
+      among: [fillSlots(rome.play).painted.get("arrowUp")?.slot[1] ?? -1],
+      against: [fillPalette(rome.play, false, true, false).COL_WALL],
+      why: "a given arrow's shaft beside an area's wall: the arrow has a head and sits inside a square, the wall on its edge",
     },
   ],
   sticks: [

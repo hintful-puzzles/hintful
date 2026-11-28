@@ -583,7 +583,7 @@ is drawn over the bands.
 
 **Draw the stripes after the cell's background and before its content.** A
 game on `OverlaySidecar` names the cells as stripes in its words and calls
-`ds.hint.drawHatch` ([`rome/render.ts`](../src/games/rome/render.ts)). A game
+`ds.hint.drawHatch` ([`crossing/render.ts`](../src/games/crossing/render.ts)). A game
 with its own tile word calls `dr.drawHatch(tileRect, hatchPeriod(ts))` and
 puts the flag in the tile's diff key
 ([`magnets/render.ts`](../src/games/magnets/render.ts)). The bands are laid on

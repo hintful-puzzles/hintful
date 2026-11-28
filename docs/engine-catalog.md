@@ -655,7 +655,7 @@ Reach for it for a desc that ships a region partition as walls.
 write and read the walls half of a `walls,clues` desc. The reader takes a
 `DescReader`, so it composes with the clue half, and it refuses a run past
 the last border. `gapLetters(n)` is the letter run of the clue half.
-Exemplar: `rome/state.ts`.
+Exemplar: `fill/segments/walls.ts`, a described ID's `walls` segment.
 
 ### `block-structure.ts` — a partition as upstream Keen's block structure
 
@@ -1157,7 +1157,8 @@ from either side; a later leg's sentence is `edgeContinuation` in
 Reach for it in every game that carries `ui.pencilMode` and
 `ui.cursorFromKeyboard`: the player types values and pencils candidates. The
 game keeps its coordinates, its symbols and its
-own `Move`. Exemplar: `rome/index.ts`.
+own `Move`. Exemplars: `crossing/index.ts`, and `fill/numbers.ts` for every
+born game.
 
 - **Input**: `pressNoteTakingCell`, `tapNoteTakingCell` and
   `dragEnteredNoteTakingCell` resolve a press, a release and a drag;
@@ -1315,9 +1316,8 @@ Exemplar: `separate/generator.ts`.
 ### `divide.ts` — regions of unequal size
 
 Reach for it in a generator whose regions differ in size: the game supplies
-its rule and the module walks. `mergeNeighbors` joins neighboring regions
-wherever the rule allows, `mergeToCount` joins them toward a number of
-regions and returns `null` where the rule cannot be met, `growFromSeeds`
+its rule and the module walks. `mergeToCount` joins neighboring regions,
+wherever the rule allows, toward a number of regions and returns `null` where the rule cannot be met, `growFromSeeds`
 grows a region round each cell it is given (`scatterSeeds` draws them), and
 `growToSize` grows one region at a time to a size the game draws.
 `regionNumbers` reads any division as a number for each cell, and
@@ -1325,9 +1325,9 @@ grows a region round each cell it is given (`scatterSeeds` draws them), and
 from. Which walk
 suits which rule is
 [`solver-and-generator.md`](./solver-and-generator.md) § "A division into
-regions is the engine's". The order of `mergeNeighbors` and
-`growFromSeeds` deals the boards; both are upstream's draws.
-Exemplars: `rome/generator.ts`, `map/generator.ts`, `fill/divide.ts`
+regions is the engine's". The order of `growFromSeeds` deals Map's boards,
+and is upstream's draws.
+Exemplars: `map/generator.ts`, `fill/grow.ts`, `fill/divide.ts`
 (Seismic's areas, `deal.divide` with `sizes`).
 
 ### `mend-division.ts` — mend a division until it has one answer
@@ -1807,7 +1807,7 @@ a strike names), `evidenceOf` (what a step's words outline and stripe),
 `populateThenClean`, and `keepCandidateHintTrack` and
 `refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.
-Exemplars: `rome/hint.ts`, and `engine/fill/candidates.ts` for every
+Exemplars: `crossing/index.ts`, and `engine/fill/candidates.ts` for every
 born game that keeps notes.
 
 - **`NoteEncoding.all(i)` must agree with the game's own fill-all move.**

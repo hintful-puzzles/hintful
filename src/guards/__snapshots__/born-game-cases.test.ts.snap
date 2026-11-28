@@ -170,6 +170,21 @@ exports[`range: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`rome: pinned hint positions > says, at each pin 1`] = `
+{
+  "clean": "Now clear the easy ones: cross out any arrow already placed in its square's area.",
+  "dup": "The left just placed can't repeat in its area, so the struck left mark must go from the other squares.",
+  "hiddenSingle": "Its area must hold all four arrows, and only this square can still point up, so it must point up.",
+  "loop": "Pointing down, this square would meet the outlined arrow pointing back, so this square must point left.",
+  "note": "Of the ways this square can point, only up and down aren't already used in its area, so pencil them in.",
+  "opposite": "Its lower neighbor in this area must point up (a loop) or down (two downs), so this square's down mark must go.",
+  "pair": "Two squares of this area must take left or right between them, so this square's left mark must go.",
+  "reach": "Only one mark leads into the striped group, and some square must, so this square must point right.",
+  "regionsFull": "Every other way this square can point is already used in its area, so it must point down.",
+  "single": "Every other arrow has been ruled out in this square, so it can only point left.",
+}
+`;
+
 exports[`salad: pinned hint positions > says, at each pin 1`] = `
 {
   "ball": "The outlined ball means its square holds a number, so the X must go.",

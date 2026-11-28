@@ -1,0 +1,245 @@
+# Rome's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): the hand-written port's IDs read and
+# written back, its params, the areas and arrows broken, its drag and keys,
+# and a position for every rung its hint takes.
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0}
+    - {w: 6, h: 6, diff: 0}
+    - {w: 6, h: 6, diff: 1}
+    - {w: 6, h: 6, diff: 2}
+    - {w: 6, h: 8, diff: 2}
+  unreached:
+    populate: >-
+      spoken under the reading that pencils every arrow in first, and Rome's hint starts on the one that pencils in only as needed (play.hintNotes)
+  pins:
+    # Held on 25 of 1938 positions walked.
+    clean:
+      id: "6x6dn:1aa4a1a4c3a1a6bb1a5aa2a1a,RRaRaDfUUaULXaLURaDaLDdRbLL"
+      moves:
+        - {type: set, x: 0, y: 5, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 0, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 0, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 1, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 1, n: 4, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 4}]}
+        - {type: set, x: 5, y: 1, n: 2, pencil: false, autoElim: false}
+    # Held on 509 of 1938 positions walked.
+    note:
+      id: "6x8dt:2ba2b2ab2b4a1a3a10b5aa3a1a2a2c1b,DDaDcRbUbRRULbRaDUbLUaLbDcUbDDLLRdX"
+      moves:
+        - {type: set, x: 5, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}]}
+        - {type: set, x: 0, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 4}]}
+        - {type: set, x: 2, y: 3, n: 1, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 5, y: 3, n: 2}, {x: 5, y: 3, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 2}]}
+        - {type: set, x: 3, y: 4, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 5, n: 4, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 5, y: 4, n: 1}, {x: 5, y: 4, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 5, n: 2}, {x: 3, y: 5, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 6, n: 3}, {x: 1, y: 6, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 7, n: 1}, {x: 1, y: 7, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 7, n: 3}, {x: 2, y: 7, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 7, n: 3}, {x: 3, y: 7, n: 4}]}
+        - {type: set, x: 4, y: 7, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 5, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 5, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 7, n: 3}]}
+        - {type: set, x: 3, y: 7, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 2}]}
+        - {type: set, x: 0, y: 3, n: 4, pencil: false, autoElim: false}
+    # Held on 1095 of 1938 positions walked.
+    dup: "4x4de:1abb1a7a2a,XaLDbDaRcRaRa"
+    # Held on 1861 of 1938 positions walked.
+    single:
+      id: "4x4de:3a4aa4c1a,bXbRDUcLRc"
+      moves:
+        - {type: set, x: 3, y: 0, n: 3, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 4}]}
+    # Held on 1337 of 1938 positions walked.
+    regionsFull: "4x4de:2b1baaaa2a3,eLXbURcUa"
+    # Held on 279 of 1938 positions walked.
+    hiddenSingle: "6x6dn:b1a1a2aa2a7a1b2a3ab5a2aab,hRaUaRRaDaUDcLDRaXUbRaULRa"
+    # Held on 1830 of 1938 positions walked.
+    loop: "4x4de:3a4aa4c1a,bXbRDUcLRc"
+    pair:
+      id: "6x6dt:2aa1bb4aa2a3ab7a3a1b1aaa1a,cDcLcLaUaUaXbLRUbRdRRUc"
+      moves:
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 2}]}
+        - {type: set, x: 0, y: 0, n: 4, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 2}, {x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 1}, {x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 1, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 2, n: 2}, {x: 4, y: 2, n: 3}, {x: 4, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 2, n: 2}]}
+    # Held on 859 of 1938 positions walked.
+    reach:
+      id: "6x8dt:2ba2b2ab2b4a1a3a10b5aa3a1a2a2c1b,DDaDcRbUbRRULbRaDUbLUaLbDcUbDDLLRdX"
+      moves:
+        - {type: set, x: 5, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}]}
+        - {type: set, x: 0, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 4}]}
+        - {type: set, x: 2, y: 3, n: 1, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 5, y: 3, n: 2}, {x: 5, y: 3, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 2}]}
+        - {type: set, x: 3, y: 4, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 5, n: 4, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 5, y: 4, n: 1}, {x: 5, y: 4, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 5, n: 2}, {x: 3, y: 5, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 6, n: 3}, {x: 1, y: 6, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 7, n: 1}, {x: 1, y: 7, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 7, n: 3}, {x: 2, y: 7, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 7, n: 3}, {x: 3, y: 7, n: 4}]}
+    # Held on 837 of 1938 positions walked.
+    opposite:
+      id: "6x6dt:a1a11a3aa4ab1bd2a1caa1a1,DaLLDaRbDcRbLUaLaUaXDcLbRRc"
+      moves:
+        - {type: set, x: 1, y: 0, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 1, n: 4, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 4}]}
+        - {type: set, x: 5, y: 1, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 5, y: 0, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 4, y: 1, n: 4}]}
+        - {type: set, x: 4, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 2, n: 3, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 2, y: 2, n: 1}, {x: 2, y: 2, n: 2}]}
+        - {type: set, x: 0, y: 3, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 5, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 2, n: 1, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 3, y: 4, n: 1}, {x: 3, y: 4, n: 2}]}
+
+ids:
+  # Boards the hand-written port dealt, read and written back.
+  - {id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc", writesBack: true}
+  - {id: "4x4de:aac4a7aa,RfDaDXLRaUa", writesBack: true}
+  - {id: "6x6dn:1a7aa1a4bc2abaa1a2aa3a1a2a,cLXcRULcLDUaUbRDjULU", writesBack: true}
+  - {id: "6x6dt:aa5aa1a1a1a10aab4a5a1ad,eDcLRbDaLDaXeRaLRUUdLU", writesBack: true}
+  # A character the code has no use for, in the walls or the squares; the
+  # squares cut short or run past the board, or anything after it.
+  - {id: "4x4de:1a1b3c!2b4a,aDcRUaUaXDRc", refused: "This game ID has \"!\" where it can't have one."}
+  - {id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRQ", refused: "This game ID has \"Q\" where it can't have one."}
+  - {id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRb", refused: DESC_TOO_SHORT}
+  - {id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRd", refused: DESC_TOO_LONG}
+  - {id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc,", refused: DESC_TOO_LONG}
+  # A goal beside a square of its own area, which its clue says it never
+  # has (the top left square, joined to the one beside it): no tier's
+  # ladder finishes it, and with no search tier that is the refusal.
+  - {id: "3x3de:a10,Xh", refused: DESC_NOT_DEDUCIBLE}
+  # An area of eight beside a goal alone: no area holds more arrows than
+  # four, and no ladder finishes a board with no answer.
+  - {id: "3x3de:1ee,Xh", refused: DESC_NOT_DEDUCIBLE}
+  # An arrow off the board, on the right column pointing right.
+  - {id: "3x3de:12,bRf", refused: DESC_CONTRADICTORY}
+
+params:
+  # The size, then the tier; a size alone is Easy, and a width alone a
+  # square board.
+  - {read: "10x6dt", full: "10x6dt", brief: "10x6", label: "10x6 Tricky"}
+  - {read: "8x8dn", full: "8x8dn"}
+  - {read: "7", full: "7x7de"}
+  - {read: "2x5de", refused: "Width must be at least 3."}
+  - {read: "5x2de", refused: "Height must be at least 3."}
+  - {read: "3x3de", refused: false}
+
+positions:
+  # A hidden single in an area of three on the left edge, whose squares
+  # can point only three ways between them: the hint says so, where an
+  # area of four says it holds all four.
+  - id: "8x10dn:1a7aaa2b5b2a1aaaaaa1a3a4a2c2a3aab1a4b4aaa2b4a7a5a1a1a5a1a,DDRcDDaXDDaUbUcLUDXcLRaRbUUaLRRcRaRRaDaUDUURaLaRaULUUaRXaRRbUaLaRaUb"
+    moves:
+      - {type: set, x: 7, y: 9, n: 3, pencil: false, autoElim: false}
+      - {type: set, x: 6, y: 9, n: 3, pencil: false, autoElim: false}
+      - {type: set, x: 3, y: 0, n: 4, pencil: false, autoElim: false}
+      - {type: pencilAdd, marks: [{x: 4, y: 0, n: 2}, {x: 4, y: 0, n: 4}]}
+      - {type: pencilAdd, marks: [{x: 5, y: 0, n: 3}, {x: 5, y: 0, n: 4}]}
+      - {type: set, x: 0, y: 1, n: 4, pencil: false, autoElim: false}
+      - {type: set, x: 7, y: 1, n: 3, pencil: false, autoElim: false}
+      - {type: pencilAdd, marks: [{x: 6, y: 1, n: 2}, {x: 6, y: 1, n: 3}]}
+      - {type: set, x: 3, y: 2, n: 3, pencil: false, autoElim: false}
+      - {type: set, x: 4, y: 1, n: 1, pencil: false, autoElim: false}
+      - {type: pencilStrike, marks: [{x: 4, y: 0, n: 2}]}
+      - {type: set, x: 4, y: 0, n: 4, pencil: false, autoElim: false}
+      - {type: pencilStrike, marks: [{x: 5, y: 0, n: 3}]}
+      - {type: set, x: 5, y: 0, n: 4, pencil: false, autoElim: false}
+      - {type: pencilStrike, marks: [{x: 6, y: 1, n: 3}]}
+      - {type: set, x: 6, y: 1, n: 2, pencil: false, autoElim: false}
+      - {type: pencilAdd, marks: [{x: 2, y: 2, n: 2}, {x: 2, y: 2, n: 3}]}
+      - {type: set, x: 1, y: 3, n: 3, pencil: false, autoElim: false}
+      - {type: set, x: 1, y: 2, n: 2, pencil: false, autoElim: false}
+      - {type: pencilAdd, marks: [{x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 2}]}
+      - {type: pencilAdd, marks: [{x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}]}
+      - {type: pencilStrike, marks: [{x: 2, y: 3, n: 4}]}
+      - {type: set, x: 2, y: 3, n: 3, pencil: false, autoElim: false}
+      - {type: pencilStrike, marks: [{x: 2, y: 2, n: 3}]}
+      - {type: set, x: 2, y: 2, n: 2, pencil: false, autoElim: false}
+      - {type: pencilAdd, marks: [{x: 5, y: 3, n: 1}, {x: 5, y: 3, n: 2}]}
+      - {type: pencilAdd, marks: [{x: 7, y: 3, n: 1}, {x: 7, y: 3, n: 2}]}
+      - {type: set, x: 7, y: 4, n: 1, pencil: false, autoElim: false}
+      - {type: pencilStrike, marks: [{x: 7, y: 3, n: 2}]}
+      - {type: set, x: 7, y: 3, n: 1, pencil: false, autoElim: false}
+      - {type: pencilStrike, marks: [{x: 5, y: 3, n: 1}]}
+      - {type: set, x: 5, y: 3, n: 2, pencil: false, autoElim: false}
+      - {type: set, x: 1, y: 5, n: 3, pencil: false, autoElim: false}
+      - {type: pencilAdd, marks: [{x: 0, y: 5, n: 1}, {x: 0, y: 5, n: 2}]}
+    steps:
+      - {rung: hiddenSingle, says: "Its area's 3 squares can point only 3 ways between them, and only this square can still point right, so it must point right."}
+  # The board solved.
+  - id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc"
+    solve: true
+    status: solved
+  # Two right arrows in the bottom right area, which holds each arrow once.
+  # They leave the corner beyond them a loop either way it points, back up
+  # into the arrow above it or left into theirs, which the live errors show
+  # as soon as it is certain.
+  - id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc"
+    moves: [{set: [13, 4]}, {set: [14, 4]}]
+    breaks: [shape.0, shape.1]
+  # The top right square of the top area pointing left, into the given
+  # arrows that lead back round to it: a loop, which leads to no goal.
+  - id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc"
+    moves: [{set: [2, 3]}]
+    breaks: [shape.1]
+  # The left column's area of three, its top square pointing down and the
+  # given below pointing up: the middle square can point only right, as
+  # left leads off the board.
+  - id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc"
+    moves: [{set: [0, 2]}]
+    steps:
+      - {rung: regionsFull, says: "Every other way this square can point is already used in its area, so it must point right."}
+
+input:
+  # The number pad's digits type the arrow their key points, and a way off
+  # the board, left from the left edge, types nothing; Enter then an arrow
+  # key places, and Backspace clears. The first arrow shows the cursor and
+  # moves it, to the square below the top left.
+  - id: "4x4de:1a1b3c2b4a,aDcRUaUaXDRc"
+    events:
+      - {key: down}
+      - {key: "2", holds: {values.4: 2}}
+      - {key: "6", holds: {values.4: 4}}
+      - {key: "4", returns: none, holds: {values.4: 4}}
+      - {key: "8", holds: {values.4: 1}}
+      - {key: "\b", holds: {values.4: 0}}
+      - {key: select}
+      - {key: down, holds: {values.4: 2}}
+      # Enter then Space clears the arrow and disarms.
+      - {key: select}
+      - {key: select2, holds: {values.4: 0}}
+      # Space on an empty square arms a mark: the next arrow key marks it.
+      - {key: select2}
+      - {key: right, holds: {values.4: 0, pencil.4: 16}}

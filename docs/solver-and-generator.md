@@ -1163,8 +1163,7 @@ states what it wants:
 
 | The game knows | The walk | Exemplar |
 | --- | --- | --- |
-| Which neighboring regions may join | `mergeNeighbors`, with what a region holds and how two holdings join | [`rome/generator.ts`](../src/games/rome/generator.ts) |
-| That, and how many regions there are to be | `mergeToCount`, which returns `null` where the rule cannot be met | [`fill/grow.ts`](../src/engine/fill/grow.ts) |
+| Which neighboring regions may join, and how many regions there are to be | `mergeToCount`, with what a region holds and how two holdings join; it returns `null` where the rule cannot be met | [`fill/grow.ts`](../src/engine/fill/grow.ts) |
 | Where each region starts, or how many there are | `growFromSeeds`, over cells the game places or `scatterSeeds` draws | [`map/generator.ts`](../src/games/map/generator.ts) |
 | How large a region may be | `growToSize`, with a size the game draws for each | [`fill/divide.ts`](../src/engine/fill/divide.ts) (Seismic's `deal.divide`) |
 

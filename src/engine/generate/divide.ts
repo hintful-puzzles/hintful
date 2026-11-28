@@ -2,8 +2,8 @@
  * Dividing a rectangle into connected regions of unequal size, in three
  * walks. The game supplies its rule and the walk is the same for every game:
  *
- * - {@link mergeNeighbors} joins neighboring regions in a random order
- *   wherever the game allows the join. The rule is a predicate on what two
+ * - {@link mergeToCount} joins neighboring regions, wherever the game allows
+ *   the join, until a count is left. The rule is a predicate on what two
  *   regions hold.
  * - {@link growFromSeeds} grows a region from each seed, all at once, until
  *   the grid is full. The rule is where the seeds are, or how many.
@@ -13,12 +13,10 @@
  * which cells share a region.
  *
  * The draws of each walk, and their order, decide which board a seed deals in
- * Rome, Map and Seismic. Map's and Rome's are upstream's, and their frozen
- * fixtures pin them.
+ * Map and Seismic. Map's are upstream's, and its frozen fixtures pin them.
  */
 
 import { Dsf } from "../board/dsf.ts";
-import { shuffle } from "../board/shuffle.ts";
 import { drawRejected } from "../contract/deal-census.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 
@@ -72,46 +70,6 @@ function join<T>(
   held.delete(regions.canonify(i2));
   regions.merge(i1, i2);
   held.set(regions.canonify(i1), joined);
-}
-
-/**
- * Join neighboring regions in a random order wherever `rule` allows it: every
- * pair of cells that share an edge is visited once, shuffled, and the regions
- * of a pair are joined unless they are one already or `rule.join` refuses.
- * What is left is a division in which the rule refuses every pair of
- * neighboring regions. How many regions that is falls out of the rule.
- */
-export function mergeNeighbors<T>(
-  p: DividedGrid,
-  rng: RandomState,
-  rule: MergeRule<T>,
-): Dsf {
-  const { w, h } = p;
-  const wh = w * h;
-  const [regions, held] = startOf(p, rule);
-
-  // A pair across a vertical edge is its left cell's index, and a pair across
-  // a horizontal edge is its upper cell's index plus `wh`.
-  const pairs: number[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) pairs.push(y * w + x);
-  }
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) pairs.push(wh + y * w + x);
-  }
-  shuffle(pairs, rng);
-
-  for (const pair of pairs) {
-    const i1 = pair % wh;
-    const i2 = pair >= wh ? i1 + w : i1 + 1;
-    const r1 = regions.canonify(i1);
-    const r2 = regions.canonify(i2);
-    if (r1 === r2) continue;
-    const joined = rule.join(held.get(r1) as T, held.get(r2) as T);
-    if (joined !== null) join(regions, held, i1, i2, joined);
-  }
-
-  return regions;
 }
 
 /**

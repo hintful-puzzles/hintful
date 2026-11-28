@@ -1,6 +1,13 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: rome
+catalog:
+  name: Rome
+  description: Arrow-placing puzzle
+  objective: Fill the grid with arrows leading to a goal.
+  collection: unreleased
+  family: lines
+  similar: Arrows, Roma
 help:
   rules: |-
     You're given a grid that has been divided into areas, containing arrows and one or more goals (represented by circles). Your goal is to fill every empty space with an arrow pointing up, down, left or right while following these rules:
@@ -16,7 +23,7 @@ help:
 
     Squares whose arrows already lead to a goal are shaded, so you can see how much of the grid is settled. A second preference shades squares caught in a loop instead, which can never reach a goal; it is off by default. Both are in the game's preferences.
 
-    The keyboard can also be used. Move the cursor with the arrow keys, and press Enter followed with an arrow key to place an arrow. Use Space to add pencil marks. A question mark shows in the square while it waits for the arrow key. Alternatively, type 8, 2, 4 or 6 to enter the arrow that key points to on a numpad directly; the digits on the number row do the same.
+    The keyboard can also be used. Move the cursor with the arrow keys, and press Enter followed with an arrow key to place an arrow. Use Space to add pencil marks. A question mark shows in the square while it waits for the arrow key. Alternatively, type 8, 2, 4 or 6 to enter the arrow that key points to on a numpad directly; the digits on the number row do the same. An arrow that would point off the board can't be entered.
   origins: |-
     This type was invented by [Nikoli](https://www.nikoli.co.jp/), who name it *Roma*.
 
@@ -28,9 +35,15 @@ help:
 
     A few ideas are worth learning by name:
 
-    * **One of each.** Once an area has an arrow, no other square in it can point that way. An area of four squares must hold all four arrows, so an arrow with only one square left to go in goes there.
+    * **One of each.** Once an area has an arrow, no other square in it can point that way. An area of four squares must hold all four arrows, so an arrow with only one square left to go in goes there. So must a smaller area at the edge whose squares can point only as many ways between them as it has squares: three squares down the left edge can't point left, so they hold up, down and right.
     * **No loops.** An arrow pointing at a square whose arrows lead back here would go round in a circle and never reach a goal, so it is ruled out. The shortest loop is two neighbors pointing at each other. If the square to the left, in the same area, can only point left or right, this square can't point left into it: the area can't hold two left arrows, so that square would have to point right, straight back.
     * **A pair.** Two squares of an area that must take the same two arrows between them leave those arrows to no other square of the area.
+words:
+  value: arrow
+  # A square points a way, and a way struck is a mark: "this square's up
+  # mark", where "the up" alone would not say it is one.
+  be: point
+  note: mark
 produces: lines
 sizes:
   # Nothing in the game bounds a side but the time a deal takes.
@@ -53,20 +66,21 @@ answer:
     to: "step(c, d)"
 given: [value]
 marks:
-  cand: { sort: cell, notation: "set of range(1, 4)" }
+  cand: { sort: cell, notation: "set of range(1, 5)" }
 define:
   # The squares whose arrows already lead to a goal, the goals among them.
   home: "{p in cells where exists g in chain(p): clue(goal, g) >= 0}"
+  # Whether square c's arrows already lead to a goal: `home`'s, of one square.
+  homeward(c): "exists g in chain(c): clue(goal, g) >= 0"
 shape:
   # Every outlined area holds different arrows.
   - "forall r in area: distinct(value(c) over c in cells(r))"
-  # Following the arrows from any square leads to a goal.
-  - "forall c in cells: exists g in chain(c): value(g) = 5"
-implied:
-  # No arrow closes a loop: the square it points at does not lead back to
-  # it. Said of each square, so a loop's squares are where it breaks, where
-  # the shape names every square leading into one as well.
-  noLoop: "forall c in cells where to(c) != none: c not in chain(to(c))"
+  # Following the arrows from any square leads to a goal: as no arrow
+  # points off the board (the domain), that is that no arrow closes a loop,
+  # the square it points at not leading back to it. Said so, a loop's
+  # squares are where it breaks, and not the squares leading into it, which
+  # `exists g in chain(c): value(g) = 5` would name alike.
+  - "forall c in cells where to(c) != none: c not in chain(to(c))"
 clues:
   # A goal, alone in its area.
   goal:
@@ -74,11 +88,60 @@ clues:
     value: "range(0, 0)"
     means: "value(at) = 5 and |cells(area(at))| = 1"
 freedom: { kind: fill }
+play:
+  numbers:
+    pictures:
+      paint: { 1: arrowUp, 2: arrowDown, 3: arrowLeft, 4: arrowRight }
+      names: { 1: up, 2: down, 3: left, 4: right }
+  given:
+    5: { glyph: " o ", paint: disc }
+  # Upstream's two shadings, by its keys and with its defaults.
+  highlights:
+    - when: "homeward(c)"
+      paint: goal
+      pref: { kw: goal, name: Highlight arrows pointing towards goal }
+    - when: "to(c) != none and c in chain(to(c))"
+      paint: error
+      pref: { kw: loop, name: Highlight loops }
+      on: false
+  # A strike from an unmarked square ends in what it leaves, so the plan is
+  # about 0.7 the length of penciling in every arrow first.
+  hintNotes: implicit
+  # Every tier at 4x4, 6x6, 6x8 and 8x10: upstream's 8x8 and 10x10 made
+  # upright boards of about their areas.
+  boards: [4x4, 6x6, 6x8, 8x10]
+  default: 6x6
+  hintMarks:
+    ring: "the square the step decides: the arrow to place, or the marks to pencil in."
+    strike: the marks the step crosses off.
+    outline: >-
+      the squares it reasons from: "this square", whose marks it crosses
+      off, the arrow the area already has, a neighbor that can only point two
+      ways, or the two squares of a pair. A trail of arrows is outlined when a
+      sentence says "the arrows from the square below lead back to this
+      square": follow the arrows from the square next door.
+    stripes: >-
+      the area the sentence calls "its area" or "this area", or "the striped
+      group": a goal and the squares already leading into it.
 deal:
   answer: an arrow a square in a random order, each one that points on the board and closes no loop, and a goal where none does
   area: neighboring squares joined at random while they hold no arrow twice and no goal
   value: every arrow, then as many hidden as the board stays at its tier
   tier: one of the tiers
+  # Upstream's: a goal wherever the arrows laid leave a square none, at most
+  # one in 25 squares, or one.
+  sample:
+    build: true
+    fallback:
+      value: 5
+      most: "max(x in range(1, w * h) where x = 1 or 25 * x <= w * h of x)"
+  merge: { partition: area }
+  hide: given
+id:
+  - walls: area
+  - codes: { U: given 1, D: given 2, L: given 3, R: given 4, X: goal 0 }
+    before: ","
+    always: true
 tiers: [Easy, Normal, Tricky]
 names:
   dup: "one of each arrow in an area"
@@ -109,9 +172,15 @@ techniques:
     with:
       more: ", q = step(c, d)"
       closes: "q != none and c in chain(q)"
+    # The arrows outlined are those from the square pointed at, back to this
+    # one, which is the ring and holds none.
     says:
-      terms: { c: c, q: q }
-      marks: {}
+      terms: { c: c, q: q, d: d }
+      marks: { outline: "{x in chain(q) where x != c}" }
+      wordings:
+        - when: "|chain(q)| = 2"
+          look: "Pointing {d}, {ring} would meet {outline: the outlined arrow} pointing back"
+        - look: "Pointing {d}, {ring} would meet {outline: the outlined arrows} leading back"
   # An area of four squares holds all four arrows, so an arrow only one of
   # its squares can still take is that square's. One no square can take
   # makes the marks inconsistent.
@@ -124,6 +193,12 @@ techniques:
       set: cells(r)
       value: d
       move: "(forall e in cand(c) where e != d: strike(c, e))"
+    # Only an area of four must hold every arrow, so the sentence says so.
+    says:
+      terms: { d: d }
+      marks: { stripes: "cells(r)" }
+      look: "{stripes: Its area} must hold all four arrows, and only {ring} can still point {d}"
+      move: "it must point {d}"
   # Two squares of an area left the same two arrows take both between them,
   # so no other square of the area can.
   - kind: peer.pair
@@ -131,8 +206,9 @@ techniques:
     tier: Normal
     with: { pair: "r in area, a in cells(r)", partners: "before(a, cells(r))", peers: "cells(r)" }
     says:
-      terms: { r: r, a: a, b: b }
-      marks: {}
+      terms: { first: "min(x in cand(a) of x)", second: "max(x in cand(a) of x)" }
+      marks: { outline: "{a, b}", stripes: "cells(r)" }
+      look: "{outline: Two squares} of {stripes: this area} must take {first} or {second} between them"
   # Some square not yet leading to a goal points straight into the squares
   # that do, since every square leads to one. Where only one arrow anywhere
   # still can, it is that one.
@@ -144,8 +220,9 @@ techniques:
       e in cand(q) where q != p or e != d: step(q, e) in H)
     conclude: "forall e in cand(p) where e != d: strike(p, e)"
     says:
-      terms: { p: p, d: d }
-      marks: {}
+      terms: { d: d }
+      marks: { stripes: H }
+      look: "Only one mark leads into {stripes: the striped group}, and some square must"
   # A square left only the two arrows along one line cannot be pointed at
   # along that line from its own area: the neighbor's arrow would leave it
   # only the other, which points straight back.
@@ -156,16 +233,37 @@ techniques:
       forall a in adj4(c) where area(a) = area(c), d in cand(a)
       where step(a, d) = c and d in cand(c)
       and (exists e in cand(c): e != d and step(c, e) = a): strike(a, d)
+    # The ring is the square struck, `d` the way it points at its neighbor
+    # `c`, and `back` the way `c` would then have to point.
     says:
+      shown: each
       terms: { c: c }
-      marks: {}
+      marks: { outline: "{c}", stripes: "cells(area(c))" }
+      fact:
+        terms: { d: d, back: "first({e in cand(c) where e != d})" }
+        marks: {}
+        wordings:
+          - when: "d = 2"
+            look: "{outline: Its lower neighbor} in {stripes: this area} must point {back} (a loop) or {d} (two {d}s)"
+          - when: "d = 1"
+            look: "{outline: Its upper neighbor} in {stripes: this area} must point {back} (a loop) or {d} (two {d}s)"
+          - when: "d = 4"
+            look: "{outline: Its right neighbor} in {stripes: this area} must point {back} (a loop) or {d} (two {d}s)"
+          - look: "{outline: Its left neighbor} in {stripes: this area} must point {back} (a loop) or {d} (two {d}s)"
 # Rome's candidates are ways to point, so a sentence names them by their word
-# ("up") and the relation it names ("the square above"), never by the glyph:
-# an arrow drawn in prose is smaller than the board's and says nothing more.
-# The steps below are the ones that differ from every candidate game's: a
-# square at the edge can point fewer ways, and only an area of four must hold
-# every arrow. A strike's look is a premise, which the walk ends with its move.
+# ("up"), never by the glyph: an arrow drawn in prose is smaller than the
+# board's and says nothing more. A square at the edge can point fewer ways,
+# so the walk's steps speak of the ways a square can point, never of all four.
 steps:
+  # The opening clean, after "cross out".
+  clean:
+    ring: cell
+    move: "any arrow already placed in its square's area"
+  # Where a placed arrow rules itself out, after "can't repeat in its".
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "area"
   # A note step under the implicit reading: what the area leaves a square is
   # said of the ways it can point, never of all four. `unruled` where its area
   # rules nothing out yet.
@@ -185,58 +283,17 @@ steps:
     terms: { n: number }
     look: "Every other way {ring} can point is already used in its area"
     move: "it must point {n}"
-  # A four-square area with one home left for an arrow. Not every candidate
-  # game's: only an area of four must hold every arrow, so it says so.
+  # An arrow with one square left in an area that holds every arrow its
+  # squares can point: an area of four holds all four, and a smaller one only
+  # where its squares, at the board's edge, can point no more ways between
+  # them than it has squares.
   hiddenSingle:
     ring: cell
-    terms: { n: number }
-    marks: { stripes: [area] }
-    look: "{stripes area: Its area} must hold all four arrows, and only {ring} can still point {n}"
-    move: "it must point {n}"
-  # The cull around a placement, and the opening clean's per-firing form.
-  dup:
-    ring: cell
-    terms: { n: number }
-    marks: { stripes: [area], outline: [placed] }
-    look: "{stripes area: This area} now has {outline placed: its {n} arrow}"
-  # Where a cull's struck marks are.
-  dupWhere:
-    ring: cell
-    move: "in it"
-  # A mark that would join a chain of arrows leading back to its own square,
-  # `side` the square it points at; the square is the ring, not an arrow.
-  loop:
-    ring: cell
-    terms: { side: [above, below, to the left, to the right] }
-    marks: { outline: [arrows] }
+    terms: { n: number, size: number }
+    marks: { stripes: [cell] }
     wordings:
-      - when: "|outlineArrows| = 1"
-        look: "{outline arrows: The arrow in the square {side}} points back to {ring}"
-      - look: "{outline arrows: The arrows from the square {side}} lead back to {ring}"
-  # The one mark anywhere that can still grow a goal's group.
-  reach:
-    ring: cell
-    marks: { stripes: [group] }
-    look: "Every square needs a goal, and only one mark in {ring} leads to {stripes group: the striped group}"
-  # What a reach strikes.
-  reachStruck:
-    ring: cell
-    move: "its other marks"
-  # A neighbor, on the `side` the struck mark points, that could only point
-  # along one axis: back (`back`, a loop) or on (`n`, two of `n` in its area).
-  opposite:
-    ring: cell
-    terms: { side: [upper, lower, left, right], back: number, n: number }
-    marks: { outline: [neighbor], stripes: [area] }
-    look: "{outline neighbor: Its {side} neighbor} in {stripes area: this area} must point {back} (a loop) or {n} (two {n}s)"
-  # Two squares of an area left the same two marks, `first` and `second`: the `pair`
-  # technique's sentence, which the kind it places states none of.
-  sharedPair:
-    ring: cell
-    terms: { first: number, second: number }
-    marks: { outline: [pair], stripes: [area] }
-    look: "{outline pair: Two squares} of {stripes area: this area} must take {first} or {second} between them"
-  # Where a pair's struck marks are.
-  pairWhere:
-    ring: cell
-    move: "of the area"
+      - when: "size = 4"
+        look: "{stripes cell: Its area} must hold all four arrows, and only {ring} can still point {n}"
+        move: "it must point {n}"
+      - look: "{stripes cell: Its area's {numeral size} squares} can point only {numeral size} ways between them, and only {ring} can still point {n}"
+        move: "it must point {n}"

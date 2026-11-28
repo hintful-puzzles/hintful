@@ -293,7 +293,25 @@ weighs it by the areas the born deal makes against the hand-written ones.
 draft's notes become `set of range(1, 5)`, as the compiler holds notes to
 the domain's values, and it words the walk's `clean` and `cull`.
 
-## What each flip changed for a player
+### 13. A value said with its verb, and a part that holds every value it can (2.3e)
+
+Rome's arrow is not "an up": a square points up. `words.be` names the verb
+a square takes a value by, and with it a value is said with no article
+("it must point right", "can only point down or right"); `words.note`
+names what a struck value is called ("the struck left mark must go").
+Both are words, so another game whose values are ways or states takes
+them with no code.
+
+A distinct partition's part holds every value only where its squares can
+take no more values between them than it has squares: Rome's area of
+four, or a smaller one at the board's edge. The walk already finds a
+hidden single there (a part's `holdsEvery`, read off its cells' domains);
+what it lacked was a sentence that says why the part must hold the value.
+`PART_STEPS.hiddenSingle` is that step, worded by the description with the
+part striped and its size as a term, and asked for only where a
+description has distinct parts and the step. The library's line sentence
+("the only square in its area that can…") said the conclusion without its
+reason.
 
 Filled in by each flip.
 
@@ -320,6 +338,38 @@ Filled in by each flip.
 - **No auto-pencil preference is offered**, as before, now because a
   placement rules nothing out on a board with no unit.
 - **New Game deals 4×4 Normal.**
+
+### Rome (2.3e)
+
+- **Each area is washed in its own pastel**, and its walls are drawn as
+  bars, where the hand-written board left the grid as the gaps between
+  its squares' fills. A given arrow's square keeps the given's gray, so
+  its area shows by its walls alone.
+- **Boards carry about one given arrow more, in smaller areas**: on twelve
+  6x6 deals a tier, 14.6 given arrows against 13.8 at Normal and 17.2
+  areas against 15.8, alike at Easy and Tricky. Upstream's cluster steer,
+  which keeps an arrow from growing a run of three alike, is not built:
+  the boards it would change differ by a clue, and every one still has a
+  single answer the tier's techniques reach. A deal costs about a third
+  more work, and none takes 100 ms (`compare-cost`, 2026-11-28).
+- **No control places an arrow pointing off the board**: a typed or
+  on-screen key that would is no move, as a value outside its square's
+  domain is no move on any born board. The hand-written game placed it and
+  flagged it.
+- **A loop is shown in error as soon as it closes**, whatever the loop
+  preference says, as every born game shows what its rules make certain.
+  The preference stays, with its key and its default (off): it is a
+  setting a player may hold, and drawing a loop twice costs nothing.
+- **The hint is the candidate walk's.** A note is a "mark", a square
+  "points" a way, and each technique says why: a loop outlines the arrows
+  that would lead back ("Pointing left, this square would meet the
+  outlined arrows leading back"), an area that must hold all four arrows,
+  or every way its squares can point, is striped, and a pair outlines its
+  two squares.
+- **An ID with a goal sharing its area, or an area of more than four
+  squares, is refused** as a board deduction cannot finish, where the
+  hand-written reader named what was wrong. Neither has an answer, and
+  upstream's generator writes neither.
 
 ## Risks / Trade-offs
 

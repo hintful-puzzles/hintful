@@ -14,7 +14,6 @@ import {
   type DividedGrid,
   growFromSeeds,
   growToSize,
-  mergeNeighbors,
   mergeToCount,
   regionNumbers,
   scatterSeeds,
@@ -96,60 +95,6 @@ function eachDraw(run: (p: DividedGrid, seed: string) => void): void {
 const sizeRule = (most: number) => ({
   of: () => 1,
   join: (a: number, b: number) => (a + b <= most ? a + b : null),
-});
-
-describe("mergeNeighbors", () => {
-  it("keeps to a largest size, and leaves no two neighbors that could still join", () => {
-    eachDraw((p, seed) => {
-      const division = mergeNeighbors(p, randomNew(seed), sizeRule(4));
-      const groups = expectDivision(division, p, seed);
-      for (const g of groups) expect(g.length, seed).toBeLessThanOrEqual(4);
-      for (let i = 0; i < p.w * p.h; i++)
-        for (const j of adjacentCells(p, i)) {
-          if (division.equivalent(i, j)) continue;
-          expect(division.size(i) + division.size(j), seed).toBeGreaterThan(4);
-        }
-    });
-  });
-
-  it("never joins what the game forbids: no region holds two cells of a kind", () => {
-    eachDraw((p, seed) => {
-      // Five kinds laid so that neighbors differ, as a bit each.
-      const kind = (i: number) => 1 << (((i % p.w) + 2 * Math.floor(i / p.w)) % 5);
-      const division = mergeNeighbors(p, randomNew(seed), {
-        of: kind,
-        join: (a, b) => (a & b ? null : a | b),
-      });
-      const groups = expectDivision(division, p, seed);
-      for (const g of groups) expect(new Set(g.map(kind)).size, seed).toBe(g.length);
-      // Something was joined: the rule was asked, not only obeyed.
-      if (p.w * p.h > 1) expect(groups.length, seed).toBeLessThan(p.w * p.h);
-    });
-  });
-
-  it("starts from a division it is given, and leaves that one as it was", () => {
-    const p = { w: 6, h: 6 };
-    // Rows of three: twelve regions.
-    const from = new Dsf(36);
-    for (let i = 0; i < 36; i++) if (i % 3) from.merge(i, i - 1);
-    const asked: number[] = [];
-    const division = mergeNeighbors(p, randomNew("from"), {
-      from,
-      of: (cell) => {
-        asked.push(cell);
-        return from.size(cell);
-      },
-      join: (a, b) => (a + b <= 6 ? a + b : null),
-    });
-    expect(asked).toHaveLength(12);
-    expect(regionsOf(from, p)).toHaveLength(12);
-    const groups = expectDivision(division, p, "from");
-    for (const g of groups) expect([3, 6]).toContain(g.length);
-    expect(groups.length).toBeLessThan(12);
-    // A region of the first division is never split.
-    for (let i = 0; i < 36; i++)
-      if (i % 3) expect(division.equivalent(i, i - 1)).toBe(true);
-  });
 });
 
 describe("mergeToCount", () => {

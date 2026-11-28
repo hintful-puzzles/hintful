@@ -4,7 +4,7 @@
  * a step of the walk to be named.
  */
 
-import { REPEAT_STEPS, WALK_STEPS } from "../../engine/fill/walk-steps.ts";
+import { PART_STEPS, REPEAT_STEPS, WALK_STEPS } from "../../engine/fill/walk-steps.ts";
 import { CompileError, type Env } from "../compile-sorts.ts";
 import { clauseOf } from "../compile-stated.ts";
 import { concludes } from "../compile-technique.ts";
@@ -137,6 +137,9 @@ function checkWalkSteps(
     check(WALK_STEPS, "the notes' reach is no row and column", []);
   if (json.answer?.value?.repeat !== undefined)
     check(REPEAT_STEPS, "a unit holds a value more than once", ["outline"]);
+  // Optional: worded only where a part's hidden single needs its own reason.
+  if (distinctParts.length > 0 && d.steps.some((s) => s.id === "hiddenSingle"))
+    check(PART_STEPS, "a part is worded", ["stripes"]);
   // The walk speaks every other step in the engine's words (its singles are
   // the Latin library's), so a step worded under another name is words the
   // player never sees. A variation may add the reach that reads WALK_STEPS
@@ -148,10 +151,11 @@ function checkWalkSteps(
     if (
       !Object.hasOwn(WALK_STEPS, s.id) &&
       !Object.hasOwn(REPEAT_STEPS, s.id) &&
+      !(distinctParts.length > 0 && Object.hasOwn(PART_STEPS, s.id)) &&
       !spokenBy.has(s.id)
     )
       throw new CompileError(
-        `steps ${s.id}: the walk reads no step of that name, and speaks it in the engine's words (it reads ${[...Object.keys(WALK_STEPS), ...Object.keys(REPEAT_STEPS)].join(", ")})`,
+        `steps ${s.id}: the walk reads no step of that name, and speaks it in the engine's words (it reads ${[...Object.keys(WALK_STEPS), ...Object.keys(REPEAT_STEPS), ...(distinctParts.length > 0 ? Object.keys(PART_STEPS) : [])].join(", ")})`,
       );
 }
 

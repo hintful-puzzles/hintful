@@ -113,9 +113,6 @@ const OWN_CONVERSIONS: Record<string, Record<string, typeof FOLDS | typeof SCALE
     "w: Math.floor((g.xExtent * tileSize) / g.tileSize) + 2 * b + 1,": SCALE,
     "h: Math.floor((g.yExtent * tileSize) / g.tileSize) + 2 * b + 1,": SCALE,
   },
-  "rome/index.ts": {
-    "return Math.max(0, Math.floor((pixel - o) / ts));": FOLDS,
-  },
 };
 
 interface Conversion {

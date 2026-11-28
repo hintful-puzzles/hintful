@@ -1230,7 +1230,10 @@ says how each form is read; what a description's author acts on:
   shuts in. Where each square names the next by its value, the same is
   `forall c in cells where to(c) != none: c not in chain(to(c))`, so a
   loop's squares are where it breaks and not those leading into it, which
-  the shape's `exists g in chain(c)` names alike (Rome's). A shape said of
+  `exists g in chain(c): value(g) = 5` names alike. Where the domain keeps
+  every arrow on the board, the cycle form is the whole of "every square
+  leads to a goal", so it is the shape itself and the reach is not said
+  (Rome's). A shape said of
   a square that the answer's edges decide names the edges it read, around
   the square and past it; said again of each line, implied, it names the
   lines: WordTrail's `onWord`, each line on a trail that still fits, so

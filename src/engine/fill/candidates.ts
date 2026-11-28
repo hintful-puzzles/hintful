@@ -124,6 +124,10 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
     readonly value?: string;
     /** How a wing's ends share a unit with the cell it strikes. */
     readonly alongside?: string;
+    /** The verb a square takes a value by, where it is not "be". */
+    readonly be?: string;
+    /** What a struck value is called where its word is no numeral. */
+    readonly note?: string;
   };
   /** Every kind of step the description's own techniques say: an id, or
    * `id.arm` where an arm splits its steps. */
@@ -310,7 +314,13 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       noun: module.WORDS?.value ?? glyphs.noun,
       value: glyphs.say,
       cell: module.WORDS?.cell ?? "square",
-      ...(module.play?.numbers?.pictures?.names === undefined ? {} : { article: true }),
+      // A picture's name is a thing a square is ("a ghost"), unless the
+      // square takes it by a verb of its own, as a way ("point up").
+      ...(module.play?.numbers?.pictures?.names === undefined ||
+      module.WORDS?.be !== undefined
+        ? {}
+        : { article: true }),
+      ...(module.WORDS?.be === undefined ? {} : { be: module.WORDS.be }),
       ...(module.WORDS?.alongside === undefined
         ? {}
         : { beside: module.WORDS.alongside }),
@@ -390,6 +400,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           value,
           noun: vocab.cell,
           valueNoun: vocab.noun,
+          ...(vocab.be === undefined ? {} : { be: vocab.be }),
           unit: (els: readonly Point[]) =>
             unitName(
               sp,
@@ -478,6 +489,8 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     const regions = regionsOf(board, sp);
     const words = walkWords(board);
     const last = lastWords(board);
+    const partSingle = partWords(board);
+    const parts = new Set(module.distinctParts ?? []);
     runCandidatePlan<FillMove, CandidateFillHint, Reason, FillRegion>({
       w,
       steps: out,
@@ -509,13 +522,21 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
               },
             },
       placeWords: (m, reason, continues) => {
-        if (!isOwn(reason))
+        if (!isOwn(reason)) {
+          if (
+            partSingle !== null &&
+            reason.kind === "hiddenSingle" &&
+            "unit" in reason &&
+            parts.has(reason.unit.name)
+          )
+            return { words: partSingle(m, reason.unit.cells) };
           return {
             words:
               words !== null && reason.kind === "regionsFull"
                 ? words.regionsFull(m)
                 : narrateLatinReason(reason, m, w, vocab),
           };
+        }
         if (reason.say === undefined)
           throw new Error(`${reason.kind} strikes, and places nothing`);
         return { words: reason.say(continues) };
@@ -541,6 +562,8 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         value,
         cell: vocab.cell,
         ...(vocab.article === undefined ? {} : { article: vocab.article }),
+        ...(vocab.be === undefined ? {} : { be: vocab.be }),
+        ...(module.WORDS?.note === undefined ? {} : { note: module.WORDS.note }),
       }),
       notes: {
         populate: populateText(vocab.noun, vocab.cell),
@@ -664,6 +687,20 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     };
   }
 
+  /** What a hidden single in a part of a partition the rules hold distinct
+   * says on `board` (`PART_STEPS`), its mark the part `area` striped; `null`
+   * where the description words none, and the walk says a unit's. */
+  function partWords(board: FillBoard<C>) {
+    const steps = module.STEPS;
+    if (steps === undefined || !Object.hasOwn(steps, "hiddenSingle")) return null;
+    const { voice, said } = stepsOn(board, steps);
+    return (m: Mark, area: readonly Point[]): Sentence =>
+      voice.sentence("hiddenSingle", {
+        ...said([m], { n: m.n, size: area.length }),
+        marks: { stripes: { cell: area } },
+      });
+  }
+
   /** The description's `steps` spoken on `board`, each told the board's
    * sizes and its variations beside its own terms. Their terms are what the
    * walk gives each (`walk-steps.ts`), which the compiler held the
@@ -672,7 +709,13 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     const vocab = vocabOf(board);
     const voice = stepVoice<Readonly<Record<string, StepType>>, Point>(
       steps as unknown as StepTable<Readonly<Record<string, StepType>>>,
-      { kind: CELL, value: vocab.value, noun: vocab.cell, valueNoun: vocab.noun },
+      {
+        kind: CELL,
+        value: vocab.value,
+        noun: vocab.cell,
+        valueNoun: vocab.noun,
+        ...(vocab.be === undefined ? {} : { be: vocab.be }),
+      },
     );
     const dealt = board.dealt as Readonly<Record<string, unknown>>;
     const sizes = Object.fromEntries(

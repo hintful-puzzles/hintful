@@ -659,9 +659,8 @@ square paints its own background rect, inset by one pixel everywhere and
 further on each side that meets a different region. What the fills leave is
 the grid; stroking the boundaries draws it twice. Assert the inset in a
 render test: a square whose neighbor shares its region against one whose
-neighbor does not, expecting a wider rect. Exemplar:
-[`rome/render.ts`](../src/games/rome/render.ts) and `rome-render.test.ts`
-("insets a square's fill on each side that meets a different region").
+neighbor does not, expecting a wider rect. No game draws its grid this way
+now: Rome's did, until its board was born and drew its areas' walls.
 
 ### Display state in a narrow type
 
