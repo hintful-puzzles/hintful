@@ -313,6 +313,49 @@ description has distinct parts and the step. The library's line sentence
 ("the only square in its area that can…") said the conclusion without its
 reason.
 
+### 14. Magnets' gap list, read against `7379eafb8` (2.4)
+
+Met: the tiles as a dealt partition, the counts a line per value
+(`per: value`), done marks on margin kinds (`done.ts`'s `marginKinds`),
+the walk with no region, `deal.sample.build` with a value first
+(`build.value`, `share`), the `S` flag and the tier letters. New, each a
+concept another game takes:
+
+- **A domino tiling as a divide** (`deal.divide`'s `dominoes`, upstream
+  `laydomino.c`, which `engine/generate/laydomino.ts` already ports):
+  Dominosa's too. With it, an ID segment writing a partition of pairs as a
+  letter a cell, which way its partner lies (`L R T B`, `*` alone).
+- **A count a value split across a line's two ends**: value 1's before the
+  start, value 3's past the end, and a value the rules derive (the neutral
+  squares, the line less its poles) neither drawn nor written. With it, an
+  ID segment of one character a line, no separator (the desc alphabet).
+- **A part played whole**: a value placed in one cell of a part writes
+  the part's other cells by a formula of it (`4 − d`), and a click cycles
+  the part through its values from the cell pressed (empty, + here, −
+  here). Dominosa's pair and Map's region want the same address.
+- **Pole painters**, + and −, and the neutral square's.
+- **The notes**: Decision 15, the owner's.
+
+### 15. Magnets' notes (2.4), for the owner
+
+Today the player marks a tile `?`, a magnet either way round, and nothing
+else; the hand-written hint strikes a pole from a square where the board
+already rules it out and never shows that strike, re-reading it from the
+board when a later step cites it (`reading.ts`, `speak.ts`: 611 lines). A
+born hint is the candidate walk, whose every fact is a note the player can
+make (`docs/hints-candidates.md`).
+
+**The owner's call**: (a), recommended, candidate notes on every square as
+on Undead and Rome, + and − and neutral drawn small, with the right
+button's `?` kept as neutral struck from both ends of a tile and drawn as
+one `?` across a tile whose ends both hold just + and −; the hint then
+strikes a pole as a step the player can repeat ("Beside a +, this end
+can't be +"), so it teaches with marks the player has, at the cost of more,
+smaller steps (measured at the flip against the hand-written walk); or (b)
+keep `?` the only note, and the engine gains a strike the board already
+shows, made by the walk and never spoken, which only Magnets would use now.
+2.4a to 2.4c and the painters do not wait on it.
+
 Filled in by each flip.
 
 ### Undead (2.1e)

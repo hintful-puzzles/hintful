@@ -1,8 +1,8 @@
 ## Next
 
-2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.4
-(Magnets) goes on meanwhile: it needs nothing of Crossing's. Rome is born
-(2.3e). For 2.2f: the
+2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
+on § "Decisions" 15; 2.4a to 2.4d and 2.4f go on meanwhile, in order.
+Rome is born (2.3e). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -85,7 +85,22 @@ order.
   - [x] 2.3e The ID (the walls, then the clue stream with `U D L R X`),
         read against what is met, and the flip (design.md § "Decisions"
         13; § "What each flip changed for a player", Rome).
-- [ ] 2.4 Magnets born.
+- [ ] 2.4 Magnets born. Read against `7379eafb8` (design.md § "Decisions"
+      14); its notes are the owner's (§ "Decisions" 15).
+  - [ ] 2.4a A domino tiling as a divide, a leftover square where the
+        area is odd, and the ID's tiling segment (`L R T B *`). On a
+        fixture of its own.
+  - [ ] 2.4b A count a value split across a line's two ends, a derived
+        value's neither drawn nor written, done marks on both; the ID's
+        segment of one character a line.
+  - [ ] 2.4c A part played whole: a value writes the part's other cells by
+        a formula, a click cycles the part from the cell pressed.
+  - [ ] 2.4d Pole painters (+, −, neutral).
+  - [ ] 2.4e The notes, by the owner's answer to § "Decisions" 15.
+  - [ ] 2.4f The deal: a few neutral tiles first, then a magnet wherever
+        one fits; clues stripped by `S`.
+  - [ ] 2.4g The flip: the hint restated as `says`, cases, spec deltas,
+        guides.
 - [ ] 2.5 Subsets born.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
 
