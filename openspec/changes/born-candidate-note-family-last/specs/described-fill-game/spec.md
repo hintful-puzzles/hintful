@@ -31,7 +31,8 @@ value is past the field's range SHALL be refused.
 
 `play.counts` SHALL draw a clue at the board the deal derives beneath the
 board, each record its value's piece and its count, the count in the error
-color where the rules break the record; the canvas SHALL hold the row. A
+color where the rules break the record and gray where every one of its
+value is placed; the row SHALL be centered within the board's width. A
 press on a record SHALL place its value as the value's key does.
 
 #### Scenario: A pressed count places its value
@@ -39,6 +40,23 @@ press on a record SHALL place its value as the value's key does.
 - **WHEN** the cursor is on an open square of a `totaling` board and the
   disc's count is pressed
 - **THEN** the square holds a disc
+
+#### Scenario: A finished count
+
+- **WHEN** every ghost of a `portraying` board's total is placed
+- **THEN** the ghost's count is gray, and not in the error color
+
+### Requirement: A row of counts may read in the player's style
+
+`play.countStyle` SHALL offer the player a preference, under the key it
+names, for how a count reads: Total, Remaining, Placed/Total, or
+Left/Total, the last by default, every style fitting the same row.
+
+#### Scenario: A count in each style
+
+- **WHEN** a `portraying` board whose total of ghosts is 3 holds one ghost,
+  drawn in each count style
+- **THEN** the ghost's count reads `3`, `−2`, `1/3` and `2/3`
 
 ### Requirement: A born game's board of numbers may be drawn as pictures
 
@@ -63,6 +81,20 @@ instead, and `A` SHALL switch it.
 - **THEN** it draws three small monsters, the first two side by side and
   the third beneath the first
 
+### Requirement: A picture's name is how a player is told its value
+
+Each picture SHALL have a name, which the hint says its value by, with its
+article ("can only be a ghost", "the struck ghost must go"), and the keypad
+labels its key with, capitalized. A digit SHALL type the value it numbers
+whatever the alphabet's letters.
+
+#### Scenario: The keypad of a board of monsters
+
+- **WHEN** the keys of a `sighting` board are asked for, and `1` and `3`
+  are typed on an open square
+- **THEN** they are labeled Ghost, Vampire, Zombie and Clear, and the square
+  holds a ghost, then a zombie
+
 ### Requirement: The compiler refuses pictures a board cannot draw
 
 The compiler SHALL refuse `play.numbers.pictures` naming a painter no
@@ -74,6 +106,28 @@ value or an empty square.
 
 - **WHEN** a `portraying` description's alphabet is `GAZ`
 - **THEN** the compiler refuses it, since `A` switches the pictures
+
+### Requirement: A board of notes no placement narrows offers no auto-pencil preference
+
+A born game whose board has no unit and no technique run on placing SHALL
+offer no preference to remove what a placement rules out, since a placement
+rules out nothing.
+
+#### Scenario: A board of monsters
+
+- **WHEN** the preferences of a `sighting` game are listed
+- **THEN** none of them removes what a placement rules out
+
+### Requirement: The compiler refuses a step the walk never reads
+
+The compiler SHALL refuse a board of notes' step worded under a name the
+candidate walk reads on no board and no other step's clause speaks, since
+the walk says its singles and its opening in the engine's words.
+
+#### Scenario: A worded single
+
+- **WHEN** a `boxing` description words a step `single`
+- **THEN** the compiler refuses it
 
 ### Requirement: A born game's board of numbers may hold values only the deal places
 

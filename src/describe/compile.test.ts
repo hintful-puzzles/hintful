@@ -992,6 +992,16 @@ describe("what the fill board reads of a description", () => {
         j.steps["cull"].terms["X"] = "number";
       }),
     ).toThrow(/steps cull: term X is a flag/);
+    // The walk says its singles in the Latin library's words, so a step of
+    // that name worded here would never be seen.
+    expect(() =>
+      compileBoxing((j) => {
+        j.steps["single"] = Object.assign(
+          { terms: { d: "number" } },
+          { ring: "cell", move: "it can only be {d}" },
+        );
+      }),
+    ).toThrow(/steps single: the walk reads no step of that name/);
   });
 
   it("refuses a rung that strikes on a board of numbers without notes", () => {

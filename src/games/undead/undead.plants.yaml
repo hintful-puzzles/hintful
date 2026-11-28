@@ -11,6 +11,7 @@ techniques:
       f(c) = d and ((a < 0 or count(x in sight_direct(s, mirror) where f(x) !=
       2) + count(x in sight_bent(s, mirror) where f(x) != 2) + count(x in
       sight_twice(s, mirror) where f(x) != 2) = a) and (b < 0 or shows(f, t) =
-      b) and count(x in L where f(x) = 1 and |cand(x)| > 1) <= g and count(x in
-      L where f(x) = 2 and |cand(x)| > 1) <= v and count(x in L where f(x) = 3
-      and |cand(x)| > 1) <= z): true): strike(c, d)
+      b) and (not counted(1) or count(x in L where f(x) = 1 and |cand(x)| > 1)
+      <= g) and (not counted(2) or count(x in L where f(x) = 2 and |cand(x)| >
+      1) <= v) and (not counted(3) or count(x in L where f(x) = 3 and
+      |cand(x)| > 1) <= z)): true): strike(c, d)

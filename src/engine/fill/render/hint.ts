@@ -223,14 +223,17 @@ export function hintPass<C extends Clues<C>>(
   const unlinked = targets.filter((c) => !inPill.has(c.y * w + c.x));
   const stripes = marks.of("stripes", CELL).filter(onGrid);
   for (const p of stripes) hintWord[p.y * w + p.x] |= HINT_LINE;
-  // The striped line, where the stripes lie along one: a line of one cell is
-  // a row.
+  // The striped line, where the stripes are the whole of one: a line of one
+  // cell is a row. Stripes on part of a row (a sightline's squares) are no
+  // line, and the row's clues are not theirs.
+  const across = new Set(stripes.map((p) => p.x)).size;
+  const down = new Set(stripes.map((p) => p.y)).size;
   const stripedLine =
     stripes.length === 0
       ? -1
-      : stripes.every((p) => p.y === stripes[0].y)
+      : down === 1 && across === w
         ? stripes[0].y
-        : stripes.every((p) => p.x === stripes[0].x)
+        : across === 1 && down === h
           ? h + stripes[0].x
           : -1;
   return {

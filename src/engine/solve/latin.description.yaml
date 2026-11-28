@@ -21,28 +21,30 @@ library: latin
 # regions), so a game words a single by speaking these.
 steps:
   # The cell's notes are down to one.
+  # `thing` where a value is said as a word with its article (Undead's
+  # monsters: "it can only be a ghost").
   single:
     ring: cell
-    terms: { d: number }
+    terms: { d: number, thing: flag }
     look: "Every other {valueNoun} has been ruled out in {ring}"
-    move: "it can only {be} {d}"
+    move: "it can only {be} {if thing: {a d} | {d}}"
   # The cell has no notes, and its units already hold every other value:
   # named, as the step's struck values, where the game supplies them.
   regionsFull:
     ring: cell
-    terms: { d: number, named: flag }
+    terms: { d: number, named: flag, thing: flag }
     wordings:
       - when: "named"
         look: "{ring}'s {regions} already hold {struck}"
       - look: "{ring}'s {regions} already hold every other {valueNoun}"
-    move: "it can only {be} {d}"
+    move: "it can only {be} {if thing: {a d} | {d}}"
   # The value has one home left in a unit, which the walk stripes whole.
   hiddenSingle:
     ring: cell
-    terms: { d: number }
+    terms: { d: number, thing: flag }
     marks: { stripes: [cell] }
-    look: "No other {noun} in {stripes cell: this {unit}} can {be} {d}"
-    move: "{ring} must {be} {d}"
+    look: "No other {noun} in {stripes cell: this {unit}} can {be} {if thing: {a d} | {d}}"
+    move: "{ring} must {be} {if thing: {a d} | {d}}"
 techniques:
   # A placed value leaves the rest of every unit holding it, once the unit
   # holds every copy of it. The engine runs it as each value is placed, one

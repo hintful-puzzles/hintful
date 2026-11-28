@@ -27,8 +27,8 @@ import {
   spaceOf,
   topValue,
 } from "./board.ts";
-import { countPressed, countRecords } from "./counts.ts";
-import { type FillParams, givenOf, recordsOf } from "./game-id.ts";
+import { countPressed, countRecords, countsAcross, countsLayout } from "./counts.ts";
+import { type FillParams, givenOf } from "./game-id.ts";
 import type { FillMove } from "./notes.ts";
 import { orderOf, viewedErrors, viewedMistakes, viewedStep, viewOf } from "./order.ts";
 import { tallyIn, tallyOf } from "./params/tally.ts";
@@ -286,19 +286,14 @@ export function fillRender<C extends Clues<C>>(
         cx.margined && module.deal !== undefined
           ? perValuesOf(module, paramSpaceOf(module, p), givenOf(module.deal, p) as C)
           : 0;
-      // A row of counts holds every record the deal may deal.
-      const records =
-        cx.counted === null || module.deal === undefined
-          ? null
-          : recordsOf(module.deal, cx.counted.kind).keys.length;
       return metrics.canvasOf(
         p,
         values,
         t !== null
           ? tallyBeneath(tallyOf(t, p), p.w)
-          : records === null
+          : cx.counted === null
             ? null
-            : countsBeneath(records),
+            : countsBeneath(p.w),
         metrics.tileOf(size),
       );
     },
@@ -344,7 +339,8 @@ export function fillRender<C extends Clues<C>>(
         b.h,
       );
       const records = countRecords(b, cx.counted);
-      const i = countPressed(x, y, records.length, ts, p.x, p.y);
+      const lay = countsLayout(records, countsAcross(b.w));
+      const i = countPressed(lay, x, y, ts, p.x, p.y);
       return i < 0 ? null : records[i].value;
     },
   };

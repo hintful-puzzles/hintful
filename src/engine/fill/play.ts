@@ -142,13 +142,15 @@ export interface FillPlay {
    * cross, and a square whose notes lack it is drawn in the ball the clue
    * kind `ball` is drawn as (`glyphs.ts`'s `emptyOf`). `pictures`: each
    * value drawn by its painter in place of its glyph, a note small, unless
-   * the player's preference `pref` draws the glyphs; `A` switches it. */
+   * the player's preference `pref` draws the glyphs; `A` switches it. Each
+   * is said by its name in `names`, and labeled by it on the keypad. */
   readonly numbers?: {
     readonly raised?: true;
     readonly letters?: true | string;
     readonly empty?: { readonly ball: string };
     readonly pictures?: {
       readonly paint: Readonly<Record<number, string>>;
+      readonly names: Readonly<Record<number, string>>;
       readonly pref: { readonly kw: string; readonly name: string };
     };
   };
@@ -170,6 +172,9 @@ export interface FillPlay {
    * field whose value a record's piece shows and a press on it places
    * (`counts.ts`). */
   readonly counts?: Readonly<Record<string, string>>;
+  /** The player's preference for how the row of counts reads (`counts.ts`'s
+   * `COUNT_STYLES`), by its key and name; absent, each count is its total. */
+  readonly countStyle?: { readonly kw: string; readonly name: string };
   /** The sign drawn after the number of each clue kind at a dealt
    * partition's part or at a corner, by kind: a part's clue is drawn at its
    * part's first cell, and a corner's on a disc there. A list is a word a
@@ -292,6 +297,9 @@ export interface FillUi {
   /** On a board whose values are drawn as pictures (`numbers.pictures`), the
    * player's preference: pictures, or the glyphs. */
   pictures?: boolean;
+  /** On a board whose counts' style is a preference (`FillPlay.countStyle`),
+   * the player's choice, by its index in `COUNT_STYLES`. */
+  countStyle?: number;
 }
 
 export function newFillUi(): FillUi {

@@ -180,8 +180,11 @@ export function fillPalette(
   const COL_PENCIL = COL_ENTRY + 1;
   const COL_PENCIL_BODY = COL_ENTRY + 2;
   /** Where the player marks clues done (`play.done`, a board of numbers'),
-   * a done clue's gray, after the notes' slots where the board keeps them. */
-  const marksDone = Object.keys(play.done ?? {}).length > 0;
+   * a done clue's gray, after the notes' slots where the board keeps them;
+   * a row of counts grays a value all placed in it too. */
+  const marksDone =
+    Object.keys(play.done ?? {}).length > 0 ||
+    Object.keys(play.counts ?? {}).length > 0;
   const COL_DONE = notes ? COL_PENCIL_BODY + 1 : COL_ENTRY + 1;
   const PENCIL_STYLE: PencilIndicatorStyle = {
     background: COL_BACKGROUND,

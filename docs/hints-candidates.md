@@ -226,7 +226,11 @@ copies counted, are as many as its cells. A born board may have no
 unit at all (ABCD's, whose lines count rather than forbid a repeat): its
 reach is then its techniques' alone, it has no hidden single, and its
 description words the walk's steps (`WALK_STEPS`), as the `counting`
-fixture does.
+fixture does. Those are the only steps it words: the walk says its singles
+and its opening in the engine's words, and the compiler refuses a step of
+another name no clause speaks. Where no placement narrows anything (no
+unit, and no technique run on placing: Undead's), the game offers no
+auto-pencil preference, which would remove nothing.
 
 ## A sentence names which kinds of region
 
@@ -465,9 +469,7 @@ check vouches for them".
 Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts), every
 born game's walk (Seismic's areas, and ABCD's board with no unit, among
 them, and Salad's, whose empty square a line holds more than once),
-[`rome/hint.ts`](../src/games/rome/hint.ts). Outside the
-shared walk, Undead reads its ladder's firings off the notes the same way
-(`undeadFirings` in [`undead/solver.ts`](../src/games/undead/solver.ts)).
+[`rome/hint.ts`](../src/games/rome/hint.ts).
 
 ## A premise names everything its deduction reads
 
@@ -912,8 +914,8 @@ The shared helpers assume `0` for empty, `{x, y}` cells on a grid of stride
 that breaks these does not adapt onto them: an adapter that rebuilds the
 highlights supplies the logic itself, and the helper then keeps none. It
 writes its own plan and says so. Exemplar:
-[`undead/index.ts`](../src/games/undead/index.ts) (a non-zero empty
-sentinel, marks over a one-dimensional bordered board).
+[`map/hint.ts`](../src/games/map/hint.ts) (regions of a graph, not cells of
+a grid).
 
 Everything else in this guide still applies to it: reading the notes only
 where the mistake check vouches for them, `pencilStrike`, the naked-single-first walk with lazy populate, the stale

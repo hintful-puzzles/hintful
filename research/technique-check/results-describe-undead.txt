@@ -1,11 +1,3 @@
-ok  undead     single                         3  sound    (want sound   )     9 queries    0.2s
-ok  undead     single (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
-ok  src/games/undead/undead.description.yaml#single: recorded sound, proved whole on all 1 boards
-ok  undead     total                          3  sound    (want sound   )     3 queries   29.6s
-ok  undead     total (planted)                3  unsound  (want unsound )     1 queries    0.2s   at 1
-ok  src/games/undead/undead.description.yaml#total: recorded sound, proved whole on all 1 boards
-..  undead     sightline: not proved whole in time, asked on 336 boards: no defect
-ok  undead     sightline                      3  held     (want sound   )   749 queries  120.0s
-..  undead     sightline (planted): not proved whole in time, asked on 88 boards: unsound
-ok  undead     sightline (planted)            3  unsound  (want unsound )   169 queries   16.5s   at 3
-ok  src/games/undead/undead.description.yaml#sightline: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest
+ok  undead     single                         current: recorded src/games/undead/undead.description.yaml#single 643766c73f411223
+ok  undead     total                          current: recorded src/games/undead/undead.description.yaml#total b18ef8b08f282856
+ok  undead     sightline                      current: recorded src/games/undead/undead.description.yaml#sightline 42852ee205e5a846 held

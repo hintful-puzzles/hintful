@@ -6,6 +6,7 @@
 
 import { REPEAT_STEPS, WALK_STEPS } from "../../engine/fill/walk-steps.ts";
 import { CompileError, type Env } from "../compile-sorts.ts";
+import { clauseOf } from "../compile-stated.ts";
 import { concludes } from "../compile-technique.ts";
 import { type Description, type DescriptionJson, noteMarkOf } from "../description.ts";
 import { parse } from "../expr.ts";
@@ -136,6 +137,22 @@ function checkWalkSteps(
     check(WALK_STEPS, "the notes' reach is no row and column", []);
   if (json.answer?.value?.repeat !== undefined)
     check(REPEAT_STEPS, "a unit holds a value more than once", ["outline"]);
+  // The walk speaks every other step in the engine's words (its singles are
+  // the Latin library's), so a step worded under another name is words the
+  // player never sees. A variation may add the reach that reads WALK_STEPS
+  // (`dividing`'s cages), so those stay allowed on any board.
+  const spokenBy = new Set(
+    d.steps.flatMap((s) => s.terms.flatMap((t) => clauseOf(t.kind) ?? [])),
+  );
+  for (const s of d.steps)
+    if (
+      !Object.hasOwn(WALK_STEPS, s.id) &&
+      !Object.hasOwn(REPEAT_STEPS, s.id) &&
+      !spokenBy.has(s.id)
+    )
+      throw new CompileError(
+        `steps ${s.id}: the walk reads no step of that name, and speaks it in the engine's words (it reads ${[...Object.keys(WALK_STEPS), ...Object.keys(REPEAT_STEPS)].join(", ")})`,
+      );
 }
 
 /** Holds the description's step `id` to the terms the walk `supplied` it

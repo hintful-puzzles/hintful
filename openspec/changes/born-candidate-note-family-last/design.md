@@ -118,7 +118,8 @@ is, and no clue value is drawn at random apart from the answer.
 
 ### 6. Undead's deal is upstream's, its steer a sample's (2.1d)
 
-The draft (`undead-born-draft.yaml`, as Salad's was) deals as upstream
+The description (`undead.description.yaml`, a draft in this change until
+the flip, as Salad's was) deals as upstream
 undead.c's `new_game_desc` does: a mirror on a square in five each way,
 the layout drawn again outside 0.48 to 0.78 monsters or with a sightline
 longer than the tier allows; sightlines filled first, the shortest first,
@@ -139,6 +140,30 @@ another game whose clues look along sightlines takes it as it is.
 ## What each flip changed for a player
 
 Filled in by each flip.
+
+### Undead (2.1e)
+
+- **Unreasonable is the search tier.** The hand-written game took a board
+  its depth-1 forcing solved; the born one takes a board Normal cannot
+  finish and the search proves has one answer, as every born game's top
+  tier is. Its letter stays `t`.
+- **The counts are beneath the board**, centered, and read in the player's
+  style as before (Left/Total by default); a finished count is gray.
+- **A press on a count no longer clears a square holding that monster**: it
+  types the monster's key, as the keypad does, and typing a held value
+  leaves it on every board of numbers. `E` no longer clears either; `0`,
+  Backspace, Space and Delete do.
+- **An ID with a monster fixed in its grid (`G`, `V`, `Z`) is refused.**
+  Upstream's reader takes one; its generator never writes one.
+- **An empty sighting reads as a clue the board does not show**, where the
+  hand-written reader refused it.
+- **The hint is the candidate walk's**: its words are the collection's
+  ("Every other monster has been ruled out in this square, so it can only
+  be a ghost"), a sightline is striped and its clues outlined, and struck
+  monsters "must go".
+- **No auto-pencil preference is offered**, as before, now because a
+  placement rules nothing out on a board with no unit.
+- **New Game deals 4×4 Normal.**
 
 ## Risks / Trade-offs
 

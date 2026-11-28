@@ -136,18 +136,18 @@ const say = {
   touchesTheRest: (r: number, color: number, others: number): Sentence =>
     singles.sentence("regionsFull", {
       ring: ring(r),
-      terms: { d: color, named: true },
+      terms: { d: color, named: true, thing: false },
       struck: colorsOf(others),
     }),
 
   /** A region the player has dotted with one color only. */
   lastDot: (r: number, color: number): Sentence =>
-    singles.sentence("single", { ring: ring(r), terms: { d: color } }),
+    singles.sentence("single", { ring: ring(r), terms: { d: color, thing: false } }),
 
   deadDots: (r: number, color: number): Sentence =>
     steps.sentence("deadDots", {
       ring: ring(r),
-      closing: singles.part("single", "move", { terms: { d: color } }),
+      closing: singles.part("single", "move", { terms: { d: color, thing: false } }),
     }),
 
   pair: (r: number, regions: readonly RegionMark[], pair: number, c: Conclusion) =>

@@ -512,8 +512,8 @@ lands on it and what it holds, and drives the drag with `beginSweep`,
   member carries it and no guard finds it otherwise. A `holds` that reads the
   wrong array typechecks and drags nothing.
 
-Exemplars: `clueDrag` in [`undead/index.ts`](../src/games/undead/index.ts);
-`crossDrag` in [`engine/mechanics/line-drawing.ts`](../src/engine/mechanics/line-drawing.ts).
+Exemplars: the fill engine's done marks
+([`engine/fill/done.ts`](../src/engine/fill/done.ts)); `crossDrag` in [`engine/mechanics/line-drawing.ts`](../src/engine/mechanics/line-drawing.ts).
 
 ## Keyboard cursors
 
@@ -878,8 +878,8 @@ absolute sets and not toggles. Exemplar: `setEdge` in
 **A game that types values implements `requestKeys(params): KeyLabel[]`.** An
 absent hook is an empty keypad, and on touch the panel is the only way to
 type. Normative: the on-screen-keys requirements of `engine-input`.
-Exemplars: `engine/fill/numbers.ts`,
-[`undead/index.ts`](../src/games/undead/index.ts) (keys with word labels).
+Exemplar: `engine/fill/numbers.ts`, whose keys take a picture's name for a
+label where its values are drawn as pictures (Undead's).
 
 - **Build digits with `digitKeys(n)`** from
   [`engine/input/key-labels.ts`](../src/engine/input/key-labels.ts), sizing `n` from the

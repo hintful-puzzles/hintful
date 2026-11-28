@@ -1,0 +1,159 @@
+# Undead's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): upstream's IDs read and written back,
+# its params, the totals and sightlines broken, its keys and the counts'
+# press, and a position for every rung its hint takes.
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0}
+    - {w: 4, h: 4, diff: 1}
+    - {w: 5, h: 5, diff: 1}
+    - {w: 6, h: 8, diff: 1}
+  unreached:
+    clean: >-
+      a placed monster rules out no other square (Undead has no unit and no technique run on placing), so no note is left to clean
+    dup: >-
+      a placed monster rules out no other square (Undead has no unit and no technique run on placing), so no note duplicates it
+    note: >-
+      spoken under the reading that pencils in only as needed, and Undead's hint starts on the one that pencils every monster in first (play.hintNotes)
+    regionsFull: >-
+      spoken under the reading that pencils in only as needed: where every monster is penciled in first, a square every other monster is ruled out of is a single
+  pins:
+    # Held on 48 of 1831 positions walked.
+    populate: "4x4de:1,2,5,aLRbLRaLaRaLaRa,4,0,0,3,2,4,1,0,3,1,3,0,0,0,2,2"
+    # Held on 1796 of 1831 positions walked.
+    single:
+      id: "4x4de:1,2,5,aLRbLRaLaRaLaRa,4,0,0,3,2,4,1,0,3,1,3,0,0,0,2,2"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 2}, {x: 3, y: 3, n: 3}]}
+    # Held on 124 of 1831 positions walked.
+    usedUp:
+      id: "4x4dn:2,3,3,LaRLbLLcRbLL,0,3,0,0,0,3,0,0,3,0,3,3,2,2,2,2"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 3}]}
+        - {type: set, x: 1, y: 0, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 3}]}
+        - {type: set, x: 1, y: 3, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 3}]}
+        - {type: set, x: 0, y: 3, n: 2, pencil: false, autoElim: false}
+    # Held on 329 of 1831 positions walked.
+    justRoom:
+      id: "4x4dn:3,5,4,bLReRcRb,2,3,0,0,1,4,2,2,3,3,2,2,2,0,4,4"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 1}, {x: 3, y: 3, n: 2}]}
+        - {type: set, x: 3, y: 3, n: 3, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 2}]}
+        - {type: set, x: 2, y: 3, n: 3, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 3}]}
+        - {type: set, x: 1, y: 0, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 1}, {x: 1, y: 1, n: 3}]}
+        - {type: set, x: 1, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 2}, {x: 0, y: 2, n: 3}]}
+        - {type: set, x: 0, y: 2, n: 1, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 1}, {x: 3, y: 1, n: 3}]}
+        - {type: set, x: 3, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 3}]}
+        - {type: set, x: 3, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 1}]}
+    # Held on 1757 of 1831 positions walked.
+    sightline:
+      id: "4x4de:1,2,5,aLRbLRaLaRaLaRa,4,0,0,3,2,4,1,0,3,1,3,0,0,0,2,2"
+      moves:
+        - {type: pencilAll}
+
+ids:
+  # Boards the hand-written port dealt, read and written back.
+  - {id: "5x5dn:6,3,7,RRdLRaRcLaLcLbRb,0,5,4,2,6,4,0,3,0,0,4,1,2,2,1,5,1,4,3,0", writesBack: true}
+  - {id: "5x5dn:9,4,3,aLaRRbRaRaRaRRcRf,2,0,3,0,4,4,3,0,2,2,2,0,3,2,2,2,0,2,0,3", writesBack: true}
+  - {id: "5x5dn:10,3,6,cRfLRbRgLLa,3,1,1,3,6,5,2,2,4,4,2,3,2,4,1,0,4,2,2,0", writesBack: true}
+  # A 3x3 of six mirrors over a ghost, a vampire and a zombie, worked by
+  # hand; then a sighting past the most a path crossing each square twice
+  # shows, the grid run past its squares or cut short, the sightings cut
+  # short or run past their count.
+  - {id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0", writesBack: true}
+  - {id: "3x3dn:1,1,1,LRLRLRc,19,0,0,0,1,2,1,2,0,2,0,0", refused: DESC_OUT_OF_RANGE}
+  - {id: "3x3dn:1,1,1,LRLRLRd,0,0,0,0,1,2,1,2,0,2,0,0", refused: DESC_TOO_LONG}
+  - {id: "3x3dn:1,1,1,LRc,0,0,0,0,1,2,1,2,0,2,0,0", refused: "This game ID has \",\" where it can't have one."}
+  - {id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0,", refused: DESC_TOO_LONG}
+  - {id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0x", refused: DESC_TOO_LONG}
+  - {id: "3x3dn:1,1,1,LRLRLRc,0,0", refused: DESC_TOO_SHORT}
+  # A monster fixed in the grid, which upstream's reader takes and its
+  # generator never writes.
+  - {id: "3x3dn:1,1,1,LRLRLRGb,0,0,0,0,1,2,1,2,0,2,0,0", refused: "This game ID has \"G\" where it can't have one."}
+  # An empty sighting is a number the board does not show, which upstream's
+  # reader refused: here it is read, and the clues left still single out
+  # the answer.
+  - {id: "3x3dn:1,1,1,LRLRLRc,0,,0,0,1,2,1,2,0,2,0,0", writesBack: true}
+  # Totals that do not add up to the squares, and sightings no filling
+  # shows: no answer meets either.
+  - {id: "3x3dn:1,1,2,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0", refused: DESC_CONTRADICTORY}
+  - {id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,0,0,0,0,0,0,0,0", refused: DESC_CONTRADICTORY}
+
+params:
+  # The size, then the tier; a size alone is Normal, upstream's.
+  - {read: "5x5dt", full: "5x5dt", brief: "5x5", label: "5x5 Unreasonable"}
+  - {read: "4x4", full: "4x4dn"}
+  - {read: "7x7dn", full: "7x7dn"}
+  - {read: "2x4de", refused: "Width must be at least 3."}
+  - {read: "4x2de", refused: "Height must be at least 3."}
+  - {read: "9x6de", refused: false}
+  - {read: "6x9de", refused: false}
+
+positions:
+  # The board solved.
+  - id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0"
+    solve: true
+    status: solved
+  # A second zombie, one more than the board holds, breaks its total, and
+  # the sightlines that now show too many.
+  - id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0"
+    moves: [{set: [8, 3]}, {set: [7, 3]}]
+    breaks: [clue.sees, clue.total]
+  # A clue marked done.
+  - id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0"
+    moves: [{type: done, kind: sees, k: 4}]
+    holds:
+      done.sees: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+input:
+  # A monster typed by its letter or its digit, and cleared by 0, Space,
+  # Backspace and Delete, on the bottom left square; typed again, it stays,
+  # as a press on its count (which types its key) leaves it. The first arrow
+  # shows the cursor on the top left, a mirror.
+  - id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0"
+    events:
+      - {key: down}
+      - {key: down}
+      - {key: down}
+      - {key: "g", holds: {values.6: 1}}
+      - {key: "2", holds: {values.6: 2}}
+      - {key: "0", holds: {values.6: 0}}
+      - {key: "z", holds: {values.6: 3}}
+      - {key: select2, holds: {values.6: 0}}
+      - {key: "v", holds: {values.6: 2}}
+      - {key: "\b", holds: {values.6: 0}}
+      - {key: "3", holds: {values.6: 3}}
+      - {key: "delete", holds: {values.6: 0}}
+      - {key: "g", holds: {values.6: 1}}
+      - {key: "g", holds: {values.6: 1}}
+  # A switches pictures and letters, the preference with it.
+  - id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0"
+    events:
+      - {key: "a", preferences: {monsters: 1}}
+      - {key: "a", preferences: {monsters: 0}}
+  # Shift with an arrow marks done the clue at that end of the cursor's row
+  # or column: left of the bottom row, then below its left square. The
+  # clues are listed along the top, the bottom, the left and the right.
+  - id: "3x3dn:1,1,1,LRLRLRc,0,0,0,0,1,2,1,2,0,2,0,0"
+    events:
+      - {key: down}
+      - {key: down}
+      - {key: down}
+      - {key: "shift+left", holds: {done.sees: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]}}
+      - {key: "shift+down", holds: {done.sees: [0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]}}

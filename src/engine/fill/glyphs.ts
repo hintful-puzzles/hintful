@@ -15,8 +15,13 @@ import { sizeChoices } from "./params/settings.ts";
 
 /** How a board of numbers' values are drawn, said and typed. */
 export interface ValueGlyphs {
-  /** The glyph value `v` is drawn and said as. */
+  /** The glyph value `v` is drawn and written as. */
   readonly draw: (v: number) => string;
+  /** What a hint calls value `v`: its glyph, or its picture's name. */
+  readonly say: (v: number) => string;
+  /** Value `v`'s key's label on the keypad: its glyph, or its picture's
+   * name, capitalized. */
+  readonly label: (v: number) => string;
   /** The key that types value `v`. */
   readonly keyCode: (v: number) => number;
   /** The value key `button` types, 0 for one that clears, or `null`. */
@@ -39,6 +44,8 @@ const numeral = (v: number): string => {
 
 const NUMERALS: ValueGlyphs = {
   draw: numeral,
+  say: numeral,
+  label: numeral,
   keyCode: digitKeyCode,
   typed: digitOf,
   top: 31,
@@ -52,11 +59,14 @@ const a = "a".charCodeAt(0);
 const FROM_A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 /** The glyphs of an alphabet: value `v` drawn and said as the `v`-th letter
- * of `alphabet`, and typed by that letter in either case, or by a digit as
- * the letter at its place from A (ABCD's keys, upstream's too; Group's `e`
- * typed by 5). */
+ * of `alphabet`, and typed by that letter in either case, or by a digit: as
+ * the letter at its place from A where the alphabet is the first letters in
+ * some order (ABCD's keys, upstream's too; Group's `e` typed by 5), else as
+ * the alphabet's letter at its place (Undead's G, V and Z typed by 1 to 3,
+ * upstream's). */
 function lettersOf(alphabet: string): ValueGlyphs {
   const upper = alphabet.toUpperCase();
+  const fromA = [...upper].every((ch) => ch.charCodeAt(0) - A < upper.length);
   const letter = (v: number): string => {
     if (!Number.isInteger(v) || v < 1 || v > alphabet.length)
       throw new Error(`no letter draws the value ${v}: say a count as {numeral …}`);
@@ -69,13 +79,17 @@ function lettersOf(alphabet: string): ValueGlyphs {
   };
   return {
     draw: letter,
+    say: letter,
+    label: letter,
     keyCode: (v) => letter(v).charCodeAt(0),
     typed: (button) => {
       const base = stripModifiers(button);
       if ((base >= A && base < A + 26) || (base >= a && base < a + 26))
         return ofLetter(base);
       const d = digitOf(button);
-      return d === null || d === 0 ? d : ofLetter(A + d - 1);
+      if (d === null || d === 0) return d;
+      if (fromA) return ofLetter(A + d - 1);
+      return d <= upper.length ? d : null;
     },
     top: alphabet.length,
     noun: "letter",
@@ -115,10 +129,29 @@ function rulesetLetters(
 /** The glyphs a board of `module` draws its values by, `sizes` the sizes its
  * params give (a board's clues hold them): letters where its `play` says
  * so or its ruleset does, else numerals, typed as letters where another
- * ruleset draws them. */
+ * ruleset draws them. Values drawn as pictures are said and labeled by their
+ * names. */
 export function glyphsOf(
   module: Pick<FillModule<unknown>, "play" | "deal">,
   sizes: Readonly<Record<string, unknown>> = {},
+): ValueGlyphs {
+  const glyphs = unnamedGlyphsOf(module, sizes);
+  const names = module.play?.numbers?.pictures?.names;
+  if (names === undefined) return glyphs;
+  const name = (v: number): string => names[v] ?? glyphs.draw(v);
+  return {
+    ...glyphs,
+    say: name,
+    label: (v) => {
+      const n = name(v);
+      return n.charAt(0).toUpperCase() + n.slice(1);
+    },
+  };
+}
+
+function unnamedGlyphsOf(
+  module: Pick<FillModule<unknown>, "play" | "deal">,
+  sizes: Readonly<Record<string, unknown>>,
 ): ValueGlyphs {
   const letters = module.play?.numbers?.letters;
   if (letters !== undefined) return alphabetOf(letters);
@@ -161,6 +194,8 @@ export function boardGlyphs<C>(
   return {
     ...glyphs,
     draw: (v) => (v === empty ? EMPTY_GLYPH : glyphs.draw(v)),
+    say: (v) => (v === empty ? EMPTY_GLYPH : glyphs.say(v)),
+    label: (v) => (v === empty ? EMPTY_GLYPH : glyphs.label(v)),
     keyCode: (v) => (v === empty ? EMPTY_GLYPH.charCodeAt(0) : glyphs.keyCode(v)),
   };
 }

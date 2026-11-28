@@ -5,7 +5,8 @@
 # holds, for the fill engine's tests of a board of numbers drawn as pictures
 # (`numbers.pictures`): each value placed and noted as its painter's piece,
 # typed by its letter, and drawn as the letter where the player's preference
-# says, `A` switching it, on a description that names no game.
+# says, `A` switching it, said and labeled by its name; and its counts read
+# as the player chooses (`countStyle`), on a description that names no game.
 game: portraying
 produces: latin
 sizes:
@@ -35,8 +36,10 @@ play:
     letters: GVZ
     pictures:
       paint: { 1: ghost, 2: vampire, 3: zombie }
+      names: { 1: ghost, 2: vampire, 3: zombie }
       pref: { kw: monsters, name: Monster representation }
   counts: { total: item }
+  countStyle: { kw: count-style, name: Count display }
   boards: [3x3]
   hintMarks:
     ring: the square the step decides.

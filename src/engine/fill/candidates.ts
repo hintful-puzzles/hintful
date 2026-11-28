@@ -301,13 +301,15 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
   /** The words a hint on `board` says its values and squares by: each value
-   * its glyph, and what a value is called, by the board's ruleset. */
+   * its glyph or its picture's name, and what a value is called, by the
+   * board's ruleset. */
   const vocabOf = (board: FillBoard<C>): LatinVocab => {
     const glyphs = boardGlyphs(module, spaceOf(module, board), board.dealt);
     return {
       noun: module.WORDS?.value ?? glyphs.noun,
-      value: glyphs.draw,
+      value: glyphs.say,
       cell: module.WORDS?.cell ?? "square",
+      ...(module.play?.numbers?.pictures?.names === undefined ? {} : { article: true }),
       ...(module.WORDS?.alongside === undefined
         ? {}
         : { beside: module.WORDS.alongside }),
@@ -533,7 +535,11 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           ...(reason.reads === undefined ? {} : { reads: reason.reads }),
         };
       },
-      conclude: candidateConclusions({ value, cell: vocab.cell }),
+      conclude: candidateConclusions({
+        value,
+        cell: vocab.cell,
+        ...(vocab.article === undefined ? {} : { article: vocab.article }),
+      }),
       notes: {
         populate: populateText(vocab.noun, vocab.cell),
         cleanObvious:

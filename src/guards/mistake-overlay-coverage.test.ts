@@ -125,14 +125,7 @@ const coveredGame = (id: string): boolean =>
  * drawn by code no test has ever looked at; deleting one means adding a test
  * that paints it and asserts what it drew, in any of the spellings above.
  */
-const NO_OVERLAY_TEST = [
-  "ascent",
-  "bridges",
-  "dominosa",
-  "filling",
-  "palisade",
-  "undead",
-];
+const NO_OVERLAY_TEST = ["ascent", "bridges", "dominosa", "filling", "palisade"];
 
 describe("a game that finds mistakes has a test that paints them", () => {
   it("reads a real population and real test sources", () => {

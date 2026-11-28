@@ -214,11 +214,19 @@ export function candidateConclusions(vocab: {
   cell?: string;
   be?: string;
   note?: string;
+  article?: boolean;
 }): Conclusions {
   const v = vocab.value;
   const cell = vocab.cell ?? "square";
   const be = vocab.be ?? "be";
   const { note } = vocab;
+  /** What a square is, where it holds value `n`: bare ("must be 3"), or
+   * with its article where the vocabulary's values are things ("must be a
+   * ghost"). */
+  const thing = (n: number): string => {
+    const w = v(n);
+    return vocab.article === true ? `${indefinite(w)} ${w}` : w;
+  };
   return {
     cell,
     strike: ({ where, struck }) => {
@@ -226,6 +234,13 @@ export function candidateConclusions(vocab: {
         const ns = distinct([...values]);
         if (note !== undefined)
           return `${where ? "the" : `this ${cell}'s`} ${joinWith(ns.map(v))} ${values.length === 1 ? note : `${note}s`}`;
+        // A value said as a word (Undead's monsters) names a thing the board
+        // also shows placed, so it says which mark it is, as `stated.ts`'s
+        // closing does: "the struck ghost", "the struck ghosts" from
+        // several cells.
+        const words = ns.map(v);
+        if (vocab.article === true)
+          return `the struck ${joinWith(values.length > ns.length ? words.map((w) => `${w}s`) : words)}`;
         // One value struck from several cells is several notes: "the As".
         // A lower-case letter (Group's elements) has no plural that reads
         // as the letter, so it stays "the a".
@@ -247,10 +262,10 @@ export function candidateConclusions(vocab: {
         after: from ? `must go ${where}` : "must go",
       };
     },
-    place: (n) => `must ${be} ${v(n)}`,
+    place: (n) => `must ${be} ${thing(n)}`,
     // Short where it can be: the list is as long as the values left, and
     // "only" says they are all the cell can be.
-    keep: (values) => `can only ${be} ${joinOr(values.map(v))}`,
+    keep: (values) => `can only ${be} ${joinOr(values.map(thing))}`,
   };
 }
 
@@ -291,6 +306,9 @@ export interface LatinVocab {
   /** The verb a square takes a value by. Default "be"; Rome's arrows
    * "point". */
   be?: string;
+  /** A value is a thing, said with its article where a square is one ("can
+   * only be a ghost", Undead's monsters), not a numeral or a letter. */
+  article?: boolean;
 }
 
 const NUMBER_VOCAB: LatinVocab = { noun: "number", value: (n) => String(n) };
@@ -320,7 +338,7 @@ export function narrateLatinReason(
     be: vocab.be,
   };
   const ring = [at];
-  const terms = { d: at.n };
+  const terms = { d: at.n, thing: vocab.article === true };
   switch (reason.kind) {
     case "single":
       return latinVoice<Point>(words).sentence("single", { ring, terms });
@@ -343,7 +361,7 @@ export function narrateLatinReason(
         unit: () => unit.name,
       }).sentence("hiddenSingle", {
         ring,
-        terms: { d: reason.n },
+        terms: { d: reason.n, thing: terms.thing },
         marks: { stripes: { cell: unit.cells } },
       });
     }

@@ -87,7 +87,7 @@ export type MirrorAt = (c: number) => number;
 
 /** A sightline: every cell it passes, mirrors included, in the order it
  * passes them, and the slot it comes out at. */
-export interface Sightline {
+interface Sightline {
   readonly visits: readonly number[];
   readonly exit: number;
 }
@@ -96,9 +96,9 @@ export interface Sightline {
  * The sightline in from slot `s` (Undead's): straight on through each cell,
  * turned a quarter turn by each mirror, and out at the slot it reaches. It
  * never comes back out at `s`, since a mirror never turns it right round.
- * One tracer for the game, the compiled code and the checker.
+ * One tracer for the compiled code and the checker.
  */
-export function traceSight(sp: GridSpace, s: number, mirrorAt: MirrorAt): Sightline {
+function traceSight(sp: GridSpace, s: number, mirrorAt: MirrorAt): Sightline {
   let at = sightEntry(sp, s);
   const visits: number[] = [];
   for (;;) {

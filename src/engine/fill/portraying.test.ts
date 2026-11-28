@@ -8,7 +8,9 @@
 
 import { describe, expect, it } from "vitest";
 import * as portraying from "../../generated/engine/testing/fixtures/portraying/portraying.compiled.ts";
+import * as sighting from "../../generated/engine/testing/fixtures/sighting/sighting.compiled.ts";
 import { undeadGhost, undeadVampire, undeadZombie } from "../color/palette-games.ts";
+import { COL_ERROR } from "../color/roles.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
@@ -157,5 +159,81 @@ describe("a board of numbers drawn as pictures", () => {
     expect(new Set(counted(ui).map((op) => (op.op === "text" ? op.text : "")))).toEqual(
       new Set(["G", "V", "Z"]),
     );
+  });
+
+  it("labels each value's key by its name, and types it by its place", () => {
+    expect(game.requestKeys?.(p, b).map((k) => k.label)).toEqual([
+      "Ghost",
+      "Vampire",
+      "Zombie",
+      "Clear",
+    ]);
+    // The alphabet is not the first letters, so a digit types its letter.
+    expect(press("1")).toMatchObject({ type: "set", n: 1 });
+    expect(press("3")).toMatchObject({ type: "set", n: 3 });
+    expect(press("4")).toBeNull();
+  });
+});
+
+describe("a row of counts read in the player's style", () => {
+  /** The counts' texts beneath the board, under `ui`. */
+  const countsOf = (s: Board, ui: FillUi = game.newUi(s)) =>
+    draw(s, ui).filter(
+      (op): op is Extract<DrawOp, { op: "text" }> =>
+        op.op === "text" && /^[\d−]+(\/\d+)?$/.test(op.text),
+    );
+  const { total } = b.dealt;
+
+  it("offers the styles by the description's name, left over total first", () => {
+    const pref = game.prefs?.find((q) => q.kw === "count-style");
+    if (pref?.type !== "choices") throw new Error("no count style preference");
+    expect(pref.name).toBe("Count display");
+    expect(pref.choices).toEqual(["Total", "Remaining", "Placed/Total", "Left/Total"]);
+    expect(pref.get(game.newUi(b))).toBe(3);
+  });
+
+  it("reads each count in the chosen style", () => {
+    const placed = total.item.map((v) => b.values.filter((x) => x === v).length);
+    const read = (style: number) => {
+      const ui = game.newUi(b);
+      ui.countStyle = style;
+      return countsOf(b, ui).map((op) => op.text);
+    };
+    const minus = (n: number) => (n < 0 ? `−${-n}` : String(n));
+    expect(read(0)).toEqual(total.many.map(String));
+    expect(read(1)).toEqual(total.many.map((n, i) => minus(placed[i] - n)));
+    expect(read(2)).toEqual(total.many.map((n, i) => `${placed[i]}/${n}`));
+    expect(read(3)).toEqual(total.many.map((n, i) => `${minus(n - placed[i])}/${n}`));
+  });
+
+  it("grays a count whose value is all placed, and no other", () => {
+    const k = total.item.indexOf(2);
+    const opens = [...b.values.keys()].filter((c) => b.fixed[c] === 0);
+    const short = total.many[k] - b.values.filter((x) => x === 2).length;
+    // Vampires placed on open squares until the board holds as many as its
+    // count, and one fewer.
+    const placing = (n: number): Board =>
+      game.executeMove(b, { set: opens.slice(0, n).flatMap((c) => [c, 2]) } as never);
+    expect(short).toBeGreaterThan(0);
+    const ink = countsOf(placing(short - 1))[k].color;
+    const all = countsOf(placing(short))[k].color;
+    expect(all).not.toBe(ink);
+    expect(all).not.toBe(COL_ERROR);
+  });
+
+  it("lies within the board's width and its right margin", () => {
+    const right = Math.max(
+      ...countsOf(b).map((op) => op.x + op.text.length * 0.6 * (op.size ?? TS)),
+    );
+    expect(right).toBeLessThanOrEqual(game.computeSize(p, TS).w);
+  });
+});
+
+describe("a board where a placed value rules out none other", () => {
+  it("offers no preference to remove what a placement rules out", () => {
+    expect(game.prefs?.some((q) => q.kw === "auto-pencil")).toBe(true);
+    expect(
+      fillGame("sighting", sighting).prefs?.some((q) => q.kw === "auto-pencil"),
+    ).toBe(false);
   });
 });

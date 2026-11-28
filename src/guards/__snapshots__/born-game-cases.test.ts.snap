@@ -301,6 +301,16 @@ exports[`towers: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`undead: pinned hint positions > says, at each pin 1`] = `
+{
+  "justRoom": "Exactly as many squares can still hold a ghost as there are ghosts left to place, so this square can only be a ghost.",
+  "populate": "Start by penciling every candidate monster into each empty square.",
+  "sightline": "This sightline's 0 and 1 leave no room for a vampire or zombie in this square, so the struck vampire and zombie must go.",
+  "single": "Every other monster has been ruled out in this square, so it can only be a ghost.",
+  "usedUp": "No vampires are left to place, so the struck vampire must go.",
+}
+`;
+
 exports[`unequal: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",

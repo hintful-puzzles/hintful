@@ -29,7 +29,6 @@ export {
   sights,
   sightTurn,
   traceBeam,
-  traceSight,
 } from "./describe-runtime/beams.ts";
 export {
   freshBinding,

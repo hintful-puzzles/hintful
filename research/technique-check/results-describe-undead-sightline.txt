@@ -1,0 +1,5 @@
+..  undead     sightline: not proved whole in time, asked on 456 boards: no defect
+ok  undead     sightline                      3  held     (want sound   )    61 queries  119.9s
+..  undead     sightline (planted): not proved whole in time, asked on 32 boards: unsound
+ok  undead     sightline (planted)            3  unsound  (want unsound )     4 queries    0.3s   at 3
+ok  src/games/undead/undead.description.yaml#sightline: recorded held, proved whole on 0 of 1 boards and asked on sampled answers on the rest

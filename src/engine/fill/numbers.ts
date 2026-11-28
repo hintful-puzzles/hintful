@@ -490,7 +490,7 @@ export function numberInput<
       const glyphs = glyphsOf(module, dealt as Readonly<Record<string, unknown>>);
       const keys = Array.from({ length: n }, (_, i) => i + 1)
         .filter((v) => v !== empty)
-        .map((v) => ({ button: glyphs.keyCode(v), label: glyphs.draw(v) }));
+        .map((v) => ({ button: glyphs.keyCode(v), label: glyphs.label(v) }));
       // Upstream Salad's: the symbols, then X, O and clear.
       if (empty !== null)
         keys.push(

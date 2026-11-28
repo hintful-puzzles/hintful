@@ -46,7 +46,6 @@ const UNJUDGED: Readonly<Record<string, string>> = {
   blackbox:
     "a ray is a probe of the hidden arena, fired where the player chooses, so none is forced",
   mines: OWN_SOLVER,
-  undead: OWN_SOLVER,
 };
 
 const DIRECT = /^Your last move follows from (?!the board)/;

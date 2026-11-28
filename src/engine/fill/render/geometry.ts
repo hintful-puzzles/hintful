@@ -162,9 +162,9 @@ export const tallyBeneath = (counts: readonly number[], w: number): Beneath => (
   height: tallyHeight(counts, w),
 });
 
-/** A row of `n` counts beneath a board. */
-export const countsBeneath = (n: number): Beneath => ({
-  across: countsAcross(n),
+/** A row of counts beneath a board `w` wide. */
+export const countsBeneath = (w: number): Beneath => ({
+  across: countsAcross(w),
   height: COUNTS_HEIGHT,
 });
 

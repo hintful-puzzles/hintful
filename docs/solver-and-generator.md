@@ -137,7 +137,7 @@ The shapes that are not the plain one:
 | a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
 | two scales, each capped and graded apart | `capsOf`, in [`engine/fill/board.ts`](../src/engine/fill/board.ts), and `scales:` in [`solo.description.yaml`](../src/games/solo/solo.description.yaml) |
 | a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`engine/hint/glance.ts`](../src/engine/hint/glance.ts) |
-| a count kept from the firings tally rather than a wrapped rung | [`undead/solver.ts`](../src/games/undead/solver.ts) `solveDeductive` |
+| a tier bounding how often a rung fires, counted off the firings tally | a technique's `most`, and `overFired` in [`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts) |
 
 ### A fixpoint is order-independent only if every rule is monotone
 
@@ -713,21 +713,15 @@ measured cost:
 **When a game's shipped tiers need guessing, build the missing deductive
 rungs and re-grade by which rung a board needs; do not add an Unreasonable
 tier on a hunch.** Accept a board only when the ladder solves it uniquely
-with zero recursion, verified against a brute-force oracle. Exemplar for a
-candidate game that is not on a Latin square:
-[`undead/solver.ts`](../src/games/undead/solver.ts).
+with zero recursion, verified against a brute-force oracle.
 
 - **Exact counting** off a global tally that is an equality (`total` in
-  `undead.description.yaml`):
+  `undead.description.yaml`, the `count.value` kind):
   a type whose full count is placed is struck everywhere; a type whose
   candidate cells equal its remaining need forces them all; too few candidate
   cells is a contradiction.
-- **Depth-1 forcing** (`forcingPass`) hypothesizes one candidate and runs the
-  fixpoint, which is a solve from a hypothesis and so a Search (§ "Check,
-  Tactic, Search"): the tier that needs it is named Unreasonable and the hint
-  refuses there.
-- **Cap the ladder at the tier while grading** (`maxRung`). A board the tier
-  cannot use is rejected anyway.
+- **A solve from a hypothesis is a Search** (§ "Check, Tactic, Search"): a
+  tier that needs one is named Unreasonable and the hint refuses there.
 - **Count a candidate rung's firings on the boards the ladder stalls on
   before writing its words.** A rung a person would name first may decide
   nothing the others do not: Path's cut and reach rungs fired on none of
@@ -792,9 +786,8 @@ question (`t − 1`) first, and its doc says why it takes a closure and not a
   and export any bound they share from one place.** The rule is stated twice,
   once in the generator and once in `solveAtCap`, and a game's own tests
   exercise only the first: a `solveAtCap` wider than the tier it names still
-  deals correct boards. Exemplar: `EASY_MAX_ARC_PASSES` in
-  [`undead/solver.ts`](../src/games/undead/solver.ts), which both readers
-  import.
+  deals correct boards. A born game states such a bound once, as a
+  technique's `most`, which the deal and the grade both read.
 - **Strip each tier from the one below, and a board needs its tier by
   construction.** A board stripped until no clue can go at `t − 1` keeps a
   removal at `t` only where `t − 1` can no longer finish it, so one removal

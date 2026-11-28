@@ -318,7 +318,7 @@ const saidPlainly = (kind: StepTermKind): boolean =>
 
 /** The steps a `clause` or `clauses` term may speak, or null for any other
  * term. */
-const clauseOf = (kind: StepTermKind): readonly string[] | null =>
+export const clauseOf = (kind: StepTermKind): readonly string[] | null =>
   typeof kind !== "object" || Array.isArray(kind)
     ? null
     : "clause" in kind

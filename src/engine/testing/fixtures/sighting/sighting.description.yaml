@@ -60,6 +60,7 @@ play:
     letters: GZ
     pictures:
       paint: { 1: ghost, 2: zombie }
+      names: { 1: ghost, 2: zombie }
       pref: { kw: monsters, name: Monster representation }
   given:
     3: { glyph: " \\ ", paint: fall }

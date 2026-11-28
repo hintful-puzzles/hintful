@@ -1,13 +1,11 @@
 ## Next
 
-2.1e, the flip. Undead's born description is `undead-born-draft.yaml` here
-(game `undeadborn`): copy it to `src/engine/testing/fixtures/undeadborn/`
-to compile and deal it while working, never commit it there, and at the
-flip make it `undead.description.yaml` with game `undead`, its help, words,
-`says` and cases, and the hand-written modules deleted. What the flip must
-weigh: Unreasonable is the search tier (one answer the search proves, Normal
-short of it) where the hand-written game took depth-1 forcing; the keypad's
-G, V, Z (2.1b); the counts drawn beneath the board (2.1a).
+Tick 2.1 (Undead is born), then 2.2, Crossing (design.md § "Decisions"
+2): read its `gaps.md` entry against the tree first, since Undead's flip
+built a clue at the board drawn as a row of counts and picture names.
+Crossing's list is that clue as a panel struck as used; its walls are
+dealt apart from the answer. Split it into capabilities on fixtures, then
+the flip, as 2.1 was.
 
 ## 1. Design
 
@@ -25,10 +23,8 @@ description, cases, spec deltas, `npm run flip`, `play-smoke`,
 design.md § "What every group does"). In design.md § "Decisions" 2's
 order.
 
-- [ ] 2.1 Undead born. Read against `fd9ed95f9` (2026-11-28): met as
-      `gaps.md` says, and also a clue at the board with fields (Boats'
-      fleet, `tallying`), which the totals become in place of the three
-      sizes, and `sample.build.first` for the mirrors.
+- [x] 2.1 Undead born. Met beyond `gaps.md`: a clue at the board with
+      fields (`tallying`) and `sample.build.first` for the mirrors.
   - [x] 2.1a A clue at the board derived from the answer, drawn as a row
         of counts beneath the board (`play.counts`, `totaling`); a flip
         difference: Undead drew its totals above. Seen in the app at 2.1e.
@@ -41,7 +37,9 @@ order.
   - [x] 2.1d The deal, upstream's, on `sighting` and the draft: mirrors by
         chance, keeps by tier, sightlines filled first, Easy's passes
         (`most`); timed in design.md § "Decisions" 6.
-  - [ ] 2.1e The flip: words, cases, spec deltas, guides.
+  - [x] 2.1e The flip: words, cases, spec deltas, guides; what it built
+        beside is its commit's, what changed for a player design.md §
+        "What each flip changed for a player".
 - [ ] 2.2 Crossing born.
 - [ ] 2.3 Rome born.
 - [ ] 2.4 Magnets born.

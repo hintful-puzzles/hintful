@@ -9,7 +9,7 @@ import type { Partition } from "../../solve/describe-runtime.ts";
 import { rulesOf } from "../answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
-import { countedOf, countRecords } from "../counts.ts";
+import { countedOf } from "../counts.ts";
 import { type ClueMax, partKindsOf } from "../game-id.ts";
 import { gapKindsOf } from "../gaps.ts";
 import { boardGlyphs } from "../glyphs.ts";
@@ -177,7 +177,7 @@ export function fillSetup<C extends Clues<C>>(
     tallied !== null
       ? tallyBeneath(tallyCounts(b, tallied.kind, tallied.count), b.w)
       : counted !== null
-        ? countsBeneath(countRecords(b, counted).length)
+        ? countsBeneath(b.w)
         : null;
 
   /** The number on cell `c`, its kind and its index in the kind's list, or

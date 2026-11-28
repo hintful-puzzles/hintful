@@ -1387,8 +1387,8 @@
                 },
                 "pictures": {
                   "type": "object",
-                  "description": "Each value is drawn by the painter named, in place of its glyph: placed, as a piece filling its square; noted, small in a two-by-two grid; in a row of counts, as its record's piece (upstream Undead's monsters). The player's preference `pref`, pictures by default, draws the glyphs instead, and `A` switches it, so no glyph is typed by A. Every value the player places has a painter, from 1. Not raised, and with no empty square.",
-                  "required": ["paint", "pref"],
+                  "description": "Each value is drawn by the painter named, in place of its glyph: placed, as a piece filling its square; noted, small in a two-by-two grid; in a row of counts, as its record's piece (upstream Undead's monsters). The player's preference `pref`, pictures by default, draws the glyphs instead, and `A` switches it, so no glyph is typed by A. Every value the player places has a painter, from 1, and a name in `names`: what a hint calls it and its key's label on the keypad, capitalized. Not raised, and with no empty square.",
+                  "required": ["paint", "names", "pref"],
                   "additionalProperties": false,
                   "properties": {
                     "paint": {
@@ -1398,6 +1398,16 @@
                       },
                       "additionalProperties": {
                         "type": "string"
+                      }
+                    },
+                    "names": {
+                      "type": "object",
+                      "propertyNames": {
+                        "pattern": "^[1-9][0-9]*$"
+                      },
+                      "additionalProperties": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z ]*$"
                       }
                     },
                     "pref": {
@@ -1442,9 +1452,19 @@
             },
             "counts": {
               "type": "object",
-              "description": "Clues at the board the deal derives, each drawn as a row of counts beneath the board (`engine/fill/counts.ts`), by kind the field whose value is a value the player places: each record that value's piece and its last field's number, red where the rules break it. A press on a record's piece or number places its value in the selected square, as its key does.",
+              "description": "Clues at the board the deal derives, each drawn as a row of counts beneath the board (`engine/fill/counts.ts`), by kind the field whose value is a value the player places: each record that value's piece and its last field's number, red where the rules break it. A press on a record's piece or number places its value in the selected square, as its key does. The row is as wide as the board and its right margin, and a record whose value is all placed is gray.",
               "additionalProperties": {
                 "type": "string"
+              }
+            },
+            "countStyle": {
+              "type": "object",
+              "description": "The player's preference for how each count of the row of `counts` reads, by its key and name (upstream Undead's `count-style`): the total, how many are placed past it (negative while some are left), placed over total, or left to place over total, the default. Absent, a count is its total.",
+              "required": ["kw", "name"],
+              "additionalProperties": false,
+              "properties": {
+                "kw": { "type": "string" },
+                "name": { "type": "string" }
               }
             },
             "done": {

@@ -34,7 +34,8 @@ import { notesOf } from "./notes.ts";
 import { partBound } from "./values.ts";
 
 /** Refuses pictures (`numbers.pictures`) a board cannot draw: a painter no
- * description may name; values painted that are not 1 up, or an alphabet
+ * description may name; values painted that are not 1 up, or not those
+ * named, or an alphabet
  * they do not each have a letter of; a raised value, a block as tall as its
  * number; an empty square, which is a cross; and a letter A, whose key
  * switches the pictures. */
@@ -47,6 +48,11 @@ function checkPictures(numbers: PlayJson["numbers"]): void {
       throw new CompileError(`play numbers pictures: ${v}'s painter ${paint} is none`);
   if (!values.sort((a, b) => a - b).every((v, i) => v === i + 1))
     throw new CompileError("play numbers pictures: the values painted are not 1 up");
+  const named = Object.keys(pictures.names).map(Number);
+  if (named.length !== values.length || !values.every((v) => named.includes(v)))
+    throw new CompileError(
+      "play numbers pictures: the values named are not those painted",
+    );
   const letters = numbers?.letters;
   if (typeof letters === "string" && letters.length !== values.length)
     throw new CompileError(
@@ -139,13 +145,15 @@ const fixesItsValue = (e: Expr): boolean =>
  */
 /** Refuses `play.counts` that name no clue at the board the deal derives,
  * or whose records are not keyed by a field alone, before their count, of
- * values the player places. */
+ * values the player places; and a style of counts with no row to read. */
 function checkCounts(
   json: DescriptionJson,
   d: Description,
   measured: (e: Expr) => Expr,
 ): void {
   const p = json.play as PlayJson;
+  if (p.countStyle !== undefined && Object.keys(p.counts ?? {}).length === 0)
+    throw new CompileError("play countStyle: no row of counts to read");
   for (const [k, field] of Object.entries(p.counts ?? {})) {
     const c = d.clueKinds.get(k);
     const fields = [...(c?.fields.keys() ?? [])];

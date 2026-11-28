@@ -55,7 +55,7 @@ import {
 } from "./board.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
-import { countedOf, countRecords } from "./counts.ts";
+import { COUNT_STYLES, countedOf, countRecords, countStyleOf } from "./counts.ts";
 import type { DealtFillModule } from "./deal/context.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, glyphsIn } from "./desc.ts";
@@ -265,12 +265,18 @@ export function fillGame<C extends Clues<C> & object>(
     ...(!notes
       ? []
       : [
-          // The candidate walk refuses any regions but rows and columns.
-          noted(
-            autoPencilPref(
-              "When you place a number, remove it from pencil marks in its row and column",
-            ),
-          ),
+          // The candidate walk refuses any regions but rows and columns. A
+          // board where a placed value rules out none other (no unit, and no
+          // technique run as it is placed: Undead's) has nothing to remove.
+          ...(module.units.length === 0 && module.placing.length === 0
+            ? []
+            : [
+                noted(
+                  autoPencilPref(
+                    "When you place a number, remove it from pencil marks in its row and column",
+                  ),
+                ),
+              ]),
           noted(stickyPencilPref()),
           noted(pencilKeepHighlightPref()),
           noted(candidateReadingPref()),
@@ -288,6 +294,19 @@ export function fillGame<C extends Clues<C> & object>(
             get: (ui: FillUi) => (ui.pictures === false ? 1 : 0),
             set: (ui: FillUi, v: number) => {
               ui.pictures = v === 0;
+            },
+          } satisfies GamePref<FillUi>,
+        ]),
+    ...(play.countStyle === undefined
+      ? []
+      : [
+          {
+            ...play.countStyle,
+            type: "choices",
+            choices: [...COUNT_STYLES],
+            get: (ui: FillUi) => countStyleOf(play, ui),
+            set: (ui: FillUi, v: number) => {
+              ui.countStyle = v;
             },
           } satisfies GamePref<FillUi>,
         ]),

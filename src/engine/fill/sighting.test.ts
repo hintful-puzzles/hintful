@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import * as sighting from "../../generated/engine/testing/fixtures/sighting/sighting.compiled.ts";
 import { validateDesc } from "../contract/desc-error.ts";
+import { CELL, mark, phrase } from "../contract/hint-words.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { sights } from "../solve/describe-runtime.ts";
@@ -114,6 +115,25 @@ describe("an ID written as upstream undead.c's", () => {
   });
 });
 
+describe("a step's stripes beside the slots", () => {
+  it("hatches no clue for stripes on part of a row, as a sightline's are", () => {
+    // The square right of the middle mirror, the one striped square of
+    // its row: no line, so the clues at the row's ends are not its.
+    const words = phrase`${mark.this("stripes", CELL, [{ x: 2, y: 1 }], "square")}`;
+    const dr = new RecordingDrawing(colors);
+    game.redraw(dr, game.newDrawState(mirrored, TS), {
+      state: mirrored,
+      prev: null,
+      dir: 1,
+      ui: game.newUi(mirrored),
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: { words, highlights: { area: [], hatch: [], targets: [], marks: [] } },
+    } as never);
+    expect(dr.ops.filter((op) => op.op === "hatch")).toHaveLength(1);
+  });
+});
+
 describe("values only the deal places, on a board of numbers", () => {
   it("draws a mirror by its painter, as pictures and as letters alike", () => {
     const pictured = draw(mirrored);
@@ -138,7 +158,7 @@ describe("values only the deal places, on a board of numbers", () => {
 
   it("offers a key for each monster and none for a mirror", () => {
     const keys = game.requestKeys?.(p, mirrored) ?? [];
-    expect(keys.map((k) => k.label)).toEqual(["G", "Z", expect.anything()]);
+    expect(keys.map((k) => k.label)).toEqual(["Ghost", "Zombie", expect.anything()]);
     expect(game.requestKeys?.(p).map((k) => k.label)).toEqual(keys.map((k) => k.label));
   });
 

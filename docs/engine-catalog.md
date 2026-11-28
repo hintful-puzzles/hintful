@@ -882,7 +882,12 @@ the square (`render/layers/notes.ts`). A note's tile is a third larger than
 its slot, which a piece drawn in three quarters of its tile fills, as the
 monsters are (`monster.ts`); a painter that fills its whole tile would
 overrun its slot there. A painter takes its sizes from its tile alone, so
-a caller may draw it at any size. A value only the deal places
+a caller may draw it at any size. Each picture is named (`names`), and the
+name is the value everywhere a word stands for it: the hint says it with
+its article ("can only be a ghost", the vocabulary's `article`), and the
+keypad labels its key with it, capitalized (`glyphs.ts`'s `say` and
+`label`). A digit types the value it numbers whatever the alphabet, so 1,
+2 and 3 type G, V and Z. A value only the deal places
 (`play.given`, Undead's mirrors) is a piece on a board of numbers too,
 whatever the preference: it sits above every value the player places, so
 the keypad, the givens and the notes stop below it, and the domain may
@@ -1043,7 +1048,8 @@ Reach for it when your game has a pencil mode. It is the "pencil mode is
 on" glyph, the same in every game and in the same
 place: the canvas's top-right corner. The position is the engine's; a game
 picks its three palette indices (`PencilIndicatorStyle`) and finds the
-room. Exemplar: `undead/render.ts`.
+room. Exemplar: the fill engine's
+[`render/geometry.ts`](../src/engine/fill/render/geometry.ts).
 
 - **Reserve `Math.max(yourMargin, pencilIndicatorReach(ts))`.** The reach
   is the glyph plus both insets, and the glyph is clamped between 20 and 48
@@ -1199,7 +1205,9 @@ site, a module of `render/sites/` and a line of `render.ts`'s `SITES`.
 What a board draws beneath it, the tally or a row of counts (`counts.ts`,
 `play.counts`), is one `Beneath` the canvas makes room for: a board has
 one of them, and a site placing anything there takes its top left from
-`metrics.beneathAt`, so the drawing, the press and the canvas agree.
+`metrics.beneathAt`, so the drawing, the press and the canvas agree. A row
+of counts is laid out once for the widest of its styles (`countsLayout`),
+so switching the player's style (`play.countStyle`) never moves a record.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

@@ -57,7 +57,7 @@ const WIDE_BY_NATURE: Record<string, { reason: string; params: string[] }> = {
 const UNEVEN_FRAME: Record<string, string> = {
   boats: "The fleet is drawn in a panel below the grid.",
   crossing: "The list of numbers to place is drawn below the grid.",
-  undead: "The monster counts are drawn in a band above the grid.",
+  undead: "The monster counts are drawn in a row below the grid.",
   wordtrail: "The list of word lengths is drawn below the grid.",
 };
 
