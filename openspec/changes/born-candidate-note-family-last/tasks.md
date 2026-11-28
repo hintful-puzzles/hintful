@@ -2,7 +2,10 @@
 
 2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.3
 (Rome) goes on meanwhile: it needs nothing of Crossing's. Rome's next is
-the first of 2.3a–e not ticked. For 2.2f: the
+2.3b, planned in design.md § "Decisions" 10. For the flip: Rome's hint
+says a value with a verb ("it must point up", "the up marks in it"), the
+hand-written vocabulary's `be` and `note`, which a born game's `words:`
+does not yet carry. For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:

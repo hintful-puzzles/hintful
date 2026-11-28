@@ -203,6 +203,37 @@ panel; ruled out is left for one that fits no site through the selection.
 The hand-written hint names no number to the panel (`HintStep.reference`),
 and neither does the engine's yet.
 
+### 10. Rome's arrows are pieces that point, and are played by their way (2.3a, 2.3b)
+
+Rome is a board of numbers drawn as pictures with no preference: its
+values are arrows and nothing else reads them (2.3a). A painter that
+points (`Painter.points`) is what places its note on its side and what
+chooses a value by direction, so the drawing and the input read one
+statement; the description's `to` stays the rules' (where an arrow leads),
+which Rome's cases check agrees with the painters.
+
+The input, 2.3b's plan read against `4aef22eaf`, keeps upstream's and the
+hand-written game's controls, so no control changes for a player:
+
+- A board whose every piece points is played by a drag on the shared
+  select-or-drag gesture (`note-taking-cell.ts`, the arms Rome's and Map's
+  hand-written input use): a press commits nothing, the drag is `ui.drag`
+  (a board of numbers keeps no other), its way the dominant axis from the
+  pressed square to the one under the pointer, none back on it; a release
+  with a way sets the value whose piece points so (right button or notes
+  mode: toggles that note), back on the square clears it, and one that
+  commits nothing is `tapNoteTakingCell`. A way the cell's domain does not
+  hold reads as none. The preview is the numbers input's `previewed`, the
+  render's existing hook, so the live errors read the dragged board.
+- Keys: `glyphs.ts` gives a pointing board's values the numpad digit of
+  their way (8 up, 2 down, 4 left, 6 right) as `keyCode` and `typed`, and an
+  arrow as each key's `label`, so the keypad, typing and the hint's gesture
+  agree. Enter arms the selection for an arrow key (`ARMED`, drawn as a `?`
+  in the entry color), Space for a note on an empty square (the `?` in
+  pencil) or clears where it is armed already; on this board Enter does not
+  toggle notes mode, which the Marks key (P) does, as in the hand-written
+  game.
+
 ## What each flip changed for a player
 
 Filled in by each flip.
