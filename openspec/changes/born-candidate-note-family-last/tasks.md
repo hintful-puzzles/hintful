@@ -3,8 +3,8 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a is in, 2.5b1 is next (design.md § "Decisions" 16 is
-its model). Rome is born (2.3e). For 2.2f: the
+on meanwhile: 2.5a and 2.5b1 are in, 2.5b2 is next (design.md §
+"Decisions" 16 is its model, and 17 how its notes stay full). Rome is born (2.3e). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -113,9 +113,8 @@ order.
         each on `holding` (which gains `marks: cand` and the walk's
         `steps:` wording then: the compiler refuses notes whose `clean` is
         unworded on a board with no row or column):
-    - [ ] 2.5b1 Notes full from the deal, and a cell narrowed to one set
-          holding it (`engine/fill/notes.ts`, which today reads no notes
-          as none noted).
+    - [x] 2.5b1 Notes full from the deal, and a cell narrowed to one set
+          holding it (the mark's `full`, design.md § "Decisions" 17).
     - [ ] 2.5b2 The features drawn: a slot a feature, a letter where every
           candidate has it, a cross where none has, nothing between
           (hand-written `subsets/render.ts` for the look).
@@ -125,7 +124,9 @@ order.
   - [ ] 2.5c The band of every value: struck where placed, a spotlight, a
         strike from the cell in focus, and the keyboard into it.
   - [ ] 2.5d Every value once (the sample), and upstream's ID.
-  - [ ] 2.5e The flip.
+  - [ ] 2.5e The flip. Weigh: full notes offer auto-pencil (a placed set
+        struck from every other square, which the hand-written game never
+        did), and its words say "row and column".
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
 
 ## 3. Finish

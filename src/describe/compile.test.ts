@@ -1031,6 +1031,38 @@ describe("what the fill board reads of a description", () => {
     );
   });
 
+  it("refuses full on a mark that is no notes, and a hint reading beside full notes", () => {
+    const source = "src/engine/testing/fixtures/holding/holding.description.yaml";
+    const holding = sources.get(source);
+    if (holding === undefined || !isFormal(holding)) throw new Error("no holding");
+    type Json = {
+      marks: Record<string, { sort: string; notation: string; full?: true }>;
+      play: { hintNotes?: string };
+    };
+    const compileHolding = (over: (j: Json) => void) => {
+      const j = structuredClone(holding) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileHolding(() => {})).toContain('"fullNotes":true');
+    expect(() =>
+      compileHolding((j) => {
+        j.marks["seen"] = { sort: "edge", notation: "set of range(0, 2)", full: true };
+      }),
+    ).toThrow(/marks seen: full, and it is no candidate notes/);
+    expect(() =>
+      compileHolding((j) => {
+        j.play.hintNotes = "implicit";
+      }),
+    ).toThrow(/hintNotes: the notes are full/);
+  });
+
   it("refuses {tally}, which only the library's fish is given, in a game's own wording", () => {
     const source = "src/games/solo/solo.description.yaml";
     const solo = sources.get(source);

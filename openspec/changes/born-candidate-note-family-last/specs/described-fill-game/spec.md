@@ -726,3 +726,22 @@ error color.
 
 - **WHEN** the empty set is placed beside {B} with no horseshoe between
 - **THEN** a cross is drawn in the error color in their gap
+
+### Requirement: A born game's notes may be full from the deal
+
+A born game's candidate notes MAY be declared full: what each open cell
+can still hold, never a cell left unnoted. Every open cell's notes SHALL
+be its domain as dealt and again wherever its value is cleared; a move
+that leaves a cell one note SHALL place that value there; a strike that
+would leave an open cell no note SHALL leave its notes as they were; and
+the game SHALL offer no hint-notes preference.
+
+#### Scenario: Narrowed to one set
+
+- **WHEN** a `holding` square's notes are struck down to {A}
+- **THEN** the square holds {A}
+
+#### Scenario: A set cleared
+
+- **WHEN** a `holding` square's set is cleared
+- **THEN** its notes are every set again

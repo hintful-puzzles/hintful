@@ -1274,6 +1274,10 @@
               "while": {
                 "$ref": "#/$defs/formula",
                 "description": "For the cell mark that names one clue: what it needs to stand, read of the cell `at` on the board's values. An edit drops every mark whose `while` the values it leaves break (Tents' link needs `value(at) = 1`)."
+              },
+              "full": {
+                "const": true,
+                "description": "For candidate notes: they are what each open square can still hold, never a square left unnoted (Subsets'). Every open square's are its whole domain as dealt and again where its value is cleared, a square narrowed to one value holds it, and a strike that would leave a square nothing is no strike there. The hint reads them as written, so the board has no hint-notes preference (`play.hintNotes`)."
               }
             }
           }

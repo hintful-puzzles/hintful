@@ -396,6 +396,22 @@ to be taught. What changes for a player, listed again at the flip:
 - Turning a letter back to unknown gives back every set of the other half
   the cell's other letters allow, a set ruled out in the band among them.
 
+### 17. Full notes are settled after every move (2.5b1)
+
+A board whose notes mark says `full` keeps every open cell noted, so the
+walk, Mark-all and the mistake check read it unchanged, never meeting a
+cell with none. One step after every move (`settleFullNotes`) keeps the
+promise for every kind of move at once: a cell left one note holds that
+value, a cell whose value was cleared takes its whole domain back, and a
+strike that would leave an open cell nothing leaves it as it was. That
+last one is because an empty set of notes is the one state the shared
+readers take for never noted (`impliedNotes`, `anyEmptyLacksNotes`), and
+on such a board only a contradiction reaches it (Mark-all's clean around
+two wrongly placed sets), which the mistake check shows anyway. A walk's
+strike that leaves one set places it, so the walk owes no single after it.
+
+## What each flip changed for a player
+
 Filled in by each flip.
 
 ### Undead (2.1e)

@@ -17,6 +17,9 @@ answer:
   # 2, since the marks hold no value 0.
   value: { sort: cell, domain: "range(1, 4)" }
 given: [value]
+# The sets a square can still hold, every one from the deal.
+marks:
+  cand: { sort: cell, notation: "set of range(1, 4)", full: true }
 define:
   letters(d): "bits(d - 1)"
   holds(x, y): "x != y and letters(y) subset letters(x)"
@@ -61,3 +64,27 @@ techniques:
   - kind: one.cell
     as: lone
     tier: Easy
+# The walk's steps, worded since a placed set rules itself out of every
+# other square and no row or column says so.
+steps:
+  clean:
+    ring: cell
+    move: "any set already placed in another square"
+  note:
+    ring: cell
+    terms: { unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "No set is placed yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: isn't | aren't} placed yet"
+        move: "pencil {vs: it | them} in"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other set is placed"
+    move: "{ring} can only be {n}"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "other square"

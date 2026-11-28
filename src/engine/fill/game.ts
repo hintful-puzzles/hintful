@@ -292,7 +292,8 @@ export function fillGame<C extends Clues<C> & object>(
               ]),
           noted(stickyPencilPref()),
           noted(pencilKeepHighlightPref()),
-          noted(candidateReadingPref()),
+          // Full notes leave no square unnoted for the hint to read.
+          ...(play.fullNotes === true ? [] : [noted(candidateReadingPref())]),
         ]),
     ...(play.numbers?.pictures?.pref === undefined
       ? []

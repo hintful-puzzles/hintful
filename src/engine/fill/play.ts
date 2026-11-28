@@ -169,6 +169,11 @@ export interface FillPlay {
   /** Whether a board of numbers keeps the player's candidate notes, a set of
    * values an open cell (`notes.ts`): the description's mark of them. */
   readonly notes?: true;
+  /** Whether the notes are what each open cell can still hold, never a cell
+   * left unnoted (the mark's `full`, Subsets'): dealt as its domain, given
+   * back whole where a value is cleared, and a cell narrowed to one value
+   * holding it (`notes.ts`'s `settleFullNotes`). */
+  readonly fullNotes?: true;
   /** Where the board keeps notes, how its hint reads a cell with none until
    * the player chooses (`candidate-hint.ts`'s `CandidateReading`): the
    * convention, `populate`, where the description says nothing. */

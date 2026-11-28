@@ -125,7 +125,50 @@ export function fillMoveOf(move: unknown, context: string): FillMove {
 }
 
 /** The board after `move`. */
-export const applyMove = <C>(
+export function applyMove<C>(
+  module: LadderedFillModule<C>,
+  board: FillBoard<C>,
+  move: FillMove,
+): FillBoard<C> {
+  const after = applyAnyMove(module, board, move);
+  return module.play?.fullNotes === true
+    ? settleFullNotes(module, board, after)
+    : after;
+}
+
+/**
+ * `after`, a move's board from `before`, on a board whose notes are what
+ * each open cell can still hold: a cell narrowed to one value holds it, a
+ * cell cleared of its value can hold its whole domain again, and a strike
+ * that would leave an open cell nothing keeps the notes it had, since a
+ * cell with no notes would read as one never noted.
+ */
+function settleFullNotes<C>(
+  module: LadderedFillModule<C>,
+  before: FillBoard<C>,
+  after: FillBoard<C>,
+): FillBoard<C> {
+  const notes = after.pencil;
+  if (notes === null) return after;
+  const sp = spaceOf(module, after);
+  const pencil = notes.slice();
+  const narrowed: number[] = [];
+  for (const c of sp.cells) {
+    if (after.fixed[c] || after.values[c] !== 0) continue;
+    if (pencil[c] === 0) {
+      const had = before.values[c] === 0 ? (before.pencil?.[c] ?? 0) : 0;
+      pencil[c] = had !== 0 ? had : module.domainOf(sp, after.dealt, c);
+    }
+    if ((pencil[c] & (pencil[c] - 1)) === 0)
+      narrowed.push(c, 31 - Math.clz32(pencil[c]));
+  }
+  const settled = { ...after, pencil };
+  return narrowed.length === 0
+    ? settled
+    : applyEdit(module, settled, { set: narrowed });
+}
+
+const applyAnyMove = <C>(
   module: LadderedFillModule<C>,
   board: FillBoard<C>,
   move: FillMove,

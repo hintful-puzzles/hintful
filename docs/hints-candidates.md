@@ -68,7 +68,7 @@ dialect of its own (§ "Moves or notes outside the Latin dialect").
 | A premise names everything its deduction reads | you write a technique's terms, a reason or its words |
 | Persist, populate, and the moves | you add the note moves, the opening steps or the notes half of `findMistakes` |
 | A populate step never resets notes | you write a fill-all move or a Mark-all press |
-| Two readings of an unmarked cell | you add the `hint-notes` preference, choose its default, or a step rests on a cell with no notes |
+| Two readings of an unmarked cell | you add the `hint-notes` preference, choose its default, a step rests on a cell with no notes, or your notes start full |
 | – Joining the preference | you add the `hint-notes` preference to a game |
 | – Choosing the default | you set the reading `newUi` starts on |
 | – What the walk folds, and what a step owes it | a step under the implicit reading rests on a cell with no notes |
@@ -582,6 +582,13 @@ note-less cell is folded", "A game states the reading it starts on".
   cell it outlines or `reads`, one `pencilAdd` leg each in the engine's
   words, and a note-less cell whose regions hold every other value is the
   `regionsFull` single, narrated as that.
+
+A born board whose notes are what a cell can still hold, never a jotting
+(Subsets', where the letters drawn are a view of them), has no unmarked
+cell and so neither reading: its notes mark says `full`, and
+`settleFullNotes` in [`engine/fill/notes.ts`](../src/engine/fill/notes.ts)
+keeps every open cell noted after each move. A walk's strike that narrows
+a cell to one value places it, so the walk owes no single after it.
 
 ### Joining the preference
 

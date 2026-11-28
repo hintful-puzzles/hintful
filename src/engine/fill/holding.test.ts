@@ -11,6 +11,7 @@ import type { DrawOp } from "../testing/recording-drawing.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
 import { paramSpaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
+import type { FillMove } from "./notes.ts";
 import { COL_INK } from "./render/palette.ts";
 
 const game = fillGame("holding", holding);
@@ -102,5 +103,57 @@ describe("a horseshoe", () => {
     expect(text).toContain("∪");
     expect(text).toContain("∩");
     expect(text).toContain("⊂");
+  });
+});
+
+describe("notes full from the deal", () => {
+  // Every set, bits 1 to 4.
+  const EVERY = 0b11110;
+  const open = (hidden: readonly number[]) =>
+    game.newState(PARAMS, descOf(ANSWER, hidden));
+  const strike = (c: number, ...sets: number[]): FillMove => ({
+    type: "pencilStrike",
+    marks: sets.map((n) => ({ x: c % 2, y: Math.floor(c / 2), n })),
+  });
+  const play = (hidden: readonly number[], ...moves: FillMove[]) =>
+    moves.reduce((b, m) => game.executeMove(b, m), open(hidden));
+
+  it("are every set in each open square as dealt, and none in a given one", () => {
+    expect(Array.from(open([0, 3]).pencil ?? [])).toEqual([EVERY, 0, 0, EVERY]);
+  });
+
+  it("place the one set a square is narrowed to", () => {
+    const b = play([0, 3], strike(0, 1, 3, 4));
+    expect(b.values[0]).toBe(2);
+    expect(b.pencil?.[0]).toBe(0);
+    // Two left stay notes.
+    expect(play([0, 3], strike(0, 1, 4)).pencil?.[0]).toBe(0b01100);
+  });
+
+  it("give every set back to a square whose set is cleared", () => {
+    const b = play([0, 3], strike(0, 1, 4), { set: [0, 3] }, { set: [0, 0] });
+    expect(b.values[0]).toBe(0);
+    expect(b.pencil?.[0]).toBe(EVERY);
+  });
+
+  it("are not struck to nothing", () => {
+    const b = play([0, 3], strike(0, 1, 4), strike(0, 2, 3));
+    expect(b.values[0]).toBe(0);
+    expect(b.pencil?.[0]).toBe(0b01100);
+  });
+
+  it("leave no square unnoted, so no hint-notes preference is offered", () => {
+    expect(game.prefs?.map((p) => p.kw)).toEqual([
+      "auto-pencil",
+      "sticky-pencil-mode",
+      "pencil-keep-highlight",
+    ]);
+  });
+
+  it("are finished by the walk's strike alone where it leaves one set", () => {
+    const b = open([0]);
+    const plan = game.hint.plan(b);
+    if (!plan.ok) throw new Error(`no plan: ${JSON.stringify(plan)}`);
+    expect(game.status(game.executeMove(b, plan.steps[0].move))).toBe("solved");
   });
 });

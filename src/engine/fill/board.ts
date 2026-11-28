@@ -387,7 +387,14 @@ export function newBoard<C>(
     values,
     fixed,
     mark: new Int32Array(w * h).fill(-1),
-    pencil: module.play?.notes === true ? new Int32Array(w * h) : null,
+    pencil:
+      module.play?.notes !== true
+        ? null
+        : module.play.fullNotes === true
+          ? Int32Array.from({ length: w * h }, (_, c) =>
+              values[c] === 0 ? module.domainOf(sp, dealt, c) : 0,
+            )
+          : new Int32Array(w * h),
     done: Object.fromEntries(
       Object.keys(module.play?.done ?? {}).map((k) => [
         k,

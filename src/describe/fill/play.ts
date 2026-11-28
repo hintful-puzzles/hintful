@@ -453,7 +453,7 @@ export function playOf(
   for (const id of askBefore ?? [])
     if (glance?.includes(id))
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
-  const { notes, distinctParts } = notesOf(json, d, env);
+  const { notes, fullNotes, distinctParts } = notesOf(json, d, env);
   checkSigns(p, d, env);
   checkGaps(p, d, env);
   // A clue is marked done by a press where it is drawn, and the engine finds
@@ -509,6 +509,7 @@ export function playOf(
     ...rest,
     ...(whole === undefined ? {} : { whole: { part: whole.part } }),
     ...(notes ? { notes } : {}),
+    ...(fullNotes ? { fullNotes } : {}),
     ...(dotted ? { dotted } : {}),
     ...(wash === undefined
       ? {}

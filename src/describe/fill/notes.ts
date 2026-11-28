@@ -15,16 +15,26 @@ import { parse } from "../expr.ts";
  * Whether the board keeps notes, and the dealt partitions whose parts the
  * walk of the notes reads. Refuses a technique the walk cannot name a step
  * of, notes on a board of buttons, a strike on a board of numbers that
- * keeps none, and hint notes on a board without them.
+ * keeps none, hint notes on a board without them or whose notes are full,
+ * and `full` on a mark that is no candidate notes.
  */
 export function notesOf(
   json: DescriptionJson,
   d: Description,
   env: Env,
-): { notes: boolean; distinctParts: string[] } {
+): { notes: boolean; fullNotes: boolean; distinctParts: string[] } {
   const p = json.play;
   // Notes are typed, a key a value, so only a board of numbers keeps them.
-  const notes = noteMarkOf(json) !== null;
+  const mark = noteMarkOf(json);
+  const notes = mark !== null;
+  for (const [name, m] of Object.entries(json.marks ?? {}))
+    if (m.full === true && name !== mark)
+      throw new CompileError(`marks ${name}: full, and it is no candidate notes`);
+  const fullNotes = mark !== null && json.marks?.[mark]?.full === true;
+  if (fullNotes && p?.hintNotes !== undefined)
+    throw new CompileError(
+      "play hintNotes: the notes are full, so the hint never reads a square with none",
+    );
   // The walk of notes names a step by the arm that held, each a rung the
   // description gives the technique, or by its one rung.
   if (notes)
@@ -65,7 +75,7 @@ export function notesOf(
     );
   const distinctParts = notes ? distinctPartsOf(json, env) : [];
   if (notes) checkWalkSteps(json, d, distinctParts);
-  return { notes, distinctParts };
+  return { notes, fullNotes, distinctParts };
 }
 
 /**
