@@ -17,8 +17,8 @@
  *
  * Two rules hold here:
  *
- * - **every export is prefixed with its game's id** — `signpostArrowDim`,
- *   `undeadGhost`. `palette-source.test.ts` derives each game's allowed colors
+ * - **every export is prefixed with its game's id** — `signpostArrowDim`.
+ *   `palette-source.test.ts` derives each game's allowed colors
  *   from that prefix, so the prefix is load-bearing, not decoration;
  * - **an absolute value here is an exception and says why.** There is none.
  *   A new one says what it means to the player, and why no meaning and no
@@ -266,29 +266,3 @@ function inGamut(c: Color): Color {
     Math.max(0, Math.min(1, c[2])),
   ];
 }
-
-// --- undead -------------------------------------------------------------
-
-/**
- * Undead's three monsters. Upstream derives all three from the background's
- * **red channel alone**, which is why they are a matched family rather than three
- * independent colors: ghost cyan, zombie green, vampire pink, all at the same
- * brightness so no monster looks more important than another.
- */
-export const undeadGhost = (background: Color): Color => [
-  background[0] * 0.5,
-  background[0],
-  background[0],
-];
-/** @see undeadGhost */
-export const undeadZombie = (background: Color): Color => [
-  background[0] * 0.5,
-  background[0],
-  background[0] * 0.5,
-];
-/** @see undeadGhost */
-export const undeadVampire = (background: Color): Color => [
-  background[0],
-  background[0] * 0.9,
-  background[0] * 0.9,
-];

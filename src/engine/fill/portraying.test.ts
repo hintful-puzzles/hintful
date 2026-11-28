@@ -9,10 +9,10 @@
 import { describe, expect, it } from "vitest";
 import * as portraying from "../../generated/engine/testing/fixtures/portraying/portraying.compiled.ts";
 import * as sighting from "../../generated/engine/testing/fixtures/sighting/sighting.compiled.ts";
-import { undeadGhost, undeadVampire, undeadZombie } from "../color/palette-games.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import { randomNew } from "../random/index.ts";
+import { ghostColor, vampireColor, zombieColor } from "../render/pieces/monster.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
@@ -33,7 +33,7 @@ const fixedAt = [...b.fixed].indexOf(1);
 /** The palette slot of `color`, the one a painter takes for it. */
 const slotOf = (color: readonly number[]): number =>
   colors.findIndex((c) => c.every((x, i) => Math.abs(x - color[i]) < 1e-9));
-const bodies = [undeadGhost, undeadVampire, undeadZombie].map((c) =>
+const bodies = [ghostColor, vampireColor, zombieColor].map((c) =>
   slotOf(c(DEFAULT_BACKGROUND)),
 );
 

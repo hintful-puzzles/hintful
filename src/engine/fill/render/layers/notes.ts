@@ -8,7 +8,7 @@
 import { drawStrike, glyphFont } from "../../../render/draw.ts";
 import type { FillBoard } from "../../board.ts";
 import type { FillUi } from "../../play.ts";
-import type { Placed } from "../palette.ts";
+import { COL_INK, type Placed } from "../palette.ts";
 import { BALL, NOTES_MODE } from "../tile-word.ts";
 import type { TileFrame } from "./layer.ts";
 
@@ -56,10 +56,17 @@ export function paintNotes(
           COL_PENCIL,
           glyph(shown[j]),
         );
+      // A piece's own ink is its outline's, which a strike through it
+      // keeps; a glyph's is the pencil's.
       if (struck & (1 << shown[j]))
-        drawStrike(dr, middle, Math.floor((box.w * 2) / 3), COL_PENCIL, tile, {
-          slant: true,
-        });
+        drawStrike(
+          dr,
+          middle,
+          Math.floor((box.w * 2) / 3),
+          placed === null ? COL_PENCIL : COL_INK,
+          tile,
+          { slant: true },
+        );
     });
     return;
   }

@@ -25,7 +25,7 @@ import {
   stickyPencilPref,
 } from "../hint/pencil-prefs.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
-import { isMouseDown, newCursor } from "../input/pointer.ts";
+import { LEFT_BUTTON, newCursor, stripModifiers } from "../input/pointer.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import { searchTiers } from "../solve/answer-search.ts";
@@ -500,13 +500,17 @@ export function fillGame<C extends Clues<C> & object>(
       return (typeof key === "string" ? key : key[0]).charCodeAt(0);
     return boardGlyphs(module, spaceOf(module, b), b.dealt).keyCode(v);
   };
-  /** The input, a press on a record of the row of counts typing its value's
-   * key (`counts.ts`). */
+  /** The input, a left press on a record of the row of counts typing its
+   * value's key (`counts.ts`); a right one is the right button's anywhere,
+   * which under the sticky preference switches notes on and off. */
   const interpretMove =
     counted === null
       ? inputs.interpretMove
       : (b: FillBoard<C>, ui: FillUi, ds: FillDrawState, p: Point, button: number) => {
-          const v = isMouseDown(button) ? render.countPressed(b, ds, p) : null;
+          const v =
+            stripModifiers(button) === LEFT_BUTTON
+              ? render.countPressed(b, ds, p)
+              : null;
           return inputs.interpretMove(b, ui, ds, p, v === null ? button : keyOf(b, v));
         };
   const newUi = (b: FillBoard<C>): FillUi => {

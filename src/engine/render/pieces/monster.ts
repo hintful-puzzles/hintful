@@ -8,11 +8,35 @@
  */
 
 import { INK } from "../../color/palette.ts";
-import { undeadGhost, undeadVampire, undeadZombie } from "../../color/palette-games.ts";
 import { COL_BACKGROUND, COL_ERROR } from "../../color/roles.ts";
 import type { GameDrawing } from "../../contract/game.ts";
 import type { Color, Point } from "../../contract/types.ts";
 import type { Painter } from "./painter.ts";
+
+/**
+ * The three monsters' colors. Upstream derives all three from the
+ * background's **red channel alone**, which is why they are a matched family
+ * rather than three independent colors: ghost cyan, zombie green, vampire
+ * pink, all at the same brightness so no monster looks more important than
+ * another.
+ */
+export const ghostColor = (background: Color): Color => [
+  background[0] * 0.5,
+  background[0],
+  background[0],
+];
+/** @see ghostColor */
+export const zombieColor = (background: Color): Color => [
+  background[0] * 0.5,
+  background[0],
+  background[0] * 0.5,
+];
+/** @see ghostColor */
+export const vampireColor = (background: Color): Color => [
+  background[0],
+  background[0] * 0.9,
+  background[0] * 0.9,
+];
 
 const f = Math.floor;
 const idiv = (a: number, b: number): number => Math.trunc(a / b);
@@ -147,9 +171,9 @@ const monster = (color: (background: Color) => Color, draw: Drawn): Painter => (
   },
 });
 
-export const ghostPiece: Painter = monster(undeadGhost, ghost);
-export const vampirePiece: Painter = monster(undeadVampire, vampire);
-export const zombiePiece: Painter = monster(undeadZombie, zombie);
+export const ghostPiece: Painter = monster(ghostColor, ghost);
+export const vampirePiece: Painter = monster(vampireColor, vampire);
+export const zombiePiece: Painter = monster(zombieColor, zombie);
 
 /** A mirror, a stroke a sixteenth of the tile thick from a quarter in on
  * either side: falling to the right (`\`) where `falls`, else rising. */
