@@ -1219,7 +1219,10 @@ where a record may be written and where the deal read it from are one
 statement. Its hint gesture plays each tap and key through the input on a
 copy of the `Ui`, since a value typed moves the selection: a gesture worked
 out by the note-taking cell's rules taps the next square again, which
-deselects it.
+deselects it. Where `play.along.panel` names a record and a site, the list
+is also the game's reference aid (`record-panel.ts`): what it calls fitting
+is `AlongInput.fits`, where `take` would write the record, and a pick is
+`take`, so the panel, the list's press and the board cannot disagree.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

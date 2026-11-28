@@ -367,3 +367,97 @@ describe("a hint's gesture", () => {
     }
   });
 });
+
+describe("the list as a reference aid", () => {
+  const aid = (() => {
+    const { reference } = game;
+    if (reference === undefined) throw new Error("no reference aid");
+    return reference;
+  })();
+  /** Each number's label and status in the panel, by section. */
+  const statuses = (b: Board, ui: FillUi) =>
+    aid
+      .model(b, ui)
+      .sections.map((s) => [s.heading, s.items.map((i) => `${i.label} ${i.status}`)]);
+
+  it("lists the numbers by length, titled by the description's noun", () => {
+    expect(aid.title).toBe("Numbers");
+    const g = playing();
+    expect(statuses(empty, g.ui)).toEqual([
+      ["2 digits", ["21 outstanding", "34 outstanding"]],
+      [
+        "3 digits",
+        [
+          "366 outstanding",
+          "726 outstanding",
+          "813 outstanding",
+          "847 outstanding",
+          "961 outstanding",
+        ],
+      ],
+      ["4 digits", ["2591 outstanding"]],
+    ]);
+    expect(aid.model(empty, g.ui).instructions).toBe(
+      "Select a square to see the numbers that fit its runs. Tap one to pick it up.",
+    );
+  });
+
+  it("says which fit a run through the selected square, as a press would write them", () => {
+    const g = playing(holding(7, 8));
+    g.tap(0);
+    const model = aid.model(g.board(), g.ui);
+    expect(model.instructions).toBe(
+      "The numbers that fit a run through the selected square. Tap one that fits to write it in.",
+    );
+    const fits = model.sections
+      .flatMap((s) => s.items)
+      .filter((i) => i.status === "outstanding")
+      .map((i) => i.label);
+    expect(fits).toEqual(["21", "34", "2591"]);
+  });
+
+  it("with no square typed into, says which fit any run; one none can read is broken", () => {
+    // 8 starts two runs, 9 another, and the last row reads 3?1.
+    const g = playing(holding(7, 8, 10, 9, 17, 3, 19, 1));
+    const of = (status: string) =>
+      aid
+        .model(g.board(), g.ui)
+        .sections.flatMap((s) => s.items)
+        .filter((i) => i.status === status)
+        .map((i) => i.label);
+    const fitting = ["21", "34", "813", "847", "961", "2591"];
+    expect(of("outstanding")).toEqual(fitting);
+    expect(of("conflict")).toEqual(["366", "726"]);
+    // On notes, the selection is not typed into.
+    g.tap(0);
+    g.key(PENCIL_MODE_BUTTON);
+    expect(of("outstanding")).toEqual(fitting);
+  });
+
+  it("marks a number the board holds placed, and one read twice in conflict", () => {
+    const placed = holding(7, 8, 8, 4, 9, 7);
+    const item = (b: Board, label: string) =>
+      aid
+        .model(b, game.newUi(b))
+        .sections.flatMap((s) => s.items)
+        .find((i) => i.label === label)?.status;
+    expect(item(placed, "847")).toBe("placed");
+    const twice = holding(0, 2, 1, 1, 3, 2, 8, 1);
+    expect(item(twice, "21")).toBe("conflict");
+  });
+
+  it("writes a picked number in through the selection, or holds it", () => {
+    const g = playing();
+    g.tap(7);
+    const edit = aid.select(g.board(), g.ui, String(N847));
+    expect(edit).toEqual({ set: [7, 8, 8, 4, 9, 7] });
+    const h = playing();
+    expect(aid.select(h.board(), h.ui, String(N813))).toBe(UI_UPDATE);
+    expect(aid.model(h.board(), h.ui).selected).toBe(String(N813));
+    expect(aid.watches(h.ui)).toContain(`|${N813}`);
+    expect(aid.select(h.board(), h.ui, null)).toBe(UI_UPDATE);
+    expect(h.ui.held).toBe(NONE_HELD);
+    expect(aid.select(h.board(), h.ui, null)).toBeNull();
+    expect(aid.select(h.board(), h.ui, "99")).toBeNull();
+  });
+});

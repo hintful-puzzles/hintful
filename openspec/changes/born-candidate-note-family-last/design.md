@@ -189,6 +189,20 @@ its hint is dismissed by a press outside the squares it is about
 press; and its `keepTrack` follows a whole-run step typed a digit at a
 time.
 
+### 9. The Numbers panel is the list's, in the description's words (2.2e)
+
+The panel is declared by what a record and a site are called
+(`play.along.panel`); its title is the record's plural, a heading's member
+is `words.value` and a square `words.cell`, so a description writes two
+words and no sentence. What it calls fitting is `AlongInput.fits`, the
+test `take` writes by, and a pick is `take`, so the panel cannot offer a
+number the list's press would not write. Placed and broken are the list's
+strike and red (`recordHolds`, the live errors). A number no site can read
+is broken, by the rules, before it is ruled out, as in the hand-written
+panel; ruled out is left for one that fits no site through the selection.
+The hand-written hint names no number to the panel (`HintStep.reference`),
+and neither does the engine's yet.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

@@ -1011,6 +1011,9 @@ Game controls panel and does not block play. The requirement is the
 reference-aid one in [`ts-engine`](../openspec/specs/ts-engine/spec.md).
 Exemplars: [`dominosa/index.ts`](../src/games/dominosa/index.ts) for pieces,
 [`wordtrail/dictionary.ts`](../src/games/wordtrail/dictionary.ts) for words.
+A described board of numbers with a list typed along its sites declares one
+in two words, `play.along.panel` (`engine/fill/record-panel.ts`), and writes
+no code for it.
 
 - **`Game.reference` is one object: `title`, `model` and `select`.** The
   title names what the aid is ("Dominoes", "Dictionary"); it labels the

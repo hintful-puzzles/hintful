@@ -1,9 +1,10 @@
 ## Next
 
-2.2e, the Numbers panel, then 2.2f. 2.2f waits on the owner's answer to
-design.md § "Decisions" 7. For 2.2e: the hand-written panel is
-`src/games/crossing/numbers.ts`; its "Fits" is `along.ts`'s `siteFor` and
-`fitsAlong`, and a press on a number there is `AlongInput.take`. For 2.2f:
+2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.3
+(Rome) goes on meanwhile: it needs nothing of Crossing's. For 2.2f: the
+draft's `play.along` gains `panel: { record: number, site: run }` and its
+`words:` `value: digit`, which the panel's headings read, and
+`src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
 Crossing's draft techniques were checked sound with two records, which no
 board answers (`docs/solver-and-generator.md`, the records bullet); check
 them again, now a record a line. The draft deals once it has `play:` (with
@@ -62,8 +63,9 @@ order.
   - [x] 2.2d Typing along a run, a record placed whole from the list, the
         runs washed (`play.along`, on `running`, design.md § "Decisions"
         8). In the app at 2.2f.
-  - [ ] 2.2e The Numbers panel: the list as a reference aid, searched and
-        filtered by what fits the selection.
+  - [x] 2.2e The Numbers panel: the list as a reference aid, searched and
+        filtered by what fits the selection (`play.along.panel`, on
+        `running`, design.md § "Decisions" 9). In the app at 2.2f.
   - [ ] 2.2f The flip.
 - [ ] 2.3 Rome born.
 - [ ] 2.4 Magnets born.

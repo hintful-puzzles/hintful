@@ -9,6 +9,8 @@
 # that names no game.
 game: running
 produces: numbers
+words:
+  value: digit
 sizes:
   # A 2x2 opens one square, alone, and its keep refuses every layout.
   w: { min: 3, max: 9 }
@@ -52,6 +54,8 @@ play:
   along:
     advance: { kw: auto-advance, name: Typing a digit moves the selection along its run }
     wash: { kw: highlight-runs, name: Wash the runs through the selected square }
+    # The list is also a reference aid, its numbers filtered by what fits.
+    panel: { record: number, site: run }
   boards: [5x4]
   hintMarks:
     ring: the square the step decides.

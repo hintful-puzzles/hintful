@@ -104,6 +104,7 @@ import {
   newFillUi,
 } from "./play.ts";
 import { listedOf, listRecords } from "./record-list.ts";
+import { recordPanel } from "./record-panel.ts";
 import { PLACE_ANIM_TIME } from "./render/tile.ts";
 import {
   type FillDrawState,
@@ -527,7 +528,8 @@ export function fillGame<C extends Clues<C> & object>(
       return (typeof key === "string" ? key : key[0]).charCodeAt(0);
     return boardGlyphs(module, spaceOf(module, b), b.dealt).keyCode(v);
   };
-  const takeRecord = typed?.takeRecord ?? null;
+  const along = typed?.along ?? null;
+  const takeRecord = along === null ? null : along.take;
   /** The input, a left press on a record of the row of counts typing its
    * value's key (`counts.ts`), and one on a record of the list taking it
    * where typing goes along the list's sites (`along.ts`); a right one is
@@ -643,6 +645,9 @@ export function fillGame<C extends Clues<C> & object>(
     revealOne,
     textFormat: (b) => textFormat(reading, b),
     ...(prefs.length === 0 ? {} : { prefs }),
+    ...(along === null || play.along?.panel === undefined || play.list === undefined
+      ? {}
+      : { reference: recordPanel(module, play.list, along, play.along.panel) }),
     // A plain number has no cells to be done with, so is never counted.
     ...(!numbered.some((k) => module.clueCells?.[k] !== undefined)
       ? {}

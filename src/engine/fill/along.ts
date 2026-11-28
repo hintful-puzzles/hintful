@@ -200,12 +200,17 @@ export interface AlongInput<C> {
    * selected for typing that takes it, or else picked up, or put down where
    * it was held. */
   take(b: FillBoard<C>, ui: FillUi, k: number): Edit | UiUpdate;
+  /** Whether record `k` fits where `take` would write it: a site through
+   * the cell selected for typing, or with none selected, any site. */
+  fits(b: FillBoard<C>, ui: FillUi, k: number): boolean;
 }
 
 export function alongInput<C>(module: FillModule<C>, kind: string): AlongInput<C> {
   const recordsOf = (b: FillBoard<C>) => listRecords(b, kind);
   /** The edit dropping record `k` into the site through cell `c` that takes
    * it, `null` where none does or the site holds it already. */
+  /** Whether the cursor is on a cell selected for typing. */
+  const typing = (ui: FillUi): boolean => ui.cursor.visible && ui.pencilMode !== true;
   const drop = (b: FillBoard<C>, ui: FillUi, c: number, k: number): Edit | null => {
     const s = sitesOf(module, b);
     const records = recordsOf(b);
@@ -243,7 +248,7 @@ export function alongInput<C>(module: FillModule<C>, kind: string): AlongInput<C
     },
     take(b, ui, k) {
       const { cursor } = ui;
-      if (cursor.visible && ui.pencilMode !== true) {
+      if (typing(ui)) {
         const edit = drop(b, ui, cursor.y * b.w + cursor.x, k);
         if (edit !== null) {
           ui.held = NONE_HELD;
@@ -252,6 +257,15 @@ export function alongInput<C>(module: FillModule<C>, kind: string): AlongInput<C
       }
       ui.held = ui.held === k ? NONE_HELD : k;
       return UI_UPDATE;
+    },
+    fits(b, ui, k) {
+      const s = sitesOf(module, b);
+      const records = recordsOf(b);
+      const read = readSites(b, s, records);
+      if (!typing(ui))
+        return s.all.some((_, at) => fitsAlong(b, s, records, read, at, k));
+      const c = ui.cursor.y * b.w + ui.cursor.x;
+      return siteFor(b, s, records, read, c, k, ui.way ?? "row") >= 0;
     },
   };
 }

@@ -215,11 +215,9 @@ export interface NumberInput<C, D> {
     | ReorderMove
     | UiUpdate
     | null;
-  /** Where typing goes along the list's sites (`play.along`), record `k`
-   * pressed on the list (`AlongInput.take`); `null` on any other board. */
-  readonly takeRecord:
-    | ((board: FillBoard<C>, ui: FillUi, k: number) => Edit | UiUpdate)
-    | null;
+  /** Where typing goes along the list's sites (`play.along`), what a press
+   * on a record of the list does; `null` on any other board. */
+  readonly along: AlongInput<C> | null;
   /** A key a value, then the clear key, for a board of the params `p`, and
    * of `board` where it is in play. */
   requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
@@ -396,7 +394,7 @@ export function numberInput<
   }
   const input: NumberInput<C, D> = {
     done,
-    takeRecord: along === null ? null : along.take,
+    along,
     interpretMove(b, fillUi, ds, p, raw) {
       const ui = noteTaking(fillUi);
       const button = stripModifiers(raw);

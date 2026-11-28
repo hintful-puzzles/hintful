@@ -178,10 +178,12 @@ export interface FillPlay {
   readonly list?: string;
   /** Where typing goes along the list's sites (`along.ts`): the player's
    * preferences that move the selection along a site and wash the sites
-   * through it, by key and name. */
+   * through it, by key and name; and where the list is also a reference
+   * aid (`record-panel.ts`), what it calls a record and a site. */
   readonly along?: {
     readonly advance: { readonly kw: string; readonly name: string };
     readonly wash: { readonly kw: string; readonly name: string };
+    readonly panel?: { readonly record: string; readonly site: string };
   };
   /** The player's preference for how the row of counts reads (`counts.ts`'s
    * `COUNT_STYLES`), by its key and name; absent, each count is its total. */

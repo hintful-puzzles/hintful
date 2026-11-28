@@ -1490,6 +1490,16 @@
               "required": ["advance", "wash"],
               "additionalProperties": false,
               "properties": {
+                "panel": {
+                  "type": "object",
+                  "description": "The list is also a reference aid (`engine/fill/record-panel.ts`, Crossing's Numbers), titled by `record`'s plural: its records grouped by length, each placed where it holds, in conflict where the rules break it, fitting where a press would write it in (a site through the square selected for typing, or with none selected, any site), and ruled out otherwise; searched, and filtered to those that fit or are placed. A pick is a press on the record in the list. `record` and `site` are what the game calls a record and a site, each a noun its plural adds `s` to; a record's members and a square are called by `words`.",
+                  "required": ["record", "site"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "record": { "type": "string" },
+                    "site": { "type": "string" }
+                  }
+                },
                 "advance": {
                   "type": "object",
                   "required": ["kw", "name"],

@@ -449,3 +449,31 @@ previewed on the empty squares where one site alone takes it.
 - **WHEN** the one four-digit number of a `running` board is held
 - **THEN** the four-square column is washed and the number's digits are
   previewed down it
+
+### Requirement: A born game's list may also be its reference aid
+
+Where `play.along.panel` names what a record and a site are called, the
+game SHALL offer the list as its reference aid, titled by the record's
+plural, its records grouped by length: each placed or in conflict as the
+list strikes or reddens it, fitting where a press on it would write it in,
+and ruled out otherwise. A pick SHALL do what a press on the record in the
+list does.
+
+#### Scenario: Nothing selected
+
+- **WHEN** no square of a `running` board is selected for typing
+- **THEN** every number that fits some run is offered as fitting
+
+#### Scenario: The numbers that fit the selection
+
+- **WHEN** square 0 of a `running` board, on a two-square row and a
+  four-square column, is selected for typing
+- **THEN** the Numbers panel says the two-digit numbers and the four-digit
+  one fit, and every three-digit number is ruled out
+
+#### Scenario: A pick writes a number in
+
+- **WHEN** the first square of a three-square run is selected and a number
+  that fits it is picked in the panel
+- **THEN** the number is written along the run, as a press on it in the
+  list would write it
