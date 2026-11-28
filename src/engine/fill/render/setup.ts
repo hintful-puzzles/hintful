@@ -18,7 +18,7 @@ import type { FillPlay, FillUi } from "../play.ts";
 import { listedOf } from "../record-list.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
-import { marginValuesOf } from "../value-margin.ts";
+import { type MarginSides, marginSidesOf } from "../value-margin.ts";
 import {
   type Beneath,
   countsBeneath,
@@ -142,6 +142,7 @@ export function fillSetup<C extends Clues<C>>(
     lineLabels: labelStart !== null,
     listed: lineLists.length > 0,
     margined,
+    marginEnd: margined ? (play.ends?.end.length ?? 0) : 0,
     lineClued: lineClues.length > 0,
     slotted,
     gapped,
@@ -202,10 +203,12 @@ export function fillSetup<C extends Clues<C>>(
     return null;
   };
 
-  /** The values board `b`'s margin of clues one a value heads, 0 where it
-   * has none. */
-  const marginValues = (b: FillBoard<C>): number =>
-    margined ? marginValuesOf(module, b) : 0;
+  /** How board `b`'s margin of clues one a value is laid, nothing at either
+   * end where it has none. */
+  const marginSides = (b: FillBoard<C>): MarginSides =>
+    margined ? marginSidesOf(module, b) : { start: [], end: [] };
+  /** The values the margin heads before the lines' start, its depth. */
+  const marginValues = (b: FillBoard<C>): number => marginSides(b).start.length;
 
   /** The partition the part clues sit at on board `b`: absent from a board a
    * variation that deals it is off on. */
@@ -261,6 +264,7 @@ export function fillSetup<C extends Clues<C>>(
     beneathOf,
     numberAt,
     marginValues,
+    marginSides,
     labelParts,
     /** Each part clue's size, by tile size, walls and length
      * (`cell-text.ts`'s `labelText`). */

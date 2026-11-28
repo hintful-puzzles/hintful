@@ -36,6 +36,14 @@ import { type FillMove, isCandidateMove } from "./notes.ts";
 import { marginPlaceAt, marginPoint } from "./value-margin.ts";
 
 const game = fillGame("counting", counting);
+/** A 4x4 board of three letters' margin: every letter before the start. */
+const K3 = { start: [1, 2, 3], end: [] };
+/** Where the clue at `place` of a 4x4 board of three letters lies. */
+const clueSquare = (place: number): Point => {
+  const p = marginPoint(4, 4, K3, place);
+  if (p === null) throw new Error(`no square for ${place}`);
+  return p;
+};
 type Board = FillBoard<counting.Dealt>;
 
 const dealt = (id: string, seed: string): Board => {
@@ -243,12 +251,12 @@ describe("a clue one a value in the margin before its line", () => {
     expect(clues.map((t) => [t.text, { x: t.x, y: t.y }])).toEqual(
       Array.from(count.at, (place, k) => [
         String(count.v[k]),
-        middle(marginPoint(4, 3, place)),
+        middle(clueSquare(place)),
       ]),
     );
     // Value 1 furthest out: row 0's clue for A is three tiles before it.
-    expect(marginPoint(4, 3, perPlace(0, 1))).toEqual({ x: -3, y: 0 });
-    expect(marginPoint(4, 3, perPlace(4 + 2, 3))).toEqual({ x: 2, y: -1 });
+    expect(clueSquare(perPlace(0, 1))).toEqual({ x: -3, y: 0 });
+    expect(clueSquare(perPlace(4 + 2, 3))).toEqual({ x: 2, y: -1 });
     const heads = drawn.filter((t) => /^[A-Z]$/.test(t.text));
     expect(heads.map((t) => [t.text, { x: t.x, y: t.y }])).toEqual([
       ["A", middle({ x: -3, y: -1 })],
@@ -277,7 +285,7 @@ describe("a clue one a value in the margin before its line", () => {
       sameColor(colors[t.color], colors[COL_ERROR]),
     );
     expect(red.map((t) => ({ x: t.x, y: t.y }))).toContainEqual(
-      middle(marginPoint(4, 3, place)),
+      middle(clueSquare(place)),
     );
   });
 
@@ -290,7 +298,7 @@ describe("a clue one a value in the margin before its line", () => {
 
   it("is marked done by a press on it, drawn gray, and by Shift or Ctrl with Left or Up", () => {
     const place = perPlace(1, 2);
-    const marked = pressed(b, middle(marginPoint(4, 3, place)));
+    const marked = pressed(b, middle(clueSquare(place)));
     expect(Array.from(marked.done["count"] ?? [])[count.byAt[place]]).toBe(1);
     const gray = clueDoneColor(DEFAULT_BACKGROUND);
     const grays = (s: Board) =>
@@ -347,7 +355,7 @@ describe("a clue one a value in the margin before its line", () => {
         if (step.rung === "full") {
           const places = stepMarks(step)
             .of("outline", CELL)
-            .map((q) => marginPlaceAt(4, 4, 3, q.x, q.y));
+            .map((q) => marginPlaceAt(4, 4, K3, q.x, q.y));
           expect(places).toHaveLength(1);
           const [place] = places;
           expect(s.dealt.count.byAt[place]).toBeGreaterThanOrEqual(0);
@@ -355,7 +363,7 @@ describe("a clue one a value in the margin before its line", () => {
           const striped = stepMarks(step).of("stripes", CELL);
           const L = perElement(place);
           expect(striped.every((q) => (L < 4 ? q.y === L : q.x === L - 4))).toBe(true);
-          const p = marginPoint(4, 3, place);
+          const p = clueSquare(place);
           const sides = draw(s, { hint: step }).filter(
             (op) =>
               op.op === "rect" &&

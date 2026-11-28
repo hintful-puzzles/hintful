@@ -23,7 +23,7 @@ import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import { slotAt, slotClueAt } from "./slots.ts";
-import { marginClueAt, marginPlaceAt, marginValuesOf } from "./value-margin.ts";
+import { marginClueAt, marginPlaceAt, marginSidesOf } from "./value-margin.ts";
 
 /** The clue of the part holding cell `c` on a board drawn at tile size
  * `ts`, with the box it is drawn in (`FillRender.partClueBox`). */
@@ -149,7 +149,7 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
       atSlot(b, slotAt(b.w, b.h, x, y)) ??
       (marginKinds.length === 0
         ? null
-        : atMargin(b, marginPlaceAt(b.w, b.h, marginValuesOf(module, b), x, y)))
+        : atMargin(b, marginPlaceAt(b.w, b.h, marginSidesOf(module, b), x, y)))
     );
   };
   /** The clue of a part drawn round `p`, a few pixels' slack about its
@@ -238,12 +238,16 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
         const ey = dy === 0 ? y : dy < 0 ? -1 : b.h;
         return atSlot(b, slotAt(b.w, b.h, ex, ey));
       }
-      // On a board of clues one a value before the lines' start, the clue
-      // for the cursor's value of its row (Left) or column (Up).
+      // On a board of clues one a value in the margins, the clue at that
+      // end of the cursor's row (Left, Right) or column (Up, Down): the
+      // one value drawn there, or the cursor's value where several are.
       if (marginKinds.length > 0) {
-        const v = b.values[y * b.w + x];
-        if (v === 0 || step[1] > 0 || step[2] > 0) return null;
-        return atMargin(b, perPlace(step[1] < 0 ? y : b.h + x, v));
+        const sides = marginSidesOf(module, b);
+        const back = step[1] < 0 || step[2] < 0;
+        const there = back ? sides.start : sides.end;
+        const v = there.length === 1 ? there[0] : b.values[y * b.w + x];
+        if (v === 0 || !there.includes(v)) return null;
+        return atMargin(b, perPlace(step[2] === 0 ? y : b.h + x, v));
       }
       const [nx, ny] = [x + step[1], y + step[2]];
       if (nx < 0 || ny < 0 || nx >= b.w || ny >= b.h) return null;

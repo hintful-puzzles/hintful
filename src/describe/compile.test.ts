@@ -2175,6 +2175,36 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/id: pairs of tile, which the deal does not lay as dominoes/);
   });
 
+  it("lays a clue of some values at a line's two ends, and writes it a character a value", () => {
+    const ending = "src/engine/testing/fixtures/ending/ending.description.yaml";
+    type Ending = {
+      clues: { count: { per: unknown } };
+      play: { ends: { start: number[]; end: number[] } };
+      id: Record<string, unknown>[];
+    };
+    const edited = (edit: (j: Ending) => void) =>
+      compileEdited(ending, (j: Ending) => {
+        edit(j);
+        return j;
+      });
+    expect(edited(() => {})).toContain('"perOf":{"count":[1,3]}');
+    expect(() =>
+      edited((j) => {
+        j.play.ends.end = [];
+      }),
+    ).toThrow(/play ends: count's values are not laid each at one end/);
+    expect(() =>
+      edited((j) => {
+        j.clues.count.per = "value";
+      }),
+    ).toThrow(/play ends: count's values are not laid each at one end/);
+    expect(() =>
+      edited((j) => {
+        j.id[0]["hidden"] = "0";
+      }),
+    ).toThrow(/no hidden mark of one character outside it/);
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

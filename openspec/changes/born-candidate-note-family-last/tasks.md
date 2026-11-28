@@ -89,9 +89,8 @@ order.
       14); its notes are the owner's (§ "Decisions" 15).
   - [x] 2.4a A domino tiling as a divide, a leftover square where the
         area is odd, and the ID's `pairs` segment, on `tiling`.
-  - [ ] 2.4b A count a value split across a line's two ends, a derived
-        value's neither drawn nor written, done marks on both; the ID's
-        segment of one character a line.
+  - [x] 2.4b `per` of some values, laid at a line's two ends (`play.ends`),
+        written a character a value (`alphabet`, `byValue`), on `ending`.
   - [ ] 2.4c A part played whole: a value writes the part's other cells by
         a formula, a click cycles the part from the cell pressed.
   - [ ] 2.4d Pole painters (+, −, neutral).

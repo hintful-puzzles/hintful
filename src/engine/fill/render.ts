@@ -299,12 +299,18 @@ export function fillRender<C extends Clues<C>>(
     // A hexagon's rows reach half a tile past its width.
     computeSize: (p, size) => {
       const t = module.deal === undefined ? null : tallyIn(module.deal);
-      // The margin of clues one a value is as deep as the domain the
-      // params' sizes give.
-      const values =
-        cx.margined && module.deal !== undefined
-          ? perValuesOf(module, paramSpaceOf(module, p), givenOf(module.deal, p) as C)
-          : 0;
+      // The margin of clues one a value is as deep as the values its ends
+      // lay before the start, or the domain the params' sizes give.
+      const values = !cx.margined
+        ? 0
+        : (module.play?.ends?.start.length ??
+          (module.deal === undefined
+            ? 0
+            : perValuesOf(
+                module,
+                paramSpaceOf(module, p),
+                givenOf(module.deal, p) as C,
+              )));
       return metrics.canvasOf(
         p,
         values,

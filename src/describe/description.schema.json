@@ -930,8 +930,21 @@
             "description": "The element sort a clue sits at, or `board` for a whole-board clue, which has `fields` in place of a `value`."
           },
           "per": {
-            "enum": ["value"],
-            "description": "A clue at the element for each value of the answer's domain, read `clue(kind, x, d)`; its meaning reads the value as `per`."
+            "oneOf": [
+              {
+                "enum": ["value"]
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            ],
+            "description": "A clue at the element for each value of the answer's domain, or with a list for each of those values alone (Magnets' + and −, its neutral squares' count following from them), read `clue(kind, x, d)`; its meaning reads the value as `per`."
           },
           "list": {
             "const": true,
@@ -1529,6 +1542,24 @@
                     "kw": { "type": "string" },
                     "name": { "type": "string" }
                   }
+                }
+              }
+            },
+            "ends": {
+              "type": "object",
+              "description": "Where the clues one a value at the lines, a kind whose `per` lists its values, are drawn (`engine/fill/value-margin.ts`): `start`'s values before each line's start, the furthest out first, and `end`'s past its end, the nearest first, each value at one end, its heading in that end's corner (upstream Magnets' + counts top and left, its − counts bottom and right). Absent, every value before the start.",
+              "required": ["start", "end"],
+              "additionalProperties": false,
+              "properties": {
+                "start": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "type": "integer", "minimum": 1 }
+                },
+                "end": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": { "type": "integer", "minimum": 1 }
                 }
               }
             },
@@ -2178,6 +2209,14 @@
                   "closed": {
                     "const": true,
                     "description": "A comma after every element, the last too, rather than between two (Boats')."
+                  },
+                  "alphabet": {
+                    "const": true,
+                    "description": "Each value one character of the desc alphabet, 0 to 9, a to z, A to Z, and an absent one `hidden`, which it needs; a run's characters side by side, a kind at lines a run an axis and any other one run, the runs between commas (or `between`), or with `closed` a comma after each (upstream Magnets')."
+                  },
+                  "byValue": {
+                    "const": true,
+                    "description": "A kind one a value is written a value at a time, each value's runs in turn, rather than each element's values in turn (upstream Magnets' + counts, then its −)."
                   }
                 }
               },

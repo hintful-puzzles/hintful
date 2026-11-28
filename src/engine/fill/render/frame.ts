@@ -40,7 +40,7 @@ export function drawFrame<C extends Clues<C>>(
     );
   // Each value heading its clues in the margin, as large as they are.
   if (cx.margined)
-    for (const { x, y, v } of marginHeadings(cx.marginValues(state)))
+    for (const { x, y, v } of marginHeadings(w, h, cx.marginSides(state)))
       dr.drawText(
         { x: coord(x, ts) + Math.floor(ts / 2), y: coord(y, ts) + Math.floor(ts / 2) },
         glyphFont(Math.floor(ts / 2)),

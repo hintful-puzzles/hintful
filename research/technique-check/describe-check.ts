@@ -2997,8 +2997,9 @@ function dealSymbolically(d: Description, board: Board): void {
       continue;
     }
     if (c.per) {
-      // One clue at each place for each value the domain may hold, each
-      // present or not, its value within its range.
+      // One clue at each place for each value the domain may hold, or of
+      // those its `per` lists, each present or not, its value within its
+      // range.
       if (c.value.k !== "call" || c.value.fn !== "range")
         throw new Error(`clue ${kind}: a clue per value is checked with a range`);
       const dom = domainOfAny(d, ctx);
@@ -3006,7 +3007,7 @@ function dealSymbolically(d: Description, board: Board): void {
         const here = new Map([["at", elem(placeSort(board, c.at), e)]]);
         const [lo, hi] = c.value.args.map((a) => num(evaluate(a, here, ctx), "range"));
         dom.forEach((g, n) => {
-          if (g === false) return;
+          if (g === false || (c.perOf !== null && !c.perOf.includes(n))) return;
           const v = Z3.Int.const(`clue_${kind}_${e}_${n}_v_${boardCount}`);
           const present = Z3.Bool.const(`clue_${kind}_${e}_${n}_${boardCount}`);
           board.clueDomain.push(

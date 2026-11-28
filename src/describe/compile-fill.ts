@@ -140,6 +140,12 @@ function dealOf(
     throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
   const universes = universesOf(json, d, env);
   const perValue = kinds.filter((k) => env.clues.get(k)?.per === true);
+  const perOf = Object.fromEntries(
+    perValue.flatMap((k) => {
+      const of = d.clueKinds.get(k)?.perOf ?? null;
+      return of === null ? [] : [[k, of]];
+    }),
+  );
   const partsOf = partsOfKinds(d, universes);
   const records = recordsOfKinds(
     d,
@@ -222,6 +228,7 @@ function dealOf(
     ...(ruledKinds(json).size === 0 ? {} : { idKinds: id.map(segmentNames) }),
     universes,
     ...present("perValue", perValue.length === 0 ? null : perValue),
+    ...present("perOf", Object.keys(perOf).length === 0 ? null : perOf),
     ...partsOf,
     ...records,
     ...(partitions.length === 0 ? {} : { partitions }),

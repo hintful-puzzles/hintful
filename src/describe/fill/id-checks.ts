@@ -362,13 +362,28 @@ const SEGMENTS: { readonly [K in SegmentKey]: SegmentRead<SegmentOf<K>> } = {
   lists: numbers((seg) => seg.lists),
   numbers: numbers(
     (seg) => seg.numbers,
-    (seg, { json, id, i }, { kind, c }) => {
+    (seg, { json, id, i, env }, { kind, c }) => {
       // Records read a binding are as many as the board deals, so they are
       // read to the desc's end.
       if (json.deal?.records?.[kind] !== undefined && i !== id.length - 1)
         throw new CompileError(
           `id: numbers of ${kind}, whose records the deal reads a binding, end the desc, and come last`,
         );
+      if (seg.byValue === true && env.clues.get(kind)?.per !== true)
+        throw new CompileError(
+          `id: numbers of ${kind} by value, which is not one a value`,
+        );
+      // A character a value, so a value is one, and an absent one too.
+      if (seg.alphabet === true) {
+        if (seg.hidden?.length !== 1 || /[0-9a-zA-Z]/.test(seg.hidden))
+          throw new CompileError(
+            `id: numbers of ${kind} in the alphabet, with no hidden mark of one character outside it`,
+          );
+        if (c.at === "board" || c.list)
+          throw new CompileError(
+            `id: numbers of ${kind} in the alphabet, which is no clue of one number at an element`,
+          );
+      }
       if (seg.sides === undefined) return;
       if (c.at !== "slot")
         throw new CompileError(

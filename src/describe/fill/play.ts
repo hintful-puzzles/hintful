@@ -475,6 +475,23 @@ export function playOf(
       );
   }
   checkCounts(json, d, measured);
+  // The ends lay the margin of clues one a value at lines: each value of
+  // theirs drawn at one end, so every clue is drawn and no square is empty.
+  if (p.ends !== undefined) {
+    const margined = [...d.clueKinds].filter(
+      ([k, c]) => c.at === "line" && (env.clues.get(k) as ClueKind | undefined)?.per,
+    );
+    const laid = [...p.ends.start, ...p.ends.end];
+    if (margined.length === 0)
+      throw new CompileError("play ends: no clue one a value at the lines to lay");
+    for (const [k, c] of margined) {
+      const of = c.perOf;
+      if (of === null || laid.length !== of.length || of.some((v) => !laid.includes(v)))
+        throw new CompileError(
+          `play ends: ${k}'s values are not laid each at one end, its \`per\` listing them`,
+        );
+    }
+  }
   // A selection is the typed board's: a board of buttons drags a sweep.
   if (p.select !== undefined && p.numbers === undefined)
     throw new CompileError(

@@ -46,7 +46,7 @@ import type { FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
 import { slotClueAt } from "./slots.ts";
-import { marginClueAt } from "./value-margin.ts";
+import { type MarginSides, marginClueAt } from "./value-margin.ts";
 
 /** A cell the player's board holds against the answer: its value, the mark
  * on it, or its notes, which leave the answer out. */
@@ -85,10 +85,10 @@ export interface AnswerReading<C> {
    * (Salad's border on a Numbers board). */
   readonly off?: (board: FillBoard<C>) => ReadonlySet<string>;
   /** The clue kinds at lines one a value, printed before each line's start
-   * a value a column, and the values a board's margin heads. */
+   * or after its end a value a column, as a board's margin is laid. */
   readonly valueMargins?: {
     readonly kinds: readonly (keyof C)[];
-    readonly values: (board: FillBoard<C>) => number;
+    readonly sides: (board: FillBoard<C>) => MarginSides;
   };
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
@@ -444,7 +444,8 @@ function withValueMargins<C extends Clues<C>>(
   const margins = reading.valueMargins;
   if (margins === undefined) return grid;
   const { w, h } = board;
-  const values = margins.values(board);
+  const { start, end } = margins.sides(board);
+  const n = start.length;
   const clue = (line: number, v: number): string => {
     const at = marginClueAt(margins.kinds, board, perPlace(line, v));
     return at === null ? "" : String(at.v);
@@ -454,31 +455,38 @@ function withValueMargins<C extends Clues<C>>(
   // A column of the rows' clues is as wide as its widest text and a space.
   let width = 2;
   for (let line = 0; line < w + h; line++)
-    for (let v = 1; v <= values; v++)
+    for (const v of [...start, ...end])
       width = Math.max(width, clue(line, v).length + 1, heading(v).length + 1);
-  const everyValue = Array.from({ length: values }, (_, i) => i + 1);
   // A cell's text is three characters after a one-character wall.
-  const above = everyValue.map((v) => {
-    const heads =
-      v === values
-        ? everyValue.map((u) => heading(u).padEnd(width)).join("")
-        : `${" ".repeat((values - 1) * width)}${heading(v).padEnd(width)}`;
-    const columns = Array.from({ length: w }, (_, x) => {
+  const columns = (v: number): string =>
+    Array.from({ length: w }, (_, x) => {
       const t = clue(h + x, v);
       return ` ${t.length === 1 ? ` ${t} ` : t.padEnd(3)}`;
     }).join("");
-    return `${heads}${columns}`.trimEnd();
+  const above = start.map((v, i) => {
+    const heads =
+      i === n - 1
+        ? start.map((u) => heading(u).padEnd(width)).join("")
+        : `${" ".repeat((n - 1) * width)}${heading(v).padEnd(width)}`;
+    return `${heads}${columns(v)}`.trimEnd();
   });
+  // The values past the end head their rows of the columns' clues after
+  // them, the first line, which the corner shares, heading each column of
+  // the rows' clues too.
+  const below = end.map((v, j) =>
+    `${" ".repeat(n * width)}${columns(v)}  ${j === 0 ? end.map(heading).join(" ") : heading(v)}`.trimEnd(),
+  );
   // The grid's lines alternate a wall and a row of cells.
   const lines = grid
     .trimEnd()
     .split("\n")
-    .map((line, i) =>
-      i % 2 === 1 && (i - 1) / 2 < h
-        ? `${everyValue.map((v) => clue((i - 1) / 2, v).padEnd(width)).join("")}${line}`
-        : `${" ".repeat(values * width)}${line}`,
-    );
-  return `${[...above, ...lines].join("\n")}\n`;
+    .map((line, i) => {
+      const row = (i - 1) / 2;
+      if (i % 2 === 0 || row >= h) return `${" ".repeat(n * width)}${line}`;
+      const after = end.map((v) => ` ${clue(row, v)}`).join("");
+      return `${start.map((v) => clue(row, v).padEnd(width)).join("")}${line}${after}`.trimEnd();
+    });
+  return `${[...above, ...lines, ...below].join("\n")}\n`;
 }
 
 /** `grid` in a rim of the clues at its slots: each column's above and below

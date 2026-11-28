@@ -195,6 +195,14 @@ export interface FillPlay {
     readonly wash: { readonly kw: string; readonly name: string };
     readonly panel?: { readonly record: string; readonly site: string };
   };
+  /** Where the clues one a value at the lines are drawn (`value-margin.ts`):
+   * the values before each line's start, the furthest out first, and those
+   * past its end, the nearest first; a value in neither is drawn nowhere.
+   * Absent, every value before the start. */
+  readonly ends?: {
+    readonly start: readonly number[];
+    readonly end: readonly number[];
+  };
   /** The player's preference for how the row of counts reads (`counts.ts`'s
    * `COUNT_STYLES`), by its key and name; absent, each count is its total. */
   readonly countStyle?: { readonly kw: string; readonly name: string };

@@ -557,7 +557,18 @@ export function derivedClues(
       },
       ...(per === null
         ? []
-        : [{ name: per, kind: "in", of: measured(d.domain), where: null } as Binder]),
+        : [
+            {
+              name: per,
+              kind: "in",
+              // A kind one a value of some values is derived at those alone.
+              of:
+                c.perOf === null
+                  ? measured(d.domain)
+                  : parse(`{${c.perOf.join(", ")}}`),
+              where: null,
+            } as Binder,
+          ]),
       solved === null
         ? { name: "v", kind: "in", of: value, where: null }
         : {

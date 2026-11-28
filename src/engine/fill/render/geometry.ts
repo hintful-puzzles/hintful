@@ -29,6 +29,8 @@ export interface FillShape {
   /** The lines have clues one a value before their start, a tile a value
    * (`value-margin.ts`). */
   readonly margined: boolean;
+  /** The tiles of those clues past the lines' end (`play.ends`). */
+  readonly marginEnd: number;
   /** The lines have clues past their end. */
   readonly lineClued: boolean;
   /** The board has clues at slots. */
@@ -49,6 +51,7 @@ export function fillMetrics(shape: FillShape) {
     lineLabels,
     listed,
     margined,
+    marginEnd,
     lineClued,
     slotted,
     gapped,
@@ -82,7 +85,13 @@ export function fillMetrics(shape: FillShape) {
           ? slotMargin(ts)
           : rim(ts);
   const end = (ts: number): number =>
-    lineClued ? ts + 2 : slotted ? slotMargin(ts) : rim(ts);
+    marginEnd > 0
+      ? marginEnd * ts + rim(ts)
+      : lineClued
+        ? ts + 2
+        : slotted
+          ? slotMargin(ts)
+          : rim(ts);
   // A board with clues at edges has a gap between every two cells to draw
   // them in, half a tile wide (upstream unequal.c's).
   const gapOf = (ts: number): number => (gapped ? Math.floor(ts / 2) : 0);

@@ -614,6 +614,9 @@ export interface ClueKind {
    * domain (ABCD's count of each letter a line holds), read
    * `clue(kind, x, d)`, its meaning reading the value as `per`. */
   per: boolean;
+  /** Where it sits once for some values alone, those; `null` where for each
+   * value of the domain, or for none. */
+  perOf: readonly number[] | null;
   /** Whether a clue is a list of its values, in order (Pattern's run
    * lengths), read `clue(kind, x)` as the whole list. */
   list: boolean;
@@ -953,7 +956,8 @@ export function loadDescription(
       );
     clueKinds.set(kind, {
       at: c.at,
-      per: c.per === "value",
+      per: c.per !== undefined,
+      perOf: Array.isArray(c.per) ? [...c.per].sort((a, b) => a - b) : null,
       list: c.list === true,
       value: c.value === undefined ? null : at(`clue ${kind} value`, c.value),
       fields: new Map(

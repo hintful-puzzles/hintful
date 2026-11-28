@@ -27,42 +27,85 @@ import {
   spaceOf,
 } from "./board.ts";
 
-/** How many values the margin of board `b` heads: its domain's top. */
-export const marginValuesOf = <C>(module: FillModule<C>, b: FillBoard<C>): number =>
-  perValuesOf(module, spaceOf(module, b), b.dealt);
+/** Which values' clues a margin draws before each line's start, the
+ * furthest out first, and which past its end, the nearest first: a value
+ * in neither is drawn nowhere. */
+export interface MarginSides {
+  readonly start: readonly number[];
+  readonly end: readonly number[];
+}
 
-/** Where the clue at `place` of a board `h` high whose margin heads
- * `values` values lies: a square off the grid, before its line's start. */
-export function marginPoint(h: number, values: number, place: number): Point {
+/** The margin of board `b`: as `play.ends` lays it (Magnets' + before the
+ * start and − past the end), or every value from 1 to the domain's top
+ * before the start. */
+export function marginSidesOf<C>(module: FillModule<C>, b: FillBoard<C>): MarginSides {
+  const ends = module.play?.ends;
+  if (ends !== undefined) return ends;
+  const top = perValuesOf(module, spaceOf(module, b), b.dealt);
+  return { start: Array.from({ length: top }, (_, d) => d + 1), end: [] };
+}
+
+/** Where the clue at `place` of a `w` by `h` board whose margin is laid
+ * `sides` lies: a square off the grid, before its line's start or past its
+ * end; `null` where its value is drawn nowhere. */
+export function marginPoint(
+  w: number,
+  h: number,
+  sides: MarginSides,
+  place: number,
+): Point | null {
   const line = perElement(place);
-  const out = perValue(place) - 1 - values;
-  return line < h ? { x: out, y: line } : { x: line - h, y: out };
+  const v = perValue(place);
+  const i = sides.start.indexOf(v);
+  const j = sides.end.indexOf(v);
+  if (i < 0 && j < 0) return null;
+  const row = line < h;
+  const out = i >= 0 ? i - sides.start.length : (row ? w : h) + j;
+  return row ? { x: out, y: line } : { x: line - h, y: out };
 }
 
 /** The place of the clue at `(x, y)` beside a `w` by `h` board whose
- * margin heads `values` values, or `-1` where that is no clue's square: on
- * the grid, in the margins' corner, or further out. */
+ * margin is laid `sides`, or `-1` where that is no clue's square: on the
+ * grid, in the margins' corners, or further out. */
 export function marginPlaceAt(
   w: number,
   h: number,
-  values: number,
+  sides: MarginSides,
   x: number,
   y: number,
 ): number {
-  if (y >= 0 && y < h && x < 0 && x >= -values) return perPlace(y, x + values + 1);
-  if (x >= 0 && x < w && y < 0 && y >= -values) return perPlace(h + x, y + values + 1);
+  const { start, end } = sides;
+  const n = start.length;
+  if (y >= 0 && y < h) {
+    if (x < 0 && x >= -n) return perPlace(y, start[x + n]);
+    if (x >= w && x < w + end.length) return perPlace(y, end[x - w]);
+  }
+  if (x >= 0 && x < w) {
+    if (y < 0 && y >= -n) return perPlace(h + x, start[y + n]);
+    if (y >= h && y < h + end.length) return perPlace(h + x, end[y - h]);
+  }
   return -1;
 }
 
 /** Where each value's headings lie, at the inner edge of the margins'
- * corner: over its column of the rows' clues and beside its row of the
- * columns', the last value's one square for both. */
-export function marginHeadings(values: number): readonly (Point & { v: number })[] {
+ * corners: over its column of the rows' clues and beside its row of the
+ * columns', the value nearest the board one square for both; a start
+ * value's in the top left corner, an end value's in the bottom right. */
+export function marginHeadings(
+  w: number,
+  h: number,
+  sides: MarginSides,
+): readonly (Point & { v: number })[] {
   const out: (Point & { v: number })[] = [];
-  for (let v = 1; v <= values; v++) {
-    out.push({ x: v - 1 - values, y: -1, v });
-    if (v < values) out.push({ x: -1, y: v - 1 - values, v });
-  }
+  const n = sides.start.length;
+  sides.start.forEach((v, i) => {
+    out.push({ x: i - n, y: -1, v });
+    if (i < n - 1) out.push({ x: -1, y: i - n, v });
+  });
+  sides.end.forEach((v, j) => {
+    out.push({ x: w + j, y: h, v });
+    if (j > 0) out.push({ x: w, y: h + j, v });
+  });
   return out;
 }
 

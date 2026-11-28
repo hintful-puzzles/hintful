@@ -90,7 +90,7 @@ import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { variationFlags } from "./params/settings.ts";
 import { recordPoint } from "./record-list.ts";
 import { slotPoint } from "./slots.ts";
-import { marginPoint, marginValuesOf } from "./value-margin.ts";
+import { marginPoint, marginSidesOf } from "./value-margin.ts";
 import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
 
 /** What a step of the candidate walk marks: the shared highlights. */
@@ -364,8 +364,12 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     const clueSquare = (clueKind: string, k: number): Point => {
       if (module.deal?.universes[clueKind] === "board") return recordPoint(h, k);
       const place = listOf(board.dealt, clueKind as keyof C).at[k];
-      if (module.valueMargins?.includes(clueKind as keyof C) === true)
-        return marginPoint(h, marginValuesOf(module, board), place);
+      if (module.valueMargins?.includes(clueKind as keyof C) === true) {
+        const p = marginPoint(w, h, marginSidesOf(module, board), place);
+        if (p === null)
+          throw new Error(`hint: a ${clueKind} clue drawn nowhere marked`);
+        return p;
+      }
       if (module.slotClues?.includes(clueKind as keyof C) === true)
         return slotPoint(w, h, place);
       return at(place);

@@ -46,6 +46,15 @@ export const partKindsOf = (deal?: FillDeal): string[] =>
     .filter(([, u]) => u === "parts")
     .map(([k]) => k);
 
+/** The values kind `kind`, one a value, is dealt for on a board whose
+ * domain tops at `top`: its own list, or each from 1. */
+export const valuesOfKind = (
+  deal: FillDeal,
+  kind: string,
+  top: number,
+): readonly number[] =>
+  deal.perOf?.[kind] ?? Array.from({ length: top }, (_, d) => d + 1);
+
 /** How many elements kind `kind` may sit at on a board dealt `clues`. */
 export function elementCount<C extends Clues<C>>(
   deal: FillDeal,
@@ -181,6 +190,9 @@ export interface FillDeal {
   /** The kinds dealt one a value at each element (`per: value`), each clue
    * at its element and value's place (`perPlace`). */
   readonly perValue?: readonly string[];
+  /** The values a kind of `perValue` is dealt for, by kind, where those are
+   * some of the domain's alone (Magnets' + and −); else each from 1. */
+  readonly perOf?: Readonly<Record<string, readonly number[]>>;
   /** The partition each kind at parts sits at, by kind. */
   readonly partsOf?: Readonly<Record<string, string>>;
   /** The records each clue at the board the deal derives may hold, by kind

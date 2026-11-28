@@ -7,6 +7,7 @@
 
 import { DESC_OUT_OF_RANGE } from "../../contract/desc-error.ts";
 import { isDigit } from "../../game-id/decimal.ts";
+import { c2n, n2c } from "../../game-id/desc-alphabet.ts";
 import type { DescReader } from "../../game-id/desc-reader.ts";
 import { clueList, compareLists } from "../../solve/describe-runtime.ts";
 import type { Clues, FieldClue } from "../board.ts";
@@ -17,6 +18,7 @@ import {
   maxOf,
   placeCount,
   placesOf,
+  runsOf,
   type SegmentKind,
   type Side,
 } from "./segment.ts";
@@ -35,7 +37,64 @@ export type NumbersSegment = {
   /** Whether a comma follows every element, the last too, rather than
    * standing between two. */
   readonly closed?: true;
+  /** Each value one character of the desc alphabet (`desc-alphabet.ts`),
+   * an absent one `hidden`, a run's characters side by side: a line's kind
+   * a run an axis, any other's one run. The runs stand between commas (or
+   * `between`), or with `closed` a comma follows each. */
+  readonly alphabet?: true;
+  /** Where the kind is one a value, each value's runs in turn, rather than
+   * each element's values in turn (upstream Magnets' + counts, then its −). */
+  readonly byValue?: true;
 };
+
+/** `seg`'s runs of places on the space `sp` (`runsOf`). */
+const runsOfSeg = (
+  seg: NumbersSegment,
+  deal: FillDeal,
+  sp: Parameters<typeof runsOf>[1],
+  values: number,
+) => runsOf(deal, sp, seg.numbers, values, seg.byValue === true, seg.order, seg.sides);
+
+/** The runs' values a character each (`NumbersSegment.alphabet`). */
+function alphabetEncoded(
+  seg: NumbersSegment,
+  runs: readonly (readonly number[])[],
+  valueAt: ArrayLike<number>,
+): string {
+  const hidden = seg.hidden ?? "";
+  const written = runs.map((run) =>
+    run.map((e) => (valueAt[e] >= 0 ? n2c(valueAt[e]) : hidden)).join(""),
+  );
+  return (
+    (seg.before ?? "") +
+    (seg.closed === true
+      ? written.map((s) => `${s},`).join("")
+      : written.join(seg.between ?? ","))
+  );
+}
+
+/** The runs read back a character each, each value no more than its
+ * element's most (`max`). */
+function alphabetDecoded(
+  r: DescReader,
+  seg: NumbersSegment,
+  runs: readonly (readonly number[])[],
+  max: (place: number) => number,
+): [number, number][] {
+  if (seg.before !== undefined) r.expect(seg.before);
+  const read: [number, number][] = [];
+  runs.forEach((run, i) => {
+    if (i > 0 && seg.closed !== true) r.expect(seg.between ?? ",");
+    for (const e of run) {
+      if (seg.hidden !== undefined && r.accept(seg.hidden)) continue;
+      const n = c2n(r.char((ch) => c2n(ch) !== null));
+      if (n === null || n > max(e)) r.fail(DESC_OUT_OF_RANGE);
+      read.push([e, n as number]);
+    }
+    if (seg.closed === true) r.expect(",");
+  });
+  return read;
+}
 
 /** The values a clue at the board is written as: by each record the deal may
  * hold, in turn, the last field of the one dealt, or `-1`. */
@@ -104,6 +163,12 @@ export const numbers: SegmentKind<NumbersSegment> = {
     const bound =
       deal.universes[seg.numbers] === "board" ? recordsOf(deal, seg.numbers) : null;
     if (bound?.bound !== undefined) return boundEncoded(seg, clue, bound.fields[0]);
+    if (seg.alphabet === true)
+      return alphabetEncoded(
+        seg,
+        runsOfSeg(seg, deal, sp, values),
+        listOf(seg.numbers).valueAt,
+      );
     const vs =
       bound !== null
         ? recordValues(deal, seg.numbers, clue)
@@ -128,6 +193,18 @@ export const numbers: SegmentKind<NumbersSegment> = {
     const records = board ? recordsOf(deal, seg.numbers) : null;
     if (records?.bound !== undefined) {
       out[kind] = boundDecoded(r, seg, records.fields[0], records.bound);
+      return;
+    }
+    if (seg.alphabet === true) {
+      const read = alphabetDecoded(r, seg, runsOfSeg(seg, deal, sp, values), (e) =>
+        maxOf(clueMax, kind, sp, elementOf(deal, seg.numbers, e)),
+      );
+      read.sort((a, b) => a[0] - b[0]);
+      out[kind] = clueList(
+        read.map(([e]) => e),
+        read.map(([, x]) => x),
+        placeCount(deal, sp, seg.numbers),
+      );
       return;
     }
     const places = board

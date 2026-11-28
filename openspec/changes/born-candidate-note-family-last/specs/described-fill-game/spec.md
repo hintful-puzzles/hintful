@@ -651,3 +651,24 @@ cells that do not name each other or a partner across the board's edge.
 - **WHEN** a `tiling` ID names the last cell of the top row and the first
   of the next as each other's partner
 - **THEN** the ID is refused
+
+### Requirement: A born game's clue one a value may be of some values, at a line's two ends
+
+A clue kind whose `per` lists values SHALL be dealt, written and read for
+those values alone. Where `play.ends` lays them, a line's clues of `start`
+SHALL be drawn before its start and of `end` past its end, each end's
+values headed in its corner, a press or Shift with the arrow toward an end
+marking that end's clue done. The `numbers` segment's `alphabet` SHALL
+write a value a character, `byValue` a value at a time.
+
+#### Scenario: Counts at both ends
+
+- **WHEN** an `ending` board is drawn
+- **THEN** each line's count of 1s stands before it and of 3s after it, and
+  no count of 2s is drawn, dealt or written
+
+#### Scenario: The ID a character a count
+
+- **WHEN** an `ending` 4x4 board is written
+- **THEN** its ID is the columns' and rows' 1s, then their 3s, four
+  characters a run, each run closed by a comma

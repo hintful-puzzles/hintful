@@ -1,6 +1,6 @@
 /**
- * Each line's clues one a value, in the margin before its start, a tile a
- * value (`value-margin.ts`): red where the rules break it, gray where the
+ * Each line's clues one a value, in the margin before its start or past its
+ * end, a tile a value (`value-margin.ts`): red where the rules break it, gray where the
  * player marks it done, hatched where a step stripes its line, and
  * outlined where a step reads it. The headings are the frame's
  * (`frame.ts`).
@@ -24,14 +24,16 @@ export const valueMargins: FillSite = {
     const { coord } = lay;
     const ts = ds.tileSize;
     const { w, h } = b;
-    const values = cx.marginValues(b);
+    const sides = cx.marginSides(b);
     // A step names a clue by the square it lies in, off the grid.
     const outlined = new Set(
-      marks.of("outline", CELL).map((c) => marginPlaceAt(w, h, values, c.x, c.y)),
+      marks.of("outline", CELL).map((c) => marginPlaceAt(w, h, sides, c.x, c.y)),
     );
     for (let line = 0; line < w + h; line++)
-      for (let v = 1; v <= values; v++) {
+      for (const v of [...sides.start, ...sides.end]) {
         const place = perPlace(line, v);
+        const p = marginPoint(w, h, sides, place);
+        if (p === null) continue;
         const clue = marginClueAt(cx.valueMargins, b, place);
         const err = marginErrors.has(place);
         const done = clue !== null && isDone(b, clue.kind, clue.k);
@@ -41,7 +43,6 @@ export const valueMargins: FillSite = {
           (done ? 4 : 0) |
           (outlined.has(place) ? 8 : 0);
         if (!ds.margins.changed(place, key)) continue;
-        const p = marginPoint(h, values, place);
         const box = { x: coord(p.x, ts), y: coord(p.y, ts), w: ts, h: ts };
         dr.drawRect(box, COL_BACKGROUND);
         if (key & 2) dr.drawHatch(box, hatchPeriod(ts));

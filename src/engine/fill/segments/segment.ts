@@ -16,7 +16,12 @@ import {
   perPlace,
 } from "../../solve/describe-runtime.ts";
 import type { Clues, FieldClue } from "../board.ts";
-import type { ClueMax, FillDeal, Universe } from "../game-id.ts";
+import {
+  type ClueMax,
+  type FillDeal,
+  type Universe,
+  valuesOfKind,
+} from "../game-id.ts";
 import type { ValueGlyphs } from "../glyphs.ts";
 import type { GrowSizes } from "../grow.ts";
 
@@ -67,12 +72,38 @@ export function placesOf(
   order?: "columns",
   sides?: readonly Side[],
 ): readonly number[] {
-  const els = elements(sp, universeOf(deal, kind), order, sides);
-  if (deal.perValue?.includes(kind) !== true) return els;
+  return runsOf(deal, sp, kind, values, false, order, sides).flat();
+}
+
+/**
+ * {@link placesOf} in runs: a kind at lines a run an axis, in the order its
+ * lines are written, and any other one run. Where the kind is one a value,
+ * each element's values in turn, or `byValue` each value's places in turn,
+ * a run an axis of each.
+ */
+export function runsOf(
+  deal: FillDeal,
+  sp: GridSpace,
+  kind: string,
+  values: number,
+  byValue: boolean,
+  order?: "columns",
+  sides?: readonly Side[],
+): readonly (readonly number[])[] {
+  const universe = universeOf(deal, kind);
+  const els = elements(sp, universe, order, sides);
+  const axes =
+    universe !== "lines"
+      ? [els]
+      : order === "columns"
+        ? [els.slice(0, sp.w), els.slice(sp.w)]
+        : [els.slice(0, sp.h), els.slice(sp.h)];
+  if (deal.perValue?.includes(kind) !== true) return axes;
   if (values < 1) throw new Error(`id: ${kind} is one a value, and the board has none`);
-  return els.flatMap((e) =>
-    Array.from({ length: values }, (_, d) => perPlace(e, d + 1)),
-  );
+  const vs = valuesOfKind(deal, kind, values);
+  if (byValue)
+    return vs.flatMap((d) => axes.map((run) => run.map((e) => perPlace(e, d))));
+  return axes.map((run) => run.flatMap((e) => vs.map((d) => perPlace(e, d))));
 }
 
 /** The element a place of kind `kind` is at ({@link placesOf}). */

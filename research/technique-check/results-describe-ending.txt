@@ -1,0 +1,5 @@
+ok  ending     placed                         current: recorded src/engine/testing/fixtures/ending/ending.description.yaml#placed 46e01adb2e81814f
+ok  ending     single                         current: recorded src/engine/testing/fixtures/ending/ending.description.yaml#single a178ae2b637ca08f
+ok  ending     full                           current: recorded src/engine/testing/fixtures/ending/ending.description.yaml#full 2bcfceef8a76c477
+ok  ending     room                           current: recorded src/engine/testing/fixtures/ending/ending.description.yaml#room d33935bd72720119
+ok  ending     twos                           current: recorded src/engine/testing/fixtures/ending/ending.description.yaml#twos 46ccc30601ba889e

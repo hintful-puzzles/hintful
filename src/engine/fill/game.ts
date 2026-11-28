@@ -113,7 +113,7 @@ import {
   fillRender,
 } from "./render.ts";
 import { answerSearched, searches } from "./search.ts";
-import { marginValuesOf } from "./value-margin.ts";
+import { marginSidesOf } from "./value-margin.ts";
 
 /** What a game born from its description's compiled module holds. */
 export interface BornModule<C>
@@ -398,7 +398,7 @@ export function fillGame<C extends Clues<C> & object>(
       : {
           valueMargins: {
             kinds: module.valueMargins,
-            values: (b: FillBoard<C>) => marginValuesOf(module, b),
+            sides: (b: FillBoard<C>) => marginSidesOf(module, b),
           },
         }),
     ...(module.answerSort === "cell"
