@@ -1779,8 +1779,37 @@
               "description": "An arrow at the grid's edge carries the cursor to the other edge (upstream's Singles)."
             },
             "click": {
-              "enum": ["toggle", "cycle"],
-              "description": "What a click does: `toggle` (the default) sets the button's value or empties a cell holding it; `cycle` goes round empty, the button's value and the other button's, the right button the other way round."
+              "description": "What a click does: `toggle` (the default) sets the button's value or empties a cell holding it; `cycle` goes round empty, the button's value and the other button's, the right button the other way round; or, by button, the values it goes round after empty, in order, a cell holding a value its list does not name left as it is (upstream Magnets' left button: empty, + where pressed, − where pressed).",
+              "oneOf": [
+                { "enum": ["toggle", "cycle"] },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["primary", "secondary"],
+                  "properties": {
+                    "primary": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "type": "integer" }
+                    },
+                    "secondary": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "type": "integer" }
+                    }
+                  }
+                }
+              ]
+            },
+            "whole": {
+              "type": "object",
+              "description": "A part of a dealt partition played whole (upstream Magnets' tile): a value placed in one of its squares writes each of its other open squares `others`, a formula of the value `d`, and emptying one empties them.",
+              "additionalProperties": false,
+              "required": ["part", "others"],
+              "properties": {
+                "part": { "type": "string" },
+                "others": { "type": "string" }
+              }
             },
             "shape": {
               "type": "string",

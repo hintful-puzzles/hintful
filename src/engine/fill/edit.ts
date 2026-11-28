@@ -6,6 +6,7 @@
  */
 
 import { rejectMove } from "../contract/assert-never.ts";
+import type { Partition } from "../solve/describe-runtime.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
 
 export interface Edit {
@@ -40,6 +41,19 @@ function isEdit(move: unknown): move is Edit {
   );
 }
 
+/** The parts a board's module plays whole (`play.whole`), each cell's part
+ * and what its other squares take, or `null` where it plays none. */
+function wholeOf<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+): (Pick<Partition, "cells" | "of"> & { others(d: number): number }) | null {
+  const part = module.play?.whole?.part;
+  const others = module.wholeOthers;
+  if (part === undefined || others === undefined) return null;
+  const { cells, of } = board.dealt[part as keyof C] as unknown as Partition;
+  return { cells, of, others };
+}
+
 /**
  * The board after `edit`: its values, then its marks, then every mark whose
  * `while` the new values break dropped. A fixed cell, a cell off the board
@@ -61,11 +75,19 @@ export function applyEdit<C>(
   const set = edit.set ?? [];
   // A value placed on a cell takes the place of its notes.
   const pencil = board.pencil?.slice() ?? null;
+  const put = (c: number, v: number) => {
+    values[c] = v;
+    if (pencil !== null && v !== 0) pencil[c] = 0;
+  };
+  const whole = wholeOf(module, board);
   for (let i = 0; i < set.length; i += 2) {
     const c = cellOf(set[i]);
     if (board.fixed[c]) throw new Error(`edit: cell ${c} is fixed`);
-    values[c] = set[i + 1];
-    if (pencil !== null && values[c] !== 0) pencil[c] = 0;
+    const v = set[i + 1];
+    put(c, v);
+    if (whole === null) continue;
+    for (const p of whole.cells[whole.of[c]] ?? [])
+      if (p !== c && !board.fixed[p]) put(p, v === 0 ? 0 : whole.others(v));
   }
   const marks = edit.mark ?? [];
   for (let i = 0; i < marks.length; i += 2) mark[cellOf(marks[i])] = marks[i + 1];

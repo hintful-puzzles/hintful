@@ -1,0 +1,8 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A domino read as holding the same at both ends.
+  pair:
+    conclude: "place(p, value(c))"

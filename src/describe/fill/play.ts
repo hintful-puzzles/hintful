@@ -33,6 +33,7 @@ import { boundsOf, menuOf, sizeOf } from "./menu.ts";
 import { notesOf } from "./notes.ts";
 import { recordSitesOf } from "./records.ts";
 import { partBound } from "./values.ts";
+import { checkClick, checkWhole, wholeOthersOf } from "./whole.ts";
 
 /** Refuses pictures (`numbers.pictures`) a board cannot draw: a painter no
  * description may name; values painted that are not 1 up, or not those
@@ -426,8 +427,11 @@ export function playOf(
     plain: _plain,
     wash,
     highlights,
+    whole,
     ...rest
   } = p;
+  checkClick(p);
+  checkWhole(json, whole);
   if (rest.covers !== undefined && values[rest.covers.value] === undefined)
     throw new CompileError(
       `play covers: ${rest.covers.value} is not a value the player places`,
@@ -503,6 +507,7 @@ export function playOf(
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
   const plainPlay = {
     ...rest,
+    ...(whole === undefined ? {} : { whole: { part: whole.part } }),
     ...(notes ? { notes } : {}),
     ...(dotted ? { dotted } : {}),
     ...(wash === undefined
@@ -545,6 +550,7 @@ export function playOf(
     ...repeatOf(d, env, measured),
     ...washedOf(wash?.when ?? null, env, measured),
     ...highlightedOf(highlights, env, measured),
+    ...wholeOthersOf(whole?.others ?? null, env, measured),
     ...recordHoldsOf(json, d, env, measured),
     ...(p.along === undefined || p.list === undefined
       ? []

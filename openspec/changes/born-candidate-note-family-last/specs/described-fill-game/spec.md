@@ -672,3 +672,22 @@ write a value a character, `byValue` a value at a time.
 - **WHEN** an `ending` 4x4 board is written
 - **THEN** its ID is the columns' and rows' 1s, then their 3s, four
   characters a run, each run closed by a comma
+
+### Requirement: A born game's dealt part may be played whole
+
+Where `play.whole` names a dealt partition, a value placed in one square of
+a part, by any edit, SHALL write each other open square of it `others` of
+that value, and emptying one SHALL empty them. A `click` given by button
+SHALL go round empty and that button's values from the square pressed, and
+SHALL leave a square holding a value its list does not name.
+
+#### Scenario: A magnet turned round
+
+- **WHEN** a `poling` domino's left end is clicked twice
+- **THEN** it holds a 3 there and a 1 at the other end, and a third click
+  empties both
+
+#### Scenario: A neutral tile is the right button's
+
+- **WHEN** a `poling` domino holding two 2s is clicked with the left button
+- **THEN** nothing changes

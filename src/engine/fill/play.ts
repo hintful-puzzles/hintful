@@ -62,6 +62,7 @@ import {
   listOf,
   spaceOf,
 } from "./board.ts";
+import { type Button, type ClickCycles, clickOf } from "./click.ts";
 import { edgeGeometry, edgeReach, elementAtPoint } from "./edge-target.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import type { ReorderDrag } from "./order.ts";
@@ -221,8 +222,12 @@ export interface FillPlay {
   readonly secondary?: number;
   /** What a click does: `toggle`, the default, sets the button's value or
    * empties a cell holding it; `cycle` goes round empty, the button's value
-   * and the other button's. */
-  readonly click?: "toggle" | "cycle";
+   * and the other button's; or, by button, the values it goes round after
+   * empty, leaving a cell holding a value its list does not name. */
+  readonly click?: "toggle" | "cycle" | ClickCycles;
+  /** The dealt partition whose parts are played whole (`edit.ts`): a value
+   * placed in one square writes the others the module's `wholeOthers`. */
+  readonly whole?: { readonly part: string };
   /** The clue kind at a cell that the cell is dealt holding, fixed. */
   readonly dealt?: string;
   /** Whether a dealt cell is drawn with a dot on its piece, where its kind
@@ -453,18 +458,12 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       const v = to(b.values[c]);
       return b.fixed[c] || v === b.values[c] ? null : { set: [c, v] };
     };
-  /** A button's verb: toggling its value with empty, or going round empty,
-   * its value and `then`. */
-  const clicking = (value: number, then: number): Verb =>
-    play.click === "cycle"
-      ? {
-          does: play.values[value].does,
-          apply: setting((v) => (v === 0 ? value : v === value ? then : 0)),
-        }
-      : {
-          does: `${play.values[value].does}, or empty it if it is already filled`,
-          apply: setting((v) => (v === 0 ? value : 0)),
-        };
+  const click = clickOf(play);
+  /** A button's verb, as its click goes (`click.ts`). */
+  const clicking = (button: Button): Verb => ({
+    does: click.does(button),
+    apply: setting((v) => click.next(button, v)),
+  });
   const keyOf = (k: string): VerbKey =>
     isDigit(k) ? digitKey(Number(k)) : letterKey(k);
   const keyOnly: KeyOnlyVerb<FillBoard<C>, FillUi, Point, Edit>[] = [
@@ -476,7 +475,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
         apply: setting(() => value),
         pointer: {
           kind: "cycle" as const,
-          button: value === secondary ? ("secondary" as const) : ("primary" as const),
+          button: click.buttonOf(value),
         },
       };
     }),
@@ -490,13 +489,13 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   ];
   const targetVerbs: TargetVerbs<FillBoard<C>, FillUi, D, Point, Edit> = {
     geometry,
-    primary: clicking(primary, secondary),
+    primary: clicking("primary"),
     // One of a pair of alike pieces (Unruly's block and disc), or of two
     // lines (Sticks'), is placed as the other is, and rules nothing out.
     secondary:
       paired(play.values[secondary].paint) || axes !== null
-        ? clicking(secondary, primary)
-        : rulingOut(clicking(secondary, primary)),
+        ? clicking("secondary")
+        : rulingOut(clicking("secondary")),
     keyOnly,
     ...(onEdges
       ? {

@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a board laid at random with dominoes, each holding
+# a 1 and a 3 or two 2s, a square no domino covers a 2, some squares given.
+# For the fill engine's tests of a part played whole, a value placed in one
+# of its squares writing the others, and of a click going round a button's
+# own values, on a description that names no game.
+game: poling
+produces: shading
+sizes:
+  w: { min: 2, max: 8 }
+  h: { min: 2, max: 8 }
+space:
+  grid: { w: "w", h: "h" }
+  regions: { tile: dealt }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 3)" }
+define:
+  others(c): "{p in cells(tile(c)) where p != c}"
+shape:
+  - "forall c in cells: |cells(tile(c))| <= 2"
+  - "forall c in cells where |cells(tile(c))| = 1: value(c) = 2"
+  - "forall c in cells, p in others(c): value(p) = 4 - value(c)"
+# A piece the board is dealt holding.
+given: [value]
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a block in it, key: "1", glyph: " 1 ", paint: block }
+    2: { does: put a disc in it, key: "2", glyph: " 2 ", paint: disc }
+    3: { does: put a ring in it, key: "3", glyph: " 3 ", paint: ring }
+  primary: 1
+  secondary: 2
+  click: { primary: [1, 3], secondary: [2] }
+  whole: { part: tile, others: "4 - d" }
+  boards: [4x4, 5x3]
+  hintMarks:
+    ring: the square to fill.
+    outline: the squares the step reasons from.
+deal:
+  tiles: a random tiling, a square left alone where the area is odd
+  answer: a tile of a 1 and a 3, or of 2s, built at random
+  given: every square's piece, then each hidden while the board still finishes
+  tier: the one tier
+  divide: { partition: tile, dominoes: true }
+  sample: { build: true }
+  hide: given
+id:
+  - pairs: tile
+  - numbers: given
+    before: ","
+    hidden: "."
+tiers: [Easy]
+names:
+  pair: "the other end of a domino"
+techniques:
+  # The other end of a placed domino holds what makes the two sum to 4.
+  - id: pair
+    tier: Easy
+    for: "c in cells where known(c), p in others(c) where not known(p)"
+    conclude: "place(p, 4 - value(c))"
+    says:
+      terms: { n: "value(c)" }
+      marks: { outline: "{c}" }
+      look: "{outline: The other end} of {ring}'s domino holds {piece n}"

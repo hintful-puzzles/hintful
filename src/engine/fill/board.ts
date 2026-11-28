@@ -112,6 +112,9 @@ export interface FillModule<C> {
   /** Whether the mark on cell `c` may stand on the values `g`: the mark's
    * `while`. A mark with none stands on any. */
   markWhile?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;
+  /** What each other square of a part played whole (`play.whole`) holds
+   * once one holds `d`. */
+  wholeOthers?(d: number): number;
   /** Whether cell `c` is washed on the values `g` (`play.wash`): an open one
    * then reads as the secondary value, which a piece there would break. */
   washed?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;

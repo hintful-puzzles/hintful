@@ -91,8 +91,8 @@ order.
         area is odd, and the ID's `pairs` segment, on `tiling`.
   - [x] 2.4b `per` of some values, laid at a line's two ends (`play.ends`),
         written a character a value (`alphabet`, `byValue`), on `ending`.
-  - [ ] 2.4c A part played whole: a value writes the part's other cells by
-        a formula, a click cycles the part from the cell pressed.
+  - [x] 2.4c `play.whole` (any edit writes a part's other squares) and a
+        `click` cycle by button, on `poling`.
   - [ ] 2.4d Pole painters (+, −, neutral).
   - [ ] 2.4e The notes, by the owner's answer to § "Decisions" 15.
   - [ ] 2.4f The deal: a few neutral tiles first, then a magnet wherever

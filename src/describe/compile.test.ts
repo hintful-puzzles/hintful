@@ -2175,6 +2175,34 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/id: pairs of tile, which the deal does not lay as dominoes/);
   });
 
+  it("plays a dealt part whole, and refuses a cycle not starting at its button's value", () => {
+    const poling = "src/engine/testing/fixtures/poling/poling.description.yaml";
+    type Poling = {
+      play: { click: Record<string, number[]>; whole: { part: string } };
+    };
+    const edited = (edit: (j: Poling) => void) =>
+      compileEdited(poling, (j: Poling) => {
+        edit(j);
+        return j;
+      });
+    expect(edited(() => {})).toContain('"whole":{"part":"tile"}');
+    expect(() =>
+      edited((j) => {
+        j.play.click["primary"] = [3, 1];
+      }),
+    ).toThrow(/play click: primary goes first to its own value/);
+    expect(() =>
+      edited((j) => {
+        j.play.click["secondary"] = [2, 4];
+      }),
+    ).toThrow(/goes round 4, which is no value the player places/);
+    expect(() =>
+      edited((j) => {
+        j.play.whole.part = "box";
+      }),
+    ).toThrow(/play whole: box is no dealt partition/);
+  });
+
   it("lays a clue of some values at a line's two ends, and writes it a character a value", () => {
     const ending = "src/engine/testing/fixtures/ending/ending.description.yaml";
     type Ending = {
