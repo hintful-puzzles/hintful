@@ -1271,7 +1271,9 @@ of the board's highlights (`render/layers/wash.ts`), so a player's wash
 over the squares is one lane whichever control asks for it. A square is
 put in focus for the band by its badge, in the gap above it
 (`sites/badges.ts`), and a site drawn in a gap keys on what the gap shows
-(`ds.gaps.shown`), since the gaps site clears a gap whole.
+(`ds.gaps.shown`), since the gaps site clears a gap whole. The keyboard
+enters the band down from the board (`bandKey`, `enterBand`), and a
+hint's strike no letters' halves make is pressed there (`FeatureSites`).
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

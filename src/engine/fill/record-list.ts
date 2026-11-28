@@ -103,6 +103,16 @@ function listLayout(lengths: readonly number[], across: number): ListLayout {
   return { font, row, slots };
 }
 
+/** How many rows deep the records of `texts` are laid, `across` tiles wide:
+ * the layout's own, which no tile size changes. */
+export function listRows(texts: readonly string[], across: number): number {
+  const { row } = listLayout(
+    texts.map((t) => t.length),
+    across,
+  );
+  return row === 0 ? 0 : Math.round(PANEL / row);
+}
+
 /** Each record of board `b`'s clue `kind` as drawn, its members' glyphs. */
 export const recordTexts = <C>(
   b: FillBoard<C>,

@@ -447,6 +447,68 @@ describe("a square in focus", () => {
   });
 });
 
+describe("the keyboard in the band", () => {
+  // Square 2, the bottom row's left, open; every other given.
+  const id = idOf(ANSWER, [2]);
+  /** The board, Ui and frame after `keys`, Down repeated until the cursor
+   * is in the band first where `enter`. */
+  const keying = (enter: boolean, ...keys: number[]) => {
+    const { midend, palette } = renderScenario({ game, id });
+    let board = game.newState(PARAMS, descOf(ANSWER, [2]));
+    const ui = game.newUi(board);
+    const ds = game.newDrawState(board, game.preferredTileSize);
+    const press = (key: number) => {
+      midend.processInput(0, 0, key);
+      const made = game.interpretMove(board, ui, ds, { x: 0, y: 0 }, key);
+      if (made !== null && made !== UI_UPDATE) board = game.executeMove(board, made);
+    };
+    for (let n = 0; enter && (ui.bandAt ?? -1) < 0; n++) {
+      if (n > 10) throw new Error("Down never reached the band");
+      press(CURSOR_DOWN);
+    }
+    for (const k of keys) press(k);
+    const recording = new RecordingDrawing(palette);
+    midend.forceRedraw(recording);
+    return { ops: recording.ops, board, ui };
+  };
+
+  it("is entered by Down from the bottom row, its square put in focus", () => {
+    const { ui, ops } = keying(true);
+    expect(ui.bandAt).toBe(0);
+    expect(ui.focus).toBe(2);
+    expect(ui.cursor.visible).toBe(false);
+    // Its corners about the band's first set, below the board.
+    const first = ops.find((o) => o.op === "text" && o.text === "__");
+    if (first?.op !== "text") throw new Error("no __");
+    const corners = ops.filter(
+      (o) => "color" in o && o.color === COL_CURSOR && o.op === "line",
+    );
+    expect(corners.length).toBeGreaterThan(0);
+    for (const o of corners)
+      if (o.op === "line") expect(Math.abs(o.y1 - (first.y - 8))).toBeLessThan(30);
+  });
+
+  it("walks the band, and Up from its top row goes back to the board", () => {
+    expect(keying(true, CURSOR_DOWN, CURSOR_DOWN).ui.bandAt).toBe(2);
+    expect(keying(true, CURSOR_DOWN, CURSOR_UP).ui.bandAt).toBe(0);
+    const back = keying(true, CURSOR_UP).ui;
+    expect(back.bandAt).toBe(-1);
+    expect(back.cursor.visible).toBe(true);
+  });
+
+  it("strikes the set under it from the square in focus, and gives it back", () => {
+    const struck = keying(true, CURSOR_SELECT).board;
+    const before = keying(false).board;
+    const notes = (b: typeof struck) => Array.from(b.pencil ?? [])[2];
+    // The empty set, struck by Enter and given back by Backspace.
+    expect(notes(struck)).toBe(notes(before) & ~(1 << 1));
+    expect(notes(keying(true, CURSOR_SELECT, CURSOR_SELECT2).board)).toBe(
+      notes(before),
+    );
+    expect(notes(keying(true, CURSOR_SELECT, BACKSPACE).board)).toBe(notes(before));
+  });
+});
+
 describe("notes full from the deal", () => {
   // Every set, bits 1 to 4.
   const EVERY = 0b11110;
@@ -784,11 +846,16 @@ describe("a hint's gesture on a board of letters", () => {
           : [RIGHT_BUTTON, RIGHT_RELEASE];
       const move = game.interpretMove(at, ui, ds, a.at, down);
       game.interpretMove(at, ui, ds, a.at, up);
-      if (move === null || move === UI_UPDATE) throw new Error("a press made nothing");
+      if (move === null) throw new Error("a press made nothing");
+      // A badge's press puts a square in focus, and moves nothing.
+      if (move === UI_UPDATE) {
+        verdicts.push(`focus ${ui.focus}`);
+        continue;
+      }
       verdicts.push(keepTrack(move, step, at));
       at = game.executeMove(at, move);
     }
-    return { actions, verdicts, before: b, after: at, struck: plan.steps[0].move };
+    return { actions, verdicts, before: b, after: at, struck: plan.steps[0].move, ui };
   };
 
   it("strikes a square's sets as the letters whose halves they are, one press each", () => {
@@ -812,9 +879,46 @@ describe("a hint's gesture on a board of letters", () => {
     expect(Array.from(after.pencil ?? [])).toEqual(Array.from(stepped.pencil ?? []));
   });
 
-  it("refuses a strike that is no union of letter halves", () => {
+  it("strikes on the band what no union of letter halves strikes, each square in focus in turn", () => {
     // Every square open but square 3: {A, B} struck alone from squares
     // 0 to 2, which no letter's half is.
-    expect(() => followed(ANSWER, [0, 1, 2])).toThrow(/no letter's half/);
+    const { verdicts, before, after, struck, ui } = followed(ANSWER, [0, 1, 2]);
+    expect(verdicts).toEqual([
+      "focus 0",
+      "onTrack",
+      "focus 1",
+      "onTrack",
+      "focus 2",
+      "completed",
+      "focus -1",
+    ]);
+    const stepped = game.executeMove(before, struck);
+    expect(Array.from(after.pencil ?? [])).toEqual(Array.from(stepped.pencil ?? []));
+    expect(ui.spotlit ?? 0).toBe(0);
+  });
+
+  it("rings on the band each set the step strikes", () => {
+    const ringed = (hidden: readonly number[]) => {
+      const { recording } = renderScenario({
+        game,
+        id: idOf(ANSWER, hidden),
+        showHint: true,
+      });
+      const ops = recording.ops;
+      return ["__", "A_", "_B", "AB"].filter((text) => {
+        const t = ops.find((o) => o.op === "text" && o.text === text);
+        if (t?.op !== "text") throw new Error(`no ${text}`);
+        return ops.some(
+          (o) =>
+            o.op === "ring" &&
+            o.x <= t.x &&
+            o.x + o.w >= t.x + 4 &&
+            o.y <= t.y - 4 &&
+            o.y + o.h >= t.y - 4,
+        );
+      });
+    };
+    // Square 0 is {A}: the rest struck from it.
+    expect(ringed([0])).toEqual(["__", "_B", "AB"]);
   });
 });

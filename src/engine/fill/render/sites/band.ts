@@ -5,9 +5,16 @@
  * list's record is: a strike through a set's `_` reads as another glyph, and
  * the band's strike is what the square in focus rules out. */
 
-import { COL_BACKGROUND, COL_ERROR, COL_HINT_OUTLINE } from "../../../color/roles.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+} from "../../../color/roles.ts";
 import type { DrawTextOptions } from "../../../contract/types.ts";
+import { drawRectCorners } from "../../../render/draw.ts";
 import { drawMarkSides, MARK_ALL } from "../../../render/hint-mark.ts";
+import { textBox } from "../../../render/ring.ts";
 import { canHold, placedCounts } from "../../band.ts";
 import { COL_INK } from "../palette.ts";
 import type { FillSite } from "./site.ts";
@@ -18,6 +25,8 @@ const PLACED = 1;
 const BROKEN = 2;
 const SPOTLIT = 4;
 const RULED = 8;
+const CURSOR = 16;
+const HINTED = 32;
 
 export const band: FillSite = {
   on: (cx) => cx.banded,
@@ -26,11 +35,17 @@ export const band: FillSite = {
     const { values, texts, area, pixels } = cx.bandOf(b, ts, lay.f.depth);
     const focus = ui.focus ?? -1;
     const open = focus >= 0 && b.values[focus] === 0;
+    // What the hint's step strikes from any square, packed by the hint pass
+    // before the sites paint.
+    let hinted = 0;
+    for (const m of ds.struck.struck) hinted |= m;
     const states = placedCounts(b, values).map(
       (n, k) =>
         (n > 1 ? BROKEN : n === 1 ? PLACED : 0) |
         (values[k] === ui.spotlit ? SPOTLIT : 0) |
-        (open && !canHold(b, focus, values[k]) ? RULED : 0),
+        (open && !canHold(b, focus, values[k]) ? RULED : 0) |
+        (k === ui.bandAt ? CURSOR : 0) |
+        (hinted & (1 << values[k]) ? HINTED : 0),
     );
     const key = states.join(",");
     if (ds.band.shown === key) return;
@@ -47,17 +62,36 @@ export const band: FillSite = {
     const thick = Math.max(2, Math.round(font / 8));
     for (const [k, o] of origins.entries()) {
       const s = states[k];
+      const box = {
+        x: o.x - pad,
+        y: Math.round(o.y - font * 0.85),
+        w: o.w + 2 * pad,
+        h: Math.round(font * 1.1),
+      };
       // The value spotlit is framed in the second color, as a list's record
       // a hint reasons from is.
-      if (s & SPOTLIT) {
-        const box = {
-          x: o.x - pad,
-          y: Math.round(o.y - font * 0.85),
-          w: o.w + 2 * pad,
-          h: Math.round(font * 1.1),
-        };
+      if (s & SPOTLIT)
         drawMarkSides(dr, { box, outer: thick, inner: 0 }, MARK_ALL, COL_HINT_OUTLINE);
+      // A value the hint's step strikes is ringed, as a list's record the
+      // step changes is: a strike no letters' halves make is read here.
+      if (s & HINTED) {
+        const avoid = origins.flatMap((q, j) =>
+          j === k ? [] : [textBox(q, opts, texts[j])],
+        );
+        dr.drawRing(box, { enclose: [textBox(o, opts, texts[k])], avoid }, thick, {
+          room: area,
+        });
       }
+      // The keyboard cursor, as the board's: corners, inside a frame.
+      if (s & CURSOR)
+        drawRectCorners(
+          dr,
+          box.x + Math.floor(box.w / 2),
+          box.y + Math.floor(box.h / 2),
+          Math.floor(Math.max(box.w, box.h) / 2) - 1,
+          COL_CURSOR,
+          Math.max(1, ts >> 4),
+        );
       const ink = s & BROKEN ? COL_ERROR : s & PLACED ? cx.pal.COL_DONE : COL_INK;
       dr.drawText(o, opts, ink, texts[k]);
       // Struck through the letters' middle, in the player's ink: a mark

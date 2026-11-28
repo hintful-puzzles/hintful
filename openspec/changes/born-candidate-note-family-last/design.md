@@ -510,6 +510,23 @@ a badge sits in is cleared whenever its clue is drawn again, so what the
 gap shows is in the badge's key (`sites/badges.ts`), and the badges are
 drawn after the gaps.
 
+### 24. The keyboard enters the band, and a hint strikes on it (2.5c4)
+
+Down from the board's bottom row of slots enters the band, onto its
+column under the cursor, and puts the square the cursor left in focus, so
+a board's keyboard reaches everything its pointer does; the arrows walk
+the band as laid, Up from its top row goes back to the board, Enter or
+Space presses a value as a click does, and Backspace gives a struck value
+back. The band's cursor is the board's corners. A pointer's press takes
+the cursor out of the band.
+
+A hint's strike that no union of letter halves makes is made on the band:
+each square put in focus by its badge, each value pressed, then the focus
+the player had given back, since a gesture leaves the Ui as it found it
+where it can. Every value a step strikes from any square is ringed on the
+band, as a list ringed a step's target, so a strike the letters cannot
+show is still read off the board.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

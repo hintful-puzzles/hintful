@@ -7,7 +7,7 @@
 import type { Painter } from "../../render/pieces/index.ts";
 import type { Partition } from "../../solve/describe-runtime.ts";
 import { rulesOf } from "../answer.ts";
-import { bandText, bandValues } from "../band.ts";
+import { type BandGrid, bandText, bandValues } from "../band.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
 import { countedOf } from "../counts.ts";
@@ -16,7 +16,7 @@ import { gapKindsOf } from "../gaps.ts";
 import { boardGlyphs } from "../glyphs.ts";
 import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
-import { LIST_HEIGHT, listedOf, listPixels } from "../record-list.ts";
+import { LIST_HEIGHT, listedOf, listPixels, listRows } from "../record-list.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
 import { type MarginSides, marginSidesOf } from "../value-margin.ts";
@@ -224,6 +224,14 @@ export function fillSetup<C extends Clues<C>>(
       pixels: listPixels(texts, across, ts, at.x, at.y),
     };
   };
+  /** Board `b`'s band as the keyboard walks it: its values and its rows,
+   * laid as the site lays them. */
+  const bandGrid = (b: FillBoard<C>): BandGrid => {
+    const values = bandValues(module, b);
+    const glyph = glyphOf(b);
+    const texts = values.map((v) => bandText(v, glyph, features));
+    return { values, rows: listRows(texts, metrics.spanTiles(b.w)) };
+  };
   /** What a board `w` wide draws beneath it but its tally: its row of counts,
    * its list, or its band, as wide as the board. */
   const untalliedBeneath = (w: number): Beneath | null =>
@@ -314,6 +322,7 @@ export function fillSetup<C extends Clues<C>>(
     listed,
     banded,
     bandOf,
+    bandGrid,
     untalliedBeneath,
     beneathOf,
     numberAt,

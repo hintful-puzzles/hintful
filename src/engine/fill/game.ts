@@ -42,7 +42,7 @@ import {
   status,
   textFormat,
 } from "./answer.ts";
-import { pressBadge, pressBand } from "./band.ts";
+import { bandKey, pressBadge, pressBand } from "./band.ts";
 import {
   boardSizeOf,
   type Clues,
@@ -494,7 +494,14 @@ export function fillGame<C extends Clues<C> & object>(
             marginKinds: module.valueMargins ?? [],
           },
           render.recordPoint,
-          play.numbers.features === undefined ? null : render.featureSlots,
+          play.numbers.features === undefined
+            ? null
+            : {
+                slotsOf: render.featureSlots,
+                bandGrid: render.bandGrid,
+                bandPoint: render.bandPoint,
+                badgePoint: render.badgePoint,
+              },
         );
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
@@ -548,14 +555,18 @@ export function fillGame<C extends Clues<C> & object>(
    * value's key (`counts.ts`), one on a record of the list taking it where
    * typing goes along the list's sites (`along.ts`), one on a value of the
    * band striking it from the square in focus or spotlighting its squares,
-   * and one on a badge putting its square in focus (`band.ts`); a right one
-   * is the right
+   * and one on a badge putting its square in focus (`band.ts`), whose keys
+   * the band takes while the keyboard is in it; a right one is the right
    * button's anywhere, which under the sticky preference switches notes on
    * and off. */
   const interpretMove =
     counted === null && takeRecord === null && play.band !== true
       ? inputs.interpretMove
       : (b: FillBoard<C>, ui: FillUi, ds: FillDrawState, p: Point, button: number) => {
+          const grid = render.bandGrid(b);
+          const keyed =
+            grid === null ? "pass" : bandKey(b, ui, stripModifiers(button), grid);
+          if (keyed !== "pass") return keyed;
           const left = stripModifiers(button) === LEFT_BUTTON;
           const spot = left ? render.bandPressed(b, ds, p) : null;
           if (spot !== null) return pressBand(b, ui, spot);

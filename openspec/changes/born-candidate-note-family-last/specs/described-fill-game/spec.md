@@ -834,10 +834,53 @@ On a born board whose values are features, a hint's strike SHALL be shown
 as presses on the square's undecided slots, each to present or absent,
 each striking only notes the step strikes; and a strike of part of a hint
 step's notes SHALL keep the hint on its step, shrunk to the rest. A strike
-that no such presses make is the band's, which a later requirement adds.
+that no such presses make SHALL be made on the band of every value.
 
 #### Scenario: A strike as two presses
 
 - **WHEN** the hint strikes {}, {B} and {A, B} from a `holding` square
 - **THEN** its gesture presses A to present and B to absent, and the first
   press keeps the hint on its step
+
+#### Scenario: A strike made on the band
+
+- **WHEN** the hint strikes {A, B} alone from three `holding` squares
+- **THEN** its gesture puts each square in focus by its badge and presses
+  {A, B} on the band, then gives back the focus the player had
+
+### Requirement: A born board of features may show every value as a band
+
+A born board whose values are features and which declares `play.band`
+SHALL draw every value beneath it, gray once a square holds it and red
+where two do. A press on a value SHALL spotlight the squares that can
+still hold it, and a second press put the spotlight out. The values a
+hint's step strikes SHALL be ringed on the band. The compiler SHALL refuse
+a band on a board not of numbers, or beside a list or counts.
+
+#### Scenario: A spotlight
+
+- **WHEN** the player presses {A, B} on a `holding` board's band
+- **THEN** the squares that can still hold {A, B} are washed, and a second
+  press puts them out
+
+### Requirement: A born band strikes from the square in focus
+
+On a born board with a band, a square SHALL be put in focus by its badge,
+in the gap above it, or by the keyboard entering the band. While an open
+square is in focus, the band SHALL strike each value its notes rule out,
+and a press on a value, or Enter on it, SHALL strike it from the square
+or give it back.
+
+#### Scenario: A strike from the square in focus
+
+- **WHEN** a `holding` square is in focus and the player presses {A, B} on
+  the band
+- **THEN** {A, B} is struck from its notes and on the band, and a second
+  press gives it back
+
+#### Scenario: The keyboard into the band
+
+- **WHEN** the cursor is on the board's bottom row and the player presses
+  Down
+- **THEN** the cursor is on the band, the square it left in focus, and Up
+  from the band's top row takes it back to the board

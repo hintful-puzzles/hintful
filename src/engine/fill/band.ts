@@ -13,6 +13,13 @@
  */
 
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
+import {
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  cursorDelta,
+  isEraseKey,
+  isMouseDown,
+} from "../input/pointer.ts";
 import { domainMask, type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import type { FillMove } from "./notes.ts";
 import type { FillUi } from "./play.ts";
@@ -73,6 +80,68 @@ export function pressBadge(ui: FillUi, c: number): UiUpdate {
   ui.focus = ui.focus === c ? -1 : c;
   ui.spotlit = 0;
   return UI_UPDATE;
+}
+
+/** How board `b`'s band is laid out for the keyboard: its values, and how
+ * many rows deep it is, the values going down each column in turn. */
+export interface BandGrid {
+  readonly values: readonly number[];
+  readonly rows: number;
+}
+
+/** The keyboard cursor enters the band from square `c` of the board's bottom
+ * row: onto the top of the band's column under it, the square put in
+ * focus, and the board's cursor put away until it comes back up. */
+export function enterBand<C>(
+  b: FillBoard<C>,
+  ui: FillUi,
+  c: number,
+  grid: BandGrid,
+): void {
+  const cols = Math.ceil(grid.values.length / grid.rows);
+  const col = Math.floor(((c % b.w) * cols) / b.w);
+  ui.bandAt = Math.min(grid.values.length - 1, col * grid.rows);
+  ui.focus = b.fixed[c] ? -1 : c;
+  ui.spotlit = 0;
+  ui.cursor.visible = false;
+}
+
+/** A key while the keyboard cursor is in the band: an arrow moves it, up
+ * from the top row back onto the board; Enter and Space press the value,
+ * as a click does; an erase key gives it back to the square in focus.
+ * `pass` for any other button, a pointer's among them, which takes the
+ * cursor out of the band. */
+export function bandKey<C>(
+  b: FillBoard<C>,
+  ui: FillUi,
+  button: number,
+  grid: BandGrid,
+): FillMove | UiUpdate | null | "pass" {
+  const at = ui.bandAt ?? -1;
+  if (at < 0) return "pass";
+  const delta = cursorDelta(button);
+  if (delta !== null) {
+    const row = at % grid.rows;
+    if (delta.dy < 0 && row === 0) {
+      ui.bandAt = -1;
+      ui.cursor.visible = true;
+      return UI_UPDATE;
+    }
+    const cols = Math.ceil(grid.values.length / grid.rows);
+    const col = Math.max(0, Math.min(cols - 1, Math.floor(at / grid.rows) + delta.dx));
+    const next = col * grid.rows + Math.max(0, Math.min(grid.rows - 1, row + delta.dy));
+    ui.bandAt = Math.min(grid.values.length - 1, next);
+    return UI_UPDATE;
+  }
+  const v = grid.values[at];
+  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) return pressBand(b, ui, v);
+  if (isEraseKey(button)) {
+    const c = ui.focus ?? -1;
+    if (c < 0 || b.values[c] !== 0 || canHold(b, c, v)) return null;
+    return { type: "pencilAdd", marks: [{ x: c % b.w, y: Math.floor(c / b.w), n: v }] };
+  }
+  if (isMouseDown(button)) ui.bandAt = -1;
+  return "pass";
 }
 
 /** The number of squares of board `b` that hold each value of `values`, by

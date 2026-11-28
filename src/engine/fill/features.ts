@@ -12,7 +12,7 @@
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { Point, Rect } from "../contract/types.ts";
 import type { Mark } from "../hint/candidate-hint.ts";
-import type { PointerAction } from "../input/hint-gesture.ts";
+import { click, type PointerAction } from "../input/hint-gesture.ts";
 import {
   cursorDelta,
   isMouseDown,
@@ -27,6 +27,7 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../input/target-verb.ts";
+import { type BandGrid, enterBand } from "./band.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import type { FillMove } from "./notes.ts";
 import type { FillUi } from "./play.ts";
@@ -102,21 +103,31 @@ export interface FeatureInput<C, D> {
   gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
 
+/** Where a board of features draws what its input reads: each square's
+ * slots, and the band beneath it, `null` where it has none (`band.ts`). */
+export interface FeatureSites<C, D> {
+  slotsOf(b: FillBoard<C>, ds: D, c: number): readonly Rect[];
+  bandGrid(b: FillBoard<C>): BandGrid | null;
+  bandPoint(b: FillBoard<C>, ds: D, v: number): Point | null;
+  badgePoint(b: FillBoard<C>, ds: D, c: number): Point | null;
+}
+
 /**
  * The input of `module`'s board of features, where `cellAt` is the square a
- * press lands on and `slotsOf` where its slots are drawn; `null` where its
- * values are no features.
+ * press lands on and `sites` where its slots and band are drawn; `null`
+ * where its values are no features.
  */
 export function featureInput<C, D extends { readonly tileSize: number }>(
   module: FillModule<C>,
   cellAt: (b: FillBoard<C>, ds: D, p: Point, ui: FillUi) => Point | null,
-  slotsOf: ((b: FillBoard<C>, ds: D, c: number) => readonly Rect[]) | null,
+  sites: FeatureSites<C, D> | null,
 ): FeatureInput<C, D> | null {
   const names = module.play?.numbers?.features?.names;
   if (names === undefined) return null;
   const of = module.featuresOf;
   if (of === undefined) throw new Error("play numbers features: no featuresOf");
-  if (slotsOf === null) throw new Error("play numbers features: no slots drawn");
+  if (sites === null) throw new Error("play numbers features: no slots drawn");
+  const { slotsOf } = sites;
   const count = names.length;
   const { across, down } = featureGrid(count);
 
@@ -202,7 +213,8 @@ export function featureInput<C, D extends { readonly tileSize: number }>(
       },
       // The arrows walk the slots of every square as one grid, past a
       // square's missing ones (upstream subsets.c's cursor, over its gaps),
-      // and stop at the board's edge.
+      // and stop at the board's edge, but for down from its bottom row into
+      // the band beneath it, where it has one.
       moveCursor(b, ui, button) {
         const delta = cursorDelta(button);
         if (delta === null) return false;
@@ -223,6 +235,11 @@ export function featureInput<C, D extends { readonly tileSize: number }>(
           !isSlot(x, y)
         );
         const moved = x >= 0 && y >= 0 && x < b.w * across && y < b.h * down;
+        const grid = sites.bandGrid(b);
+        if (!moved && delta.dy > 0 && ui.cursor.visible && grid !== null) {
+          enterBand(b, ui, ui.cursor.y * b.w + ui.cursor.x, grid);
+          return true;
+        }
         const shown = !ui.cursor.visible;
         ui.cursor.visible = true;
         if (!moved) return shown;
@@ -275,6 +292,7 @@ export function featureInput<C, D extends { readonly tileSize: number }>(
       const out: PointerAction[] = [];
       const pencil = Int32Array.from(b.pencil ?? []);
       const board = { ...b, pencil };
+      let focus = ui.focus ?? -1;
       for (const c of new Set(move.marks.map((m) => m.y * b.w + m.x))) {
         const x = c % b.w;
         const y = Math.floor(c / b.w);
@@ -296,10 +314,25 @@ export function featureInput<C, D extends { readonly tileSize: number }>(
             out.push(...verbGesture(verbs, b, ds, ui, [{ x, y, k }], button));
             break;
           }
-        if (left !== 0)
+        if (left === 0) continue;
+        // The rest is struck on the band, the square put in focus by its
+        // badge first.
+        const badge = sites.badgePoint(b, ds, c);
+        const values = valuesIn(left);
+        const points = values.map((v) => sites.bandPoint(b, ds, v));
+        if (badge === null || points.some((p) => p === null))
           throw new Error(
-            `play numbers features: square ${c}'s strike of ${valuesIn(left)} is no letter's half`,
+            `play numbers features: square ${c}'s strike of ${values} is no letter's half, and no band's`,
           );
+        if (focus !== c) out.push(click(badge));
+        focus = c;
+        for (const p of points) if (p !== null) out.push(click(p));
+      }
+      // The focus the player had is given back.
+      const had = ui.focus ?? -1;
+      if (focus !== had) {
+        const back = sites.badgePoint(b, ds, had < 0 ? focus : had);
+        if (back !== null) out.push(click(back));
       }
       return out;
     },

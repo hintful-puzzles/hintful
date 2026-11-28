@@ -14,7 +14,7 @@
 
 import { fromCoord } from "../board/geometry.ts";
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
-import type { KeyLabel, Point, Rect } from "../contract/types.ts";
+import type { KeyLabel, Point } from "../contract/types.ts";
 import {
   type CandidateMove,
   candidateGesture,
@@ -77,7 +77,7 @@ import {
 } from "./dividers.ts";
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { Edit } from "./edit.ts";
-import { type FeatureInput, featureInput } from "./features.ts";
+import { type FeatureInput, type FeatureSites, featureInput } from "./features.ts";
 import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf, waysOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
@@ -264,13 +264,13 @@ export function numberInput<
   gap: (tileSize: number) => number = () => 0,
   clueSites: ClueSites<C> = {},
   recordPoint: RecordPoint<C, D> | null = null,
-  featureSlots: ((b: FillBoard<C>, ds: D, c: number) => readonly Rect[]) | null = null,
+  featureSites: FeatureSites<C, D> | null = null,
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const features = featureInput<C, D>(
     module,
     (b, ds, p, ui) => geometry.pointerTarget(b, ds, p, ui),
-    featureSlots,
+    featureSites,
   );
   const notes = module.play?.notes === true;
   const listed = module.play?.list;

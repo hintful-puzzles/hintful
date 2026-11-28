@@ -260,6 +260,9 @@ export interface FillUi {
    * badge, whose notes the band strikes from, -1 where none is. */
   spotlit?: number;
   focus?: number;
+  /** On a board with a band, the value the keyboard cursor is on in it, by
+   * its index there, -1 where the cursor is on the board. */
+  bandAt?: number;
   /** On a board whose pieces all point (`glyphs.ts`'s `waysOf`), what Enter
    * or Space armed the selection to take from the next arrow key: a value,
    * or a note; `null` where nothing is armed. */

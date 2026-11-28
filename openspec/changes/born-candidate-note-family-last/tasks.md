@@ -3,9 +3,8 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a to 2.5c3 are in, 2.5c4 is next (design.md §
-"Decisions" 16, 20 to 23; the keyboard into the band is the hand-written
-`subsets/index.ts`'s `moveInTally`). For 2.2f: the
+on meanwhile: 2.5a to 2.5c are in, 2.5d is next (design.md §
+"Decisions" 16, 20 to 24). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -124,14 +123,9 @@ order.
           corners, and a press near a slot's edge.
     - [x] 2.5b4 The mistake check's slot, and the hint's gesture (design.md
           § "Decisions" 20). In the app at 2.5e: the red slots.
-  - [ ] 2.5c The band of every value: struck where placed, a spotlight, a
-        strike from the cell in focus (its badge, hand-written
-        `subsets/index.ts`'s `iconHit`), and the keyboard into it, down
-        from the board's bottom row of slots (`features.ts`' `moveCursor`
-        stops there now). The hint's gesture then strikes by the band what
-        no letters' halves make (`features.ts`' `gesture` throws there now,
-        `holding.test.ts`' "refuses a strike that is no union"). In steps,
-        each on `holding`:
+  - [x] 2.5c The band of every value, in steps, each on `holding`. In the
+        app at 2.5e: the band, its badges, the keyboard's corners and the
+        hint's rings.
     - [x] 2.5c1 The band drawn (`play.band`, `band.ts`), laid as a list:
           a set as its letters, `_` for each it lacks, gray where placed
           and red twice (design.md § "Decisions" 21).
@@ -139,8 +133,8 @@ order.
           in, again puts it out (design.md § "Decisions" 22).
     - [x] 2.5c3 A square in focus by its badge: the band strikes what its
           notes rule out, a press strikes or gives back (§ "Decisions" 23).
-    - [ ] 2.5c4 The keyboard into the band; the hint's strike by the band
-          where no letters' halves make it, and its marks on the band.
+    - [x] 2.5c4 The keyboard into the band, the hint's strike by it and
+          its rings on it (design.md § "Decisions" 24).
   - [ ] 2.5d Every value once (the sample), and upstream's ID.
   - [ ] 2.5e The flip. Weigh: whether a set a square settles to should
         strike itself from the other squares, which the hand-written game

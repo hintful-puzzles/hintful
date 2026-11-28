@@ -19,6 +19,7 @@ import { OverlaySidecar } from "../render/overlay-sidecar.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { perPlace } from "../solve/describe-runtime.ts";
 import type { FillMistake } from "./answer.ts";
+import type { BandGrid } from "./band.ts";
 import {
   type Clues,
   type FillBoard,
@@ -194,6 +195,13 @@ export interface FillRender<C> {
   /** The value of the band beneath the board a press at `p` lands on, `null`
    * where it lands on none or the board has no band. */
   bandPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
+  /** Board `b`'s band as the keyboard walks it, `null` where it has none. */
+  bandGrid(board: FillBoard<C>): BandGrid | null;
+  /** Where a press on value `v` of board `b`'s band lands, `null` where it
+   * has no band. */
+  bandPoint(board: FillBoard<C>, ds: FillDrawState, v: number): Point | null;
+  /** Where a press on square `c`'s badge lands, `null` where it has none. */
+  badgePoint(board: FillBoard<C>, ds: FillDrawState, c: number): Point | null;
   /** The square whose badge a press at `p` lands on, `null` where it lands
    * on none or the board has no badges. */
   badgePressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
@@ -403,6 +411,21 @@ export function fillRender<C extends Clues<C>>(
       const { values, pixels } = cx.bandOf(b, ds.tileSize, depth);
       const k = recordAtPixel(pixels, p);
       return k < 0 ? null : values[k];
+    },
+    bandGrid: (b) => (cx.banded ? cx.bandGrid(b) : null),
+    bandPoint: (b, ds, v) => {
+      if (!cx.banded) return null;
+      const depth = metrics.depthOf(b, cx.marginValues(b));
+      const { values, pixels } = cx.bandOf(b, ds.tileSize, depth);
+      const o = pixels.origins[values.indexOf(v)];
+      if (o === undefined) return null;
+      return { x: Math.round(o.x + o.w / 2), y: Math.round(o.y - pixels.font * 0.35) };
+    },
+    badgePoint: (b, ds, c) => {
+      if (!badged(cx) || b.fixed[c]) return null;
+      const lay = layoutFor(b, false, 1);
+      const { hit } = badgeOf(lay, ds.tileSize, c % b.w, Math.floor(c / b.w), b.h);
+      return { x: Math.round(hit.x + hit.w / 2), y: Math.round(hit.y + hit.h / 2) };
     },
     badgePressed: (b, ds, p) => {
       if (!badged(cx)) return null;
