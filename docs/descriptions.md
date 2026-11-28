@@ -458,7 +458,13 @@ description author acts on:
   geometry, and the squares are where the deal divides, the ID writes and
   the player presses. A relation `sides` is the parts sharing a side,
   read off the partition (`Squares.sides`, `engine/fill/parts.ts`), so no
-  deal or ID writes it.
+  deal or ID writes it. Such a board is drawn by a renderer of its own over
+  the squares (`engine/fill/parts-render.ts`), which splits a jagged
+  border's squares along their diagonals as upstream map.c does, seeded by
+  the board's ID: its values are pictures whose piece is their surface
+  (`play.numbers.pictures`, the four colors `pink`, `yellow`, `teal` and
+  `violet`), and a note is its painter's `note` dotted in a fixed
+  formation, which has room for four values.
 - **Two edges may be known alike or opposite** (a mark with `sort: edge`
   and `notation: alike or opposite`, Loopy's pairs): `pair(e, f)` is `{1}`
   alike, `{2}` opposite and `{1, 2}` unrelated, `related(e)` the edges

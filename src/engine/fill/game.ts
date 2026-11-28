@@ -98,6 +98,7 @@ import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
 import { offKinds } from "./params/settings.ts";
+import { partsRender } from "./parts-render.ts";
 import { type FillPlay, type FillUi, newFillUi } from "./play.ts";
 import { listedOf, listRecords } from "./record-list.ts";
 import { recordPanel } from "./record-panel.ts";
@@ -105,6 +106,7 @@ import { PLACE_ANIM_TIME } from "./render/tile.ts";
 import {
   type FillDrawState,
   type FillLabels,
+  type FillLook,
   type FillRender,
   fillRender,
 } from "./render.ts";
@@ -470,21 +472,20 @@ export function fillGame<C extends Clues<C> & object>(
   };
   // The renderer previews the input's drag, and the input reads the board
   // where the renderer puts it: each is read only once both are built.
-  const render: FillRender<C> = fillRender(
-    module,
-    {
-      play,
-      lineClues: module.lineClues,
-      ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
-      ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
-      ...(module.valueMargins === undefined
-        ? {}
-        : { valueMargins: module.valueMargins }),
-      ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
-      ...(module.labels === undefined ? {} : { labels: module.labels }),
-    },
-    (b, ui) => (buttons ?? typed)?.previewed(b, ui) ?? b,
-  );
+  const look: FillLook<C> = {
+    play,
+    lineClues: module.lineClues,
+    ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
+    ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+    ...(module.valueMargins === undefined ? {} : { valueMargins: module.valueMargins }),
+    ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
+    ...(module.labels === undefined ? {} : { labels: module.labels }),
+  };
+  // A board whose cells are parts is drawn over its squares.
+  const render: FillRender<C> =
+    deal.parts === undefined
+      ? fillRender(module, look, (b, ui) => (buttons ?? typed)?.previewed(b, ui) ?? b)
+      : partsRender(module, look, deal.parts);
   // A board of numbers is typed into; one of buttons is clicked and dragged.
   const typed =
     play.numbers === undefined

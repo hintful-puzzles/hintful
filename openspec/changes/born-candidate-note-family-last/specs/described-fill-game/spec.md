@@ -1005,3 +1005,31 @@ upstream map.c's edge list (`borders`).
 - **WHEN** a board of 8 regions on 5x5 squares is dealt
 - **THEN** it has 8 cells, and its answer colors no two that share a side
   alike
+
+### Requirement: A born board of parts is drawn over its squares
+
+A board of parts SHALL be drawn over its squares, each painted in its
+part's value's surface, the borders between parts drawn, and a square
+where two parts meet on opposite corners split along its diagonal between
+them, chosen as upstream map.c chooses, seeded by the board's ID. An open
+part's notes SHALL be dots on each of its squares, a value a row.
+
+#### Scenario: A smoothed map
+
+- **WHEN** the `mapping` fixture draws the 5x5 ID
+  `dabbaaaacadbabbedac,a23a01`
+- **THEN** it splits the three squares upstream's Map splits, each half in
+  its part's color
+
+### Requirement: A born board of parts shows a part's mistakes and clashes
+
+A mistaken part SHALL be outlined red on each of its squares, and two
+neighboring parts the rules find clashing SHALL show a diamond at a point
+of the border they share.
+
+#### Scenario: Two clashing borders
+
+- **WHEN** the first region of that board is colored as the fourth and the
+  sixth are
+- **THEN** a diamond is drawn on each of the two borders the first shares
+  with them, and nowhere else

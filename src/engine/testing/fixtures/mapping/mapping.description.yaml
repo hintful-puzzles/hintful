@@ -26,7 +26,10 @@ shape:
   - "forall a in cells, b in borders(a): value(b) != value(a)"
 freedom: { kind: fill }
 play:
-  numbers: {}
+  numbers:
+    pictures:
+      paint: { 1: pink, 2: yellow, 3: teal, 4: violet }
+      names: { 1: pink, 2: yellow, 3: teal, 4: violet }
   boards: [4x4n6, 5x5n8]
   hintMarks:
     ring: the region the step decides.

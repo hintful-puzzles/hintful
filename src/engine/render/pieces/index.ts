@@ -4,6 +4,7 @@ import { arrowDown, arrowLeft, arrowRight, arrowUp, goal } from "./arrow.ts";
 import { across, down } from "./bar.ts";
 import { ground, tent, tree } from "./camp.ts";
 import { hull, sea } from "./fleet.ts";
+import { pink, teal, violet, yellow } from "./four.ts";
 import { bulb, wall } from "./lamp.ts";
 import {
   fallPiece,
@@ -38,16 +39,20 @@ export const PAINTERS = {
   hull,
   minus,
   neutral,
+  pink,
   plus,
   rise: risePiece,
   ring,
   sea,
   shade,
   star,
+  teal,
   tent,
   tree,
   vampire: vampirePiece,
+  violet,
   wall,
+  yellow,
   zombie: zombiePiece,
 } as const satisfies Record<string, Painter>;
 

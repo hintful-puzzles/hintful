@@ -12,7 +12,7 @@ space:
   grid: { w: "w", h: "h" }
   units: []
 answer:
-  value: { sort: cell, domain: "range(1, 25)" }
+  value: { sort: cell, domain: "range(1, 29)" }
 define:
   open(L): "{c in cells(L) where not known(c)}"
   need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
@@ -45,6 +45,10 @@ play:
     22: { does: point it down, key: N, glyph: " v ", paint: arrowDown }
     23: { does: point it left, key: I, glyph: " < ", paint: arrowLeft }
     24: { does: point it right, key: J, glyph: " > ", paint: arrowRight }
+    26: { does: color it pink, key: P, glyph: " p ", paint: pink }
+    27: { does: color it yellow, key: Y, glyph: " y ", paint: yellow }
+    28: { does: color it teal, key: Q, glyph: " q ", paint: teal }
+    29: { does: color it violet, key: F, glyph: " f ", paint: violet }
   given:
     14: { glyph: " T ", paint: tree }
     15: { glyph: "###", paint: wall }

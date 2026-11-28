@@ -708,7 +708,7 @@ shared run-letter stream with `from: 0`, a color written one less than its
 value, as map.c writes 0 to 3. Checked against an ID the hand-written
 generator dealt (`mapping.test.ts`).
 
-### 30. A board of parts is drawn by a renderer of its own (2.6b, planned)
+### 30. A board of parts is drawn by a renderer of its own (2.6b)
 
 Read 2026-11-28: the fill renderer (`render.ts`, `render/tile.ts`) keys a
 tile a cell, and every layer reads a cell as one square (`c % w`), so a
@@ -720,6 +720,19 @@ reference. Upstream seeds the smoothing with the ID; `encodeDesc` of the
 board's clues writes the same ID, so a born board splits the squares the
 hand-written one does. A square's key is its quadrants' parts' values,
 notes, mistake, hint roles and selection.
+
+Built (`parts-render.ts`, `render/parts-geometry.ts`): the geometry is
+map-data.ts's, keyed by the partition and its parts' pairs in place of
+Map's graph, and matched it on 240 deals of six sizes (607 split squares;
+a wrong seed diverges on 231). The values are pictures
+(`play.numbers.pictures`) whose painters, `pink`, `yellow`, `teal` and
+`violet` (`render/pieces/four.ts`, `FOUR_FILLS`), are their surface alone,
+with a note a dot in the color's mark: so the palette, the keypad's names
+and a hint's words come from the painters as on any board of pictures, and
+nothing in the renderer names a color. The dot formation is upstream's,
+room for four values, and the renderer refuses a board of notes with more.
+Selection, the hint's marks and the drag are 2.6c and 2.6d's; the region
+numbers and the large dots 2.6f's.
 
 ## What each flip changed for a player
 

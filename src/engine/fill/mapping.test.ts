@@ -7,10 +7,25 @@
 
 import { describe, expect, it } from "vitest";
 import * as mapping from "../../generated/engine/testing/fixtures/mapping/mapping.compiled.ts";
+import { FOUR_FILL_MARKS, FOUR_FILLS } from "../color/colors.ts";
+import { cellSurface } from "../color/palette.ts";
+import { COL_ERROR } from "../color/roles.ts";
 import { validateDesc } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
-import { type FillBoard, solveBoard } from "./board.ts";
+import { NO_FLASH } from "../render/win-wave.ts";
+import type { Squares } from "../solve/describe-runtime.ts";
+import {
+  type DrawOp,
+  RecordingDrawing,
+  rgbLabel,
+} from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
+import type { FillMistake } from "./answer.ts";
+import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
+import { newFillUi } from "./play.ts";
+import { BOTTOM, LEFT, partsGeometry, RIGHT, TOP } from "./render/parts-geometry.ts";
 
 const game = fillGame("mapping", mapping);
 type Board = FillBoard<mapping.Dealt>;
@@ -97,5 +112,145 @@ describe("a board whose cells are a partition's parts", () => {
     ).not.toBeNull();
     // A color past 3.
     expect(validateDesc(game, p, "bbebeacacfb,041a12")).not.toBeNull();
+  });
+});
+
+describe("a board of parts drawn over its squares", () => {
+  // A 5x5 of 6 regions the hand-written Map split three squares of, its
+  // geometry read off map-data.ts's for this ID: square 6 between regions 1
+  // (top, right) and 0, square 7 between 1 (top, left) and 3, square 8
+  // between 2 (top, right) and 3.
+  const p = game.decodeParams("5x5n6");
+  const DESC = "dabbaaaacadbabbedac,a23a01";
+  const board = (): Board => game.newState(p, DESC);
+  const TS = 30;
+
+  it("splits and labels the squares as upstream map.c, seeded by the ID the board writes", () => {
+    const b = board();
+    // The seed is the board's own ID, written again from its clues.
+    expect(encodeDesc(mapping, mapping.deal, spaceOf(mapping, b), b.dealt)).toBe(DESC);
+    const g = partsGeometry(b.dealt.map as Squares, DESC);
+    const quadrants = (s: number) =>
+      [TOP, BOTTOM, LEFT, RIGHT].map((t) => g.quadrants[t * 25 + s]).join("");
+    const split = Array.from({ length: 25 }, (_, s) => s).filter(
+      (s) => g.quadrants[s] !== g.quadrants[25 + s],
+    );
+    expect(split.map((s) => `${s}:${quadrants(s)}`)).toEqual([
+      "6:1001",
+      "7:1313",
+      "8:2332",
+    ]);
+    expect(g.labels.map(({ x, y }) => `${x},${y}`)).toEqual([
+      "2,4",
+      "4,2",
+      "8,2",
+      "7,7",
+      "3,8",
+      "1,9",
+    ]);
+    // The border points of regions 0 and 3, and 0 and 5, both ways round.
+    expect([g.borders.get(3), g.borders.get(18)]).toEqual([
+      { x: 4, y: 5 },
+      { x: 4, y: 5 },
+    ]);
+    expect(g.borders.get(5)).toEqual({ x: 1, y: 8 });
+  });
+
+  /** One frame of board `b`, and each square's ops, by the clip it draws in. */
+  function draw(b: Board, mistakes: readonly FillMistake[] = []) {
+    const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+    const ds = game.newDrawState(b, TS);
+    game.redraw(dr, ds, {
+      state: b,
+      prev: null,
+      dir: 1,
+      ui: newFillUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
+    const o = game.computeSize(p, TS).w - 5 * TS - 1;
+    const squares: DrawOp[][] = Array.from({ length: 25 }, () => []);
+    let at = -1;
+    for (const op of dr.ops) {
+      if (op.op === "clip") at = ((op.y - o / 2) / TS) * 5 + (op.x - o / 2) / TS;
+      else if (op.op === "unclip") at = -1;
+      else if (at >= 0) squares[at].push(op);
+    }
+    return squares;
+  }
+
+  it("paints each square its region's color, and the bottom of a split square its own", () => {
+    const b = board();
+    const { of } = b.dealt.map;
+    const values = Uint8Array.from(b.values);
+    // Region 0 yellow and region 3 open.
+    values[0] = 2;
+    const squares = draw({ ...b, values });
+    const surface = (v: number) =>
+      v === 0 ? rgbLabel(cellSurface(DEFAULT_BACKGROUND)) : rgbLabel(FOUR_FILLS[v - 1]);
+    // A split square's top is the region the split gave it.
+    const top = (s: number) => (s === 6 || s === 7 ? 1 : s === 8 ? 2 : of[s]);
+    for (let s = 0; s < 25; s++) {
+      const fill = squares[s].find((op) => op.op === "rect");
+      expect(fill?.op === "rect" && fill.rgb, `square ${s}`).toBe(
+        surface(values[top(s)]),
+      );
+    }
+    // Square 6's bottom is region 0's, square 7's region 3's.
+    const bottom = (s: number) =>
+      squares[s].find((op) => op.op === "polygon" && op.points.length === 3);
+    expect(bottom(6)?.op === "polygon" && bottom(6)).toMatchObject({
+      fillRgb: surface(2),
+    });
+    expect(bottom(7)?.op === "polygon" && bottom(7)).toMatchObject({
+      fillRgb: surface(0),
+    });
+    expect(bottom(12)).toBeUndefined();
+  });
+
+  it("dots an open region's notes on its squares, a color a row", () => {
+    const b = board();
+    const { of } = b.dealt.map;
+    const pencil = new Int32Array(6);
+    // Region 3, open: pink and teal.
+    pencil[3] = (1 << 1) | (1 << 3);
+    const squares = draw({ ...b, pencil });
+    const dots = (s: number) =>
+      squares[s].flatMap((op) => (op.op === "circle" ? [op.fillRgb] : []));
+    for (let s = 0; s < 25; s++) {
+      // A split square's dots on region 3's triangles only: square 8's
+      // left takes the teal's row, and square 7's pink and teal rows lie
+      // in its top and left, region 1's.
+      const expected =
+        s === 7
+          ? []
+          : s === 8
+            ? [rgbLabel(FOUR_FILL_MARKS[2])]
+            : of[s] === 3
+              ? [rgbLabel(FOUR_FILL_MARKS[0]), rgbLabel(FOUR_FILL_MARKS[2])]
+              : [];
+      expect(dots(s), `square ${s}`).toEqual(expected);
+    }
+  });
+
+  it("rings a wrong region red on every square, and diamonds each clashing border", () => {
+    const b = board();
+    const { of } = b.dealt.map;
+    const values = Uint8Array.from(b.values);
+    // Regions 0 and 3 yellow beside region 5, yellow too: two clashes.
+    values[0] = 2;
+    values[3] = 2;
+    const squares = draw({ ...b, values }, [{ cell: 4, kind: "value" }]);
+    const reds = (s: number) =>
+      squares[s].filter((op) => op.op === "rect" && op.color === COL_ERROR).length;
+    for (let s = 0; s < 25; s++)
+      expect(reds(s), `square ${s}`).toBe(of[s] === 4 ? 4 : 0);
+    // The border of 0 and 3 at half point (4, 5), between squares 11 and
+    // 12; of 0 and 5 at (1, 8), between squares 15 and 20.
+    const diamonds = Array.from({ length: 25 }, (_, s) => s).filter((s) =>
+      squares[s].some((op) => op.op === "polygon" && op.fill === COL_ERROR),
+    );
+    expect(diamonds).toEqual([11, 12, 15, 20]);
   });
 });
