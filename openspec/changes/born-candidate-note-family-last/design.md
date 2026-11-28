@@ -790,6 +790,24 @@ input's on a square board); and Enter and Space do not pick a region up and
 put it down, the keys typing a color at the selection as on every board of
 numbers (the hand-written Map's keys did both).
 
+### 33. A hint marks a part where the hand-written Map does (2.6d)
+
+A step names a part as any cell, `(part, 0)`, so its words, the walk and
+the gesture need nothing new: the gesture presses through the board's aim
+(§ 31), and the `mapping` test plays a hint's every step by its presses
+and keys to a board's end. The drawing is the hand-written Map's
+(`games/map/render.ts`): the ring a circle a square across at the part's
+label point, where the part lies on every side for half a square, reaching
+at most half a square further, drawn in each square it reaches and
+repainted there by a key of its own, since it reaches squares outside its
+part; a part the step reasons from a dashed band set in from its border,
+outside the selection's band (`parts-bands.ts`, a band's `dash`). One
+addition: a struck note is crossed on its dots, as a square board's notes
+drawn as pictures are; the hand-written Map draws no strike, its words
+naming the colors alone. The engine's `HintMarks` draws on a cell's band
+of a square and is not used: a part is no square, and its outline runs
+along a border of many squares.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

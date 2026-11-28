@@ -4,16 +4,26 @@
  * drawn and a jagged border smoothed along a square's diagonal
  * (`render/parts-geometry.ts`), the notes as dots in a fixed formation on
  * every square of the part, a mistake red round each of its squares, and a
- * live error as a diamond on the border two clashing parts share. Upstream
- * map.c's `draw_square` and `game_redraw`. The fill renderer (`render.ts`)
+ * live error as a diamond on the border two clashing parts share; a hint's
+ * ring at the part's label point, its outline a dashed band inside the
+ * part's border, and a struck note crossed. Upstream map.c's `draw_square`
+ * and `game_redraw`, the hint's marks the hand-written Map's. The fill renderer (`render.ts`)
  * keys a tile a cell and reads a cell as one square, so a board whose cells
  * are parts is drawn by this one (design.md § "Decisions" 30 of
  * `born-candidate-note-family-last`).
  */
 
-import { COL_CURSOR, COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../color/roles.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../color/roles.ts";
 import type { GameDrawing } from "../contract/game.ts";
+import { CELL, NOTE, stepMarks } from "../contract/hint-words.ts";
 import type { Rect } from "../contract/types.ts";
+import { drawStrike } from "../render/draw.ts";
 import { HintMarks } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
 import { OverlaySidecar } from "../render/overlay-sidecar.ts";
@@ -23,6 +33,7 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../render/pencil-indicator.ts";
+import type { RingClear } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepRanks, WIN_LEAD, WIN_NONE } from "../render/win-wave.ts";
 import type { Squares } from "../solve/describe-runtime.ts";
@@ -38,7 +49,7 @@ import {
   newCarriedSprite,
 } from "./render/carried.ts";
 import { COL_ERRTEXT, COL_INK, fillPalette, swatchOf } from "./render/palette.ts";
-import { bandWidth, drawBands } from "./render/parts-bands.ts";
+import { type Band, bandWidth, drawBands } from "./render/parts-bands.ts";
 import {
   BOTTOM,
   LEFT,
@@ -53,6 +64,9 @@ import type { FillRenderModule } from "./render/setup.ts";
 import type { FillDrawState, FillLook, FillRender } from "./render.ts";
 
 const PREFERRED_TILE_SIZE = 32;
+
+/** A ring keeps no text in or out: a board of parts draws none. */
+const NO_CLEAR: RingClear = { enclose: [], avoid: [] };
 
 /** The values a square's dot formation has room for, one a row. */
 const NOTED = 4;
@@ -71,6 +85,48 @@ const BOTTOM_LIT = 19;
 const SELECTED_TOP = 1 << 21;
 const SELECTED_BOTTOM = 1 << 22;
 const NOTES_CORNER = 1 << 23;
+
+// A square's hint word: its top and bottom triangles' parts' roles in the
+// step, and the notes the step strikes in each.
+const TARGET = 1;
+const EVIDENCE = 2;
+const BOTTOM_ROLE = 2;
+const TOP_STRUCK = 4;
+const BOTTOM_STRUCK = 8;
+
+/** A hint's ring round a part, as `GameDrawing.drawRing` takes it. */
+interface PartRing {
+  readonly box: Rect;
+  readonly room: Rect;
+  readonly thickness: number;
+}
+
+const overlaps = (a: Rect, b: Rect): boolean =>
+  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+
+/** The bands a triangle of a part takes along its border, outermost first:
+ * the selection's, then the dashed line of a part the step reasons from,
+ * set in from it so that where it borders the part the step decides the two
+ * never run together. The decided part's own mark is its ring. */
+function bandsOf(selected: boolean, role: number, ts: number): Band[] {
+  const t = bandWidth(ts);
+  const out: Band[] = [];
+  let reach = 0;
+  if (selected) {
+    out.push({ from: 0, to: t, color: COL_CURSOR });
+    reach = t;
+  }
+  if (role === EVIDENCE) {
+    const from = reach + t;
+    out.push({
+      from,
+      to: from + Math.max(1, Math.round((2 * t) / 3)),
+      color: COL_HINT_OUTLINE,
+      dash: Math.max(4, Math.round(ts / 3)),
+    });
+  }
+  return out;
+}
 
 /** Where a board of parts lies on its squares, which its drawing and its
  * input both read: one board is drawn and pressed frame after frame, so a
@@ -130,6 +186,8 @@ export function partsRender<C extends Clues<C>>(
     s: number,
     key: number,
     errs: number,
+    hint: number,
+    rings: readonly PartRing[],
   ): void {
     const { w } = g;
     const x = s % w;
@@ -165,8 +223,8 @@ export function partsRender<C extends Clues<C>>(
       );
     }
 
-    // The selection's band inside the part's border, under the notes.
-    const band = [{ from: 0, to: bandWidth(ts), color: COL_CURSOR }];
+    // The selection's and the hint's bands inside the part's border, under
+    // the notes.
     const notesCorner = (key & NOTES_CORNER) !== 0;
     drawBands(
       dr,
@@ -175,8 +233,8 @@ export function partsRender<C extends Clues<C>>(
       px,
       py,
       ts,
-      key & SELECTED_TOP ? band : [],
-      key & SELECTED_BOTTOM ? band : [],
+      bandsOf((key & SELECTED_TOP) !== 0, hint & 3, ts),
+      bandsOf((key & SELECTED_BOTTOM) !== 0, (hint >> BOTTOM_ROLE) & 3, ts),
       {
         top: notesCorner && (key & SELECTED_TOP) !== 0,
         bottom: notesCorner && (key & SELECTED_BOTTOM) !== 0,
@@ -200,15 +258,22 @@ export function partsRender<C extends Clues<C>>(
               : RIGHT;
       if (yo === xo && partAt(g, TOP, s) !== partAt(g, LEFT, s)) continue;
       if (yo === 3 - xo && partAt(g, TOP, s) !== partAt(g, RIGHT, s)) continue;
-      const notes = partAt(g, t, s) === top ? key >> TOP_NOTES : key >> BOTTOM_NOTES;
+      const onTop = partAt(g, t, s) === top;
+      const notes = onTop ? key >> TOP_NOTES : key >> BOTTOM_NOTES;
       if ((notes & (1 << yo)) === 0) continue;
-      drawNote(
-        dr,
-        yo + 1,
-        px + Math.floor(((xo + 1) * ts) / 5),
-        py + Math.floor(((yo + 1) * ts) / 5),
-        Math.floor(ts / 7),
-      );
+      const middle = {
+        x: px + Math.floor(((xo + 1) * ts) / 5),
+        y: py + Math.floor(((yo + 1) * ts) / 5),
+      };
+      const r = Math.floor(ts / 7);
+      drawNote(dr, yo + 1, middle.x, middle.y, r);
+      // A struck note is a shape, struck once in the pencil's ink, as a
+      // square board's notes drawn as pictures are.
+      const struck = onTop ? hint >> TOP_STRUCK : hint >> BOTTOM_STRUCK;
+      if (struck & (1 << yo))
+        drawStrike(dr, middle, Math.floor((4 * r) / 3), pal.COL_PENCIL, tile, {
+          slant: true,
+        });
     }
 
     // The borders between parts, on the square's top and left, and its top
@@ -251,6 +316,10 @@ export function partsRender<C extends Clues<C>>(
       dr.drawRect({ x: x0 + bw - t, y: y0, w: t, h: bw }, COL_ERROR);
     }
 
+    // A hint's rings over the square, each the part of it this square holds.
+    for (const ring of rings)
+      dr.drawRing(ring.box, NO_CLEAR, ring.thickness, { room: ring.room });
+
     dr.unclip();
     dr.drawUpdate(tile);
   }
@@ -281,6 +350,35 @@ export function partsRender<C extends Clues<C>>(
     );
   }
 
+  /**
+   * The ring round part `p`: a circle a square across at its label point. A
+   * part is no shape a ring can go round, but its label point has the part
+   * on every side for half a square (`parts-geometry.ts`), so the circle
+   * lies inside it; it may reach half a square further, into its
+   * neighbors, and no further than the board.
+   */
+  function ringOf(g: PartsGeometry, p: number, ts: number): PartRing {
+    const o = origin(ts);
+    const at = {
+      x: o + Math.floor((ts * g.labels[p].x) / 2),
+      y: o + Math.floor((ts * g.labels[p].y) / 2),
+    };
+    const box = { x: at.x - ts / 2, y: at.y - ts / 2, w: ts, h: ts };
+    const x0 = Math.max(o, box.x - ts / 2);
+    const y0 = Math.max(o, box.y - ts / 2);
+    const room = {
+      x: x0,
+      y: y0,
+      w: Math.min(o + g.w * ts, box.x + box.w + ts / 2) - x0,
+      h: Math.min(o + g.h * ts, box.y + box.h + ts / 2) - y0,
+    };
+    return { box, room, thickness: Math.round(1.5 * bandWidth(ts)) };
+  }
+
+  /** Per draw state, the rings each square was last drawn with, which no
+   * tile word holds: a ring reaches squares outside its part. */
+  const drawnRings = new WeakMap<FillDrawState, string[]>();
+
   return {
     preferredTileSize: PREFERRED_TILE_SIZE,
     origin,
@@ -295,7 +393,7 @@ export function partsRender<C extends Clues<C>>(
       return {
         tileSize,
         parts: null,
-        tiles: new TileCache(g.w * g.h, { words: 2 }),
+        tiles: new TileCache(g.w * g.h, { words: 3 }),
         breaches: [],
         struck: new OverlaySidecar(0),
         highlit: new OverlaySidecar(0),
@@ -317,7 +415,7 @@ export function partsRender<C extends Clues<C>>(
       };
     },
     redraw: (dr: GameDrawing, ds: FillDrawState, frame) => {
-      const { state: b, ui, flash, mistakes } = frame;
+      const { state: b, ui, flash, mistakes, hint } = frame;
       const g = geometryOf(b);
       const { w, h, n } = g;
       const wh = w * h;
@@ -392,9 +490,45 @@ export function partsRender<C extends Clues<C>>(
         if (xo === 0 && yo === 0) mark(ex - 1, ey - 1, 2, 2);
       }
 
-      for (let s = 0; s < wh; s++)
-        if (ds.tiles.changed(s, keys[s], errs[s]))
-          drawSquare(dr, ts, g, s, keys[s], errs[s]);
+      // The hint's role for each part, a ring winning over an outline, and
+      // the notes it strikes.
+      const marks = stepMarks(hint);
+      const role = new Uint8Array(n);
+      const struck = new Uint8Array(n);
+      for (const c of marks.of("outline", CELL)) role[c.x] = EVIDENCE;
+      const ringed = marks.of("ring", CELL).map((c) => c.x);
+      for (const p of ringed) role[p] = TARGET;
+      if (b.pencil !== null)
+        for (const m of marks.of("strike", NOTE)) struck[m.x] |= 1 << (m.n - 1);
+      const rings = ringed.map((p) => ringOf(g, p, ts));
+      let ringKeys = drawnRings.get(ds);
+      if (ringKeys === undefined) {
+        ringKeys = new Array<string>(wh).fill("");
+        drawnRings.set(ds, ringKeys);
+      }
+
+      for (let s = 0; s < wh; s++) {
+        const t = partAt(g, TOP, s);
+        const u = partAt(g, BOTTOM, s);
+        const hintWord =
+          role[t] |
+          (role[u] << BOTTOM_ROLE) |
+          (struck[t] << TOP_STRUCK) |
+          (struck[u] << BOTTOM_STRUCK);
+        const tile = {
+          x: o + (s % w) * ts,
+          y: o + Math.floor(s / w) * ts,
+          w: ts,
+          h: ts,
+        };
+        const here = rings.filter((r) => overlaps(r.room, tile));
+        const ringKey = here.length > 0 ? JSON.stringify(here) : "";
+        const changed = ds.tiles.changed(s, keys[s], errs[s], hintWord);
+        if (changed || ringKeys[s] !== ringKey) {
+          drawSquare(dr, ts, g, s, keys[s], errs[s], hintWord, here);
+          ringKeys[s] = ringKey;
+        }
+      }
 
       repaintPencilIndicator(
         dr,

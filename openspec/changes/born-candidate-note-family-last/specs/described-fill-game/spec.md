@@ -1048,6 +1048,20 @@ part's border, and while notes are typed as a corner in a square of it.
   split between its first and second regions, and types a color
 - **THEN** the first region is selected and takes the color
 
+### Requirement: A born board of parts shows a hint's marks on its parts
+
+On a board of parts, a hint's ring SHALL be drawn round the part's label
+point, inside the part; a part the step reasons from SHALL be outlined by a
+dashed line set in from its border; a note the step strikes SHALL be
+crossed on each square that dots it. A hint's gesture SHALL press each part
+where a press selects it.
+
+#### Scenario: A hint played by its gestures
+
+- **WHEN** the hint's steps on a `mapping` board are each played by the
+  presses and keys of its gesture
+- **THEN** each leaves the board as its move does, to the board's end
+
 ### Requirement: A key that places a color is painted in it
 
 Where a born board's value is drawn as a picture that is a color alone, the

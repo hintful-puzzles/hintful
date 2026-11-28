@@ -468,7 +468,9 @@ description author acts on:
   (`engine/fill/parts-aim.ts`): a press addresses the part of the triangle
   it lands in, the cursor walks the squares and selects the part on the
   side it last moved toward, and the selection is a band inside the part's
-  border. A key placing a picture that is a color alone (`Painter.swatch`)
+  border. A hint's marks name a part as a cell, and are drawn on it: the
+  ring round its label point, the outline a dashed band set in from its
+  border, a struck note crossed on its dots. A key placing a picture that is a color alone (`Painter.swatch`)
   is painted in the color, on any board. Map's drag of a region's color to
   another is `play.carry`, which any board of numbers may take.
 - **Two edges may be known alike or opposite** (a mark with `sort: edge`

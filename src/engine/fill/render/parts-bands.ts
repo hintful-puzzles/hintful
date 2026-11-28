@@ -2,8 +2,9 @@
  * A part of a board of parts marked by a band just inside its border, square
  * by square (`parts-render.ts`): the selection, which washes the part
  * without changing its fill, since a part's fill is its value and a wash
- * over a color would read as another color; and, for notes, the note-taking
- * corner in the part's first square. Upstream map.c draws no selection but
+ * over a color would read as another color; a hint's dashed outline of a
+ * part it reasons from; and, for notes, the note-taking corner in the
+ * part's first square. Upstream map.c draws no selection but
  * its cursor; the band is the hand-written Map's (`games/map/render.ts`,
  * "the selected region").
  *
@@ -38,11 +39,38 @@ interface Piece {
 }
 
 /** A band's reach inward from a part's border, `from` to `to` pixels, in
- * `color`. */
+ * `color`, and dashed with this period where `dash` is set. */
 export interface Band {
   readonly from: number;
   readonly to: number;
   readonly color: number;
+  readonly dash?: number;
+}
+
+/** `strip` cut into dashes along direction `(tx, ty)`, on for the first half
+ * of each `period`. Measured from the canvas origin, not from the strip, so
+ * the dashes of one border line up from square to square. */
+function dashes(strip: readonly Pt[], tx: number, ty: number, period: number): Pt[][] {
+  if (strip.length < 3) return [];
+  const u = (p: Pt) => p.x * tx + p.y * ty;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const p of strip) {
+    lo = Math.min(lo, u(p));
+    hi = Math.max(hi, u(p));
+  }
+  const out: Pt[][] = [];
+  for (let k = Math.floor(lo / period); k * period < hi; k++) {
+    const a = k * period;
+    const b = a + period / 2;
+    out.push(
+      clipHalfPlane(
+        clipHalfPlane(strip, (p) => a - u(p)),
+        (p) => u(p) - b,
+      ),
+    );
+  }
+  return out;
 }
 
 /** The selection band's width: wide enough to read on any fill, narrow
@@ -178,7 +206,7 @@ export function drawBands(
   // corner an inner band's strip along the other also covers, and the outer
   // one must be left showing there.
   for (const [piece, bands] of marked)
-    for (const { from, to, color } of [...bands].reverse()) {
+    for (const { from, to, color, dash } of [...bands].reverse()) {
       const fill = (poly: readonly Pt[]) => {
         if (poly.length >= 3) dr.drawPolygon([...poly], color, color);
       };
@@ -198,8 +226,18 @@ export function drawBands(
               const dj = inwardDistance(poly, j);
               strip = clipHalfPlane(strip, (p) => from - dj(p));
             }
-        fill(strip);
+        if (dash === undefined) {
+          fill(strip);
+          continue;
+        }
+        const a = poly[i];
+        const b = poly[(i + 1) % poly.length];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        for (const seg of dashes(strip, (b.x - a.x) / len, (b.y - a.y) / len, dash))
+          fill(seg);
       }
+      // A dashed band needs no corner joins: its gaps already break it.
+      if (dash !== undefined) continue;
       for (const k of corners) {
         // A side of the piece already running along the border from this
         // corner has covered it.

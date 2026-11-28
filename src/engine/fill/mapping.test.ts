@@ -9,9 +9,18 @@ import { describe, expect, it } from "vitest";
 import * as mapping from "../../generated/engine/testing/fixtures/mapping/mapping.compiled.ts";
 import { FOUR_FILL_MARKS, FOUR_FILLS } from "../color/colors.ts";
 import { cellSurface } from "../color/palette.ts";
-import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
+import { COL_CURSOR, COL_ERROR, COL_HINT_OUTLINE } from "../color/roles.ts";
 import { validateDesc } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  NOTE,
+  phrase,
+  stepMarks,
+  unshaped,
+} from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import {
   CURSOR_DOWN,
@@ -21,6 +30,7 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MARK_ALL_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -43,6 +53,7 @@ import { BOTTOM, LEFT, partsGeometry, RIGHT, TOP } from "./render/parts-geometry
 
 const game = fillGame("mapping", mapping);
 type Board = FillBoard<mapping.Dealt>;
+type Hint = NonNullable<Parameters<typeof game.redraw>[2]["hint"]>;
 
 /** Each region's neighbors across a side, read square by square. */
 function bordersOfSquares(b: Board): number[][] {
@@ -170,10 +181,17 @@ describe("a board of parts drawn over its squares", () => {
     expect(g.borders.get(5)).toEqual({ x: 1, y: 8 });
   });
 
-  /** One frame of board `b`, and each square's ops, by the clip it draws in. */
-  function draw(b: Board, mistakes: readonly FillMistake[] = [], ui = newFillUi()) {
+  /** One frame of board `b`, with the hint's step `hint` on display, and
+   * each square's ops, by the clip it draws in; on draw state `ds` where it
+   * is given, else a fresh one. */
+  function draw(
+    b: Board,
+    mistakes: readonly FillMistake[] = [],
+    ui = newFillUi(),
+    hint: Hint | null = null,
+    ds = game.newDrawState(b, TS),
+  ) {
     const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
-    const ds = game.newDrawState(b, TS);
     game.redraw(dr, ds, {
       state: b,
       prev: null,
@@ -182,6 +200,7 @@ describe("a board of parts drawn over its squares", () => {
       animTime: 0,
       flash: NO_FLASH,
       mistakes,
+      ...(hint === null ? {} : { hint }),
     });
     const o = game.computeSize(p, TS).w - 5 * TS - 1;
     const squares: DrawOp[][] = Array.from({ length: 25 }, () => []);
@@ -266,6 +285,130 @@ describe("a board of parts drawn over its squares", () => {
       squares[s].some((op) => op.op === "polygon" && op.fill === COL_ERROR),
     );
     expect(diamonds).toEqual([11, 12, 15, 20]);
+  });
+
+  /** The first step the hint plans on board `b`. */
+  const firstStep = (b: Board): Hint => {
+    const plan = game.hint.plan(b);
+    if (!plan.ok) throw new Error(`no hint: ${plan.error}`);
+    return plan.steps[0];
+  };
+  /** The first step the hint plans on board `b` that rings a region, after
+   * the notes it dots and strikes, and the region. */
+  const ringingStep = (b: Board): { step: Hint; r: number } => {
+    const plan = game.hint.plan(b);
+    if (!plan.ok) throw new Error(`no hint: ${plan.error}`);
+    for (const step of plan.steps) {
+      const [ringed] = stepMarks(step).of("ring", CELL);
+      if (ringed !== undefined) return { step, r: ringed.x };
+    }
+    throw new Error("no step rings a region");
+  };
+  /** A step on display whose words are `words`, marking what they name. */
+  const shown = (words: Narration): Hint => ({
+    ...firstStep(board()),
+    words: unshaped(words, "setup"),
+  });
+  /** Whether square `s` holds any of region `r`. */
+  const holds = (b: Board, s: number, r: number) => {
+    const g = partsGeometry(b.dealt.map as Squares, DESC);
+    return [TOP, BOTTOM, LEFT, RIGHT].some((t) => g.quadrants[t * 25 + s] === r);
+  };
+
+  it("rings the region a step decides at its label point", () => {
+    const b = board();
+    const { step, r } = ringingStep(b);
+    expect(stepMarks(step).of("ring", CELL)).toHaveLength(1);
+    const { labels } = partsGeometry(b.dealt.map as Squares, DESC);
+    const o = (game.computeSize(p, TS).w - 5 * TS - 1) / 2;
+    const rings = draw(b, [], newFillUi(), step)
+      .flat()
+      .flatMap((op) => (op.op === "ring" ? [op] : []));
+    expect(rings.length).toBeGreaterThan(0);
+    // Centered there, to the half pixel the ring's stroke is laid on.
+    for (const ring of rings) {
+      const dx = ring.x + ring.w / 2 - (o + Math.floor((TS * labels[r].x) / 2));
+      const dy = ring.y + ring.h / 2 - (o + Math.floor((TS * labels[r].y) / 2));
+      expect(Math.max(Math.abs(dx), Math.abs(dy))).toBeLessThanOrEqual(0.5);
+    }
+    expect(
+      draw(b)
+        .flat()
+        .some((op) => op.op === "ring"),
+    ).toBe(false);
+  });
+
+  it("dashes a line inside the border of a region a step reasons from", () => {
+    const b = board();
+    const step = shown(
+      phrase`${mark.this("outline", CELL, [{ x: 3, y: 0 }], "region")}`,
+    );
+    const squares = draw(b, [], newFillUi(), step);
+    const dashes = (s: number) =>
+      squares[s].filter((op) => op.op === "polygon" && op.fill === COL_HINT_OUTLINE)
+        .length;
+    for (let s = 0; s < 25; s++)
+      if (!holds(b, s, 3)) expect(dashes(s), `square ${s}`).toBe(0);
+    // Square 12's top runs along region 3's border, broken into dashes.
+    expect(dashes(12)).toBeGreaterThan(1);
+    expect(
+      draw(b)
+        .flat()
+        .some((op) => op.op === "polygon" && op.fill === COL_HINT_OUTLINE),
+    ).toBe(false);
+  });
+
+  it("crosses the dots of the notes a step strikes, and no others", () => {
+    const b = board();
+    const pencil = new Int32Array(6);
+    // Region 3, open: pink and teal, the pink struck.
+    pencil[3] = (1 << 1) | (1 << 3);
+    const noted = { ...b, pencil };
+    const step = shown(
+      phrase`${mark.as("strike", NOTE, [{ x: 3, y: 0, n: 1 }], "pink")}`,
+    );
+    const squares = draw(noted, [], newFillUi(), step);
+    const pinks = (s: number) =>
+      squares[s].filter(
+        (op) => op.op === "circle" && op.fillRgb === rgbLabel(FOUR_FILL_MARKS[0]),
+      ).length;
+    const strikes = (s: number) => squares[s].filter((op) => op.op === "line").length;
+    let struck = 0;
+    for (let s = 0; s < 25; s++) {
+      expect(strikes(s), `square ${s}`).toBe(pinks(s));
+      struck += strikes(s);
+    }
+    expect(struck).toBeGreaterThan(0);
+    expect(
+      draw(noted)
+        .flat()
+        .some((op) => op.op === "line"),
+    ).toBe(false);
+  });
+
+  it("repaints the squares a ring left when the step is gone", () => {
+    const b = board();
+    // Squares a ring reached that hold none of its region: no word of
+    // theirs changes when it goes.
+    let beyond = 0;
+    for (let r = 0; r < 6; r++) {
+      const ds = game.newDrawState(b, TS);
+      const step = shown(
+        phrase`${mark.this("ring", CELL, [{ x: r, y: 0 }], "region")}`,
+      );
+      const ringed = draw(b, [], newFillUi(), step, ds).map((ops) =>
+        ops.some((op) => op.op === "ring"),
+      );
+      beyond += ringed.filter((rung, s) => rung && !holds(b, s, r)).length;
+      // The squares the ring reached, and those whose part it decided.
+      const after = draw(b, [], newFillUi(), null, ds);
+      expect(
+        after.map((ops) => ops.length > 0),
+        `region ${r}`,
+      ).toEqual(ringed.map((rung, s) => rung || holds(b, s, r)));
+      expect(after.flat().some((op) => op.op === "ring")).toBe(false);
+    }
+    expect(beyond).toBeGreaterThan(0);
   });
 
   // Played on its squares (2.6c): regions 1, 2, 4 and 5 are given, 0 and 3
@@ -393,6 +536,48 @@ describe("a board of parts drawn over its squares", () => {
       tap(b, ui, ds, press.at);
       expect(ui.cursor, `region ${region}`).toMatchObject({ x: region, visible: true });
     }
+  });
+
+  it("plays each of a hint's steps by its gesture, to the end", () => {
+    const { gesture } = game.hint;
+    if (gesture === undefined) throw new Error("mapping: no hint gesture");
+    // A board of more regions, with notes to dot and strike.
+    const q = game.decodeParams("6x6n9");
+    let b = game.newState(q, game.newDesc(q, randomNew("hint gesture")).desc);
+    const ui = game.newUi(b);
+    const ds = game.newDrawState(b, TS);
+    const press = (at: Point, button: "primary" | "secondary") => {
+      const [down, up] =
+        button === "primary"
+          ? [LEFT_BUTTON, LEFT_RELEASE]
+          : [RIGHT_BUTTON, RIGHT_RELEASE];
+      game.interpretMove(b, ui, ds, at, down);
+      return game.interpretMove(b, ui, ds, at, up);
+    };
+    const kinds = new Set<string>();
+    let steps = 0;
+    while (game.status(b) === "ongoing") {
+      const step = firstStep(b);
+      const expected = game.executeMove(b, step.move);
+      for (const a of gesture(b, ui, ds, step.move, step)) {
+        kinds.add(a.kind);
+        if (a.kind === "drag") throw new Error("a drag, not a press or a key");
+        // The midend answers Mark-all itself, from the game's `markAll`.
+        const move =
+          a.kind === "click"
+            ? press(a.at, a.button)
+            : a.code === MARK_ALL_BUTTON
+              ? (game.markAll?.(b) ?? null)
+              : game.interpretMove(b, ui, ds, { x: 0, y: 0 }, a.code);
+        if (move !== null && move !== UI_UPDATE) b = game.executeMove(b, move);
+      }
+      expect(b.values, `step ${steps}`).toEqual(expected.values);
+      expect(b.pencil, `step ${steps}`).toEqual(expected.pencil);
+      steps++;
+      if (steps > 100) throw new Error("no end to the hint's steps");
+    }
+    expect(steps).toBeGreaterThan(3);
+    expect([...kinds].sort()).toEqual(["click", "key"]);
   });
 
   it("paints the keypad's keys in the colors, each labeled by the key it sends", () => {
