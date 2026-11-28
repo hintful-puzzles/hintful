@@ -729,6 +729,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     kind: "internal",
     why: "when a UI change invalidates a step",
   },
+  notesWithoutMode: {
+    kind: "upstream",
+    why: "a board whose notes are pressed letter by letter has no Marks key, as upstream's Subsets had none",
+  },
   paletteScheme: { kind: "internal", why: "how the palette adapts to a scheme" },
   animLength: { kind: "internal", why: "animation timing" },
   flashLength: { kind: "internal", why: "animation timing" },
