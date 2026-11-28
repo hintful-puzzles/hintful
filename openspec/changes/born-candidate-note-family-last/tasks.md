@@ -5,18 +5,8 @@ and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), and Subsets is born
 (2.5e, design.md § "Decisions" 26, and 2.5f): Map's pieces are planned
 (design.md § "Decisions" 28), the space is in (2.6a), and 2.6b, its
-drawing, is next. For 2.2f: the
-draft's `play.along` gains `panel: { record: number, site: run }` and its
-`words:` `value: digit`, which the panel's headings read, and
-`src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
-Crossing's draft techniques were checked sound with two records, which no
-board answers (`docs/solver-and-generator.md`, the records bullet); check
-them again, now a record a line. The draft deals once it has `play:` (with
-`marks:` and the walk's steps, which its bespoke `steps:` then refuse until
-restated, and `along:` with the hand-written keys `auto-advance` and
-`highlight-runs`); its `blank` clue is then `play.given` at 10, painted
-`wall`, as the `opening` fixture's. Weigh design.md § "Decisions" 8's two
-hint behaviors there.
+drawing, is next: its plan is design.md § "Decisions" 30. What 2.2f needs
+besides the owner's answer is § "Decisions" 7's last paragraph.
 
 ## 1. Design
 

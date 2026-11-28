@@ -166,6 +166,18 @@ correct the spec and the help to say what it deals. The hand-written game
 is left as it was until the answer; the flip (2.2f) needs it, and 2.2d and
 2.2e do not.
 
+Besides the answer, the flip needs: the draft's `play.along` gains
+`panel: { record: number, site: run }` and its `words:` `value: digit`,
+which the panel's headings read, and `src/games/crossing/numbers.ts` goes
+with the game. Crossing's draft techniques were checked sound with two
+records, which no board answers (`docs/solver-and-generator.md`, the
+records bullet); check them again, now a record a line. The draft deals
+once it has `play:` (with `marks:` and the walk's steps, which its bespoke
+`steps:` then refuse until restated, and `along:` with the hand-written
+keys `auto-advance` and `highlight-runs`); its `blank` clue is then
+`play.given` at 10, painted `wall`, as the `opening` fixture's. Weigh
+§ "Decisions" 8's two hint behaviors there.
+
 ### 8. Typing goes along the sites the deal reads the list off (2.2d)
 
 Where a record of the list may be written, and where the selection goes as
@@ -695,6 +707,19 @@ ID: the `borders` segment is map.c's edge list, and the clue list is the
 shared run-letter stream with `from: 0`, a color written one less than its
 value, as map.c writes 0 to 3. Checked against an ID the hand-written
 generator dealt (`mapping.test.ts`).
+
+### 30. A board of parts is drawn by a renderer of its own (2.6b, planned)
+
+Read 2026-11-28: the fill renderer (`render.ts`, `render/tile.ts`) keys a
+tile a cell, and every layer reads a cell as one square (`c % w`), so a
+board of parts is drawn by a `FillRender` of its own over the squares (the
+params' `w` by `h`), chosen where `deal.parts` is set, reusing the palette
+and the hint mark primitives. The hand-written `games/map/render.ts`, and
+`map-data.ts`'s `smoothDiagonals` and `computeLabelPoints`, are the
+reference. Upstream seeds the smoothing with the ID; `encodeDesc` of the
+board's clues writes the same ID, so a born board splits the squares the
+hand-written one does. A square's key is its quadrants' parts' values,
+notes, mistake, hint roles and selection.
 
 ## What each flip changed for a player
 
