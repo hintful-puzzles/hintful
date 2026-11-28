@@ -422,6 +422,27 @@ notes not kept full, where an unnoted square would read as agreeing on
 every letter, and beside raised, lettered, pictured or empty-square
 drawing.
 
+### 19. A feature is pressed on its slot, and nothing is typed (2.5b3)
+
+A board of features is played as the hand-written game is: its targets are
+slots (`features.ts`'s `targetVerbs`, which the help's Controls paragraph
+reads), the press is at once a move, and the cursor walks the slots of
+every square as one grid. The verbs are `subsets/index.ts`'s, the words
+said of a square's set rather than a cell's. A slot's three states are read
+off the notes, so its move is a note move: present and absent strike a
+half, undecided gives one back, each the canonical strike or add a hint's
+track reads (2.5b4's gesture is then a press). Going straight from present
+to absent both strikes and gives back, which no note move does, so an edit
+may write a cell's notes whole (`Edit.notes`); so does a press on a placed
+square, which clears it.
+
+Nothing on such a board is typed, as a value or a note, so it has no
+keypad, no pencil mode, and none of the preferences that act on typing:
+sticky pencil, keep highlight, and auto-pencil, which strikes a typed value
+from its peers and would strike nothing here. The value a square settles to
+is placed by `settleFullNotes`, which no preference reaches; 2.5e weighs
+whether a set settled should strike itself from the other squares.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

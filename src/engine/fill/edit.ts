@@ -15,6 +15,9 @@ export interface Edit {
   /** Cell, element, ...: the element the cell's mark names, `-1` to clear
    * it. */
   readonly mark?: readonly number[];
+  /** Cell, notes, ...: an open cell's notes written whole once the values
+   * are set, bit `v` value `v`'s note. */
+  readonly notes?: readonly number[];
 }
 
 /**
@@ -33,7 +36,7 @@ function isEdit(move: unknown): move is Edit {
     move !== null &&
     Object.entries(move).every(
       ([k, v]) =>
-        (k === "set" || k === "mark") &&
+        (k === "set" || k === "mark" || k === "notes") &&
         Array.isArray(v) &&
         v.length % 2 === 0 &&
         v.every((x) => typeof x === "number"),
@@ -55,10 +58,11 @@ function wholeOf<C>(
 }
 
 /**
- * The board after `edit`: its values, then its marks, then every mark whose
- * `while` the new values break dropped. A fixed cell, a cell off the board
- * or a mark on one breaks the edit, which throws: an edit the engine builds
- * never does, so one that does was not built by it.
+ * The board after `edit`: its values, then its notes, then its marks, then
+ * every mark whose `while` the new values break dropped. A fixed cell, a
+ * cell off the board, a mark on one, or notes on a cell holding a value or
+ * on a board that keeps none breaks the edit, which throws: an edit the
+ * engine builds never does, so one that does was not built by it.
  */
 export function applyEdit<C>(
   module: FillModule<C>,
@@ -88,6 +92,14 @@ export function applyEdit<C>(
     if (whole === null) continue;
     for (const p of whole.cells[whole.of[c]] ?? [])
       if (p !== c && !board.fixed[p]) put(p, v === 0 ? 0 : whole.others(v));
+  }
+  const notes = edit.notes ?? [];
+  for (let i = 0; i < notes.length; i += 2) {
+    const c = cellOf(notes[i]);
+    if (pencil === null) throw new Error("edit: the board keeps no notes");
+    if (board.fixed[c] || values[c] !== 0)
+      throw new Error(`edit: cell ${c} is not open`);
+    pencil[c] = notes[i + 1];
   }
   const marks = edit.mark ?? [];
   for (let i = 0; i < marks.length; i += 2) mark[cellOf(marks[i])] = marks[i + 1];

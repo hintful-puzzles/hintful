@@ -58,6 +58,7 @@ import {
   BALL_BARE,
   CURSOR,
   DIVIDER_SHIFT,
+  FEATURE_CURSOR_SHIFT,
   FIXED,
   JOIN_SHIFT,
   LABEL_DONE,
@@ -134,7 +135,12 @@ export function tileWordsOf<C extends Clues<C>>(
       let k = words.word[i] | v | (state.fixed[i] ? FIXED : 0);
       // On the edges the cursor is on the half grid, a square's middle its
       // own point.
-      if (cx.onEdges ? cx0 === 2 * x + 1 && cy0 === 2 * y + 1 : selected.has(i))
+      // On a board of features it is on a slot, and the edge word says which.
+      const slotted = cx.features !== null;
+      if (
+        !slotted &&
+        (cx.onEdges ? cx0 === 2 * x + 1 && cy0 === 2 * y + 1 : selected.has(i))
+      )
         k |= CURSOR | (ui.linkArmed || (ui.armed ?? null) !== null ? ARMED : 0);
       k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
       const hk = words.hintWord(x, y);
@@ -171,7 +177,12 @@ export function tileWordsOf<C extends Clues<C>>(
           : lk & BALL_BARE
             ? noted & NOTES_MODE
             : noted;
-      const ek = words.edgeWord[i] | (cx.onEdges ? edgeCursorBits(ui.cursor, x, y) : 0);
+      const ek =
+        words.edgeWord[i] |
+        (cx.onEdges ? edgeCursorBits(ui.cursor, x, y) : 0) |
+        (slotted && cx0 === x && cy0 === y
+          ? ((ui.slot ?? 0) + 1) << FEATURE_CURSOR_SHIFT
+          : 0);
       // A growing piece is no key's: its tile is drawn every frame.
       const grows = before !== null && before[i] !== v;
       if (grows) ds.tiles.forget(i);

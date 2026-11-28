@@ -185,6 +185,9 @@ export interface FillRender<C> {
   recordPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
   /** The middle of record `k` of the list, where a press on it lands. */
   recordPoint(board: FillBoard<C>, ds: FillDrawState, k: number): Point;
+  /** Where cell `c`'s feature slots are drawn, where the values are features
+   * (`play.numbers.features`), a slot a feature. */
+  featureSlots(board: FillBoard<C>, ds: FillDrawState, c: number): readonly Rect[];
 }
 
 const PREFERRED_TILE_SIZE = 32;
@@ -376,6 +379,17 @@ export function fillRender<C extends Clues<C>>(
       const at = listPixelsOf(b, ds);
       if (at === null) throw new Error("play list: the board has no list");
       return recordMiddle(at, k);
+    },
+    featureSlots: (b, ds, c) => {
+      if (cx.features === null) throw new Error("play numbers: no features");
+      const at = [c % b.w, Math.floor(c / b.w), b.h] as const;
+      // A board of features is never raised.
+      return layoutFor(b, false, 1).featureSlots(
+        ds.tileSize,
+        at,
+        partsOf(cx, b)?.walls[c] ?? null,
+        cx.features.names.length,
+      );
     },
   };
 

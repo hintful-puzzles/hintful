@@ -30,6 +30,13 @@ const labelFont = (ts: number) =>
 
 export type CellLayout = ReturnType<typeof cellLayoutOf>;
 
+/** The grid `count` features' slots make in a cell, as near square as holds
+ * them, filled in reading order: so many across, and so many down. */
+export function featureGrid(count: number): { across: number; down: number } {
+  const across = Math.ceil(Math.sqrt(count));
+  return { across, down: Math.ceil(count / across) };
+}
+
 /** Layout `lay` with the places of a cell's text, on a board of clues at
  * parts where `labeled`; `labelSizes` keeps each clue's size across frames. */
 export function cellLayoutOf(
@@ -170,8 +177,7 @@ export function cellLayoutOf(
     count: number,
   ): Rect[] => {
     const area = labeled ? belowClue(ts, at, walls) : markBand(ts, at, walls).box;
-    const across = Math.ceil(Math.sqrt(count));
-    const down = Math.ceil(count / across);
+    const { across, down } = featureGrid(count);
     const side = Math.floor(Math.min(area.w / across, area.h / down));
     const left = area.x + Math.floor((area.w - side * across) / 2);
     const top = area.y + Math.floor((area.h - side * down) / 2);

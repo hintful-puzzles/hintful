@@ -6,7 +6,22 @@
 
 import { describe, expect, it } from "vitest";
 import * as holding from "../../generated/engine/testing/fixtures/holding/holding.compiled.ts";
-import { COL_ERROR } from "../color/roles.ts";
+import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
+import { UI_UPDATE } from "../contract/game.ts";
+import {
+  BACKSPACE,
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  CURSOR_UP,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  RIGHT_BUTTON,
+  RIGHT_RELEASE,
+} from "../input/pointer.ts";
 import type { DrawOp } from "../testing/recording-drawing.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
 import { paramSpaceOf } from "./board.ts";
@@ -198,12 +213,11 @@ describe("notes full from the deal", () => {
     expect(b.pencil?.[0]).toBe(0b01100);
   });
 
-  it("leave no square unnoted, so no hint-notes preference is offered", () => {
-    expect(game.prefs?.map((p) => p.kw)).toEqual([
-      "auto-pencil",
-      "sticky-pencil-mode",
-      "pencil-keep-highlight",
-    ]);
+  it("leave no square unnoted, and are taken by the slots, so no note preference is offered", () => {
+    // No hint-notes preference, nor a pencil mode's or auto-pencil's: no
+    // value or note is typed.
+    expect(game.prefs).toBeUndefined();
+    expect(game.newUi(open([0])).pencilMode).toBeUndefined();
   });
 
   it("are finished by the walk's strike alone where it leaves one set", () => {
@@ -211,5 +225,200 @@ describe("notes full from the deal", () => {
     const plan = game.hint.plan(b);
     if (!plan.ok) throw new Error(`no plan: ${JSON.stringify(plan)}`);
     expect(game.status(game.executeMove(b, plan.steps[0].move))).toBe("solved");
+  });
+});
+
+describe("a slot press", () => {
+  type Board = ReturnType<typeof game.newState>;
+  const TS = game.preferredTileSize;
+  const verbs = game.targetVerbs;
+  if (verbs === undefined) throw new Error("holding: no slot verbs");
+  const open = (hidden: readonly number[]) =>
+    game.newState(PARAMS, descOf(ANSWER, hidden));
+  /** What square `c`'s sets are: its value, or its notes. */
+  const sets = (b: Board, c: number): number =>
+    b.values[c] !== 0 ? 1 << b.values[c] : (b.pencil?.[c] ?? 0);
+  const A = 0;
+  const B = 1;
+  /** The board after a press of `button` on feature `k`'s slot of square
+   * `c`, through the input, and the move it made. */
+  const press = (b: Board, c: number, k: number, button = LEFT_BUTTON) => {
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const at = verbs.geometry.pointAt(b, ds, { x: c % 2, y: c >> 1, k }, ui);
+    const move = game.interpretMove(b, ui, ds, at, button);
+    game.interpretMove(
+      b,
+      ui,
+      ds,
+      at,
+      button === LEFT_BUTTON ? LEFT_RELEASE : RIGHT_RELEASE,
+    );
+    if (move === null || move === UI_UPDATE) return { move, board: b };
+    return { move, board: game.executeMove(b, move) };
+  };
+  const strike = (c: number, ...n: number[]): FillMove => ({
+    type: "pencilStrike",
+    marks: n.map((v) => ({ x: c % 2, y: c >> 1, n: v })),
+  });
+  // {} 1, {A} 2, {B} 3, {A, B} 4.
+  const EVERY = 0b11110;
+
+  it("lands where the letter is drawn, and is on no slot between two", () => {
+    const b = open([]);
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const drawnAt = renderScenario({ game, id: idOf(ANSWER) }).recording.ops.flatMap(
+      (o) => (o.op === "text" && (o.text === "A" || o.text === "B") ? [o] : []),
+    );
+    for (const [c, set] of ANSWER.entries())
+      for (const k of [A, B]) {
+        if (!(letters(set) & (1 << k))) continue;
+        const t = { x: c % 2, y: c >> 1, k };
+        const p = verbs.geometry.pointAt(b, ds, t, ui);
+        const letter = drawnAt.filter(
+          (o) => o.text === "AB"[k] && Math.hypot(o.x - p.x, o.y - p.y) <= 1,
+        );
+        expect(letter, `square ${c}'s ${"AB"[k]}`).toHaveLength(1);
+        expect(verbs.geometry.pointerTarget(b, ds, p, ui)).toEqual(t);
+      }
+    // Square 0's two slots meet halfway between their middles, on the line
+    // between them; a press just past it is the other slot's.
+    const [a, z] = [A, B].map((k) =>
+      verbs.geometry.pointAt(b, ds, { x: 0, y: 0, k }, ui),
+    );
+    const mid = Math.round((a.x + z.x) / 2);
+    expect(
+      verbs.geometry.pointerTarget(b, ds, { x: mid + 1, y: a.y }, ui),
+    ).toMatchObject({
+      k: B,
+    });
+  });
+
+  it("goes round present, absent and undecided, striking and giving back halves", () => {
+    const first = press(open([0, 3]), 0, A);
+    // A present: the sets lacking it struck.
+    expect(first.move).toEqual(strike(0, 1, 3));
+    expect(sets(first.board, 0)).toBe(0b10100);
+    // A absent: those holding it struck, and those lacking it given back.
+    const second = press(first.board, 0, A);
+    expect(second.move).toEqual({ notes: [0, 0b01010] });
+    // Undecided: every set given back.
+    const third = press(second.board, 0, A);
+    expect(third.move).toMatchObject({ type: "pencilAdd" });
+    expect(sets(third.board, 0)).toBe(EVERY);
+  });
+
+  it("goes the other way round with the right button", () => {
+    const first = press(open([0, 3]), 0, B, RIGHT_BUTTON);
+    // B absent: {} and {A} left.
+    expect(sets(first.board, 0)).toBe(0b00110);
+    const second = press(first.board, 0, B, RIGHT_BUTTON);
+    expect(sets(second.board, 0)).toBe(0b11000);
+  });
+
+  it("places the one set left, and from a placed set gives back what the other letter allows", () => {
+    // {A, B} ruled out first: A present leaves {A} alone.
+    const ruled = game.executeMove(open([0, 3]), strike(0, 4));
+    const placed = press(ruled, 0, A).board;
+    expect(placed.values[0]).toBe(2);
+    // B undecided again, from absent: {A, B} back, though it was ruled out,
+    // since A is decided and allows it.
+    const back = press(placed, 0, B);
+    expect(back.move).toEqual({ set: [0, 0], notes: [0, 0b10100] });
+    expect(back.board.values[0]).toBe(0);
+    expect(sets(back.board, 0)).toBe(0b10100);
+  });
+
+  it("does nothing on a given square", () => {
+    expect(press(open([3]), 0, A).move).toBeNull();
+  });
+
+  it("is carried by a drag to a slot holding what the pressed one held", () => {
+    // Square 0's A straight down to square 2's, which lies below it.
+    const b = open([0, 2]);
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const pointAt = (c: number) =>
+      verbs.geometry.pointAt(b, ds, { x: c % 2, y: c >> 1, k: A }, ui);
+    expect(game.interpretMove(b, ui, ds, pointAt(0), LEFT_BUTTON)).toEqual(
+      strike(0, 1, 3),
+    );
+    expect(game.interpretMove(b, ui, ds, pointAt(2), LEFT_DRAG)).toEqual(
+      strike(2, 1, 3),
+    );
+  });
+
+  it("is made at the cursor by Enter, Space and erase, which the arrows walk over the slots", () => {
+    const b = open([0, 1, 3]);
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const key = (button: number) =>
+      game.interpretMove(b, ui, ds, { x: 0, y: 0 }, button);
+    // The cursor starts on square 0's A, and the first arrow moves it from
+    // there and shows it.
+    expect(key(CURSOR_RIGHT)).toBe(UI_UPDATE);
+    expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([0, 0, B]);
+    key(CURSOR_RIGHT);
+    expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([1, 0, A]);
+    key(CURSOR_RIGHT);
+    // The board's edge.
+    expect(key(CURSOR_RIGHT)).toBeNull();
+    expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([1, 0, B]);
+    key(CURSOR_DOWN);
+    expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([1, 1, B]);
+    // Square 3's B: present, then absent the other way round.
+    expect(key(CURSOR_SELECT)).toEqual(strike(3, 1, 2));
+    expect(key(CURSOR_SELECT2)).toEqual(strike(3, 3, 4));
+    const struck = game.executeMove(b, strike(3, 3, 4));
+    expect(game.interpretMove(struck, ui, ds, { x: 0, y: 0 }, BACKSPACE)).toMatchObject(
+      {
+        type: "pencilAdd",
+      },
+    );
+    // Square 2 is given.
+    key(CURSOR_LEFT);
+    key(CURSOR_LEFT);
+    expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([0, 1, B]);
+    expect(key(CURSOR_SELECT)).toBeNull();
+    key(CURSOR_UP);
+    expect([ui.cursor.x, ui.cursor.y, ui.slot]).toEqual([0, 0, B]);
+  });
+
+  it("types nothing, and offers no keypad", () => {
+    const b = open([0]);
+    const ds = game.newDrawState(b, TS);
+    expect(
+      game.interpretMove(b, game.newUi(b), ds, { x: 0, y: 0 }, "2".charCodeAt(0)),
+    ).toBeNull();
+    expect(game.requestKeys?.(PARAMS, b)).toEqual([]);
+  });
+
+  it("draws the cursor as corners round its slot's middle, and no square highlighted", () => {
+    const b = open([0]);
+    const ds = game.newDrawState(b, TS);
+    const ui = game.newUi(b);
+    const t = { x: 1, y: 1, k: B };
+    const p = verbs.geometry.pointAt(b, ds, t, ui);
+    const { ops } = renderScenario({
+      game,
+      id: idOf(ANSWER, [0]),
+      // Down from square 0's A to square 2's, then right over its B to
+      // square 3's A and B.
+      presses: [CURSOR_DOWN, CURSOR_RIGHT, CURSOR_RIGHT, CURSOR_RIGHT],
+    }).recording;
+    const corners = ops.filter(
+      (o): o is Extract<DrawOp, { op: "line" }> =>
+        o.op === "line" && o.color === COL_CURSOR,
+    );
+    expect(corners.length).toBeGreaterThan(0);
+    const xs = corners.flatMap((l) => [l.x1, l.x2]);
+    const ys = corners.flatMap((l) => [l.y1, l.y2]);
+    expect(Math.abs((Math.min(...xs) + Math.max(...xs)) / 2 - p.x)).toBeLessThanOrEqual(
+      1,
+    );
+    expect(Math.abs((Math.min(...ys) + Math.max(...ys)) / 2 - p.y)).toBeLessThanOrEqual(
+      1,
+    );
   });
 });

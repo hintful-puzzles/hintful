@@ -765,3 +765,44 @@ beside another way of drawing the values.
 
 - **WHEN** a `holding` square's notes are {A} and {A, B}
 - **THEN** its first slot shows A and its second shows nothing
+
+### Requirement: A born game's features are played on their slots
+
+On a born board whose values are features, a press on a slot, or Enter at
+the cursor's slot, SHALL take its feature from undecided to present, from
+present to absent and from absent to undecided, and the right button or
+Space SHALL go the other way round. Present SHALL leave the square the
+notes that have the feature, absent those that lack it, and undecided SHALL
+give back the other half, each among the sets the square's other decided
+features allow. A square left one note SHALL hold it.
+
+#### Scenario: Present, then absent
+
+- **WHEN** the player presses A on a `holding` square that can hold every set,
+  and presses it again
+- **THEN** its notes are {A} and {A, B}, and then {} and {B}
+
+#### Scenario: A set ruled out given back
+
+- **WHEN** a `holding` square holds {A}, placed after {A, B} was struck, and
+  the player presses its B
+- **THEN** its notes are {A} and {A, B}
+
+### Requirement: A born game of features is played from slot to slot
+
+On a born board whose values are features, the arrows SHALL move the cursor
+from slot to slot across the squares, an erase key SHALL make the cursor's
+slot undecided, and a drag SHALL carry a press on to each slot that held
+what the pressed one did. Such a board SHALL type no value, and SHALL offer
+no keypad, no pencil mode and no preference that acts on typing.
+
+#### Scenario: The arrows cross from square to square
+
+- **WHEN** the cursor is on a `holding` square's B and the player presses
+  the right arrow
+- **THEN** the cursor is on the A of the square to its right
+
+#### Scenario: No keypad
+
+- **WHEN** a `holding` board is in play
+- **THEN** it offers no key to type a set with

@@ -902,7 +902,14 @@ A board of numbers whose values are sets of features
 or note: each square is a grid of slots, a feature a slot, drawn by
 `render/layers/features.ts` from the value, or on an open square from what
 its notes agree on. It needs notes kept full (the mark's `full`), since an
-unnoted square would read as agreeing on every letter.
+unnoted square would read as agreeing on every letter. It is played on the
+slots alone (`features.ts`, which declares the game's `targetVerbs`): a
+press or Enter cycles a slot through present, absent and undecided, the
+right button or Space the other way, by striking or giving back the half
+of the notes that lack or hold the feature; the arrows walk the slots of
+every square as one grid. Nothing is typed, so the board has no keypad, no
+pencil mode and no note preferences, and a slot's move that both strikes
+and gives back writes the square's notes whole (an edit's `notes`).
 
 A board whose every piece the player places points (`glyphs.ts`'s
 `waysOf`) is played by each piece's way, as upstream Rome is, with nothing

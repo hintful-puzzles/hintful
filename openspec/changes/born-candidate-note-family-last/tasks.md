@@ -3,10 +3,10 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a to 2.5b2 are in, 2.5b3 is next (design.md §
-"Decisions" 16 is its model, and 17 how its notes stay full; a slot's
-place is `featureSlots` in `render/cell-text.ts`, which the press reads). Controls
-to keep: `subsets/index.ts`'s `targetVerbs`. Rome is born (2.3e). For 2.2f: the
+on meanwhile: 2.5a to 2.5b3 are in, 2.5b4 is next (design.md §
+"Decisions" 16, 17 and 19; a slot's strike and give-back are the note
+moves the hint tracks, and the gesture presses `features.ts`' verbs, as
+`subsets/index.ts`'s `hintGesture` does). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -120,15 +120,19 @@ order.
     - [x] 2.5b2 The features drawn, a slot each (`play.numbers.features`).
           In the app at 2.5e: the letters' size against the hand-written
           slot of a whole tile.
-    - [ ] 2.5b3 A slot press and the keyboard over slots (hand-written
-          `subsets/index.ts`, `iconHit` and the cursor).
+    - [x] 2.5b3 A slot press and the keyboard over slots (`features.ts`,
+          design.md § "Decisions" 19). In the app at 2.5e: the cursor's
+          corners, and a press near a slot's edge.
     - [ ] 2.5b4 The mistake check's slot, and the hint's gesture.
   - [ ] 2.5c The band of every value: struck where placed, a spotlight, a
-        strike from the cell in focus, and the keyboard into it.
+        strike from the cell in focus (its badge, hand-written
+        `subsets/index.ts`'s `iconHit`), and the keyboard into it, down
+        from the board's bottom row of slots (`features.ts`' `moveCursor`
+        stops there now).
   - [ ] 2.5d Every value once (the sample), and upstream's ID.
-  - [ ] 2.5e The flip. Weigh: full notes offer auto-pencil (a placed set
-        struck from every other square, which the hand-written game never
-        did), and its words say "row and column".
+  - [ ] 2.5e The flip. Weigh: whether a set a square settles to should
+        strike itself from the other squares, which the hand-written game
+        never did (no auto-pencil is offered, design.md § "Decisions" 19).
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
 
 ## 3. Finish

@@ -275,7 +275,9 @@ export function fillGame<C extends Clues<C> & object>(
         },
       }),
     ),
-    ...(!notes
+    // A board of features takes notes by its slots, and types nothing a
+    // placement or a mode could act on (`features.ts`).
+    ...(!notes || play.numbers?.features !== undefined
       ? []
       : [
           // The candidate walk refuses any regions but rows and columns. A
@@ -496,6 +498,7 @@ export function fillGame<C extends Clues<C> & object>(
             marginKinds: module.valueMargins ?? [],
           },
           render.recordPoint,
+          play.numbers.features === undefined ? null : render.featureSlots,
         );
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
@@ -522,6 +525,9 @@ export function fillGame<C extends Clues<C> & object>(
     buttons !== null
       ? { targetVerbs: buttons.targetVerbs, interpretMove: buttons.interpretMove }
       : {
+          ...(typed === null || typed.targetVerbs === null
+            ? {}
+            : { targetVerbs: typed.targetVerbs }),
           interpretMove: (
             b: FillBoard<C>,
             ui: FillUi,

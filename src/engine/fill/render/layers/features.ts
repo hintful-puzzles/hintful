@@ -7,9 +7,11 @@
  * still hold, and decide a slot where they all agree.
  */
 
-import { glyphFont } from "../../../render/draw.ts";
+import { COL_CURSOR } from "../../../color/roles.ts";
+import { drawRectCorners, glyphFont } from "../../../render/draw.ts";
 import { drawRuledOutCross } from "../../../render/piece.ts";
 import { COL_GRID, COL_INK } from "../palette.ts";
+import { FEATURE_CURSOR_SHIFT } from "../tile-word.ts";
 import type { TileFrame } from "./layer.ts";
 import { notesIn } from "./notes.ts";
 import { numeralInk } from "./numerals.ts";
@@ -32,7 +34,7 @@ function featureAgreement(
 export function paintFeatures(
   features: { readonly names: string; readonly of: (d: number) => number },
   COL_ENTRY: number,
-  { dr, ts, at, word, noteWord, part, lay }: TileFrame,
+  { dr, ts, at, word, noteWord, edgeWord, part, lay }: TileFrame,
 ): void {
   const v = word & 0xff;
   const { all, any } = featureAgreement(v !== 0 ? [v] : notesIn(noteWord), features.of);
@@ -56,5 +58,15 @@ export function paintFeatures(
         features.names[k],
       );
     else if (!(any & bit)) drawRuledOutCross(dr, box, COL_INK);
+    // The cursor, as upstream subsets.c's: corners round its slot's middle.
+    if (((edgeWord >> FEATURE_CURSOR_SHIFT) & 0xf) === k + 1)
+      drawRectCorners(
+        dr,
+        box.x + Math.floor(box.w / 2),
+        box.y + Math.floor(box.h / 2),
+        Math.floor(box.w * 0.4) - 1,
+        COL_CURSOR,
+        Math.max(1, ts >> 4),
+      );
   });
 }

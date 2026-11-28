@@ -8,11 +8,13 @@
  * itself from the notes it rules out (auto-pencil). A typed entry and a note
  * are the note-taking cell's moves (`notes.ts`). Where every piece points,
  * a drag or an armed arrow key chooses a value by its way (`pointing.ts`).
+ * Where the values are features, a square's slots are pressed instead, and
+ * nothing is typed (`features.ts`).
  */
 
 import { fromCoord } from "../board/geometry.ts";
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
-import type { KeyLabel, Point } from "../contract/types.ts";
+import type { KeyLabel, Point, Rect } from "../contract/types.ts";
 import {
   type CandidateMove,
   candidateGesture,
@@ -75,6 +77,7 @@ import {
 } from "./dividers.ts";
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { Edit } from "./edit.ts";
+import { type FeatureInput, featureInput } from "./features.ts";
 import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf, waysOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
@@ -120,9 +123,11 @@ function keypadTop<C>(
 
 /** `ui` as a board of numbers keeps it, which `newUi` gives it: the
  * note-taking cell's fields, and where the board keeps notes its mode and
- * preferences, as every game with notes starts them, the hint's reading the
- * one `play` declares; and no drag of buttons, but where every piece points
- * the drag that chooses one by its way, and what a key armed. */
+ * preferences, as every game with notes starts them (on a board of features
+ * none: it types nothing), the hint's reading the one `play` declares, and
+ * a board of features its cursor's slot; and no drag of buttons, but where
+ * every piece points the drag that chooses one by its way, and what a key
+ * armed. */
 export function typedUi({ drag, ...rest }: FillUi, play: FillPlay): FillUi {
   const ui: FillUi = rest;
   ui.cursorFromKeyboard ??= false;
@@ -130,11 +135,17 @@ export function typedUi({ drag, ...rest }: FillUi, play: FillPlay): FillUi {
     ui.drag = drag ?? newDrag();
     ui.armed ??= null;
   }
-  if (play.notes === true) {
+  // A board of features takes its notes by its slots (`features.ts`): no
+  // value is typed, as a value or a note.
+  const features = play.numbers?.features !== undefined;
+  if (features) ui.slot ??= 0;
+  if (play.notes === true && !features) {
     ui.pencilMode ??= false;
     ui.pencilSticky ??= true;
     ui.pencilKeepHighlight ??= true;
     ui.autoPencil ??= false;
+  }
+  if (play.notes === true) {
     ui.candidateReading ??= play.hintNotes ?? DEFAULT_CANDIDATE_READING;
   }
   if (play.numbers?.raised === true) ui.raised ??= true;
@@ -230,6 +241,9 @@ export interface NumberInput<C, D> {
   /** Where typing goes along the list's sites (`play.along`), what a press
    * on a record of the list does; `null` on any other board. */
   readonly along: AlongInput<C> | null;
+  /** Where the values are features, the verbs a press on a slot applies
+   * (`features.ts`); `null` on any other board. */
+  readonly targetVerbs: FeatureInput<C, D>["verbs"] | null;
   /** A key a value, then the clear key, for a board of the params `p`, and
    * of `board` where it is in play. */
   requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
@@ -250,8 +264,14 @@ export function numberInput<
   gap: (tileSize: number) => number = () => 0,
   clueSites: ClueSites<C> = {},
   recordPoint: RecordPoint<C, D> | null = null,
+  featureSlots: ((b: FillBoard<C>, ds: D, c: number) => readonly Rect[]) | null = null,
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
+  const features = featureInput<C, D>(
+    module,
+    (b, ds, p, ui) => geometry.pointerTarget(b, ds, p, ui),
+    featureSlots,
+  );
   const notes = module.play?.notes === true;
   const listed = module.play?.list;
   const along: AlongInput<C> | null =
@@ -376,6 +396,40 @@ export function numberInput<
     if (drag.moved) return { type: "reorder", line: drag.line, to: drag.to };
     return (dividers ? dividerAt(b, o, pitch, drag.press) : null) ?? UI_UPDATE;
   }
+  /** The done mark's input: a press on a clue marks it done, and a drag on
+   * marks those that looked the same; a Shift or Ctrl arrow is the mark's
+   * alone, and moves no cursor. */
+  function markingDone(
+    marks: DoneInput<C, D>,
+    b: FillBoard<C>,
+    fillUi: FillUi,
+    ds: D,
+    p: Point,
+    raw: number,
+  ): DoneMove | UiUpdate | null | typeof PASS {
+    const button = stripModifiers(raw);
+    if (isMouseDrag(button)) return sweepTo(marks.verbs, b, fillUi, ds, p);
+    if (isMouseRelease(button)) {
+      endSweep(fillUi);
+      return null;
+    }
+    if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+      const clue = marks.verbs.geometry.pointerTarget(b, ds, p, fillUi);
+      if (clue !== null) {
+        beginSweep(marks.verbs, b, fillUi, clue, button, p, true);
+        return clue;
+      }
+    }
+    if (!marks.isKey(raw)) return PASS;
+    // A hidden cursor is shown first, so the clue it marks is seen.
+    const ui = noteTaking(fillUi);
+    if (!ui.cursor.visible) {
+      ui.cursor.visible = true;
+      ui.cursorFromKeyboard = true;
+      return UI_UPDATE;
+    }
+    return marks.keyed(b, fillUi, raw);
+  }
   /** Value `n`, a value the cell holds or 0 for a clear, typed into the
    * selected cell `c`, as a value or a note as the mode says. */
   function typeInto(
@@ -415,6 +469,7 @@ export function numberInput<
   const input: NumberInput<C, D> = {
     done,
     along,
+    targetVerbs: features?.verbs ?? null,
     previewed: (b, ui) => pointing?.previewed(b, ui) ?? b,
     interpretMove(b, fillUi, ds, p, raw) {
       const ui = noteTaking(fillUi);
@@ -422,6 +477,12 @@ export function numberInput<
       const pointed =
         pointing === null ? PASS : pointing.interpret(b, fillUi, ds, p, button);
       if (pointed !== PASS) return pointed;
+      // A board of features is played on its slots; a key that marks a clue
+      // done is the mark's.
+      if (features !== null && !(done?.isKey(raw) ?? false)) {
+        const made = features.interpret(b, fillUi, ds, p, raw);
+        if (made !== PASS) return made;
+      }
       // A press on a raised value's top is its cell's, wherever it is drawn:
       // over a neighbor's square or a clue beside the grid.
       const raisedAt =
@@ -444,31 +505,11 @@ export function numberInput<
         if (ruled !== null) return ruled;
       }
       if (done !== null && raisedAt === null) {
-        // A press on a clue marks it done, and a drag on marks those that
-        // looked the same.
-        if (isMouseDrag(button)) return sweepTo(done.verbs, b, fillUi, ds, p);
-        if (isMouseRelease(button)) {
-          endSweep(fillUi);
-          return null;
-        }
-        if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-          const clue = done.verbs.geometry.pointerTarget(b, ds, p, fillUi);
-          if (clue !== null) {
-            beginSweep(done.verbs, b, fillUi, clue, button, p, true);
-            return clue;
-          }
-        }
-        // A Shift or Ctrl arrow is the mark's alone, and moves no cursor.
-        if (done.isKey(raw)) {
-          // A hidden cursor is shown first, so the clue it marks is seen.
-          if (!ui.cursor.visible) {
-            ui.cursor.visible = true;
-            ui.cursorFromKeyboard = true;
-            return UI_UPDATE;
-          }
-          return done.keyed(b, fillUi, raw);
-        }
+        const marked = markingDone(done, b, fillUi, ds, p, raw);
+        if (marked !== PASS) return marked;
       }
+      // Nothing on a board of features is selected or typed into.
+      if (features !== null) return null;
       const at = raisedAt ?? geometry.pointerTarget(b, ds, p, ui);
       // A press selects a cell the player may type into, or with the right
       // button one that may take notes: an open one, empty for notes. A given
@@ -567,6 +608,8 @@ export function numberInput<
       return typeInto(b, fillUi, c, n);
     },
     requestKeys(p, board) {
+      // No value of a board of features is typed: its slots are pressed.
+      if (features !== null) return [];
       const sp = paramSpaceOf(module, p);
       const top = keypadTop(module, sp, p.sizes ?? {});
       // A board from another ID may hold a part larger than any the deal
