@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: the four sets of two letters, each placed once on a
+# 2x2 board, with a horseshoe between two squares side by side wherever one's
+# set holds the other's, and every one there is shown. For the fill engine's
+# tests of a horseshoe drawn in a gap (`paint: shoe`), on a description that
+# names no game.
+game: holding
+produces: latin
+sizes: {}
+space:
+  grid: { w: "2", h: "2" }
+  edges: true
+  units: []
+answer:
+  # A set, one more than the number its letters add up to, A as 1 and B as
+  # 2, since the marks hold no value 0.
+  value: { sort: cell, domain: "range(1, 4)" }
+given: [value]
+define:
+  letters(d): "bits(d - 1)"
+  holds(x, y): "x != y and letters(y) subset letters(x)"
+shape:
+  - "distinct(value(c) over c in cells)"
+clues:
+  # 1 where the first square's set holds the second's, 2 the other way, and
+  # 0 where neither holds the other.
+  shoe:
+    at: edge
+    value: "range(0, 2)"
+    complete: true
+    means: >-
+      (v = 1) = holds(value(end1(at)), value(end2(at)))
+      and (v = 2) = holds(value(end2(at)), value(end1(at)))
+freedom: { kind: fill }
+play:
+  numbers: {}
+  gaps: { shoe: shoe }
+  boards: [2x2]
+  hintMarks:
+    ring: the square the step decides.
+    outline: the squares the step reasons from.
+deal:
+  answer: every set in a square, shuffled
+  shoe: every edge's, read off the answer
+  value: every set, then as many hidden as the board still finishes
+  tier: the one tier
+  sample: { uniform: true }
+tiers: [Easy]
+names:
+  placed: "a set already placed"
+  lone: "the only set left for a square"
+# A board loads only where deduction solves it, so it has the two steps that
+# solve the boards its tests load.
+techniques:
+  - kind: peer.placed
+    as: placed
+    tier: Easy
+    with:
+      peer: "p in cells where p != c and not known(p)"
+  - kind: one.cell
+    as: lone
+    tier: Easy

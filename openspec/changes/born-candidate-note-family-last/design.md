@@ -356,6 +356,46 @@ keep `?` the only note, and the engine gains a strike the board already
 shows, made by the walk and never spoken, which only Magnets would use now.
 2.4a to 2.4c and the painters do not wait on it.
 
+### 16. Subsets' gap list, read against `0cb9604be`, and its notes (2.5)
+
+Met: a given value, the horseshoes as an edge clue of three values drawn in
+the gaps (`play.gaps`), every clue shown (`complete`), the walk with no
+region (Magnets'), and the tier letters. New, each a concept another game
+takes, each on the `holding` fixture (a 2x2 board of the four sets of two
+letters, Subsets' shape at its smallest):
+
+- **A horseshoe painter** (`shoe`), for a clue valued by which end holds
+  the other: its open side to that end, and a cross where two neighbors
+  with none break the rule (upstream subsets.c's).
+- **A value drawn as its features**: each value a set of features in fixed
+  slots of its cell (a set's letters, `bits(d - 1)`), the slot drawing its
+  feature where every set the cell can still hold has it, a cross where
+  none has, and nothing between. A slot press marks the feature present,
+  absent or unknown by striking or giving back the half of the cell's sets
+  that lack or hold it, and a cell down to one set holds it.
+- **A band of every value** beneath the board, each struck where it is
+  placed: a press spotlights the cells a value can still go in, and with a
+  cell in focus (a badge above it) strikes the value from that cell
+  instead. Dominosa wants the spotlight.
+- **A sample of every value once**, shuffled over the cells.
+- **Upstream's ID**: a token a cell, the set's number or `_`, then the
+  letters (`U R D L`) of the horseshoes opening at it.
+
+**The notes are the cell's candidates, and the letters a view of them.**
+The hand-written game keeps two notations, the letters and the sets ruled
+out, and reads a cell's candidates as their meet. A born board keeps one:
+its notes are the sets a cell can hold, every open cell's full from the
+deal, and a letter shows what they agree on. The alternative, a second
+notation of features beside the notes, would have been a mark only Subsets
+reads, which the walk, the mistake check and Mark-all would each have had
+to be taught. What changes for a player, listed again at the flip:
+
+- A letter shows once every set left in the cell agrees on it, so ruling
+  sets out in the band can decide a letter, and the last set left decides
+  the cell, where the player marked the letters by hand.
+- Turning a letter back to unknown gives back every set of the other half
+  the cell's other letters allow, a set ruled out in the band among them.
+
 Filled in by each flip.
 
 ### Undead (2.1e)

@@ -46,6 +46,8 @@
   "src/engine/testing/fixtures/growing/growing.description.yaml#exactRegion": "e3a07d7a5b5aa942",
   "src/engine/testing/fixtures/growing/growing.description.yaml#fullRegion": "7d4113a0b643b452",
   "src/engine/testing/fixtures/growing/growing.description.yaml#partner": "db43e5ad3b106749",
+  "src/engine/testing/fixtures/holding/holding.description.yaml#lone": "35c9d15e686fe754",
+  "src/engine/testing/fixtures/holding/holding.description.yaml#placed": "af81a95fd8966c6b",
   "src/engine/testing/fixtures/joining/joining.description.yaml#lineFull": "b60a39de15f7dedc",
   "src/engine/testing/fixtures/joining/joining.description.yaml#lineMet": "e26375325f8f8f10",
   "src/engine/testing/fixtures/lacing/lacing.description.yaml#numberCount": "ea30dc9c8dc32f98",

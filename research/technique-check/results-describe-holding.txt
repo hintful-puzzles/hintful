@@ -1,0 +1,6 @@
+ok  holding    placed                         3  sound    (want sound   )     4 queries    0.1s
+ok  holding    placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/holding/holding.description.yaml#placed: recorded sound, proved whole on all 1 boards
+ok  holding    lone                           3  sound    (want sound   )     4 queries    0.0s
+ok  holding    lone (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/holding/holding.description.yaml#lone: recorded sound, proved whole on all 1 boards

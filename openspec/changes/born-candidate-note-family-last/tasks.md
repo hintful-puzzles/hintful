@@ -102,7 +102,17 @@ order.
   - [ ] 2.4g The flip: the hint restated as `says`, cases, spec deltas,
         guides. In the browser: an empty tile drawn as the partition's
         pastel fill against upstream's rounded tile, and the hint's clicks.
-- [ ] 2.5 Subsets born.
+- [ ] 2.5 Subsets born. Read against `0cb9604be` (design.md § "Decisions"
+      16), each piece on the `holding` fixture.
+  - [x] 2.5a The horseshoe painter, `shoe`, on `holding`. In the app at
+        2.5e.
+  - [ ] 2.5b A value drawn and played as its features over notes that are
+        its candidates, full from the deal; the hint's strike given as
+        letter presses where it is a union of letter halves.
+  - [ ] 2.5c The band of every value: struck where placed, a spotlight, a
+        strike from the cell in focus, and the keyboard into it.
+  - [ ] 2.5d Every value once (the sample), and upstream's ID.
+  - [ ] 2.5e The flip.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
 
 ## 3. Finish

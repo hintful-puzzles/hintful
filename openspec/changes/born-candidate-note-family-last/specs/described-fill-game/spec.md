@@ -706,3 +706,23 @@ later cell the first value it may hold.
 - **WHEN** a `poling` domino holds a 1 and a 3
 - **THEN** its + half, red, reaches the line where its − half, ink, begins,
   and a domino of 2s is drawn green at both ends, each with its cross
+
+### Requirement: A born game's clue at an edge may be a horseshoe
+
+A born game's clue at an edge valued by which of its two cells holds the
+other, 1 the cell above or left, 2 the other and 0 neither, MAY be drawn
+as a horseshoe in the gap (`shoe`): its open side SHALL face the cell that
+holds and its rounded side the cell held, nothing SHALL be drawn where it
+is 0, and a 0 that breaks its meaning SHALL be drawn as a cross in the
+error color.
+
+#### Scenario: A horseshoe opens toward the holder
+
+- **WHEN** a `holding` board has {A} above the empty set
+- **THEN** the horseshoe between them opens upward, and none is drawn
+  between {A} and {B} beside it
+
+#### Scenario: A missing horseshoe breaks
+
+- **WHEN** the empty set is placed beside {B} with no horseshoe between
+- **THEN** a cross is drawn in the error color in their gap
