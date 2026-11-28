@@ -23,9 +23,10 @@ import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
 import type { FillMistake } from "./answer.ts";
 import { type FillBoard, newBoard, paramSpaceOf, washedValues } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
-import { fillInput, newFillUi } from "./play.ts";
+import { newFillUi } from "./play.ts";
 import { type FillLook, fillRender } from "./render.ts";
 
 const PIECE = 1;

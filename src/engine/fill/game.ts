@@ -53,6 +53,7 @@ import {
   spaceOf,
   walledParts,
 } from "./board.ts";
+import { type FillInput, fillInput } from "./buttons.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
 import { COUNT_STYLES, countedOf, countRecords, countStyleOf } from "./counts.ts";
@@ -96,13 +97,7 @@ import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
 import { offKinds } from "./params/settings.ts";
-import {
-  type FillInput,
-  type FillPlay,
-  type FillUi,
-  fillInput,
-  newFillUi,
-} from "./play.ts";
+import { type FillPlay, type FillUi, newFillUi } from "./play.ts";
 import { listedOf, listRecords } from "./record-list.ts";
 import { recordPanel } from "./record-panel.ts";
 import { PLACE_ANIM_TIME } from "./render/tile.ts";

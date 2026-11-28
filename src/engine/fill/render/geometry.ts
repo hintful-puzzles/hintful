@@ -136,6 +136,8 @@ export function fillMetrics(shape: FillShape) {
   /** From the first of `n` cells' near side to the last's far side: the
    * cells, and the gaps between them. */
   const spanOf = (n: number, ts: number): number => pitch(ts) * n - gapOf(ts);
+  /** The same in tiles, a gap half a tile. */
+  const spanTiles = (n: number): number => (gapped ? n + (n - 1) / 2 : n);
   /** The top left of what a board `h` high whose margins are `depth` deep
    * draws beneath it, past its bottom margin. */
   const beneathAt = (ts: number, depth: number, h: number): Point => {
@@ -155,6 +157,7 @@ export function fillMetrics(shape: FillShape) {
     sides,
     tileOf,
     canvasOf,
+    spanTiles,
     beneathAt,
   };
 }

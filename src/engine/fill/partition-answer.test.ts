@@ -16,11 +16,12 @@ import { walkHints } from "../testing/hint-walk.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
 import { encodeAnswer } from "./answer.ts";
 import { newBoard, paramSpaceOf, solveBoard } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc } from "./desc.ts";
 import { pointOfElement } from "./edge-target.ts";
 import { fillGame } from "./game.ts";
-import { fillInput, newFillUi } from "./play.ts";
+import { newFillUi } from "./play.ts";
 import { fillSlots } from "./render/palette.ts";
 import { wallsOf } from "./sample.ts";
 

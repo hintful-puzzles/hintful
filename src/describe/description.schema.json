@@ -1528,6 +1528,10 @@
               "type": "string",
               "description": "A clue at the board whose records are lists, drawn as a list beneath the board (`engine/fill/record-list.ts`, upstream crossing.c's `draw_numbers`): each record its members' digits, in columns as many rows deep as fit the board's width, struck where its meaning holds of the board as placed and red where the rules break it. A hint's ring and outline go round a record where it is drawn."
             },
+            "band": {
+              "const": true,
+              "description": "On a board of `numbers`, every value a square can hold drawn as a band beneath the board (`engine/fill/band.ts`, upstream subsets.c's tally of the sets), laid as a `list`'s records are: each value its glyph, or where the values are `features`, its letters with `_` for each it lacks; gray where a square holds it, red where more than one does. Not beside a `list` or `counts`, which are drawn there too."
+            },
             "along": {
               "type": "object",
               "description": "On a board of `numbers` with a `list` the deal reads one record a binding of `deal.records` (Crossing's runs), typing goes along those sites, each binding's ordered cells (`engine/fill/along.ts`): a value typed moves the selection to the next square of the site it is filling, the way (row or column) set by the arrow last pressed, snapped to the one site through a square that lies in one, and turned by a second press on a square two sites cross; the sites through the selection are washed, the row's and the column's each its own color, unless a hint shows. A press on a record of the list picks it up, every site it still fits washed and its members previewed where one alone does, and a press on such a site writes it in whole; with a square selected for typing, a press on a record that fits a site through it writes it there, the site already the more written-in first. A record fits a site as long as it, agreeing with every value typed there, and read along no other. `advance` and `wash` are the player's preferences, on by default, that move the selection and wash the sites, by key and name.",

@@ -19,14 +19,10 @@ import {
   Out,
   type Val,
 } from "../compile-sorts.ts";
-import {
-  type Description,
-  type DescriptionJson,
-  type PlayJson,
-  tallyKindOf,
-} from "../description.ts";
+import type { Description, DescriptionJson, PlayJson } from "../description.ts";
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
+import { checkBeneath, recordHoldsOf } from "./beneath.ts";
 import { answerEnv, param } from "./emit.ts";
 import { checkFeatures, featuresOfFn } from "./features.ts";
 import { checkGaps, checkSigns, marginsOf } from "./locations.ts";
@@ -143,109 +139,6 @@ const isValueAt = (e: Expr): boolean =>
 const fixesItsValue = (e: Expr): boolean =>
   isValueAt(e) || (e.k === "bin" && e.op === "and" && fixesItsValue(e.a));
 
-/**
- * `play`, the engine's `FillPlay`, from the description's `play:`: its link
- * named by the clue kind the cell mark names. Nothing where there is no
- * `play:`. A button whose value the player cannot place, or a link that is
- * not the cell mark naming a clue, is refused.
- */
-/** Refuses `play.counts` that name no clue at the board the deal derives,
- * or whose records are not keyed by a field alone, before their count, of
- * values the player places; and a style of counts with no row to read. */
-function checkCounts(
-  json: DescriptionJson,
-  d: Description,
-  measured: (e: Expr) => Expr,
-): void {
-  const p = json.play as PlayJson;
-  if (p.countStyle !== undefined && Object.keys(p.counts ?? {}).length === 0)
-    throw new CompileError("play countStyle: no row of counts to read");
-  for (const [k, field] of Object.entries(p.counts ?? {})) {
-    const c = d.clueKinds.get(k);
-    const fields = [...(c?.fields.keys() ?? [])];
-    if (c?.at !== "board" || k === tallyKindOf(json))
-      throw new CompileError(
-        `play counts: ${k} is no clue at the board the deal derives`,
-      );
-    if (fields.length !== 2 || fields[0] !== field)
-      throw new CompileError(
-        `play counts: ${k}'s records are keyed by ${field} alone, before their count`,
-      );
-    const range = measured((c.fields.get(field) as { value: Expr }).value);
-    const [lo, hi] = range.k === "call" && range.fn === "range" ? range.args : [];
-    const placed = (n: number): boolean =>
-      p.numbers !== undefined || p.values?.[String(n)] !== undefined;
-    if (
-      lo?.k !== "num" ||
-      hi?.k !== "num" ||
-      !Array.from({ length: hi.v - lo.v + 1 }, (_, i) => lo.v + i).every(placed)
-    )
-      throw new CompileError(
-        `play counts: ${k}'s ${field} is a range of values the player places`,
-      );
-  }
-}
-
-/** Refuses typing along a list's sites (`along`) on a board that is not one
- * of numbers with a list, or whose drag selects several squares, which a
- * value typed fills at once. */
-function checkAlong(p: PlayJson): void {
-  if (p.along === undefined) return;
-  if (p.numbers === undefined || p.list === undefined)
-    throw new CompileError(
-      "play along: typing goes along a list's sites on a board of numbers, and play has no `numbers` or no `list`",
-    );
-  if (p.select !== undefined)
-    throw new CompileError("play along: a selection is typed into at once");
-}
-
-/**
- * `recordHolds(g, sp, cl, k)`: whether record `k` of the clue at the board
- * `play.list` draws holds of the values `g`, its meaning read of the board
- * as placed, for the list's strike. Nothing where there is no list; one
- * naming no clue at the board the deal derives, or whose records hold no
- * list, is refused.
- */
-function recordHoldsOf(
-  json: DescriptionJson,
-  d: Description,
-  env: Env,
-  measured: (e: Expr) => Expr,
-): string[] {
-  const kind = json.play?.list;
-  if (kind === undefined) return [];
-  const c = d.clueKinds.get(kind);
-  if (c?.at !== "board" || kind === tallyKindOf(json))
-    throw new CompileError(
-      `play list: ${kind} is no clue at the board the deal derives`,
-    );
-  const fields = [...c.fields.values()];
-  if (fields.length !== 1 || !fields[0].list || fields[0].at !== null)
-    throw new CompileError(`play list: ${kind}'s records are one list of numbers each`);
-  const scratch: string[] = [];
-  const out = new Out(1);
-  const v = compileExpr(
-    measured(c.means),
-    new Map<string, Val>([["k", { code: "k", sort: elem(`clue ${kind}`) }]]),
-    answerEnv(env, { yes: false }, scratch),
-    out,
-  );
-  expect(v, "bool", `play list ${kind}`);
-  const body = [...scratch.map((s) => `  ${s}`), ...out.text(), `  return ${v.code};`];
-  return [
-    "",
-    `/** Whether ${kind} record \`k\` holds of the values \`g\`, as placed (\`play.list\`). */`,
-    `export function recordHolds(${[
-      "g: ArrayLike<number>",
-      param("sp", "GridSpace", body),
-      param("cl", "Dealt", body),
-      "k: number",
-    ].join(", ")}): boolean {`,
-    ...body,
-    "}",
-  ];
-}
-
 /** Refuses what a board whose rows and columns stand for the same things
  * offers off such a board: dividers, the leading diagonal, and an order. */
 function checkSquareLines(p: PlayJson, json: DescriptionJson, d: Description): void {
@@ -302,6 +195,12 @@ function checkSquareLines(p: PlayJson, json: DescriptionJson, d: Description): v
     );
 }
 
+/**
+ * `play`, the engine's `FillPlay`, from the description's `play:`: its link
+ * named by the clue kind the cell mark names. Nothing where there is no
+ * `play:`. A button whose value the player cannot place, or a link that is
+ * not the cell mark naming a clue, is refused.
+ */
 export function playOf(
   json: DescriptionJson,
   d: Description,
@@ -480,7 +379,6 @@ export function playOf(
         `play done: ${k} is marked done on a board of numbers alone, and play has no \`numbers\``,
       );
   }
-  checkCounts(json, d, measured);
   // The ends lay the margin of clues one a value at lines: each value of
   // theirs drawn at one end, so every clue is drawn and no square is empty.
   if (p.ends !== undefined) {
@@ -503,7 +401,7 @@ export function playOf(
     throw new CompileError(
       "play select: a selection is typed into, and play has no `numbers`",
     );
-  checkAlong(p);
+  checkBeneath(json, d, measured);
   checkSquareLines(p, json, d);
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);

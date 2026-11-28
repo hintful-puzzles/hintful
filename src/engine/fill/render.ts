@@ -53,6 +53,7 @@ import { numbersLeft } from "./render/layers/numbers.ts";
 import { partClueBox } from "./render/layers/part-clues.ts";
 import { partsOf } from "./render/layers/surface.ts";
 import { type FillRenderModule, fillSetup } from "./render/setup.ts";
+import { band } from "./render/sites/band.ts";
 import { corners } from "./render/sites/corners.ts";
 import { counts } from "./render/sites/counts.ts";
 import { edgeRings } from "./render/sites/edge-rings.ts";
@@ -152,6 +153,8 @@ export interface FillDrawState {
   readonly counts: { shown: string | null };
   /** What the list beneath the board shows, `null` before it is drawn. */
   readonly recordList: { shown: string | null };
+  /** What the band beneath the board shows, `null` before it is drawn. */
+  readonly band: { shown: string | null };
   /** Whether the pencil-mode indicator shows, on a board that keeps notes:
    * `null` before it is drawn. */
   pencilModeShown: boolean | null;
@@ -224,6 +227,7 @@ const SITES: readonly FillSite[] = [
   tally,
   counts,
   recordList,
+  band,
   lists,
   valueMargins,
   lineClues,
@@ -343,6 +347,7 @@ export function fillRender<C extends Clues<C>>(
         tally: { shown: null },
         counts: { shown: null },
         recordList: { shown: null },
+        band: { shown: null },
         pencilModeShown: null,
       };
     },

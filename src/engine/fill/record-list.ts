@@ -7,7 +7,7 @@
  * grid (`recordPoint`), which the list's site draws the mark round.
  *
  * The list's other parts: the site that draws it, `render/sites/record-list.ts`,
- * and the compiler's `recordHolds`, `describe/fill/play.ts`.
+ * and the compiler's `recordHolds`, `describe/fill/beneath.ts`.
  */
 
 import type { Point } from "../contract/types.ts";

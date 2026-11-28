@@ -33,12 +33,13 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, encodeDesc } from "./desc.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { type FillParams, fillParams } from "./game-id.ts";
-import { fillInput, newFillUi } from "./play.ts";
+import { newFillUi } from "./play.ts";
 import { PLACE_ANIM_TIME } from "./render/tile.ts";
 import { fillRender } from "./render.ts";
 

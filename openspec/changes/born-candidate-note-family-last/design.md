@@ -467,6 +467,19 @@ strikes a part of a step that strikes more, now keeps the hint on it too.
 A strike that is no union, the walk's {A, B} struck alone, throws until
 2.5c's band strikes one set from a square.
 
+### 21. The band is laid as the list, and a placed value is gray, not struck (2.5c1)
+
+`play.band` draws every value a square can hold beneath the board, laid by
+the list's layout (`record-list.ts`'s `listPixels`) across the board's
+width, gaps included: for Subsets' sixteen sets, four rows of four, as
+the hand-written tally. A set is its letters with `_` for each it lacks, in
+the fixed font. A placed value is gray and red where more than one square
+holds it, as the hand-written tally's; it is not struck as a list's record
+is, because a line through `__` reads as `=`, and the band's strike is
+2.5c3's, what the square in focus rules out. The band is refused beside a
+list or a row of counts, which are drawn where it is, and on a board not of
+numbers, whose values have no glyph.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

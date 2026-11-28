@@ -1107,6 +1107,37 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/features: ABCDE names more than four features/);
   });
 
+  it("refuses a band on a board not of numbers, or beside a list", () => {
+    const source = "src/engine/testing/fixtures/holding/holding.description.yaml";
+    const holding = sources.get(source);
+    if (holding === undefined || !isFormal(holding)) throw new Error("no holding");
+    type Json = { marks?: unknown; play: { numbers?: unknown; list?: string } };
+    const compileHolding = (over: (j: Json) => void) => {
+      const j = structuredClone(holding) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileHolding(() => {})).toContain('"band":true');
+    expect(() =>
+      compileHolding((j) => {
+        // Notes are a board of numbers', so they go too.
+        delete j.play.numbers;
+        delete j.marks;
+      }),
+    ).toThrow(/play band: a band writes each value's glyph/);
+    expect(() =>
+      compileHolding((j) => {
+        j.play.list = "shoe";
+      }),
+    ).toThrow(/play band: the band is drawn beneath the board/);
+  });
+
   it("refuses {tally}, which only the library's fish is given, in a game's own wording", () => {
     const source = "src/games/solo/solo.description.yaml";
     const solo = sources.get(source);

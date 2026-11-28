@@ -34,12 +34,13 @@ import {
   paramSpaceOf,
   solveBoard,
 } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc } from "./desc.ts";
 import { elementAtPoint, pointOfElement } from "./edge-target.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
-import { fillInput, newFillUi } from "./play.ts";
+import { newFillUi } from "./play.ts";
 import { COL_CELL, COL_INK, fillSlots } from "./render/palette.ts";
 import { sampleAnswer } from "./sample.ts";
 

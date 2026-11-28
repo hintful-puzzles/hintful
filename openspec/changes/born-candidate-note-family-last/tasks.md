@@ -3,9 +3,9 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a to 2.5b4 are in, 2.5c is next (design.md §
-"Decisions" 16 and 20; the band is a site beneath the board, as Crossing's
-list is, `render/sites/record-list.ts`). For 2.2f: the
+on meanwhile: 2.5a to 2.5c1 are in, 2.5c2 is next (design.md §
+"Decisions" 16, 20 and 21; the band's press is a site's, as Crossing's
+list's is, `render.ts`'s `recordPressed`). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -130,7 +130,18 @@ order.
         from the board's bottom row of slots (`features.ts`' `moveCursor`
         stops there now). The hint's gesture then strikes by the band what
         no letters' halves make (`features.ts`' `gesture` throws there now,
-        `holding.test.ts`' "refuses a strike that is no union").
+        `holding.test.ts`' "refuses a strike that is no union"). In steps,
+        each on `holding`:
+    - [x] 2.5c1 The band drawn (`play.band`, `band.ts`), laid as a list:
+          a set as its letters, `_` for each it lacks, gray where placed
+          and red twice (design.md § "Decisions" 21).
+    - [ ] 2.5c2 A press on a value spotlights the squares it can still go
+          in; again, or a press on the board, clears it.
+    - [ ] 2.5c3 A square in focus by its badge: the band strikes in the
+          player's ink what its notes rule out, and a press strikes a value
+          from it or gives it back.
+    - [ ] 2.5c4 The keyboard into the band; the hint's strike by the band
+          where no letters' halves make it, and its marks on the band.
   - [ ] 2.5d Every value once (the sample), and upstream's ID.
   - [ ] 2.5e The flip. Weigh: whether a set a square settles to should
         strike itself from the other squares, which the hand-written game

@@ -14,10 +14,11 @@ import { inHexagon } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, spaceOf } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { encodeDesc } from "./desc.ts";
 import { applyEdit } from "./edit.ts";
 import { fillGame } from "./game.ts";
-import { fillInput, newFillUi } from "./play.ts";
+import { newFillUi } from "./play.ts";
 import { fillRender } from "./render.ts";
 
 const SHADED = 1;

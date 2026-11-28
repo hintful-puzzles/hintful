@@ -1224,8 +1224,9 @@ The board (`board.ts`) holds the description's own
 values in the space's own order, one mark a cell and the dealt clues, so
 the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
-`play.ts` is the input the description's `play:` declares, and the engine's
-`FillUi`; on a board of numbers, `glyphs.ts` is how a board's values are
+`play.ts` is what the description's `play:` declares (`FillPlay`), and the
+engine's `FillUi`; `buttons.ts` is a board of buttons' input built from
+them, and `numbers.ts` a board of numbers'. On a board of numbers, `glyphs.ts` is how a board's values are
 drawn, typed, said and written in its ID, by its ruleset. A control
 `play:` turns on beside the one cell's entry is a module of its own:
 `select.ts` a selection a drag makes in a shape (`play.select`),
@@ -1261,6 +1262,10 @@ deselects it. Where `play.along.panel` names a record and a site, the list
 is also the game's reference aid (`record-panel.ts`): what it calls fitting
 is `AlongInput.fits`, where `take` would write the record, and a pick is
 `take`, so the panel, the list's press and the board cannot disagree.
+The band of every value (`band.ts`, `play.band`, Subsets' sets) is laid by
+the list's `listPixels` across the board's width, gaps included
+(`metrics.spanTiles`), so a list and a band share one layout and one press
+geometry; its values are the board's domain, not a clue.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

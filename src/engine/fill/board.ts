@@ -430,7 +430,7 @@ export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
 }
 
 /** Every value any element of the board may hold, as a bitmask. */
-function domainMask<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
+export function domainMask<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
   let mask = 0;
   for (const c of elementsOf(module, sp)) mask |= module.domainOf(sp, dealt, c);
   return mask;

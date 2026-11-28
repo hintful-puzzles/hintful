@@ -122,10 +122,9 @@ describe("a horseshoe", () => {
 });
 
 describe("a set drawn as its letters", () => {
-  const { w: W, h: H } = renderScenario({ game, id: idOf(ANSWER) }).size;
-  /** What each square's slots show, A's then B's: a letter, `x` for a
-   * cross, `.` for nothing, read off where each is drawn. */
-  const marksOf = (id: string, moves: FillMove[] = []) => {
+  /** Every letter and cross drawn on the squares: a letter alone, which the
+   * band's sets are not, and a cross's falling stroke, which no strike is. */
+  const drawnMarks = (id: string, moves: FillMove[] = []) => {
     const ops = renderScenario({ game, id, moves }).recording.ops;
     const marks: { x: number; y: number; mark: string }[] = [
       ...ops.flatMap((o) =>
@@ -140,11 +139,23 @@ describe("a set drawn as its letters", () => {
           : [],
       ),
     ];
+    return marks;
+  };
+  // The middle of the board, between its two columns and its two rows of
+  // squares: on the board with every set placed, each slot draws something.
+  const full = drawnMarks(idOf(ANSWER));
+  const middle = (axis: "x" | "y") => {
+    const at = full.map((m) => m[axis]);
+    return (Math.min(...at) + Math.max(...at)) / 2;
+  };
+  const [MX, MY] = [middle("x"), middle("y")];
+  /** What each square's slots show, A's then B's: a letter, `x` for a
+   * cross, `.` for nothing, read off where each is drawn. */
+  const marksOf = (id: string, moves: FillMove[] = []) => {
+    const marks = drawnMarks(id, moves);
     return [0, 1, 2, 3].map((c) =>
       marks
-        .filter(
-          (m) => Number(m.x >= W / 2) === c % 2 && Number(m.y >= H / 2) === c >> 1,
-        )
+        .filter((m) => Number(m.x >= MX) === c % 2 && Number(m.y >= MY) === c >> 1)
         .sort((a, b) => a.x - b.x),
     );
   };
@@ -174,6 +185,70 @@ describe("a set drawn as its letters", () => {
     expect(slots(id, [strike(0, 1, 3)])).toEqual(["A.", "xB", "xx", "AB"]);
     // {} and {A} left: B is not, A open.
     expect(slots(id, [strike(0, 3, 4)])).toEqual([".x", "xB", "xx", "AB"]);
+  });
+});
+
+describe("the band of every set", () => {
+  /** Each set's text in the band, in the order drawn, with how it is: `ink`,
+   * `done` (gray) or `red`, and whether a line strikes it. */
+  const bandOf = (id: string, moves: FillMove[] = []) => {
+    const ops = renderScenario({ game, id, moves }).recording.ops;
+    const texts = ops.filter(
+      (o): o is Extract<DrawOp, { op: "text" }> =>
+        o.op === "text" && /^[A_][B_]$/.test(o.text),
+    );
+    const struck = (t: (typeof texts)[number]) =>
+      ops.some(
+        (o) =>
+          o.op === "line" &&
+          o.y1 === o.y2 &&
+          o.x1 === t.x &&
+          o.y1 < t.y &&
+          o.y1 > t.y - 20,
+      );
+    return texts.map(
+      (t) =>
+        `${t.text} ${t.color === COL_ERROR ? "red" : t.color === COL_INK ? "ink" : "done"}${struck(t) ? " struck" : ""}`,
+    );
+  };
+
+  it("writes every set beneath the board as its letters, a gap for each it lacks", () => {
+    const { h } = renderScenario({ game, id: idOf(ANSWER, [0]) }).size;
+    const ops = drawn(idOf(ANSWER, [0]));
+    const band = ops.filter(
+      (o): o is Extract<DrawOp, { op: "text" }> =>
+        o.op === "text" && /^[A_][B_]$/.test(o.text),
+    );
+    expect(band.map((o) => o.text)).toEqual(["__", "A_", "_B", "AB"]);
+    // Below every square's letters, on the canvas.
+    const letters = ops.flatMap((o) =>
+      o.op === "text" && o.text.length === 1 ? [o.y] : [],
+    );
+    expect(letters.length).toBeGreaterThan(0);
+    for (const o of band) {
+      expect(o.y).toBeLessThan(h);
+      expect(o.y).toBeGreaterThan(Math.max(...letters));
+    }
+  });
+
+  it("grays a set once placed, unstruck, and reds one placed twice", () => {
+    // The band's strike is kept for what the square in focus rules out.
+    // Every set but {A} given.
+    const id = idOf(ANSWER, [0]);
+    expect(bandOf(id)).toEqual(["__ done", "A_ ink", "_B done", "AB done"]);
+    expect(bandOf(id, [{ set: [0, 2] }])).toEqual([
+      "__ done",
+      "A_ done",
+      "_B done",
+      "AB done",
+    ]);
+    // {A, B} placed a second time.
+    expect(bandOf(id, [{ set: [0, 4] }])).toEqual([
+      "__ done",
+      "A_ ink",
+      "_B done",
+      "AB red",
+    ]);
   });
 });
 
@@ -435,7 +510,8 @@ describe("Check & Save on a board of letters", () => {
       (b, m) => game.executeMove(b, m),
       game.newState(PARAMS, descOf(ANSWER, [0])),
     );
-  /** The red letters and crosses drawn, and whether any outline is. */
+  /** The red letters and crosses drawn on the squares, and whether any
+   * outline is: the band's sets, two letters each, are its own. */
   const reds = (...moves: FillMove[]) => {
     const ops = renderScenario({
       game,
@@ -445,7 +521,7 @@ describe("Check & Save on a board of letters", () => {
     }).recording.ops;
     return {
       letters: ops.flatMap((o) =>
-        o.op === "text" && o.color === COL_ERROR ? [o.text] : [],
+        o.op === "text" && o.color === COL_ERROR && o.text.length === 1 ? [o.text] : [],
       ),
       crosses: ops.filter(
         (o) => o.op === "line" && o.color === COL_ERROR && o.y1 < o.y2 && o.x1 < o.x2,

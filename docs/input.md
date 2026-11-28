@@ -348,7 +348,7 @@ and "Only the Menu scrolls".
 **If the game is "aim at a target, and each button does something there",
 declare it and write no press handling.** The declaration's types are in
 [`engine/input/target-verb.ts`](../src/engine/input/target-verb.ts), and the
-skeleton's `index.ts` declares one, and [`engine/fill/play.ts`](../src/engine/fill/play.ts)
+skeleton's `index.ts` declares one, and [`engine/fill/buttons.ts`](../src/engine/fill/buttons.ts)
 builds a fill game's from its description's `play:`. The model owns the cursor's parking and
 reveal, and Enter and Space; a game writes none of it.
 
@@ -456,7 +456,7 @@ through the engine's verbs".
 
 Where a drag preview shows what the release will do, the preview and the verb
 read one function. A key the drag has no button for is a `keyOnly` verb on a
-`cycle` route. Exemplar: [`engine/fill/play.ts`](../src/engine/fill/play.ts)
+`cycle` route. Exemplar: [`engine/fill/buttons.ts`](../src/engine/fill/buttons.ts)
 (`pendingEdit`).
 
 ### A mark that drags is a sweep
@@ -544,7 +544,7 @@ skipping, lock modes), build on `cursorDelta`, `isCursorMove` and
   [`sixteen/index.ts`](../src/games/sixteen/index.ts), the shifted arrow.
 - **What a game does while the cursor moves is its own**: read `ui.cursor`
   either side of a `moveCursor` call. Exemplar: `strokeKey` in
-  `engine/fill/play.ts`.
+  `engine/fill/buttons.ts`.
 - **A fact kept beside the cursor is a field beside it, never a second
   cursor.** `cursorFromKeyboard` is the collection's name and polarity: `true`
   when the keyboard revealed or moved the cursor, `false` when a pointer took
@@ -671,7 +671,7 @@ the time to weigh one against the two exemplars.
 
 Preview the drag by recoloring the gathered cells, and put the recoloring in
 the diff key ([`rendering.md`](./rendering.md) § "The tile cache and the diff
-key"). Exemplar: a fill game's drag without `play.straight` ([`fill/play.ts`](../src/engine/fill/play.ts)),
+key"). Exemplar: a fill game's drag without `play.straight` ([`fill/buttons.ts`](../src/engine/fill/buttons.ts)),
 which is this drag and the line-fill one below with one path apart: every
 square passed that held what the pressed one held becomes what it became.
 
@@ -679,7 +679,7 @@ square passed that held what the pressed one held becomes what it became.
 
 The drag fills one row or column, and the press decides a `from → to` pair:
 every square of the line dragged out that reads `from` becomes `to`.
-Exemplar: a fill game's `play.straight` ([`fill/play.ts`](../src/engine/fill/play.ts)),
+Exemplar: a fill game's `play.straight` ([`fill/buttons.ts`](../src/engine/fill/buttons.ts)),
 for a game whose clues are on rows and columns.
 
 - **Choose the axis at each drag event, not at the press.** Whichever
@@ -757,7 +757,7 @@ press point, and a release that never traveled is the click. Exemplar:
 - **Where a drag was only ever "a click at its start", resolve by where it
   ends.** Take the drag only when its two ends make the gesture's pair, and
   let one function answer "is this the gesture?" for the preview, the release
-  and the error feedback. Exemplar: `dragLink` in `engine/fill/play.ts`.
+  and the error feedback. Exemplar: `dragLink` in `engine/fill/buttons.ts`.
 
 ## A press you do not act on must still be consumed
 

@@ -192,10 +192,23 @@ export function fillSetup<C extends Clues<C>>(
   const listed = listedOf(play);
   if (listed !== null && (counted !== null || tallied !== null))
     throw new Error("play: a list and a tally or a row of counts beneath the board");
+  /** Whether the board draws the band of every value beneath it
+   * (`band.ts`). */
+  const banded = play.band === true;
+  if (banded && (listed !== null || counted !== null || tallied !== null))
+    throw new Error(
+      "play: a band and a list, a tally or a row of counts beneath the board",
+    );
   /** What a board `w` wide draws beneath it but its tally: its row of counts,
-   * or its list. */
+   * its list, or its band, as wide as the board. */
   const untalliedBeneath = (w: number): Beneath | null =>
-    counted !== null ? countsBeneath(w) : listed !== null ? listBeneath(w) : null;
+    counted !== null
+      ? countsBeneath(w)
+      : listed !== null
+        ? listBeneath(w)
+        : banded
+          ? listBeneath(metrics.spanTiles(w))
+          : null;
   /** What board `b` draws beneath it: its tally, its row of counts, or its
    * list. */
   const beneathOf = (b: FillBoard<C>): Beneath | null =>
@@ -274,6 +287,7 @@ export function fillSetup<C extends Clues<C>>(
     tallyCounts,
     counted,
     listed,
+    banded,
     untalliedBeneath,
     beneathOf,
     numberAt,

@@ -202,11 +202,12 @@ export function fillPalette(
   /** Where the player marks clues done (`play.done`, a board of numbers'),
    * a done clue's gray, after the notes' slots where the board keeps them;
    * a row of counts grays a value all placed in it too, and a list a record
-   * it strikes. */
+   * it strikes, and a band a value placed. */
   const marksDone =
     Object.keys(play.done ?? {}).length > 0 ||
     Object.keys(play.counts ?? {}).length > 0 ||
-    play.list !== undefined;
+    play.list !== undefined ||
+    play.band === true;
   const COL_DONE = notes ? COL_PENCIL_BODY + 1 : COL_ENTRY + 1;
   /** Where typing goes along the list's sites (`play.along`), the washes of
    * the row's site and the column's through the selection, the ink on

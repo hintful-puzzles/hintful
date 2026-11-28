@@ -28,8 +28,9 @@ import {
   newBoard,
   paramSpaceOf,
 } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { applyEdit, type Edit } from "./edit.ts";
-import { type FillPlay, type FillUi, fillInput, newFillUi } from "./play.ts";
+import { type FillPlay, type FillUi, newFillUi } from "./play.ts";
 
 const SHADED = 1;
 const CROSSED = 2;

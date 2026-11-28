@@ -20,9 +20,10 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { fillInput } from "./buttons.ts";
 import { applyEdit } from "./edit.ts";
 import { fillGame } from "./game.ts";
-import { fillInput, newFillUi } from "./play.ts";
+import { newFillUi } from "./play.ts";
 
 const game = fillGame("poling", poling);
 type Board = FillBoard<poling.Dealt>;

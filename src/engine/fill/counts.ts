@@ -10,7 +10,7 @@
  * renderer, the input and the canvas.
  *
  * The row's other parts: the site that draws it, `render/sites/counts.ts`,
- * and the compiler's check of `play.counts`, `describe/fill/play.ts`.
+ * and the compiler's check of `play.counts`, `describe/fill/beneath.ts`.
  */
 
 import type { Rect } from "../contract/types.ts";
