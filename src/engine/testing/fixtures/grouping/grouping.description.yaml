@@ -40,6 +40,7 @@ freedom: { kind: fill }
 play:
   numbers: {}
   labels: { start: "i + 1", glyph: true }
+  leadingDiagonal: true
   boards: [4x4, 6x6, 5x5i]
   hintMarks:
     ring: the square the step decides.

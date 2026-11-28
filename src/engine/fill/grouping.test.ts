@@ -199,6 +199,27 @@ describe("an answer drawn as a group's table", () => {
     expect(near(by("a(bc)"), "b", -1)).toBe(true);
   });
 
+  it("strokes each square of the leading diagonal corner to corner", () => {
+    const b = game.newState(game.decodeParams("4dn"), "p");
+    const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+    game.redraw(dr, game.newDrawState(b, TS), {
+      state: b,
+      prev: null,
+      dir: 1,
+      ui: game.newUi(b),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
+    // A line falling as far as it runs right, a square wide, on the diagonal
+    // alone: its corner as far in across as down.
+    const strokes = dr.ops.flatMap((o) =>
+      o.op === "line" && o.x2 - o.x1 === TS && o.y2 - o.y1 === TS ? [o] : [],
+    );
+    expect(strokes).toHaveLength(4);
+    const lean = strokes[0].x1 - strokes[0].y1;
+    expect(strokes.every((o) => o.x1 - o.y1 === lean)).toBe(true);
+  });
+
   it("deals a board of the asked tier, not one the tier below finishes", () => {
     for (const id of ["6dn", "6dti"]) {
       const { b } = dealt(id, "tier");
