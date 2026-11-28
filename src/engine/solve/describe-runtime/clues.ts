@@ -153,6 +153,14 @@ export function sameList(
   return true;
 }
 
+/** Lists in order: the shorter first, then member by member, as a clue at
+ * the board's records read off the answer are sorted (Crossing's numbers). */
+export function compareLists(a: ArrayLike<number>, b: ArrayLike<number>): number {
+  if (a.length !== b.length) return a.length - b.length;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i];
+  return 0;
+}
+
 /** `|l|` of a list: how many numbers it holds, none for a list a clue kind
  * has none of. */
 export function listLength(l: ArrayLike<number> | null): number {

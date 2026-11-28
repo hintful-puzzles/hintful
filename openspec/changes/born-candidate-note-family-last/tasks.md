@@ -1,11 +1,9 @@
 ## Next
 
-Tick 2.1 (Undead is born), then 2.2, Crossing (design.md § "Decisions"
-2): read its `gaps.md` entry against the tree first, since Undead's flip
-built a clue at the board drawn as a row of counts and picture names.
-Crossing's list is that clue as a panel struck as used; its walls are
-dealt apart from the answer. Split it into capabilities on fixtures, then
-the flip, as 2.1 was.
+2.2b, Crossing's list drawn beneath the board (the split is 2.2's
+subtasks). A record is struck where its meaning holds of the board as
+placed, red where the rules break it; a hint rings and outlines records,
+which needs a mark kind for a record. Then 2.2c to 2.2f in turn.
 
 ## 1. Design
 
@@ -40,7 +38,28 @@ order.
   - [x] 2.1e The flip: words, cases, spec deltas, guides; what it built
         beside is its commit's, what changed for a player design.md §
         "What each flip changed for a player".
-- [ ] 2.2 Crossing born.
+- [ ] 2.2 Crossing born. Read against `169596021`: met beyond `gaps.md`, a
+      clue at the board (`play.counts`'s site beneath the board, its
+      records in the ID's `numbers`) and values only the deal places
+      (`play.given`, `sample.first`), which the walls take as value 10.
+  - [x] 2.2a A list at the board read a binding (`deal.records`), written
+        whole by `numbers`; `sample.uniform`, from 2.2c. On `listing`. For
+        2.2c: see the records' segment refused anywhere but last.
+  - [ ] 2.2b The list drawn beneath the board, each record struck where
+        the answer holds it and red where the rules break it; a hint's
+        ring and outline on a record.
+  - [ ] 2.2c Walls dealt apart from the answer: first cells opened at
+        random, symmetric as asked, until no two by two block is open and
+        the open cells are joined, on `sample.uniform`; the
+        ID's wall runs (a number a run of open cells, a letter a run of
+        walls).
+  - [ ] 2.2d Typing along a run: a typed value advances the selection
+        along the run it is filling, its way snapped or switched at a
+        crossing; a record placed whole from the list, held and previewed;
+        the runs through the selection washed; the preferences.
+  - [ ] 2.2e The Numbers panel: the list as a reference aid, searched and
+        filtered by what fits the selection.
+  - [ ] 2.2f The flip.
 - [ ] 2.3 Rome born.
 - [ ] 2.4 Magnets born.
 - [ ] 2.5 Subsets born.

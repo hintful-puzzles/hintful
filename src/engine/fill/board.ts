@@ -41,10 +41,11 @@ export type Clues<C> = {
   readonly [K in keyof C]: ClueList | ListClues | Partition | number | FieldClue;
 };
 
-/** A clue at the board with fields: `n` entries, each field a list of them. */
+/** A clue at the board with fields: `n` entries, each field a list of them,
+ * a list field's entries each a list (Crossing's numbers, their digits). */
 export interface FieldClue {
   readonly n: number;
-  readonly [field: string]: number | readonly number[];
+  readonly [field: string]: number | readonly number[] | readonly Int32Array[];
 }
 
 /** Whether a kind's clues are a clue at the board's records, not a list. */

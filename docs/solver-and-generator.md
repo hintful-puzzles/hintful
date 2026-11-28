@@ -1357,6 +1357,13 @@ the boards a seed deals move").
   there is none fills the board with the other value: state what it needs
   dealt (`counted(d)`, a record of `d` exists) beside what it reads. The
   records are distinct too, or the soundness check finds a board with two.
+- **A list at the board the answer derives cannot steer a build**: a build
+  reads none of its records, and every list technique then strikes every
+  value, so the answer is drawn by `sample.uniform` instead, a value a
+  cell at random, and the deal keeps only a board the tier finishes
+  (Crossing's numbers, `deal.records`, the `listing` fixture). A square
+  board whose rows and columns read alike is never unique: its mirror on
+  the leading diagonal reads the same list.
 - **A derived clue reads only the kinds dealt before it**, in the order the
   description lists its clues: Undead's sightlines through its mirrors
   list the mirrors first, and the compiler refuses the other order.

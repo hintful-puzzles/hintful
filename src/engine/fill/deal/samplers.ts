@@ -21,6 +21,8 @@ import {
   sampleLines,
   samplePicture,
   samplePieces,
+  sampleUniform,
+  type UniformSample,
   wallsOf,
 } from "../sample.ts";
 import { searchedPositions } from "../search.ts";
@@ -61,6 +63,7 @@ type SampleKey =
   | "pieces"
   | "latin"
   | "scatter"
+  | "uniform"
   | "walls";
 
 type Sampler<S> = <C extends Clues<C>>(sample: S, cx: DealContext<C>) => Drawn | null;
@@ -129,6 +132,14 @@ const SAMPLERS: {
   walls(sample, cx) {
     const parts = dividePartition(sample.walls.division, cx.sp, cx.sizes, cx.rs);
     return answer(parts === null ? null : wallsOf(sample, cx.sp, parts));
+  },
+  uniform<C extends Clues<C>>(sample: UniformSample, cx: DealContext<C>) {
+    const first =
+      sample.first === undefined
+        ? null
+        : firstLaid(sample.first, cx.deal, cx.p, cx.rs, cx.layouts++);
+    const top = topValue(cx.module, cx.sp, cx.sizes as unknown as C);
+    return answer(sampleUniform(sample, cx.sp.cells.length, top, first, cx.rs));
   },
   scatter: (sample, cx) => {
     const first =

@@ -42,6 +42,7 @@ export {
   clueList,
   cluesValued,
   cluesWhere,
+  compareLists,
   type ListClues,
   listAt,
   listClues,

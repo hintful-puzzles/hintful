@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a digit on every square, and a list at the board of
+# the numbers the rows and columns read, each read once; for the fill
+# engine's tests of a clue at the board whose records are read off the
+# sampled answer one a binding (`deal.records`), written in the ID whole and
+# read back, on a description that names no game.
+game: listing
+produces: numbers
+sizes:
+  w: { min: 2, max: 5 }
+  h: { min: 2, max: 5 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 3)" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, 3)" }
+define:
+  # The digit number k puts in square x of line L.
+  digit(k, x, L): "nth(digits(k), index(x, cells(L)))"
+  # Whether line L reads number k, and whether k still fits it.
+  reads(k, L): "|digits(k)| = |cells(L)| and (forall x in cells(L): value(x) = digit(k, x, L))"
+  fits(k, L): "|digits(k)| = |cells(L)| and (forall x in cells(L): digit(k, x, L) in cand(x))"
+shape:
+  - "forall L in lines: exists k in clues(numbers): reads(k, L)"
+clues:
+  # A number of the list, its digits first to last, read in one line.
+  numbers:
+    at: board
+    fields:
+      digits: { list: true, value: "range(1, 3)" }
+    means: "count(L in lines where reads(k, L)) = 1"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  # A square board is never the one board its list reads: its mirror on the
+  # leading diagonal reads the same list.
+  boards: [4x3]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the digits the step crosses out.
+    stripes: the line the step is about.
+deal:
+  answer: a digit a square, at random
+  numbers: every line's
+  tier: the one tier
+  sample: { uniform: true }
+  records:
+    numbers:
+      for: "L in lines"
+      digits: "cells(L)"
+  keep: "forall k in clues(numbers), j in clues(numbers) where j != k: digits(j) != digits(k)"
+id:
+  - numbers: numbers
+tiers: [Easy]
+names:
+  single: "the only digit left in a square"
+  narrow: "the digits a line's numbers allow"
+techniques:
+  - kind: one.cell
+    as: single
+    tier: Easy
+    with:
+      square: "true"
+      move: "(known(c) or place(c, first(U)))"
+  - id: narrow
+    tier: Easy
+    for: >-
+      L in lines, K = {k in clues(numbers) where fits(k, L)},
+      x in cells(L) where not known(x)
+    conclude: "forall d in cand(x) where not (exists k in K: digit(k, x, L) = d): strike(x, d)"
+    says:
+      marks: { stripes: "cells(L)" }
+      look: "no number that still fits {stripes: this line} puts {struckOr} in {ring}"
+steps:
+  clean:
+    ring: cell
+    move: "nothing, since a digit rules out no other square"
+  note:
+    ring: cell
+    terms: { unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "Nothing rules out a digit in {ring} yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: is | are} still possible in {ring}"
+        move: "pencil {vs: it | them} in"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other digit is ruled out in {ring}"
+    move: "it can only be {n}"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "no other square"

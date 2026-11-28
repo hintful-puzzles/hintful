@@ -1,10 +1,14 @@
 /** The `numbers` segment: a kind's values, the first after `before` and the
  * rest after commas (or `between`), in the space's order, the columns
  * first, or on slots side by side; a kind one a value, each element's values in turn; a clue at the
- * board, each record the deal may hold in turn, its last field. */
+ * board, each record the deal may hold in turn, its last field; or where
+ * the deal reads a record a binding, every record whole, which ends the
+ * desc, since its count is the board's. */
 
+import { DESC_OUT_OF_RANGE } from "../../contract/desc-error.ts";
 import { isDigit } from "../../game-id/decimal.ts";
-import { clueList } from "../../solve/describe-runtime.ts";
+import type { DescReader } from "../../game-id/desc-reader.ts";
+import { clueList, compareLists } from "../../solve/describe-runtime.ts";
 import type { Clues, FieldClue } from "../board.ts";
 import { type FillDeal, recordsOf } from "../game-id.ts";
 import {
@@ -62,15 +66,47 @@ function recordsRead(
   ]) as FieldClue;
 }
 
+/** The records read a binding (`FillRecords.bound`), each written whole, a
+ * digit a member, between commas (or `between`). */
+function boundEncoded(seg: NumbersSegment, clue: FieldClue, field: string): string {
+  const lists = clue[field] as unknown as readonly ArrayLike<number>[];
+  return (
+    (lists.length > 0 ? (seg.before ?? "") : "") +
+    lists.map((l) => Array.from(l).join("")).join(seg.between ?? ",")
+  );
+}
+
+/** The records read a binding read back, up to the segment's end: at least
+ * one, each of one member or more, each a digit within the range the clue
+ * gives. A desc lists them in any order, and they are held sorted, as the
+ * deal deals them. */
+function boundDecoded(
+  r: DescReader,
+  seg: NumbersSegment,
+  field: string,
+  { least, most }: { readonly least: number; readonly most: number },
+): FieldClue {
+  if (seg.before !== undefined) r.expect(seg.before);
+  const lists: Int32Array[] = [];
+  do {
+    const members = [Number(r.char(isDigit))];
+    while (r.peekIs(isDigit)) members.push(Number(r.char()));
+    if (members.some((m) => m < least || m > most)) r.fail(DESC_OUT_OF_RANGE);
+    lists.push(Int32Array.from(members));
+  } while (r.accept(seg.between ?? ","));
+  lists.sort(compareLists);
+  return { n: lists.length, [field]: lists } as unknown as FieldClue;
+}
+
 export const numbers: SegmentKind<NumbersSegment> = {
   encode(seg, { deal, sp, dealt, listOf, values }) {
+    const clue = dealt[seg.numbers as keyof typeof dealt] as FieldClue;
+    const bound =
+      deal.universes[seg.numbers] === "board" ? recordsOf(deal, seg.numbers) : null;
+    if (bound?.bound !== undefined) return boundEncoded(seg, clue, bound.fields[0]);
     const vs =
-      deal.universes[seg.numbers] === "board"
-        ? recordValues(
-            deal,
-            seg.numbers,
-            dealt[seg.numbers as keyof typeof dealt] as FieldClue,
-          )
+      bound !== null
+        ? recordValues(deal, seg.numbers, clue)
         : placesOf(deal, sp, seg.numbers, values, seg.order, seg.sides).map(
             (e) => listOf(seg.numbers).valueAt[e],
           );
@@ -89,6 +125,11 @@ export const numbers: SegmentKind<NumbersSegment> = {
   ) {
     const kind = seg.numbers as keyof C;
     const board = deal.universes[seg.numbers] === "board";
+    const records = board ? recordsOf(deal, seg.numbers) : null;
+    if (records?.bound !== undefined) {
+      out[kind] = boundDecoded(r, seg, records.fields[0], records.bound);
+      return;
+    }
     const places = board
       ? recordsOf(deal, seg.numbers).keys.map((_, k) => k)
       : placesOf(deal, sp, seg.numbers, values, seg.order, seg.sides);

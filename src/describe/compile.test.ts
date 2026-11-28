@@ -1252,6 +1252,56 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play leadingDiagonal: a row meets the same column on a square board/);
   });
 
+  describe("records a clue at the board reads a binding", () => {
+    const fixture = "src/engine/testing/fixtures/listing/listing.description.yaml";
+    type Listing = {
+      deal: { records: { numbers: Record<string, string> } };
+      clues: { numbers: { fields: { digits: { value: string } } } };
+      id: Record<string, unknown>[];
+    };
+    const edit = (f: (j: Listing) => void) => (j: Listing) => {
+      f(j);
+      return j;
+    };
+
+    it("derives each line's digits, sorted, and writes them whole", () => {
+      const out = compileEdited(fixture, (j) => j);
+      expect(out).toContain("Int32Array.from(sp.lineCells[v_L], (_x) => g[_x])");
+      expect(out).toContain("compareLists(numbers_digits[_a], numbers_digits[_b])");
+      expect(out).toContain('"bound":{"least":1,"most":3}');
+    });
+
+    it("refuses a field read off nothing, and a list off no ordered set of cells", () => {
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.deal.records.numbers = { for: "L in lines" };
+          }),
+        ),
+      ).toThrow(/deal records numbers: the field digits is read off no formula/);
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.deal.records.numbers["digits"] = "|cells(L)|";
+          }),
+        ),
+      ).toThrow(/the list field digits is read off an ordered set of cells/);
+    });
+
+    it("refuses members past a digit", () => {
+      expect(() =>
+        compileEdited(
+          fixture,
+          edit((j) => {
+            j.clues.numbers.fields.digits.value = "range(1, 12)";
+          }),
+        ),
+      ).toThrow(/one list field of digits, a range within 0 to 9/);
+    });
+  });
+
   describe("values only the deal places, on a board of numbers", () => {
     const fixture = "src/engine/testing/fixtures/sighting/sighting.description.yaml";
     type Sighting = {

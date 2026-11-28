@@ -7,6 +7,7 @@
  * (`engine/fill/slots.ts`, `engine/fill/value-margin.ts`).
  */
 
+import type { FillRecords } from "../../engine/fill/game-id.ts";
 import { EDGE_PAINTERS } from "../../engine/render/pieces/edge.ts";
 import { type ClueKind, CompileError, type Env } from "../compile-sorts.ts";
 import {
@@ -62,11 +63,25 @@ export function recordsOfKinds(
   d: Description,
   universes: Record<string, string>,
   measured: (e: Expr) => Expr,
-): { records?: Record<string, { fields: string[]; keys: number[][] }> } {
-  const out: Record<string, { fields: string[]; keys: number[][] }> = {};
+  bound: ReadonlySet<string> = new Set(),
+): { records?: Record<string, FillRecords> } {
+  const out: Record<string, FillRecords> = {};
   for (const [k, c] of d.clueKinds) {
     if (universes[k] !== "board") continue;
     const fields = [...c.fields];
+    // Records read a binding are as many as the board deals: one list
+    // field, each member a digit, as the ID writes it.
+    if (bound.has(k)) {
+      const [only, ...more] = fields;
+      const r = only?.[1].list === true ? measured(only[1].value) : null;
+      const [lo, hi] = r?.k === "call" && r.fn === "range" ? r.args : [];
+      if (more.length > 0 || lo?.k !== "num" || hi?.k !== "num" || lo.v < 0 || hi.v > 9)
+        throw new CompileError(
+          `clue ${k}: records the deal reads a binding are one list field of digits, a range within 0 to 9`,
+        );
+      out[k] = { fields: [only[0]], keys: [], bound: { least: lo.v, most: hi.v } };
+      continue;
+    }
     let keys: number[][] = [[]];
     for (const [f, x] of fields.slice(0, -1)) {
       const r = measured(x.value);

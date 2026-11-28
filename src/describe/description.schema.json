@@ -2323,6 +2323,23 @@
               },
               "description": "By clue kind at cells, a formula of `at` giving the cells it is the one clue of: the deal shows one in each such group, at a random member, valued as its meaning holds with it the only clue of its kind (Sticks' number, one on each line). Its meaning may then read its own kind's clues."
             },
+            "records": {
+              "type": "object",
+              "minProperties": 1,
+              "description": "By clue kind at the board, its records read off the sampled answer: one for each binding of `for`, each field a formula of the binding, a list field the ordered cells whose values it lists (Crossing's numbers, each a run's digits). The records are sorted, field by field, a list shorter first and then member by member, so their order says nothing of where each is read. The binding may read the kinds dealt before it.",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["for"],
+                "properties": {
+                  "for": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            },
             "divide": {
               "description": "A dealt partition divided at random, apart from the answer, or a list of them divided in turn. With `pairs` and `most`, into small parts (upstream keen.c): each square in a random order joined, at odds `pairs`, to its first neighbor in that order still alone; then each square left alone joined to its first neighboring part of fewer than `most` squares, the draw thrown away where one is left alone still. With `sizes`, one part at a time grown to a size drawn from a list (`engine/generate/divide.ts`'s `growToSize`), a part with no room left ending short: the first list, or with `by` a size the params give, one list a value of it from its least. With `equal`, the board tiled by connected parts of that many squares each (upstream divvy.c, Solo's jigsaw blocks): a number, a size the params give, or `w`, the board's width.",
               "oneOf": [
@@ -2551,6 +2568,20 @@
                   "properties": {
                     "latin": {
                       "const": true
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer drawn a cell at a time (upstream crossing.c's `crossing_gen_grid`): each cell a value from 1 to the top of the answer's domain at random, each alike; with `first`, after its cells, its values laid on no other. The clues are then the answer's, and nothing steers the draw: a board whose clues leave more than one answer is drawn again.",
+                  "required": ["uniform"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "uniform": {
+                      "const": true
+                    },
+                    "first": {
+                      "$ref": "#/$defs/firstCells"
                     }
                   }
                 },

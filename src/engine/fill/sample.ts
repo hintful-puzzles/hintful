@@ -33,6 +33,7 @@ export type Sample =
   | PiecesSample
   | LatinSample
   | SearchSample
+  | UniformSample
   | WallsSample;
 
 /** A partition of the cells, an answer on the edges: the board divided as
@@ -239,6 +240,39 @@ export interface FirstCells {
     readonly step: number;
     readonly top: number;
   };
+}
+
+/** An answer drawn a cell at a time: each cell the `first` cells leave a
+ * value from 1 to the top of the domain at random, each alike, but those
+ * the first cells lay (upstream crossing.c's `crossing_gen_grid`). */
+export interface UniformSample {
+  readonly uniform: true;
+  readonly first?: FirstCells;
+}
+
+/** `first`'s values, which a uniform sample lays nowhere else. */
+const firstValues = (first: FirstCells): readonly number[] =>
+  typeof first.value === "number" ? [first.value] : first.value;
+
+/** A uniform sample's answer on `n` cells whose domain tops at `top`, over
+ * the cells `first` laid (0 where it laid none). */
+export function sampleUniform(
+  sample: UniformSample,
+  n: number,
+  top: number,
+  first: Uint8Array | null,
+  rs: RandomState,
+): Uint8Array {
+  const kept = new Set(sample.first === undefined ? [] : firstValues(sample.first));
+  const values = Array.from({ length: top }, (_, i) => i + 1).filter(
+    (v) => !kept.has(v),
+  );
+  if (values.length === 0)
+    throw new Error("deal: a uniform sample with no value to lay");
+  const g = new Uint8Array(n);
+  for (let c = 0; c < n; c++)
+    g[c] = first?.[c] ? first[c] : values[randomUpto(rs, values.length)];
+  return g;
 }
 
 /** An answer the ladder builds: any value of a cell's domain, or `value`

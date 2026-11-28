@@ -1,0 +1,10 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A line's first fitting number left out of what it allows.
+  narrow:
+    conclude: >-
+      forall d in cand(x) where not (exists k in K - {first(K)}: digit(k, x, L)
+      = d): strike(x, d)

@@ -231,3 +231,43 @@ often as it fires.
   allowed one firing, and allowed none
 - **THEN** the first is solved at Easy, and the second only at the tier
   above
+
+### Requirement: A born game's clue at the board may be a list read a binding
+
+A clue at the board the deal states records for (`deal.records`) SHALL be
+dealt one record for each binding of its `for`, each field read off its
+formula, a list field the answer's values along the ordered cells its
+formula gives, and the records SHALL be held sorted, field by field, a
+list shorter first and then member by member. A field read off no formula,
+or a list field off anything but an ordered set of cells, SHALL be refused
+by the compiler.
+
+#### Scenario: Every line's digits
+
+- **WHEN** a `listing` board is dealt and solved
+- **THEN** its clue holds each row's and each column's digits, sorted
+
+### Requirement: A born game's ID may write a list read a binding whole
+
+The ID's `numbers` segment of a clue at the board read a binding SHALL
+write every record whole, a digit a member, between commas, and read
+records to the desc's end, held sorted however the desc orders them. The
+compiler SHALL refuse the segment anywhere but last, and a list field
+whose members are not digits.
+
+#### Scenario: The digits written whole
+
+- **WHEN** a `listing` board is dealt
+- **THEN** its ID is each record's digits between commas, and reads back
+  to the same clue in any order
+
+### Requirement: A born game's answer may be drawn a value a cell
+
+A deal whose sample is `uniform` SHALL draw each cell a value from 1 to the
+top of the answer's domain at random, each alike, after its first cells,
+whose values it lays on no other cell.
+
+#### Scenario: A board drawn with nothing to steer it
+
+- **WHEN** a `listing` board is dealt, whose list no build can read
+- **THEN** a board is dealt, and the ladder finishes it

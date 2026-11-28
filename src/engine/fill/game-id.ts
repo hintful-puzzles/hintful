@@ -201,6 +201,10 @@ export interface FillDeal {
 export interface FillRecords {
   readonly fields: readonly string[];
   readonly keys: readonly (readonly number[])[];
+  /** Where the deal reads a record a binding (`deal.records`), as many
+   * records as the board deals, each one list field, whose members run from
+   * `least` to `most`: Crossing's numbers. `keys` is then empty. */
+  readonly bound?: { readonly least: number; readonly most: number };
 }
 
 /** A dealt partition divided at random apart from the answer

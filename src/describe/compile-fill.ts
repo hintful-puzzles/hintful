@@ -139,7 +139,12 @@ function dealOf(
   const universes = universesOf(json, d, env);
   const perValue = kinds.filter((k) => env.clues.get(k)?.per === true);
   const partsOf = partsOfKinds(d, universes);
-  const records = recordsOfKinds(d, universes, measured);
+  const records = recordsOfKinds(
+    d,
+    universes,
+    measured,
+    new Set(Object.keys(json.deal?.records ?? {})),
+  );
   const sample = sampleOf(json);
   const grow = growOf(json);
   const divides = dividesOf(json);
