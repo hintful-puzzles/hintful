@@ -1295,6 +1295,36 @@
                   "$ref": "#/$defs/letters",
                   "description": "Each value is drawn, said and typed as a letter from A, which either case types, and a digit types the letter at its place (ABCD's); or, an alphabet, the letter at its place in it. Not raised."
                 },
+                "pictures": {
+                  "type": "object",
+                  "description": "Each value is drawn by the painter named, in place of its glyph: placed, as a piece filling its square; noted, small in a two-by-two grid; in a row of counts, as its record's piece (upstream Undead's monsters). The player's preference `pref`, pictures by default, draws the glyphs instead, and `A` switches it, so no glyph is typed by A. Every value the player places has a painter, from 1. Not raised, and with no empty square.",
+                  "required": ["paint", "pref"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "paint": {
+                      "type": "object",
+                      "propertyNames": {
+                        "pattern": "^[1-9][0-9]*$"
+                      },
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "pref": {
+                      "type": "object",
+                      "required": ["kw", "name"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "kw": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
                 "empty": {
                   "type": "object",
                   "description": "The value the answer repeats in a unit is the empty square (Salad's): drawn as a cross and noted as an X, and typed by `X`, `-` or `_`, its glyph's key typing nothing. `O`, `+` or `=` strikes it from a square's notes, all of them the rest where it has none, or puts it back: a square whose notes lack it is drawn in a ball, bare where they are every other value.",

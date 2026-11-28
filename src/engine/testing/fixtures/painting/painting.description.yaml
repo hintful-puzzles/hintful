@@ -12,7 +12,7 @@ space:
   grid: { w: "w", h: "h" }
   units: []
 answer:
-  value: { sort: cell, domain: "range(1, 15)" }
+  value: { sort: cell, domain: "range(1, 20)" }
 define:
   open(L): "{c in cells(L) where not known(c)}"
   need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
@@ -38,9 +38,14 @@ play:
     11: { does: flood it, key: W, glyph: " ~ ", paint: sea }
     12: { does: run a line across it, key: E, glyph: " - ", paint: across }
     13: { does: run a line down it, key: V, glyph: " | ", paint: down }
+    16: { does: put a ghost in it, key: K, glyph: " G ", paint: ghost }
+    17: { does: put a vampire in it, key: M, glyph: " V ", paint: vampire }
+    18: { does: put a zombie in it, key: Z, glyph: " Z ", paint: zombie }
   given:
     14: { glyph: " T ", paint: tree }
     15: { glyph: "###", paint: wall }
+    19: { glyph: " \\ ", paint: fall }
+    20: { glyph: " / ", paint: rise }
   primary: 1
   secondary: 2
   straight: true

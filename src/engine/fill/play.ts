@@ -140,11 +140,17 @@ export interface FillPlay {
    * typing the letter at its place from A. `empty`: the
    * value the answer repeats in a unit is the empty square, drawn as a
    * cross, and a square whose notes lack it is drawn in the ball the clue
-   * kind `ball` is drawn as (`glyphs.ts`'s `emptyOf`). */
+   * kind `ball` is drawn as (`glyphs.ts`'s `emptyOf`). `pictures`: each
+   * value drawn by its painter in place of its glyph, a note small, unless
+   * the player's preference `pref` draws the glyphs; `A` switches it. */
   readonly numbers?: {
     readonly raised?: true;
     readonly letters?: true | string;
     readonly empty?: { readonly ball: string };
+    readonly pictures?: {
+      readonly paint: Readonly<Record<number, string>>;
+      readonly pref: { readonly kw: string; readonly name: string };
+    };
   };
   /** Whether a board of numbers keeps the player's candidate notes, a set of
    * values an open cell (`notes.ts`): the description's mark of them. */
@@ -283,6 +289,9 @@ export interface FillUi {
   /** On a board whose values are drawn raised, the appearance preference:
    * raised (3D), or flat (2D). */
   raised?: boolean;
+  /** On a board whose values are drawn as pictures (`numbers.pictures`), the
+   * player's preference: pictures, or the glyphs. */
+  pictures?: boolean;
 }
 
 export function newFillUi(): FillUi {

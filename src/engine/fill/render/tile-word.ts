@@ -89,6 +89,10 @@ export const BALL_BARE = 1 << 22;
  * `regionWalls`' side bits: drawn as walls. */
 export const DIVIDER_SHIFT = 23;
 export const DIVIDER_SIDES = 0xf << DIVIDER_SHIFT;
+/** On a board of numbers drawn as pictures (`play.numbers.pictures`), the
+ * player's preference draws them so: the cell's value and notes are its
+ * painters', not its glyphs. */
+export const PICTURED = 1 << 27;
 
 // --- the edge word: on an answer on the edges, the tile's four sides --------
 /** Side `d`'s value (up, right, down, left), {@link EDGE_VALUE_BITS} a side

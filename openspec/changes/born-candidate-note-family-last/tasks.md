@@ -1,9 +1,14 @@
 ## Next
 
-2.1b, notes on painted values. Decide first whether Undead is a board of
-numbers whose values are painted (selection, typing, keypad and notes
-come with it, and the counts' press types into the selected square) or a
-board of buttons given notes; the former is the likelier fit.
+2.1c, the ID, with the mirrors drawn on a board of numbers. Undead's
+answer gives a mirror one value, 4, and its painter (`fall`, `rise`) needs
+its way; so the answer's mirrors become two values, `\` 4 and `/` 5, the
+clue's meaning `value(at) = v + 3`. A board of numbers then needs
+`play.given` (drawn by its painter whatever the preference; no key, no
+keypad key, no note), and its domain differs from cell to cell at the
+givens alone, which `play.ts`'s "the domain differs from cell to cell"
+refuses today; `keypadTop` reads the domain off the params, where no
+mirror is dealt.
 
 ## 1. Design
 
@@ -28,10 +33,9 @@ order.
   - [x] 2.1a A clue at the board derived from the answer, drawn as a row
         of counts beneath the board (`play.counts`, `totaling`); a flip
         difference: Undead drew its totals above. Seen in the app at 2.1e.
-  - [ ] 2.1b Notes on painted values (`play.values` with `cand` marks):
-        drawn small, typed and struck as on a board of numbers; a pictures
-        or letters preference, `A` switching it; monster and mirror
-        painters.
+  - [x] 2.1b A board of numbers drawn as pictures (design.md § "Decisions"
+        4), on `portraying`. For 2.1e to weigh: the keypad says G, V, Z
+        where Undead's says Ghost, Vampire, Zombie.
   - [ ] 2.1c The ID: the totals, the mirrors' glyph stream, the
         sightings round the grid clockwise (`sides` with the bottom and
         left read backwards).

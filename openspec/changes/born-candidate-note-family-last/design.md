@@ -87,6 +87,23 @@ Six games and some 19,900 lines. If the engine work of the first four runs
 long, Subsets and Map go to a successor filed at that point, as the
 predecessor split its nine; the decision and its reason are recorded here.
 
+### 4. Undead is a board of numbers drawn as pictures (2.1b)
+
+Undead's input is a typed board's: a square selected, then a monster
+typed, pressed on the counts or written as a note, which is what
+`play.numbers` gives, notes and their preferences included. A board of
+buttons given notes would have built a second note-taking input beside
+the one every candidate-note game already shares. So a board of numbers
+gains pictures (`play.numbers.pictures`): each value drawn by a painter,
+and a preference, named by the description so Undead keeps its key
+(`monsters`), drawing the glyphs instead, `A` switching it as upstream's
+does. Rome's arrows and Magnets' poles are the next to adopt it.
+
+Picture notes fill the square two by two, as upstream undead.c's do, and
+not the box a hint's ring keeps clear for text: that box drew them at three
+fifths of upstream's size. A ring goes round a picture's cell over it, as
+it goes round any piece, and as the hand-written Undead's does.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

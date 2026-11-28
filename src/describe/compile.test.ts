@@ -1160,6 +1160,62 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play dividers: a divider rules two rows and two columns alike/);
   });
 
+  it("refuses pictures a board of numbers cannot draw", () => {
+    const fixture =
+      "src/engine/testing/fixtures/portraying/portraying.description.yaml";
+    type Numbers = {
+      letters?: string | boolean;
+      raised?: boolean;
+      pictures: { paint: Record<string, string> };
+    };
+    const edit = (f: (n: Numbers) => void) => (j: { play: { numbers: Numbers } }) => {
+      f(j.play.numbers);
+      return j;
+    };
+    expect(compileEdited(fixture, (j) => j)).toContain('"paint":{"1":"ghost"');
+    expect(() =>
+      compileEdited(
+        fixture,
+        edit((n) => {
+          n.pictures.paint["2"] = "bat";
+        }),
+      ),
+    ).toThrow(/play numbers pictures: 2's painter bat is none/);
+    expect(() =>
+      compileEdited(
+        fixture,
+        edit((n) => {
+          n.pictures.paint = { 1: "ghost", 3: "zombie" };
+        }),
+      ),
+    ).toThrow(/the values painted are not 1 up/);
+    expect(() =>
+      compileEdited(
+        fixture,
+        edit((n) => {
+          n.letters = "GVZW";
+        }),
+      ),
+    ).toThrow(/3 values painted, and the alphabet GVZW has 4 letters/);
+    expect(() =>
+      compileEdited(
+        fixture,
+        edit((n) => {
+          n.letters = "GAZ";
+        }),
+      ),
+    ).toThrow(/A switches the pictures, and types a letter/);
+    expect(() =>
+      compileEdited(
+        fixture,
+        edit((n) => {
+          n.letters = undefined;
+          n.raised = true;
+        }),
+      ),
+    ).toThrow(/play numbers: raised, and drawn as pictures/);
+  });
+
   it("draws the leading diagonal on a square board alone", () => {
     const fixture = "src/engine/testing/fixtures/ruling/ruling.description.yaml";
     const lead = (j: { play: { leadingDiagonal?: boolean } }) => {

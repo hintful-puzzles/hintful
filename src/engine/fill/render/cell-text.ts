@@ -5,7 +5,7 @@
  * ring can still step round it.
  */
 
-import type { DrawTextOptions, Point } from "../../contract/types.ts";
+import type { DrawTextOptions, Point, Rect } from "../../contract/types.ts";
 import { type NoteSlot, noteGrid } from "../../mechanics/note-taking-cell.ts";
 import { glyphFont } from "../../render/draw.ts";
 import { type MarkBand, ringTextBox, ringThickness } from "../../render/hint-mark.ts";
@@ -133,6 +133,32 @@ export function cellLayoutOf(
     return noteGrid(area, count);
   };
 
+  /** Where `count` notes drawn as pictures go in cell `(x, y)`, in reading
+   * order: square slots filling the cell inside a hint's band, two by two
+   * where there are four or fewer, as upstream undead.c draws them. A
+   * picture is a piece, not text, so a hint's ring goes round the cell over
+   * it, as it goes round any piece, and the box kept clear for text would
+   * draw it at three fifths of upstream's size. A board drawn as pictures is
+   * never raised, and has no ball. */
+  const pictureSlots = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    count: number,
+  ): Rect[] => {
+    const area = labeled ? belowClue(ts, at, walls) : markBand(ts, at, walls).box;
+    const across = Math.max(2, Math.ceil(Math.sqrt(count)));
+    const side = Math.floor(Math.min(area.w, area.h) / across);
+    const left = area.x + Math.floor((area.w - side * across) / 2);
+    const top = area.y + Math.floor((area.h - side * across) / 2);
+    return Array.from({ length: count }, (_, j) => ({
+      x: left + side * (j % across),
+      y: top + side * Math.floor(j / across),
+      w: side,
+      h: side,
+    }));
+  };
+
   /** Where a typed value goes in cell `(x, y)`, its tile at `(tx, ty)`: the
    * tile's middle; on a board of clues at parts, the middle of the cell below
    * a clue's line, at half a tile as upstream keen.c's, so a clue never sits
@@ -152,5 +178,5 @@ export function cellLayoutOf(
     };
   };
 
-  return { ...lay, labelText, noteSlots, valueText };
+  return { ...lay, labelText, noteSlots, pictureSlots, valueText };
 }

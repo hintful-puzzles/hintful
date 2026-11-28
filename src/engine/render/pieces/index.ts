@@ -4,6 +4,13 @@ import { across, down } from "./bar.ts";
 import { ground, tent, tree } from "./camp.ts";
 import { hull, sea } from "./fleet.ts";
 import { bulb, wall } from "./lamp.ts";
+import {
+  fallPiece,
+  ghostPiece,
+  risePiece,
+  vampirePiece,
+  zombiePiece,
+} from "./monster.ts";
 import type { Painter } from "./painter.ts";
 import { block, disc } from "./pair.ts";
 import { star } from "./star.ts";
@@ -18,15 +25,20 @@ export const PAINTERS = {
   disc,
   domino,
   down,
+  fall: fallPiece,
+  ghost: ghostPiece,
   ground,
   hull,
+  rise: risePiece,
   ring,
   sea,
   shade,
   star,
   tent,
   tree,
+  vampire: vampirePiece,
   wall,
+  zombie: zombiePiece,
 } as const satisfies Record<string, Painter>;
 
 export type PainterName = keyof typeof PAINTERS;

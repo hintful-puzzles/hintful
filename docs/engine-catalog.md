@@ -876,6 +876,14 @@ each of the edge's two squares draws its half of, in its own clip, as Pearl
 draws a line. Where a value is a wall, the board's rim is drawn as one, so
 every region is closed.
 
+A board of numbers names painters too, by `play.numbers.pictures`: its
+values are then drawn as pieces, and a note as its piece in a quarter of
+the square (`render/layers/notes.ts`). A note's tile is a third larger than
+its slot, which a piece drawn in three quarters of its tile fills, as the
+monsters are (`monster.ts`); a painter that fills its whole tile would
+overrun its slot there. A painter takes its sizes from its tile alone, so
+a caller may draw it at any size.
+
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
 
 Reach for it where a value is drawn standing up out of its square, its top

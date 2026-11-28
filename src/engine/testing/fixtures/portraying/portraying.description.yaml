@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square of a ghost, a vampire and a zombie,
+# some of its squares given, and a count at the board of how many of each it
+# holds, for the fill engine's tests of a board of numbers drawn as pictures
+# (`numbers.pictures`): each value placed and noted as its painter's piece,
+# typed by its letter, and drawn as the letter where the player's preference
+# says, `A` switching it, on a description that names no game.
+game: portraying
+produces: latin
+sizes:
+  w: { min: 3, max: 3 }
+space:
+  grid: { w: "w", h: "w" }
+  units: [rows, cols]
+answer:
+  # 1 is a ghost, 2 a vampire, 3 a zombie.
+  value: { sort: cell, domain: "range(1, 3)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 3)" }
+shape:
+  - "latin(value, lines)"
+clues:
+  # How many of each monster the board holds.
+  total:
+    at: board
+    fields:
+      item: { value: "range(1, 3)" }
+      many: { value: "range(0, |cells|)" }
+    means: "count(c in cells where value(c) = item(k)) = many(k)"
+freedom: { kind: fill }
+play:
+  numbers:
+    letters: GVZ
+    pictures:
+      paint: { 1: ghost, 2: vampire, 3: zombie }
+      pref: { kw: monsters, name: Monster representation }
+  counts: { total: item }
+  boards: [3x3]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: a Latin square
+  given: every square's monster, then each hidden while the board still finishes
+  total: every count
+  tier: the one tier
+  sample: { latin: true }
+  hide: given
+id:
+  - numbers: total
+  - { digits: given, before: "," }
+tiers: [Easy]
+names:
+  dup: "a placed monster's row and column"
+  single: "the only monster left in a square"
+  hiddenSingle: "the only square left for a monster"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }

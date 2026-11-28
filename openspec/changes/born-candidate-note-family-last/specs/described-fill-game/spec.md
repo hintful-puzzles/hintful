@@ -39,3 +39,38 @@ press on a record SHALL place its value as the value's key does.
 - **WHEN** the cursor is on an open square of a `totaling` board and the
   disc's count is pressed
 - **THEN** the square holds a disc
+
+### Requirement: A born game's board of numbers may be drawn as pictures
+
+`play.numbers.pictures` SHALL draw each value the player places by the
+painter it names in place of its glyph: placed, as a piece filling its
+square; noted, as a small piece in a two-by-two grid filling the square;
+and in a row of counts, as its record's piece. The player's preference,
+named by the description and pictures by default, SHALL draw the glyphs
+instead, and `A` SHALL switch it.
+
+#### Scenario: Pictures and letters
+
+- **WHEN** a `portraying` board is drawn, and drawn again with the
+  preference switched
+- **THEN** a given ghost is drawn as a ghost and no `G`, then as a `G` and
+  no ghost, and the row of counts likewise
+
+#### Scenario: Notes drawn as pictures
+
+- **WHEN** an open square of a `portraying` board is noted a ghost, a
+  vampire and a zombie
+- **THEN** it draws three small monsters, the first two side by side and
+  the third beneath the first
+
+### Requirement: The compiler refuses pictures a board cannot draw
+
+The compiler SHALL refuse `play.numbers.pictures` naming a painter no
+description may name, painting values that are not every value from 1,
+beside an alphabet of another length or holding A, or beside a raised
+value or an empty square.
+
+#### Scenario: An alphabet holding A
+
+- **WHEN** a `portraying` description's alphabet is `GAZ`
+- **THEN** the compiler refuses it, since `A` switches the pictures

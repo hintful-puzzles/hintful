@@ -5,9 +5,8 @@
  *
  * Ops are emitted in draw order, which is also z-order: SVG paints in
  * document order, so last-drawn lands on top, matching the canvas. This
- * is a faithful-enough view, not a pixel-exact renderer: clip regions
- * are ignored (games draw within their tile bounds anyway) and font
- * metrics differ from the browser. It is NOT part of the required
+ * is a faithful-enough view, not a pixel-exact renderer: font metrics
+ * differ from the browser. It is NOT part of the required
  * assertion/snapshot flow — the harness is complete and useful without
  * it; reach for it only to eyeball a tricky highlight frame.
  *
@@ -50,17 +49,34 @@ function opToSvg(op: DrawOp): string {
     }
     case "ring":
       return `<rect x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}" rx="${op.radius}" fill="none" stroke="${op.rgb}" stroke-width="${op.thickness}"/>`;
-    // clip/unclip are layout-only; ignored in the convenience view.
+    // A clip opens a group `toSvg` numbers, and closes it.
     case "clip":
     case "unclip":
       return "";
   }
 }
 
-/** Serialize a draw record to a standalone SVG string. */
+/** Serialize a draw record to a standalone SVG string. A clip is a group
+ * clipped to its rect until its unclip, nested as the canvas's save and
+ * restore nest, so a piece drawn in clipped parts (Undead's vampire) shows
+ * as it does on the canvas. */
 export function toSvg(ops: readonly DrawOp[], size: Size): string {
-  const body = ops
-    .map(opToSvg)
+  let clips = 0;
+  let open = 0;
+  const parts = ops.map((op) => {
+    if (op.op === "clip") {
+      const id = `clip-${clips++}`;
+      open++;
+      return `<clipPath id="${id}"><rect x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}"/></clipPath><g clip-path="url(#${id})">`;
+    }
+    if (op.op === "unclip") {
+      if (open === 0) return "";
+      open--;
+      return "</g>";
+    }
+    return opToSvg(op);
+  });
+  const body = [...parts, ...Array.from({ length: open }, () => "</g>")]
     .filter((s) => s !== "")
     .join("\n  ");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size.w}" height="${size.h}" viewBox="0 0 ${size.w} ${size.h}">\n  ${body}\n</svg>\n`;

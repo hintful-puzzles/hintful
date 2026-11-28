@@ -275,6 +275,22 @@ export function fillGame<C extends Clues<C> & object>(
           noted(pencilKeepHighlightPref()),
           noted(candidateReadingPref()),
         ]),
+    ...(play.numbers?.pictures === undefined
+      ? []
+      : [
+          {
+            ...play.numbers.pictures.pref,
+            type: "choices",
+            choices: [
+              "Pictures",
+              play.numbers.letters === undefined ? "Numbers" : "Letters",
+            ],
+            get: (ui: FillUi) => (ui.pictures === false ? 1 : 0),
+            set: (ui: FillUi, v: number) => {
+              ui.pictures = v === 0;
+            },
+          } satisfies GamePref<FillUi>,
+        ]),
     ...(play.numbers?.raised !== true
       ? []
       : [

@@ -9,14 +9,17 @@ import type { FillSite } from "./site.ts";
 
 export const counts: FillSite = {
   on: (cx) => cx.counted !== null,
-  paint({ dr, ds, cx, lay, state: b, errors }) {
+  paint({ dr, ds, cx, lay, state: b, ui, errors }) {
     const counted = cx.counted;
     if (counted === null) return;
     const records = countRecords(b, counted);
     const { countErrors } = errors;
-    const key = records
+    // A board of numbers draws a record's piece where its values are drawn
+    // as pictures, and its glyph otherwise.
+    const pieces = !cx.typed || cx.pictured(ui);
+    const key = `${pieces}|${records
       .map((r, i) => `${r.value}:${r.count}:${countErrors.has(i) ? 1 : 0}`)
-      .join(",");
+      .join(",")}`;
     if (ds.counts.shown === key) return;
     ds.counts.shown = key;
     const ts = ds.tileSize;
@@ -26,7 +29,7 @@ export const counts: FillSite = {
     const glyph = cx.glyphOf(b);
     for (const [i, r] of records.entries()) {
       const { piece, count } = countBoxes(x, y, i, ts);
-      const placed = cx.pal.byValue.get(r.value);
+      const placed = pieces ? cx.pal.byValue.get(r.value) : undefined;
       if (placed !== undefined) placed.painter.paint(dr, piece, placed.slot, false);
       else
         dr.drawText(

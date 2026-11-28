@@ -111,6 +111,10 @@ export function fillSetup<C extends Clues<C>>(
   const notes = play.notes === true;
   /** Where the board draws its values raised (`play.numbers.raised`). */
   const raises = play.numbers?.raised === true;
+  /** Whether the player's preference draws a board of numbers' values as
+   * pictures (`play.numbers.pictures`), which only such a board has. */
+  const pictured = (ui: FillUi): boolean =>
+    play.numbers?.pictures !== undefined && ui.pictures !== false;
   /** The clue kind a link from a cell names the clue of. */
   const linkClues = play.links === undefined ? null : (play.links.clue as keyof C);
   const pal: FillPalette = fillPalette(
@@ -234,6 +238,7 @@ export function fillSetup<C extends Clues<C>>(
     glyphClues,
     notes,
     raises,
+    pictured,
     linkClues,
     onEdges,
     rimWall,

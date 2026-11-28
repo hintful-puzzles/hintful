@@ -60,7 +60,8 @@ export interface HintPass {
 
 /** The text cell `(x, y)` shows, for a hint's ring to keep inside it: on a
  * board of numbers its numeral, or its notes; else the number written on
- * it. */
+ * it. Drawn as pictures (`pictured`), a value and a note are pieces, which
+ * the ring goes round the cell over, as it does any piece. */
 function cellText<C extends Clues<C>>(
   cx: FillSetup<C>,
   lay: CellLayout,
@@ -68,6 +69,7 @@ function cellText<C extends Clues<C>>(
   ds: FillDrawState,
   x: number,
   y: number,
+  pictured: boolean,
 ): RingClear {
   const { w, h } = b;
   if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
@@ -95,11 +97,13 @@ function cellText<C extends Clues<C>>(
     const t = numberText(ts, face.x, face.y);
     return enclosing([textBox(t.origin, t.options, glyph(v))]);
   }
+  if (pictured && v !== 0) return enclosing([]);
   if (cx.typed && v !== 0) {
     const t = lay.valueText(ts, [x, y, h], walls, ...tile);
     return enclosing([textBox(t.origin, t.options, glyph(v))]);
   }
   const noted = notesIn(b.pencil?.[at] ?? 0);
+  if (pictured && noted.length > 0) return enclosing([]);
   if (noted.length > 0)
     return enclosing(
       lay
@@ -125,9 +129,10 @@ export function hintPass<C extends Clues<C>>(
   cx: FillSetup<C>,
   lay: CellLayout,
   ds: FillDrawState,
-  { state, hint }: FillFrame<C>,
+  { state, hint, ui }: FillFrame<C>,
   shown: FillBoard<C>,
 ): HintPass {
+  const pictured = cx.pictured(ui);
   const { clueCells, linkClues } = cx;
   const ts = ds.tileSize;
   const { w, h } = state;
@@ -206,7 +211,7 @@ export function hintPass<C extends Clues<C>>(
     },
     // A ring keeps its cell's number inside it and its neighbors' outside;
     // the line clues lie past any ring's reach.
-    text: (x, y) => cellText(cx, lay, state, ds, x, y),
+    text: (x, y) => cellText(cx, lay, state, ds, x, y, pictured),
     words: marks,
     evidenceColor: COL_HINT_OUTLINE,
     ...lay.m.sides,

@@ -104,6 +104,9 @@ export function fillSlots(
     for (const [v, { paint }] of [
       ...Object.entries(play.values ?? {}),
       ...Object.entries(play.given ?? {}),
+      ...Object.entries(play.numbers?.pictures?.paint ?? {}).map(
+        ([v, paint]) => [v, { paint }] as const,
+      ),
     ]) {
       if (!(paint in PAINTERS)) throw new Error(`play: no painter ${paint}`);
       byValue.set(Number(v), place(paint, PAINTERS[paint as PainterName]));

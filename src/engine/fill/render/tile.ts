@@ -59,6 +59,7 @@ import {
   MISTAKE,
   NOTES_MODE,
   NUMBER_UNDER,
+  PICTURED,
   RAISED,
   type RaisedAt,
   SHAPE_OPEN,
@@ -110,6 +111,7 @@ export function tileWordsOf<C extends Clues<C>>(
   const labels = labelsOf(cx, state);
   const balls = ballsOf(cx, shown, emptyIn(cx, shown));
   const { parts } = ds;
+  const pictured = cx.pictured(ui) ? PICTURED : 0;
   const tiles: (TileWords | null)[] = new Array(w * h).fill(null);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -131,6 +133,7 @@ export function tileWordsOf<C extends Clues<C>>(
         (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
         washes[i] |
         balls[i] |
+        pictured |
         (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0) |
         (dividerSides(state, x, y) << DIVIDER_SHIFT);
       const n = shownNumber(cx, state, i, v, ui.hiddenShown);
@@ -198,6 +201,11 @@ function drawTile<C extends Clues<C>>(
   const tx = lay.cellX(x, y, h, ts);
   const ty = lay.coord(y, ts);
   const tile = { x: tx, y: ty, w: ts, h: ts };
+  // A board of numbers draws a value's piece where the player's preference
+  // draws pictures, and its glyph otherwise.
+  const pictured = (lineWord & PICTURED) !== 0;
+  const pieceOf = (v: number) =>
+    typed && !pictured ? null : (pal.byValue.get(v) ?? null);
   const frame: TileFrame = {
     dr,
     ts,
@@ -215,7 +223,7 @@ function drawTile<C extends Clues<C>>(
     struck,
     label: t.label,
     breach: t.breach,
-    piece: v === 0 || lineWord & WASH_HIDES ? null : (pal.byValue.get(v) ?? null),
+    piece: v === 0 || lineWord & WASH_HIDES ? null : pieceOf(v),
     lay,
   };
 
@@ -227,10 +235,11 @@ function drawTile<C extends Clues<C>>(
   paintPartClue(pal.COL_DONE, frame);
   const raised = (lineWord & RAISED) !== 0;
   if (raised) paintRaised(cx, lay.f.top, dr, tile, { word, hintWord, noteWord }, glyph);
-  else if (typed && v !== empty) paintNumeral(pal.COL_ENTRY, glyph, frame);
+  else if (typed && v !== empty && frame.piece === null)
+    paintNumeral(pal.COL_ENTRY, glyph, frame);
   paintEmpty(pal.COL_ENTRY, empty, frame);
   // The empty square's note is its glyph, an X (upstream Salad's).
-  paintNotes(pal.COL_PENCIL, glyph, frame);
+  paintNotes(pal.COL_PENCIL, glyph, frame, pictured ? pieceOf : null);
   paintBreach(frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);

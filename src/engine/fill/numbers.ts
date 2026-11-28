@@ -121,6 +121,7 @@ export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi 
     ui.candidateReading ??= play.hintNotes ?? DEFAULT_CANDIDATE_READING;
   }
   if (play.numbers?.raised === true) ui.raised ??= true;
+  if (play.numbers?.pictures !== undefined) ui.pictures ??= true;
   if (play.select !== undefined) ui.selected ??= [];
   if (play.order === true) ui.reorder ??= null;
   return ui;
@@ -145,6 +146,10 @@ function noteTaking(ui: FillUi): NoteTakingUi {
     },
   };
 }
+
+/** The key that switches a board's pictures and glyphs, of either case. */
+const KEY_A = "A".charCodeAt(0);
+const KEY_a = "a".charCodeAt(0);
 
 /** The empty square's keys (upstream Salad's), and the ball's. */
 const EMPTY_KEYS = ["X", "x", "-", "_"].map((k) => k.charCodeAt(0));
@@ -212,6 +217,7 @@ export function numberInput<
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
+  const pictured = module.play?.numbers?.pictures !== undefined;
   const select = module.play?.select;
   const dividers = module.play?.dividers === true;
   const ordered = module.play?.order === true;
@@ -397,6 +403,12 @@ export function numberInput<
       if (notes) {
         const toggled = toggleNoteTakingMode(ui, button);
         if (toggled !== null) return toggled;
+      }
+      // A switches pictures and glyphs, a letter no value of such a board
+      // is typed by (upstream Undead's).
+      if (pictured && (button === KEY_A || button === KEY_a)) {
+        fillUi.pictures = fillUi.pictures === false;
+        return UI_UPDATE;
       }
       if (dividers && (button === KEY_BAR || button === KEY_MINUS)) {
         // A hidden cursor is shown first, so the line it divides after is

@@ -6,6 +6,7 @@
  */
 
 import { EDGE_VALUE_PAINTERS } from "../../engine/render/pieces/edge-value.ts";
+import { PAINTERS } from "../../engine/render/pieces/index.ts";
 import { compileExpr } from "../compile-expr.ts";
 import {
   type ClueKind,
@@ -31,6 +32,35 @@ import { checkGaps, checkSigns, marginsOf } from "./locations.ts";
 import { boundsOf, menuOf, sizeOf } from "./menu.ts";
 import { notesOf } from "./notes.ts";
 import { partBound } from "./values.ts";
+
+/** Refuses pictures (`numbers.pictures`) a board cannot draw: a painter no
+ * description may name; values painted that are not 1 up, or an alphabet
+ * they do not each have a letter of; a raised value, a block as tall as its
+ * number; an empty square, which is a cross; and a letter A, whose key
+ * switches the pictures. */
+function checkPictures(numbers: PlayJson["numbers"]): void {
+  const pictures = numbers?.pictures;
+  if (pictures === undefined) return;
+  const values = Object.keys(pictures.paint).map(Number);
+  for (const [v, paint] of Object.entries(pictures.paint))
+    if (!(paint in PAINTERS))
+      throw new CompileError(`play numbers pictures: ${v}'s painter ${paint} is none`);
+  if (!values.sort((a, b) => a - b).every((v, i) => v === i + 1))
+    throw new CompileError("play numbers pictures: the values painted are not 1 up");
+  const letters = numbers?.letters;
+  if (typeof letters === "string" && letters.length !== values.length)
+    throw new CompileError(
+      `play numbers pictures: ${values.length} values painted, and the alphabet ${letters} has ${letters.length} letters`,
+    );
+  if (letters === true || (typeof letters === "string" && /a/i.test(letters)))
+    throw new CompileError(
+      "play numbers pictures: A switches the pictures, and types a letter",
+    );
+  if (numbers?.raised === true)
+    throw new CompileError("play numbers: raised, and drawn as pictures");
+  if (numbers?.empty !== undefined)
+    throw new CompileError("play numbers: an empty square, and drawn as pictures");
+}
 
 /** Refuses an alphabet (`letters`, a string) that draws two values alike:
  * a letter of either case types one value. */
@@ -197,6 +227,7 @@ export function playOf(
   if (p.numbers?.raised === true && p.numbers.letters !== undefined)
     throw new CompileError("play numbers: raised letters");
   checkAlphabet("play numbers", p.numbers?.letters);
+  checkPictures(p.numbers);
   if (p.labels?.glyph === true && p.numbers === undefined)
     throw new CompileError(
       "play labels glyph: a label is drawn as a value, and play has no `numbers`",
