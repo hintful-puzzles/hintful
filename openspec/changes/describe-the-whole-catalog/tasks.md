@@ -36,6 +36,12 @@ is archived, with its figures recorded in its own design.md.
 
 - [x] 1.1 `measure-cost-by-instructions` archived (filed 2026-11-23).
 - [x] 1.1.1 `a-game-is-tested-by-its-data` archived (filed 2026-11-23).
+- [ ] 1.1.2 The plain-cell family's deals timed board by board: its
+      design.md gave one median a game. On 2026-11-28, 100 seeds (20 for
+      Star Battle): Sticks 8x10 Unreasonable 157 ms, Star Battle 8 one-star
+      Normal 114 to 10 two-star Tricky 1,436. Time each against
+      `294a20616` (`compare-cost --baseline`, a worktree carrying this
+      tree's lockfile) and fix in the engine any past the bar.
 - [x] 1.2 Latin squares and candidate notes: `born-candidate-note-family`
       (filed 2026-11-23), archived with its figures in its design.md
       § "The figures (3.1)".
