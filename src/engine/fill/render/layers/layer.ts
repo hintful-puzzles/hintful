@@ -40,6 +40,9 @@ export interface TileFrame {
   readonly label: string | null;
   /** The labels of a breach on the cell (`breaches.ts`), or `null`. */
   readonly breach: Breach | null;
+  /** The player's highlight on the cell (`play.highlights`), by its index,
+   * `-1` for none. */
+  readonly highlight: number;
   /** The value's piece as drawn: none on an open cell, or where the wash
    * leaves it out. */
   readonly piece: Placed | null;

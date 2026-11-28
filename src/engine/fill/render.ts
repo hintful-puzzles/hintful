@@ -121,6 +121,9 @@ export interface FillDrawState {
   /** The notes the hint's step strikes, a lane the tiles' key has no room
    * for: packed on a board that keeps notes alone. */
   readonly struck: OverlaySidecar;
+  /** Per cell, the player's highlight on it (`highlightsOf`), a lane the
+   * tiles' key has no room for. */
+  readonly highlit: OverlaySidecar;
   /** Per line, its clue's error, hint and hatch. */
   readonly clues: TileCache;
   /** Per line, its list's error, hatch, cursor and font. */
@@ -312,12 +315,14 @@ export function fillRender<C extends Clues<C>>(
     colors: cx.pal.colors,
     newDrawState: (b, tileSize) => {
       const struck = new OverlaySidecar(b.w * b.h);
+      const highlit = new OverlaySidecar(b.w * b.h);
       return {
         tileSize: metrics.tileOf(tileSize),
         parts: partsOf(cx, b),
-        tiles: new TileCache(b.w * b.h, { words: 5, overlays: [struck] }),
+        tiles: new TileCache(b.w * b.h, { words: 5, overlays: [struck, highlit] }),
         breaches: new Array<string | null>(b.w * b.h).fill(null),
         struck,
+        highlit,
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),
         labels: new TileCache(cx.labelStart === null ? 0 : b.w + b.h),

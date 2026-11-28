@@ -142,6 +142,10 @@ export type TileWords = {
   /** A breach's labels on the cell, which no word has room for: a change to
    * them repaints the tile (`FillDrawState.breaches`). */
   readonly breach: Breach | null;
+  /** The player's highlight on the cell (`play.highlights`), by its index,
+   * `-1` for none: in the draw state's `highlit` lane, which the key has no
+   * room for. */
+  readonly highlight: number;
   readonly anim: { readonly from: number; readonly frac: number } | null;
   readonly changed: boolean;
 };

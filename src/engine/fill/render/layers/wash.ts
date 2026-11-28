@@ -1,5 +1,6 @@
 /** The wash (`play.wash`): which cells' surface takes it, and which of them
- * leave their secondary piece out. `surface.ts` paints it. */
+ * leave their secondary piece out; and the player's highlights
+ * (`play.highlights`). `surface.ts` paints them. */
 
 import { type Clues, type FillBoard, spaceOf } from "../../board.ts";
 import type { FillUi } from "../../play.ts";
@@ -23,5 +24,29 @@ export function washesOf<C extends Clues<C>>(
     out[c] = WASHED;
     if (!ui.washedMarks && b.values[c] === play.secondary) out[c] |= WASH_HIDES;
   }
+  return out;
+}
+
+/** Each cell's highlight (`play.highlights`): one more than the index of
+ * the first the player shows that holds there, 0 where none does. */
+export function highlightsOf<C extends Clues<C>>(
+  { module, play }: FillSetup<C>,
+  b: FillBoard<C>,
+  ui: FillUi,
+): Uint8Array {
+  const out = new Uint8Array(b.values.length);
+  const { highlighted } = module;
+  if (highlighted === undefined) return out;
+  const shown = (play.highlights ?? []).flatMap((h, k) =>
+    (ui.highlights?.[k] ?? h.on) ? [k] : [],
+  );
+  if (shown.length === 0) return out;
+  const sp = spaceOf(module, b);
+  for (const c of sp.cells)
+    for (const k of shown)
+      if (highlighted[k](b.values, sp, b.dealt, c)) {
+        out[c] = k + 1;
+        break;
+      }
   return out;
 }

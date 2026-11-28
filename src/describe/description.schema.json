@@ -1665,6 +1665,40 @@
                 }
               }
             },
+            "highlights": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Washes the player switches on and off, each over the cells, placed or given included, where its `when` holds of the values, `c` the cell (Rome's squares already leading to a goal, and its loops): an aid to reading the board, which neither the live errors nor the hint read. Each is a preference by `pref`'s key and name, on unless `on` is false, and paints a cell's surface in its `paint`: `goal`, the wash of where the player is going, or `error`, the mistake's wash. Where two hold of a cell, the first listed paints it. An open cell's value reads as none there, below 1, so `value(g) > 0` asks for a placed one.",
+              "items": {
+                "type": "object",
+                "required": ["when", "paint", "pref"],
+                "additionalProperties": false,
+                "properties": {
+                  "when": {
+                    "$ref": "#/$defs/formula"
+                  },
+                  "paint": {
+                    "enum": ["goal", "error"]
+                  },
+                  "pref": {
+                    "type": "object",
+                    "required": ["kw", "name"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "kw": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "on": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
             "cornerCrosses": {
               "type": "string",
               "description": "The variation under which a small cross is drawn at each corner inside the grid, the cue that a rule reaches the squares diagonally beside one (upstream ABCD's no-diagonal mode)."

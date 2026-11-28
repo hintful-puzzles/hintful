@@ -146,6 +146,24 @@ square, or clear where a value is armed. An armed selection SHALL show a
 - **THEN** a `?` shows in the entry color, then the left arrow is placed
   there and the selection does not move
 
+### Requirement: A born game's board may show highlights the player switches
+
+`play.highlights` MAY list washes, each over the cells, placed and given
+included, a formula holds of on the values as they stand. Each SHALL be a
+boolean preference by its key and name, on unless the description says
+off, and SHALL paint a shown cell's surface in its paint, the goal's wash
+or the mistake's, the first listed where two hold. A highlight SHALL be an
+aid to reading the board alone: neither the rules, the live errors nor the
+hint read it.
+
+#### Scenario: Arrows leading off the board
+
+- **WHEN** a `pointing` board has two arrows leading off its top edge, one
+  of them through the other, and two side by side pointing at each other
+- **THEN** the three leading off are washed in the goal's wash, and the two
+  pointing at each other are washed in the mistake's wash only once the
+  loop preference, off by default, is switched on
+
 ### Requirement: A picture's name is how a player is told its value
 
 Each picture SHALL have a name, which the hint says its value by, with its

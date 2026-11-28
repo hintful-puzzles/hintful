@@ -244,6 +244,26 @@ not keep clear of an armed `?`, as the hand-written one's did
 up", "the up marks in it"), the hand-written vocabulary's `be` and `note`,
 which a born game's `words:` does not yet carry.
 
+### 11. Rome's two shadings are highlights the player switches (2.3c)
+
+The squares already leading to a goal and the squares caught in a loop are
+an aid to reading the board, not a rule, so they are not `play.wash`, whose
+washed cell the live errors and the hint read as holding the secondary
+value. `play.highlights` lists them, each a formula over a cell on the
+values as they stand, a paint (the goal's wash, or the mistake's, which the
+hand-written game uses for the two) and a boolean preference with its
+default, so Rome keeps its keys (`goal`, on; `loop`, off). Built on
+`pointing` (arrows leading off the board; loops). A highlight is kept in
+an overlay lane of the tile cache, not in a tile word, whose bits are all
+taken.
+
+Left to the flip (2.3e): the draft's `noLoop` is a rule its live errors
+read, so a born Rome marks a loop's arrows in error whatever the loop
+preference says, where the hand-written game showed a loop only with it on.
+The flip weighs whether the preference still earns its place beside that
+(`docs/rendering.md` § "Live errors are the rules'": what the rules make
+certain shows).
+
 ## What each flip changed for a player
 
 Filled in by each flip.

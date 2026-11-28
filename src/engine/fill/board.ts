@@ -115,6 +115,14 @@ export interface FillModule<C> {
   /** Whether cell `c` is washed on the values `g` (`play.wash`): an open one
    * then reads as the secondary value, which a piece there would break. */
   washed?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;
+  /** Each highlight's test (`play.highlights`), in their order: whether it
+   * holds at cell `c` on the values `g`. */
+  readonly highlighted?: readonly ((
+    g: ArrayLike<number>,
+    sp: GridSpace,
+    cl: C,
+    c: number,
+  ) => boolean)[];
   /** Whether record `k` of the list beneath the board (`play.list`) holds of
    * the values `g` as placed, which strikes it. */
   recordHolds?(g: ArrayLike<number>, sp: GridSpace, cl: C, k: number): boolean;

@@ -18,6 +18,8 @@ import {
   cellSurface,
   clueDoneColor,
   ERROR_TEXT,
+  ERROR_WASH,
+  GOAL_WASH,
   GRID_DARK,
   givenSurface,
   highlightWash,
@@ -140,6 +142,8 @@ export interface FillPalette {
   readonly COL_ALONG_COLUMN: number;
   readonly COL_ALONG_INK: number;
   readonly COL_PREVIEW: number;
+  /** Highlight `k`'s slot is this one plus `k`. */
+  readonly COL_HIGHLIGHT_PAINT: number;
   readonly PENCIL_STYLE: PencilIndicatorStyle;
   colors(background: Color): Color[];
 }
@@ -204,6 +208,15 @@ export function fillPalette(
   const COL_ALONG_COLUMN = COL_DONE + 2;
   const COL_ALONG_INK = COL_DONE + 3;
   const COL_PREVIEW = COL_DONE + 4;
+  /** Each of the player's highlights (`play.highlights`), in their order,
+   * after every slot above the board uses. */
+  const COL_HIGHLIGHT_PAINT = !typed
+    ? COL_HIGHLIGHT
+    : along
+      ? COL_PREVIEW + 1
+      : marksDone
+        ? COL_DONE + 1
+        : COL_DONE;
   const PENCIL_STYLE: PencilIndicatorStyle = {
     background: COL_BACKGROUND,
     body: COL_PENCIL_BODY,
@@ -258,6 +271,9 @@ export function fillPalette(
         out[COL_PREVIEW] = previewInk(bg);
       }
     }
+    (play.highlights ?? []).forEach(({ paint }, k) => {
+      out[COL_HIGHLIGHT_PAINT + k] = paint === "goal" ? GOAL_WASH : ERROR_WASH;
+    });
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;
@@ -286,6 +302,7 @@ export function fillPalette(
     COL_ALONG_COLUMN,
     COL_ALONG_INK,
     COL_PREVIEW,
+    COL_HIGHLIGHT_PAINT,
     PENCIL_STYLE,
     colors,
   };

@@ -8,7 +8,13 @@
 
 import { describe, expect, it } from "vitest";
 import * as pointing from "../../generated/engine/testing/fixtures/pointing/pointing.compiled.ts";
-import { INK, pencilColor, playerEntryColor } from "../color/palette.ts";
+import {
+  ERROR_WASH,
+  GOAL_WASH,
+  INK,
+  pencilColor,
+  playerEntryColor,
+} from "../color/palette.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
   CURSOR_DOWN,
@@ -24,9 +30,10 @@ import {
 } from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
+import { clueList } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
-import type { FillBoard } from "./board.ts";
+import { type FillBoard, newBoard } from "./board.ts";
 import { fillGame } from "./game.ts";
 import type { FillUi } from "./play.ts";
 
@@ -225,6 +232,106 @@ function dragFrom(
   const released = game.interpretMove(s, ui, ds, middleOf(c, dx, dy), release);
   return { pressed, moved, shown, released };
 }
+
+describe("highlights the player switches on and off", () => {
+  // 0 and 1 lead off the top, 4 up into 0; 5 and 6 point at each other.
+  const ARROWS: Record<number, number> = { 0: 1, 1: 3, 4: 1, 5: 4, 6: 3 };
+  const OUT = [0, 1, 4];
+  const LOOP = [5, 6];
+  const arrows = (): Board => {
+    const s = newBoard(pointing, 4, 4, { given: clueList([], [], 16) });
+    for (const [c, v] of Object.entries(ARROWS)) s.values[Number(c)] = v;
+    return s;
+  };
+  /** The cells whose surface a frame painted in `color`, by the tile its
+   * rectangle lies in. */
+  const washedIn = (ops: readonly DrawOp[], color: readonly number[]): number[] => {
+    const slots = slotsOf(color);
+    const cells = ops.flatMap((op) =>
+      op.op === "rect" && slots.includes(op.color)
+        ? [
+            Math.floor((op.y - origin.y) / TS) * b.w +
+              Math.floor((op.x - origin.x) / TS),
+          ]
+        : [],
+    );
+    return [...new Set(cells)].sort((a, c) => a - c);
+  };
+  const pref = (kw: string) => {
+    const q = game.prefs?.find((r) => r.kw === kw);
+    if (q?.type !== "boolean") throw new Error(`no boolean preference ${kw}`);
+    return q;
+  };
+
+  it("offers each as a preference by its key, on unless the description says off", () => {
+    const ui = game.newUi(b);
+    expect(pref("out").name).toBe("Highlight arrows leading off the board");
+    expect(pref("out").get(ui)).toBe(true);
+    expect(pref("loop").get(ui)).toBe(false);
+    pref("loop").set(ui, true);
+    expect(ui.highlights).toEqual([true, true]);
+  });
+
+  it("washes the squares each holds of, while it is shown", () => {
+    const s = arrows();
+    const ui = game.newUi(s);
+    expect(washedIn(draw(s, ui), GOAL_WASH)).toEqual(OUT);
+    expect(washedIn(draw(s, ui), ERROR_WASH)).toEqual([]);
+    pref("loop").set(ui, true);
+    expect(washedIn(draw(s, ui), ERROR_WASH)).toEqual(LOOP);
+    pref("out").set(ui, false);
+    expect(washedIn(draw(s, ui), GOAL_WASH)).toEqual([]);
+  });
+
+  it("paints a square two hold of in the first listed", () => {
+    // The second made to hold everywhere.
+    const both = fillGame("pointing", {
+      ...pointing,
+      highlighted: [pointing.highlighted[0], () => true],
+    });
+    const s = arrows();
+    const ui = both.newUi(s);
+    ui.highlights = [true, true];
+    const dr = new RecordingDrawing(colors);
+    both.redraw(dr, both.newDrawState(s, TS), {
+      state: s,
+      prev: null,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    } as never);
+    expect(washedIn(dr.ops, GOAL_WASH)).toEqual(OUT);
+    expect(washedIn(dr.ops, ERROR_WASH)).toHaveLength(16 - OUT.length);
+  });
+
+  it("repaints a warm board's squares when a highlight is switched", () => {
+    const s = arrows();
+    const ui = game.newUi(s);
+    const ds = game.newDrawState(s, TS);
+    const frame = () => {
+      const dr = new RecordingDrawing(colors);
+      game.redraw(dr, ds, {
+        state: s,
+        prev: s,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      } as never);
+      return dr.ops;
+    };
+    frame();
+    expect(washedIn(frame(), ERROR_WASH)).toEqual([]);
+    pref("loop").set(ui, true);
+    expect(washedIn(frame(), ERROR_WASH)).toEqual(LOOP);
+    pref("loop").set(ui, false);
+    // Switched off, the loop's squares repaint without it.
+    const off = frame().filter((op) => op.op === "rect");
+    expect(washedIn(off, ERROR_WASH)).toEqual([]);
+    expect(off.length).toBeGreaterThan(0);
+  });
+});
 
 describe("a board whose every piece points, played by its way", () => {
   /** The move `made` is, failing where it is none. */

@@ -130,6 +130,15 @@ export interface PlayValue {
   readonly paint: string;
 }
 
+/** A wash the player switches on and off (`FillPlay.highlights`): the
+ * surface it paints (`goal`, where the player is going, or `error`, the
+ * mistake's), its preference, and whether that is on by default. */
+export interface FillHighlight {
+  readonly paint: "goal" | "error";
+  readonly pref: { readonly kw: string; readonly name: string };
+  readonly on: boolean;
+}
+
 /** A fill game's `play:`, as its compiled module exports it. */
 export interface FillPlay {
   /** Where the values are the answer's domain, each drawn as its numeral and
@@ -241,6 +250,10 @@ export interface FillPlay {
   /** Where the open cells a definition holds of are washed (`washed`), the
    * preference that draws the secondary piece on one, on by default. */
   readonly wash?: { readonly pref?: { readonly kw: string; readonly name: string } };
+  /** Washes the player switches on and off (`highlighted`), in the order
+   * the first that holds at a cell paints it: each one's paint, its
+   * preference, and whether that is on by default. */
+  readonly highlights?: readonly FillHighlight[];
   /** The value whose piece covers the number on its cell, and the
    * preference that shows it there, smaller, off by default; a press off
    * the grid flips it (upstream singles.c). */
@@ -282,6 +295,9 @@ export interface FillUi {
   /** The wash's preference (`FillPlay.wash`): whether the secondary piece is
    * drawn on a washed cell. */
   washedMarks: boolean;
+  /** On a board with highlights (`FillPlay.highlights`), each one's
+   * preference, in their order: whether it is shown. */
+  highlights?: boolean[];
   /** The covering preference (`FillPlay.covers`): whether a number shows on
    * the piece that covers it. */
   hiddenShown: boolean;

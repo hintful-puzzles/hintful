@@ -162,11 +162,13 @@ export function paintSurface(
       ? along
       : piece !== null && piece.painter.surface !== null
         ? piece.slot[piece.painter.surface]
-        : word & FIXED
-          ? pal.COL_GIVEN
-          : lineWord & WASHED
-            ? pal.COL_WASH
-            : (part?.fill ?? COL_CELL);
+        : frame.highlight >= 0
+          ? pal.COL_HIGHLIGHT_PAINT + frame.highlight
+          : word & FIXED
+            ? pal.COL_GIVEN
+            : lineWord & WASHED
+              ? pal.COL_WASH
+              : (part?.fill ?? COL_CELL);
   // Under the content, so the piece stays whole.
   const lay = (surface: Rect) => {
     drawCellBackground(dr, surface, highlight, pal.COL_HIGHLIGHT, ground);

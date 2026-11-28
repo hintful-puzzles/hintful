@@ -264,6 +264,17 @@ export function fillGame<C extends Clues<C> & object>(
   const prefs = [
     ...(play.wash?.pref === undefined ? [] : [flag(play.wash.pref, "washedMarks")]),
     ...(play.covers === undefined ? [] : [flag(play.covers.pref, "hiddenShown")]),
+    ...(play.highlights ?? []).map(
+      ({ pref, on }, k): GamePref<FillUi> => ({
+        ...pref,
+        type: "boolean",
+        get: (ui) => ui.highlights?.[k] ?? on,
+        set: (ui, v) => {
+          ui.highlights ??= (play.highlights ?? []).map((h) => h.on);
+          ui.highlights[k] = v;
+        },
+      }),
+    ),
     ...(!notes
       ? []
       : [
@@ -547,6 +558,7 @@ export function fillGame<C extends Clues<C> & object>(
         };
   const newUi = (b: FillBoard<C>): FillUi => {
     const ui = typed === null ? newFillUi() : typedUi(newFillUi(), play);
+    if (play.highlights !== undefined) ui.highlights = play.highlights.map((h) => h.on);
     // On the edges the cursor is on the half grid (`edge-target.ts`), and
     // starts in the first square's middle.
     if (module.answerSort === "edge") ui.cursor = newCursor(1, 1);

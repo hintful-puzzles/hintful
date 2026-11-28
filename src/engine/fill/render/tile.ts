@@ -47,7 +47,7 @@ import {
   paintLeadingDiagonal,
   paintSurface,
 } from "./layers/surface.ts";
-import { washesOf } from "./layers/wash.ts";
+import { highlightsOf, washesOf } from "./layers/wash.ts";
 import type { FillSetup } from "./setup.ts";
 import { paintRaised, repainted } from "./three-d.ts";
 import {
@@ -113,6 +113,11 @@ export function tileWordsOf<C extends Clues<C>>(
   const states = numberStates(cx, shown);
   const joins = joinsOf(cx, shown);
   const washes = washesOf(cx, shown, ui);
+  const highlit = highlightsOf(cx, shown, ui);
+  ds.highlit.clear();
+  highlit.forEach((k, i) => {
+    ds.highlit.add(i, k);
+  });
   const along = alongOf(cx, shown, ui, hint !== undefined);
   const labels = labelsOf(cx, state);
   const balls = ballsOf(cx, shown, emptyIn(cx, shown));
@@ -185,6 +190,7 @@ export function tileWordsOf<C extends Clues<C>>(
         part,
         label: label?.text ?? null,
         breach,
+        highlight: highlit[i] - 1,
         anim: grows ? { from: before[i], frac } : null,
         changed: grows || ds.tiles.changed(i, k, hk, lk, nk, ek),
       };
@@ -240,6 +246,7 @@ function drawTile<C extends Clues<C>>(
     struck,
     label: t.label,
     breach: t.breach,
+    highlight: t.highlight,
     piece: v === 0 || lineWord & WASH_HIDES ? null : pieceOf(v),
     lay,
   };

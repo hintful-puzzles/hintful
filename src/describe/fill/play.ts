@@ -244,6 +244,62 @@ function recordHoldsOf(
   ];
 }
 
+/** Refuses what a board whose rows and columns stand for the same things
+ * offers off such a board: dividers, the leading diagonal, and an order. */
+function checkSquareLines(p: PlayJson, json: DescriptionJson, d: Description): void {
+  const grid = json.space.grid;
+  const square = grid !== undefined && grid.w === grid.h;
+  const size = `${grid?.w} by ${grid?.h}`;
+  // A divider is toggled by a press between two labels, and keyed by a line
+  // both of rows and of columns, the same two of each.
+  if (p.dividers === true) {
+    if (p.numbers === undefined)
+      throw new CompileError(
+        "play dividers: dividers are a board of numbers', and play has no `numbers`",
+      );
+    if (p.labels?.start === undefined)
+      throw new CompileError(
+        "play dividers: a divider is ruled between two labels, and play has no `labels.start`",
+      );
+    if (!square)
+      throw new CompileError(
+        `play dividers: a divider rules two rows and two columns alike, and the grid is not square (${size})`,
+      );
+  }
+  // The leading diagonal is where a row meets the same column, which only a
+  // square board has.
+  if (p.leadingDiagonal === true && !square)
+    throw new CompileError(
+      `play leadingDiagonal: a row meets the same column on a square board, and the grid is not square (${size})`,
+    );
+  // An order moves a row and the same column together, its labels with
+  // them, so it is offered only where nothing else is fixed to a line's
+  // place: no unit but the lines, and no clue but at a cell.
+  if (p.order !== true) return;
+  if (p.numbers === undefined)
+    throw new CompileError(
+      "play order: an order is a board of numbers', and play has no `numbers`",
+    );
+  if (p.labels?.start === undefined)
+    throw new CompileError(
+      "play order: a line is dragged by its label, and play has no `labels.start`",
+    );
+  if (!square)
+    throw new CompileError(
+      `play order: an order moves a row and the same column together, and the grid is not square (${size})`,
+    );
+  const units = json.space.units.filter((u) => u !== "rows" && u !== "cols");
+  if (units.length > 0)
+    throw new CompileError(
+      `play order: an order keeps the rows and the columns alone, and the space has ${units.join(", ")}`,
+    );
+  const offCells = [...d.clueKinds].filter(([, k]) => k.at !== "cell").map(([n]) => n);
+  if (offCells.length > 0)
+    throw new CompileError(
+      `play order: a clue off the cells keeps its place in an order, and ${offCells.join(", ")} is one`,
+    );
+}
+
 export function playOf(
   json: DescriptionJson,
   d: Description,
@@ -369,6 +425,7 @@ export function playOf(
     bounds,
     plain: _plain,
     wash,
+    highlights,
     ...rest
   } = p;
   if (rest.covers !== undefined && values[rest.covers.value] === undefined)
@@ -424,62 +481,7 @@ export function playOf(
       "play select: a selection is typed into, and play has no `numbers`",
     );
   checkAlong(p);
-  // A divider is toggled by a press between two labels, and keyed by a line
-  // both of rows and of columns, the same two of each.
-  if (p.dividers === true) {
-    if (p.numbers === undefined)
-      throw new CompileError(
-        "play dividers: dividers are a board of numbers', and play has no `numbers`",
-      );
-    if (labels?.start === undefined)
-      throw new CompileError(
-        "play dividers: a divider is ruled between two labels, and play has no `labels.start`",
-      );
-    const grid = json.space.grid;
-    if (grid === undefined || grid.w !== grid.h)
-      throw new CompileError(
-        `play dividers: a divider rules two rows and two columns alike, and the grid is not square (${grid?.w} by ${grid?.h})`,
-      );
-  }
-  // The leading diagonal is where a row meets the same column, which only a
-  // square board has.
-  if (p.leadingDiagonal === true) {
-    const grid = json.space.grid;
-    if (grid === undefined || grid.w !== grid.h)
-      throw new CompileError(
-        `play leadingDiagonal: a row meets the same column on a square board, and the grid is not square (${grid?.w} by ${grid?.h})`,
-      );
-  }
-  // An order moves a row and the same column together, its labels with
-  // them, so it is offered only where nothing else is fixed to a line's
-  // place: no unit but the lines, and no clue but at a cell.
-  if (p.order === true) {
-    if (p.numbers === undefined)
-      throw new CompileError(
-        "play order: an order is a board of numbers', and play has no `numbers`",
-      );
-    if (labels?.start === undefined)
-      throw new CompileError(
-        "play order: a line is dragged by its label, and play has no `labels.start`",
-      );
-    const grid = json.space.grid;
-    if (grid === undefined || grid.w !== grid.h)
-      throw new CompileError(
-        `play order: an order moves a row and the same column together, and the grid is not square (${grid?.w} by ${grid?.h})`,
-      );
-    const units = json.space.units.filter((u) => u !== "rows" && u !== "cols");
-    if (units.length > 0)
-      throw new CompileError(
-        `play order: an order keeps the rows and the columns alone, and the space has ${units.join(", ")}`,
-      );
-    const offCells = [...d.clueKinds]
-      .filter(([, k]) => k.at !== "cell")
-      .map(([n]) => n);
-    if (offCells.length > 0)
-      throw new CompileError(
-        `play order: a clue off the cells keeps its place in an order, and ${offCells.join(", ")} is one`,
-      );
-  }
+  checkSquareLines(p, json, d);
   if (p.cornerCrosses !== undefined && json.variations?.[p.cornerCrosses] === undefined)
     throw new CompileError(`play cornerCrosses: no variation ${p.cornerCrosses}`);
   const plainPlay = {
@@ -489,6 +491,15 @@ export function playOf(
     ...(wash === undefined
       ? {}
       : { wash: wash.pref === undefined ? {} : { pref: wash.pref } }),
+    ...(highlights === undefined
+      ? {}
+      : {
+          highlights: highlights.map(({ paint, pref, on }) => ({
+            paint,
+            pref,
+            on: on ?? true,
+          })),
+        }),
   };
   const play =
     links === undefined
@@ -516,6 +527,7 @@ export function playOf(
     ...boardDomainOf(d, env, measured),
     ...repeatOf(d, env, measured),
     ...washedOf(wash?.when ?? null, env, measured),
+    ...highlightedOf(highlights, env, measured),
     ...recordHoldsOf(json, d, env, measured),
     ...(p.along === undefined || p.list === undefined
       ? []
@@ -583,6 +595,55 @@ function washedOf(
   measured: (e: Expr) => Expr,
 ): string[] {
   if (when === null) return [];
+  return cellTestOf(
+    "washed",
+    "/** Whether cell `c` is washed on the values `g` (`play.wash`). */",
+    when,
+    "play wash when",
+    env,
+    measured,
+  );
+}
+
+/**
+ * `highlighted`, one test a highlight (`play.highlights`), in their order:
+ * whether its `when` holds at cell `c` on the values `g`. Nothing where
+ * there are none.
+ */
+function highlightedOf(
+  highlights: PlayJson["highlights"],
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  if (highlights === undefined) return [];
+  const tests = highlights.flatMap((h, k) =>
+    cellTestOf(
+      `highlighted${k}`,
+      `/** Whether cell \`c\` takes highlight ${k} on the values \`g\`. */`,
+      h.when,
+      `play highlights ${k} when`,
+      env,
+      measured,
+    ),
+  );
+  return [
+    ...tests,
+    "",
+    "/** Each highlight's test (`play.highlights`), in their order. */",
+    `export const highlighted = [${highlights.map((_, k) => `highlighted${k}`).join(", ")}] as const;`,
+  ];
+}
+
+/** `name(g, sp, cl, c)`, exported: whether the formula `when` holds of cell
+ * `c` on the values `g`. */
+function cellTestOf(
+  name: string,
+  doc: string,
+  when: string,
+  what: string,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
   const scratch: string[] = [];
   const out = new Out(1);
   const v = compileExpr(
@@ -591,12 +652,12 @@ function washedOf(
     answerEnv(env, { yes: false }, scratch),
     out,
   );
-  expect(v, "bool", "play wash when");
+  expect(v, "bool", what);
   const body = [...scratch.map((s) => `  ${s}`), ...out.text(), `  return ${v.code};`];
   return [
     "",
-    "/** Whether cell `c` is washed on the values `g` (`play.wash`). */",
-    `export function washed(${[
+    doc,
+    `export function ${name}(${[
       "g: ArrayLike<number>",
       param("sp", "GridSpace", body),
       param("cl", "Dealt", body),

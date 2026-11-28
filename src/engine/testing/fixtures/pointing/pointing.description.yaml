@@ -5,7 +5,8 @@
 # pieces that point (`numbers.pictures` naming arrows, and no preference):
 # each value placed as its arrow, in ink where given, and noted small, in
 # pencil, on the side of its square it points to; always pictures, `A`
-# switching nothing; on a description that names no game.
+# switching nothing; and of highlights the player switches on and off
+# (`play.highlights`); on a description that names no game.
 game: pointing
 produces: latin
 sizes:
@@ -14,8 +15,9 @@ space:
   grid: { w: "w", h: "w" }
   units: [rows, cols]
 answer:
-  # 1 up, 2 down, 3 left, 4 right.
-  value: { sort: cell, domain: "range(1, 4)" }
+  # 1 up, 2 down, 3 left, 4 right, each leading to the square it points
+  # at, none off the board.
+  value: { sort: cell, domain: "range(1, 4)", to: "step(c, d)" }
 given: [value]
 marks:
   cand: { sort: cell, notation: "set of range(1, 4)" }
@@ -27,6 +29,16 @@ play:
     pictures:
       paint: { 1: arrowUp, 2: arrowDown, 3: arrowLeft, 4: arrowRight }
       names: { 1: up, 2: down, 3: left, 4: right }
+  # The squares whose arrows already lead off the board, and those caught in
+  # a loop, off by default: the first listed paints a square both hold of.
+  highlights:
+    - when: "exists g in chain(c): value(g) > 0 and to(g) = none"
+      paint: goal
+      pref: { kw: out, name: Highlight arrows leading off the board }
+    - when: "to(c) != none and c in chain(to(c))"
+      paint: error
+      pref: { kw: loop, name: Highlight loops }
+      on: false
   boards: [4x4]
   hintMarks:
     ring: the square the step decides.
