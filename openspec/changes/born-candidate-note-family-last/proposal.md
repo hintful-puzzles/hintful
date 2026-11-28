@@ -11,8 +11,9 @@ and marks (Magnets), and a space whose cells are a partition's parts
 
 ## What Changes
 
-The five move onto their descriptions, one commit a game, in the order
-this change's gap list (task 1.1) sets, Map last. Its predecessor's gap
+The five, and Subsets, which task 1.1 brought in from the regions group
+(design.md § "Decisions" 1), move onto their descriptions, one commit a
+game, in the order this change's gap list (task 1.1) sets, Map last. Its predecessor's gap
 list, read at `0b0727c9d` (its design.md § "The gap list (1.1)", in the
 archive), is the start: the four flips since built some of what it names
 new (the walk with no region, a clue per value in a margin, letters, slot

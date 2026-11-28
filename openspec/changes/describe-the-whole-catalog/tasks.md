@@ -48,7 +48,7 @@ is archived, with its figures recorded in its own design.md.
       § "The figures (3.1)".
   - [x] 1.2.1 Solo, ABCD, Salad, Group: `born-candidate-note-family-rest`,
         archived with its figures in its design.md.
-  - [ ] 1.2.2 Undead, Rome, Magnets, Crossing, Map:
+  - [ ] 1.2.2 Undead, Crossing, Rome, Magnets, Subsets, Map:
         `born-candidate-note-family-last` (filed 2026-11-28).
 - [ ] 1.3 Regions and partitions.
 - [ ] 1.4 Lines and loops.
