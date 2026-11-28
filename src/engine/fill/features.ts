@@ -9,9 +9,10 @@
  * square's other decided features allow. A square left one set holds it.
  */
 
-import type { UiUpdate } from "../contract/game.ts";
+import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { Point, Rect } from "../contract/types.ts";
 import type { Mark } from "../hint/candidate-hint.ts";
+import type { PointerAction } from "../input/hint-gesture.ts";
 import {
   cursorDelta,
   isMouseDown,
@@ -24,6 +25,7 @@ import {
   rulingOut,
   sweepTo,
   type TargetVerbs,
+  verbGesture,
 } from "../input/target-verb.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import type { FillMove } from "./notes.ts";
@@ -48,6 +50,40 @@ function valuesIn(mask: number): number[] {
   return out;
 }
 
+/** The sets square `c` can be: its value, or its notes. */
+const setsOf = <C>(b: FillBoard<C>, c: number): number =>
+  b.values[c] !== 0 ? 1 << b.values[c] : (b.pencil?.[c] ?? 0);
+
+/** The features every one of the sets `mask` has, and those one has, each a
+ * mask by `of`. */
+export function featureAgreement(
+  mask: number,
+  of: (d: number) => number,
+): { readonly all: number; readonly any: number } {
+  let all = -1;
+  let any = 0;
+  for (const d of valuesIn(mask)) {
+    all &= of(d);
+    any |= of(d);
+  }
+  return { all: mask === 0 ? 0 : all, any };
+}
+
+/** The slots of square `c`, of `count` features by `of`, that its sets decide
+ * against `answer`'s: a feature they all have that it lacks, or that none has
+ * and it has. */
+export function wrongFeatures<C>(
+  b: FillBoard<C>,
+  c: number,
+  answer: number,
+  of: (d: number) => number,
+  count: number,
+): number {
+  const { all, any } = featureAgreement(setsOf(b, c), of);
+  const want = of(answer);
+  return ((all & ~want) | (~any & want)) & ((1 << count) - 1);
+}
+
 /** The features of a board's square that its sets can still be, and its
  * input: the target verbs, and the arm `numbers.ts` hands a button first,
  * which answers `pass` for one it leaves to the rest. */
@@ -60,6 +96,10 @@ export interface FeatureInput<C, D> {
     p: Point,
     raw: number,
   ): FillMove | UiUpdate | null | "pass";
+  /** A hint's strike as slot presses: on each square, an undecided slot
+   * pressed to present or absent wherever the half that strikes is all the
+   * step's, until its strike is made. */
+  gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
 
 /**
@@ -80,19 +120,7 @@ export function featureInput<C, D extends { readonly tileSize: number }>(
   const count = names.length;
   const { across, down } = featureGrid(count);
 
-  /** The sets square `c` can be: its value, or its notes. */
-  const setsOf = (b: FillBoard<C>, c: number): number =>
-    b.values[c] !== 0 ? 1 << b.values[c] : (b.pencil?.[c] ?? 0);
-  /** The features every one of the sets `mask` has, and those one has. */
-  const agreement = (mask: number): { all: number; any: number } => {
-    let all = -1;
-    let any = 0;
-    for (const d of valuesIn(mask)) {
-      all &= of(d);
-      any |= of(d);
-    }
-    return { all: mask === 0 ? 0 : all, any };
-  };
+  const agreement = (mask: number) => featureAgreement(mask, of);
   const holdsAt = (b: FillBoard<C>, t: FeatureSlot): Holds => {
     const { all, any } = agreement(setsOf(b, t.y * b.w + t.x));
     const bit = 1 << t.k;
@@ -238,6 +266,42 @@ export function featureInput<C, D extends { readonly tileSize: number }>(
         return "pass";
       if (isMouseDrag(button)) return sweepTo(verbs, b, ui, ds, p) ?? "pass";
       return interpretTargetVerbs(verbs, b, ui, ds, p, raw) ?? "pass";
+    },
+    gesture(b, ui, ds, move) {
+      if (!("type" in move) || move.type !== "pencilStrike")
+        throw new Error(
+          `play numbers features: no gesture for ${JSON.stringify(move)}`,
+        );
+      const out: PointerAction[] = [];
+      const pencil = Int32Array.from(b.pencil ?? []);
+      const board = { ...b, pencil };
+      for (const c of new Set(move.marks.map((m) => m.y * b.w + m.x))) {
+        const x = c % b.w;
+        const y = Math.floor(c / b.w);
+        let left = 0;
+        for (const m of move.marks) if (m.y * b.w + m.x === c) left |= 1 << m.n;
+        // A press only strikes, and strikes only what the step does: each
+        // such press leaves every other one such, so they are made in any
+        // order, and the strike is made where they reach it.
+        for (let k = 0; k < count && left !== 0; k++)
+          for (const button of ["primary", "secondary"] as const) {
+            const press = verbs[button]?.apply(board, { x, y, k }, ui) ?? null;
+            if (press === null || press === UI_UPDATE) continue;
+            if (!("type" in press) || press.type !== "pencilStrike") continue;
+            let struck = 0;
+            for (const m of press.marks) struck |= 1 << m.n;
+            if ((struck & ~left) !== 0) continue;
+            pencil[c] &= ~struck;
+            left &= ~struck;
+            out.push(...verbGesture(verbs, b, ds, ui, [{ x, y, k }], button));
+            break;
+          }
+        if (left !== 0)
+          throw new Error(
+            `play numbers features: square ${c}'s strike of ${valuesIn(left)} is no letter's half`,
+          );
+      }
+      return out;
     },
   };
 }

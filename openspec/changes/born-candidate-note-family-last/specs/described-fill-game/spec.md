@@ -806,3 +806,38 @@ no keypad, no pencil mode and no preference that acts on typing.
 
 - **WHEN** a `holding` board is in play
 - **THEN** it offers no key to type a set with
+
+### Requirement: Check & Save on a born board of features marks the wrong slots
+
+On a born board whose values are features, Check & Save SHALL draw red
+each slot whose letter or cross the square's value or notes decide against
+the answer, in place of the square's outline, and SHALL outline a square
+whose notes leave its answer out with no slot decided wrongly. Clearing the
+mistakes SHALL give such a square every value its domain has. The compiler
+SHALL refuse more than four features.
+
+#### Scenario: A wrong set's letters
+
+- **WHEN** a `holding` square whose answer is {A} holds {B}, and the player
+  checks
+- **THEN** its B and its cross where A goes are red, and it has no outline
+
+#### Scenario: Notes cleared of a mistake
+
+- **WHEN** a `holding` square whose answer is {A} has notes {} and {B}, and
+  the player clears the mistakes
+- **THEN** its notes are every set
+
+### Requirement: A born hint's strike on a board of features is shown as slot presses
+
+On a born board whose values are features, a hint's strike SHALL be shown
+as presses on the square's undecided slots, each to present or absent,
+each striking only notes the step strikes; and a strike of part of a hint
+step's notes SHALL keep the hint on its step, shrunk to the rest. A strike
+that no such presses make is the band's, which a later requirement adds.
+
+#### Scenario: A strike as two presses
+
+- **WHEN** the hint strikes {}, {B} and {A, B} from a `holding` square
+- **THEN** its gesture presses A to present and B to absent, and the first
+  press keeps the hint on its step

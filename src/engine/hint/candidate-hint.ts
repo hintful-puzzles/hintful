@@ -825,7 +825,7 @@ export function emitObviousCleanStep<M, H>(
 /** Classify a player move against the displayed hint step (the engine's
  * keep-track contract). A `pencilAll` matches a populate step; a real placement
  * matches a `set` step; a pencil toggle that *clears* one of a strike step's
- * marks shrinks it (`onTrack`, mutating the step in place so a later auto-hint
+ * marks, or a strike of some of them, shrinks it (`onTrack`, mutating the step in place so a later auto-hint
  * strikes only the rest) or finishes it (`completed`); anything else drops the
  * plan (`off`). `pencil` is the PRE-move notes.
  *
@@ -858,20 +858,32 @@ export function keepCandidateHintTrack<M, H extends CandidateHighlights>(
       : "off";
   }
   if (sm.type === "pencilStrike" || sm.type === "pencilAdd") {
-    // The whole step at once: the obvious-clean strike is what the mark-all
-    // control's second press makes.
-    if (pm.type === sm.type) return sameMarks(pm.marks, sm.marks) ? "completed" : "off";
-    // The player strikes or writes a candidate with a pencil toggle
-    // (`set { pencil }`), one at a time.
-    if (pm.type !== "set" || !pm.pencil) return "off";
-    const hit = sm.marks.findIndex((k) => k.x === pm.x && k.y === pm.y && k.n === pm.n);
-    if (hit < 0) return "off"; // touched a non-target candidate
-    // A pencil toggle clears the candidate iff it is present now and writes it
-    // iff it is absent, so the toggle follows a strike only on a present
-    // candidate and a note step only on an absent one.
-    const present = (pencil[pm.y * w + pm.x] & bit(pm.n)) !== 0;
-    if (present !== (sm.type === "pencilStrike")) return "off";
-    const remaining = sm.marks.filter((_, j) => j !== hit);
+    const same = (a: Mark, b: Mark) => a.x === b.x && a.y === b.y && a.n === b.n;
+    let remaining: Mark[];
+    if (pm.type === sm.type) {
+      // The whole step at once (the obvious-clean strike is what the mark-all
+      // control's second press makes), or a part of it: a board of features
+      // strikes a letter's half of a square's notes at a press.
+      if (sameMarks(pm.marks, sm.marks)) return "completed";
+      if (
+        pm.marks.length === 0 ||
+        !pm.marks.every((k) => sm.marks.some((s) => same(s, k)))
+      )
+        return "off";
+      remaining = sm.marks.filter((s) => !pm.marks.some((k) => same(s, k)));
+    } else {
+      // The player strikes or writes a candidate with a pencil toggle
+      // (`set { pencil }`), one at a time.
+      if (pm.type !== "set" || !pm.pencil) return "off";
+      const hit = sm.marks.findIndex((k) => same(k, pm));
+      if (hit < 0) return "off"; // touched a non-target candidate
+      // A pencil toggle clears the candidate iff it is present now and writes
+      // it iff it is absent, so the toggle follows a strike only on a present
+      // candidate and a note step only on an absent one.
+      const present = (pencil[pm.y * w + pm.x] & bit(pm.n)) !== 0;
+      if (present !== (sm.type === "pencilStrike")) return "off";
+      remaining = sm.marks.filter((_, j) => j !== hit);
+    }
     if (remaining.length === 0) return "completed";
     step.move =
       sm.type === "pencilStrike"

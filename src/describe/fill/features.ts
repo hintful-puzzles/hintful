@@ -20,8 +20,9 @@ import { parse } from "../expr.ts";
 import { answerEnv } from "./emit.ts";
 
 /** Refuses features a board cannot draw: a square's slots hold its letters
- * alone, so no other drawing of its value goes with them; and an open
- * square's letters are what its notes agree on, so it is never unnoted. */
+ * alone, so no other drawing of its value goes with them; an open square's
+ * letters are what its notes agree on, so it is never unnoted; and no more
+ * than four, upstream Subsets' most. */
 export function checkFeatures(numbers: PlayJson["numbers"], fullNotes: boolean): void {
   if (numbers?.features === undefined) return;
   for (const other of ["raised", "letters", "pictures", "empty"] as const)
@@ -30,6 +31,11 @@ export function checkFeatures(numbers: PlayJson["numbers"], fullNotes: boolean):
   if (!fullNotes)
     throw new CompileError(
       "play numbers features: an open square's letters are its notes', and no notes are kept full",
+    );
+  // A square's tile word has room for four slots' mistakes (`tile-word.ts`).
+  if (numbers.features.names.length > 4)
+    throw new CompileError(
+      `play numbers features: ${numbers.features.names} names more than four features`,
     );
   if (new Set(numbers.features.names).size !== numbers.features.names.length)
     throw new CompileError(

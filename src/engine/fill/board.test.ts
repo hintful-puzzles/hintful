@@ -137,7 +137,7 @@ describe("the fill board", () => {
     const right = answer.indexOf(PIECE);
     const played = applyEdit(linking, board, { set: [wrong, PIECE, right, PIECE] });
     expect(findMistakes(linking, played)).toEqual([{ cell: wrong, kind: "value" }]);
-    const [clear] = clearMistakes(played, findMistakes(linking, played));
+    const [clear] = clearMistakes(linking, played, findMistakes(linking, played));
     const cleared = applyMove(linking, played, clear);
     expect(cleared.values[wrong]).toBe(0);
     expect(findMistakes(linking, cleared)).toEqual([]);

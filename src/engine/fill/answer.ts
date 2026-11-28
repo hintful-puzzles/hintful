@@ -41,6 +41,7 @@ import {
 import { cornerClueAt, signedText } from "./corners.ts";
 import type { CountRecord } from "./counts.ts";
 import type { Edit } from "./edit.ts";
+import { wrongFeatures } from "./features.ts";
 import { BALL_GLYPH } from "./glyphs.ts";
 import type { FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
@@ -53,6 +54,9 @@ import { type MarginSides, marginClueAt } from "./value-margin.ts";
 export interface FillMistake {
   readonly cell: number;
   readonly kind: "value" | "mark" | "note";
+  /** On a board of features, the slots of the cell its value or notes decide
+   * against the answer, a bit a feature; absent where none does. */
+  readonly slots?: number;
 }
 
 /** What the answer is judged with that the compiled module does not say. */
@@ -257,8 +261,12 @@ export function findMistakes<C>(
   for (let c = 0; c < answer.length; c++)
     if (board.values[c] !== 0 && board.values[c] !== answer[c])
       out.push({ cell: c, kind: "value" });
+  const cells = (): FillMistake[] =>
+    [...out, ...noteMistakes(board, answer)].map((m) =>
+      slotted(module, board, answer, m),
+    );
   const { marksHold } = module;
-  if (marksHold === undefined) return [...out, ...noteMistakes(board, answer)];
+  if (marksHold === undefined) return cells();
   const sp = spaceOf(module, board);
   const kept = new Int32Array(board.mark.length).fill(-1);
   for (let c = 0; c < kept.length; c++) {
@@ -269,7 +277,22 @@ export function findMistakes<C>(
       out.push({ cell: c, kind: "mark" });
     }
   }
-  return [...out, ...noteMistakes(board, answer)];
+  return cells();
+}
+
+/** Mistake `m` with, on a board of features, the cell's slots it decides
+ * wrong. */
+function slotted<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+  answer: Uint8Array,
+  m: FillMistake,
+): FillMistake {
+  const names = module.play?.numbers?.features?.names;
+  const of = module.featuresOf;
+  if (m.kind === "mark" || names === undefined || of === undefined) return m;
+  const slots = wrongFeatures(board, m.cell, answer[m.cell], of, names.length);
+  return slots === 0 ? m : { ...m, slots };
 }
 
 /** Each open cell whose notes leave out its answer: a note set the hint would
@@ -286,17 +309,23 @@ function noteMistakes<C>(board: FillBoard<C>, answer: Uint8Array): FillMistake[]
 }
 
 /** One edit, each mistaken mark cleared and each mistaken cell emptied, then
- * each cell whose notes leave out its answer cleared of them. */
+ * each cell whose notes leave out its answer cleared of them; or, where the
+ * notes are kept full, given every value its domain has, in the same edit. */
 export function clearMistakes<C>(
+  module: FillModule<C>,
   board: FillBoard<C>,
   mistakes: readonly FillMistake[],
 ): readonly FillMove[] {
   const set: number[] = [];
   const mark: number[] = [];
+  const whole: number[] = [];
   const notes: FillMove[] = [];
+  const full = module.play?.fullNotes === true;
   for (const m of mistakes)
     if (m.kind === "value") set.push(m.cell, 0);
     else if (m.kind === "mark") mark.push(m.cell, -1);
+    else if (full)
+      whole.push(m.cell, module.domainOf(spaceOf(module, board), board.dealt, m.cell));
     else
       notes.push({
         type: "set",
@@ -305,7 +334,12 @@ export function clearMistakes<C>(
         n: 0,
         pencil: true,
       });
-  return [...(set.length + mark.length > 0 ? [{ set, mark }] : []), ...notes];
+  return [
+    ...(set.length + mark.length + whole.length > 0
+      ? [{ set, mark, ...(whole.length > 0 ? { notes: whole } : {}) }]
+      : []),
+    ...notes,
+  ];
 }
 
 /** The first cell in reading order whose value is not the solved board's,

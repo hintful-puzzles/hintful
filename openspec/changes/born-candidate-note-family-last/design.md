@@ -443,6 +443,30 @@ from its peers and would strike nothing here. The value a square settles to
 is placed by `settleFullNotes`, which no preference reaches; 2.5e weighs
 whether a set settled should strike itself from the other squares.
 
+### 20. A mistake is shown on its slot, and a hint's strike is pressed on slots (2.5b4)
+
+Check & Save on a board of features names the slots a square's value or
+notes decide against the answer (`FillMistake.slots`) and draws them red,
+as the hand-written game draws a wrong letter, with no outline; a square
+whose notes leave its answer out with every slot undecided (a set struck
+alone, which the band will do) has no slot to show it on and keeps the
+outline. Clearing gives such a square its whole domain back (an edit's
+`notes`), since a square's notes cleared to none would settle back to what
+they were (Decision 17). Four features at most: the edge word's four
+spare bits hold a square's wrong slots, upstream's four letters fill them,
+and the compiler refuses a fifth rather than the tile growing a word.
+
+A hint's strike is pressed on slots: each undecided slot pressed to present
+or absent where the half it strikes is all the step's, which reaches the
+strike exactly when it is a union of letter halves. Order does not matter:
+a press strikes only what the step does, so a half that holds a set the
+step keeps holds it to the end. The candidate track gains a strike of part
+of a step's notes as a shrink of the step (it was off): a game's own track
+sees each press as such a strike, and the mark-all control's clean, which
+strikes a part of a step that strikes more, now keeps the hint on it too.
+A strike that is no union, the walk's {A, B} struck alone, throws until
+2.5c's band strikes one set from a square.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

@@ -632,6 +632,7 @@ export function numberInput<
       return [...keys, clearKey];
     },
     gesture(b, fillUi, ds, move) {
+      if (features !== null) return features.gesture(b, fillUi, ds, move);
       const pointAt = (x: number, y: number) =>
         geometry.pointAt(b, ds, { x, y }, fillUi);
       const { keyCode } = boardGlyphs(module, spaceOf(module, b), b.dealt);

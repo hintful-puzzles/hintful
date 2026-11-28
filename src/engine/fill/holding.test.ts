@@ -422,3 +422,128 @@ describe("a slot press", () => {
     );
   });
 });
+
+describe("Check & Save on a board of letters", () => {
+  // Every set, bits 1 to 4.
+  const EVERY = 0b11110;
+  const strike = (c: number, ...sets: number[]): FillMove => ({
+    type: "pencilStrike",
+    marks: sets.map((n) => ({ x: c % 2, y: c >> 1, n })),
+  });
+  const played = (...moves: FillMove[]) =>
+    moves.reduce(
+      (b, m) => game.executeMove(b, m),
+      game.newState(PARAMS, descOf(ANSWER, [0])),
+    );
+  /** The red letters and crosses drawn, and whether any outline is. */
+  const reds = (...moves: FillMove[]) => {
+    const ops = renderScenario({
+      game,
+      id: idOf(ANSWER, [0]),
+      moves,
+      showMistakes: true,
+    }).recording.ops;
+    return {
+      letters: ops.flatMap((o) =>
+        o.op === "text" && o.color === COL_ERROR ? [o.text] : [],
+      ),
+      crosses: ops.filter(
+        (o) => o.op === "line" && o.color === COL_ERROR && o.y1 < o.y2 && o.x1 < o.x2,
+      ).length,
+      outlined: ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
+    };
+  };
+
+  it("draws a wrong set's letters red where they differ, and no outline", () => {
+    // Square 0's set is {A}: {B} has B and lacks A.
+    const b = played({ set: [0, 3] });
+    expect(game.findMistakes?.(b)).toEqual([{ cell: 0, kind: "value", slots: 0b11 }]);
+    expect(reds({ set: [0, 3] })).toEqual({
+      letters: ["B"],
+      crosses: 1,
+      outlined: false,
+    });
+  });
+
+  it("draws red a letter the notes decide wrongly, and outlines a square they leave wrong with none decided", () => {
+    // {} and {B} left: A decided absent, which {A} has.
+    const decided = strike(0, 2, 4);
+    expect(game.findMistakes?.(played(decided))).toEqual([
+      { cell: 0, kind: "note", slots: 0b01 },
+    ]);
+    expect(reds(decided)).toEqual({ letters: [], crosses: 1, outlined: false });
+    // {A} alone struck: no letter is decided, so the square is outlined.
+    expect(game.findMistakes?.(played(strike(0, 2)))).toEqual([
+      { cell: 0, kind: "note" },
+    ]);
+    expect(reds(strike(0, 2))).toEqual({ letters: [], crosses: 0, outlined: true });
+  });
+
+  it("clears a square's wrong notes by giving every set back", () => {
+    const b = played(strike(0, 2, 4));
+    const cleared = (
+      game.clearMistakes?.(b, game.findMistakes?.(b) ?? []) ?? []
+    ).reduce((at, m) => game.executeMove(at, m), b);
+    expect(cleared.pencil?.[0]).toBe(EVERY);
+    expect(game.findMistakes?.(cleared)).toEqual([]);
+  });
+});
+
+describe("a hint's gesture on a board of letters", () => {
+  type Board = ReturnType<typeof game.newState>;
+  const { gesture, keepTrack } = game.hint;
+  if (gesture === undefined) throw new Error("holding: no hint gesture");
+  /** The first step on the board `hidden` leaves open, its gesture, and
+   * each press of it judged by the hint's track as the midend judges it. */
+  const followed = (answer: readonly number[], hidden: readonly number[]) => {
+    const b = game.newState(PARAMS, descOf(answer, hidden));
+    const plan = game.hint.plan(b);
+    if (!plan.ok) throw new Error(`no plan: ${JSON.stringify(plan)}`);
+    const step = { ...plan.steps[0], move: structuredClone(plan.steps[0].move) };
+    const ui = game.newUi(b);
+    const ds = game.newDrawState(b, game.preferredTileSize);
+    const actions = gesture(b, ui, ds, step.move, step);
+    let at: Board = b;
+    const verdicts: string[] = [];
+    for (const a of actions) {
+      if (a.kind !== "click") throw new Error(`a ${a.kind}, not a press`);
+      const [down, up] =
+        a.button === "primary"
+          ? [LEFT_BUTTON, LEFT_RELEASE]
+          : [RIGHT_BUTTON, RIGHT_RELEASE];
+      const move = game.interpretMove(at, ui, ds, a.at, down);
+      game.interpretMove(at, ui, ds, a.at, up);
+      if (move === null || move === UI_UPDATE) throw new Error("a press made nothing");
+      verdicts.push(keepTrack(move, step, at));
+      at = game.executeMove(at, move);
+    }
+    return { actions, verdicts, before: b, after: at, struck: plan.steps[0].move };
+  };
+
+  it("strikes a square's sets as the letters whose halves they are, one press each", () => {
+    // Square 0 is {A}: {}, {B} and {A, B} struck, A's lacking half by A
+    // present and B's holding half by B absent.
+    const { actions, verdicts, after } = followed(ANSWER, [0]);
+    expect(actions.map((a) => (a.kind === "click" ? a.button : a.kind))).toEqual([
+      "primary",
+      "secondary",
+    ]);
+    expect(verdicts).toEqual(["onTrack", "completed"]);
+    expect(after.values[0]).toBe(2);
+  });
+
+  it("presses each square the strike reaches, and leaves the struck notes as the step does", () => {
+    // Squares 0 and 3, {A} and {A, B}: {} and {B} struck from both, A present.
+    const { actions, verdicts, before, after, struck } = followed(ANSWER, [0, 3]);
+    expect(actions).toHaveLength(2);
+    expect(verdicts).toEqual(["onTrack", "completed"]);
+    const stepped = game.executeMove(before, struck);
+    expect(Array.from(after.pencil ?? [])).toEqual(Array.from(stepped.pencil ?? []));
+  });
+
+  it("refuses a strike that is no union of letter halves", () => {
+    // Every square open but square 3: {A, B} struck alone from squares
+    // 0 to 2, which no letter's half is.
+    expect(() => followed(ANSWER, [0, 1, 2])).toThrow(/no letter's half/);
+  });
+});

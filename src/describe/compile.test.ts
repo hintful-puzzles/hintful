@@ -1063,13 +1063,13 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/hintNotes: the notes are full/);
   });
 
-  it("refuses features over notes not kept full, or drawn another way too", () => {
+  it("refuses features over notes not kept full, drawn another way too, or past four", () => {
     const source = "src/engine/testing/fixtures/holding/holding.description.yaml";
     const holding = sources.get(source);
     if (holding === undefined || !isFormal(holding)) throw new Error("no holding");
     type Json = {
       marks: Record<string, { full?: true }>;
-      play: { numbers: { letters?: true; features: { of: string } } };
+      play: { numbers: { letters?: true; features: { of: string; names: string } } };
     };
     const compileHolding = (over: (j: Json) => void) => {
       const j = structuredClone(holding) as unknown as Json;
@@ -1100,6 +1100,11 @@ describe("what the fill board reads of a description", () => {
         j.play.numbers.features.of = "d";
       }),
     ).toThrow(/features of: not a set of numbers/);
+    expect(() =>
+      compileHolding((j) => {
+        j.play.numbers.features.names = "ABCDE";
+      }),
+    ).toThrow(/features: ABCDE names more than four features/);
   });
 
   it("refuses {tally}, which only the library's fish is given, in a game's own wording", () => {

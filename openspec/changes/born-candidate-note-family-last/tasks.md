@@ -3,10 +3,9 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a to 2.5b3 are in, 2.5b4 is next (design.md §
-"Decisions" 16, 17 and 19; a slot's strike and give-back are the note
-moves the hint tracks, and the gesture presses `features.ts`' verbs, as
-`subsets/index.ts`'s `hintGesture` does). For 2.2f: the
+on meanwhile: 2.5a to 2.5b4 are in, 2.5c is next (design.md §
+"Decisions" 16 and 20; the band is a site beneath the board, as Crossing's
+list is, `render/sites/record-list.ts`). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -123,12 +122,15 @@ order.
     - [x] 2.5b3 A slot press and the keyboard over slots (`features.ts`,
           design.md § "Decisions" 19). In the app at 2.5e: the cursor's
           corners, and a press near a slot's edge.
-    - [ ] 2.5b4 The mistake check's slot, and the hint's gesture.
+    - [x] 2.5b4 The mistake check's slot, and the hint's gesture (design.md
+          § "Decisions" 20). In the app at 2.5e: the red slots.
   - [ ] 2.5c The band of every value: struck where placed, a spotlight, a
         strike from the cell in focus (its badge, hand-written
         `subsets/index.ts`'s `iconHit`), and the keyboard into it, down
         from the board's bottom row of slots (`features.ts`' `moveCursor`
-        stops there now).
+        stops there now). The hint's gesture then strikes by the band what
+        no letters' halves make (`features.ts`' `gesture` throws there now,
+        `holding.test.ts`' "refuses a strike that is no union").
   - [ ] 2.5d Every value once (the sample), and upstream's ID.
   - [ ] 2.5e The flip. Weigh: whether a set a square settles to should
         strike itself from the other squares, which the hand-written game

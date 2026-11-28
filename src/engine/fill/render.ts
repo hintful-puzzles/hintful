@@ -275,9 +275,9 @@ export function fillRender<C extends Clues<C>>(
     const viewed = lines === null ? live : viewedErrors(state.w, lines, live);
     const { word, lineWord, edgeErrors, ...errors } = errorWords(cx, state, viewed);
     const breaches = breachesOf(viewed.labels, cx.glyphOf(state));
-    if (!cx.onEdges) addMistakes(word, mistakes ?? []);
     addLinks(cx, word, shown, mistakes ?? []);
     const edgeWord = edgeWordsOf(cx, shown, edgeErrors, mistakes ?? []);
+    if (!cx.onEdges) addMistakes(word, edgeWord, mistakes ?? []);
     const hint = hintPass(cx, lay, ds, frame, shown);
 
     const tiles = tileWordsOf(cx, lay, ds, frame, shown, {

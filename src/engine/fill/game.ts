@@ -660,7 +660,7 @@ export function fillGame<C extends Clues<C> & object>(
             solveBoard(module, newState(p, desc), cap).verdict,
         },
     findMistakes: (b) => findMistakes(module, b),
-    clearMistakes,
+    clearMistakes: (b, mistakes) => clearMistakes(module, b, mistakes),
     revealOne,
     textFormat: (b) => textFormat(reading, b),
     ...(prefs.length === 0 ? {} : { prefs }),

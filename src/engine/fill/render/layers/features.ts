@@ -7,29 +7,14 @@
  * still hold, and decide a slot where they all agree.
  */
 
-import { COL_CURSOR } from "../../../color/roles.ts";
+import { COL_CURSOR, COL_ERROR } from "../../../color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../../render/draw.ts";
 import { drawRuledOutCross } from "../../../render/piece.ts";
+import { featureAgreement } from "../../features.ts";
 import { COL_GRID, COL_INK } from "../palette.ts";
-import { FEATURE_CURSOR_SHIFT } from "../tile-word.ts";
+import { FEATURE_CURSOR_SHIFT, FEATURE_WRONG_SHIFT, NOTES_MODE } from "../tile-word.ts";
 import type { TileFrame } from "./layer.ts";
-import { notesIn } from "./notes.ts";
 import { numeralInk } from "./numerals.ts";
-
-/** The features every one of `values` has, and those one has, each a mask
- * by `of`. */
-function featureAgreement(
-  values: readonly number[],
-  of: (d: number) => number,
-): { readonly all: number; readonly any: number } {
-  let all = -1;
-  let any = 0;
-  for (const v of values) {
-    all &= of(v);
-    any |= of(v);
-  }
-  return { all: values.length === 0 ? 0 : all, any };
-}
 
 export function paintFeatures(
   features: { readonly names: string; readonly of: (d: number) => number },
@@ -37,7 +22,12 @@ export function paintFeatures(
   { dr, ts, at, word, noteWord, edgeWord, part, lay }: TileFrame,
 ): void {
   const v = word & 0xff;
-  const { all, any } = featureAgreement(v !== 0 ? [v] : notesIn(noteWord), features.of);
+  const { all, any } = featureAgreement(
+    v !== 0 ? 1 << v : noteWord & ~NOTES_MODE,
+    features.of,
+  );
+  // Check & Save's slots decided against the answer, drawn red.
+  const wrong = (edgeWord >> FEATURE_WRONG_SHIFT) & 0xf;
   const ink = v !== 0 ? numeralInk(word, COL_ENTRY) : COL_ENTRY;
   const slots = lay.featureSlots(ts, at, part?.walls ?? null, features.names.length);
   const font = glyphFont(Math.floor((slots[0].w * 3) / 4));
@@ -54,10 +44,11 @@ export function paintFeatures(
       dr.drawText(
         { x: box.x + box.w / 2, y: box.y + box.h / 2 },
         font,
-        ink,
+        wrong & bit ? COL_ERROR : ink,
         features.names[k],
       );
-    else if (!(any & bit)) drawRuledOutCross(dr, box, COL_INK);
+    else if (!(any & bit))
+      drawRuledOutCross(dr, box, wrong & bit ? COL_ERROR : COL_INK);
     // The cursor, as upstream subsets.c's: corners round its slot's middle.
     if (((edgeWord >> FEATURE_CURSOR_SHIFT) & 0xf) === k + 1)
       drawRectCorners(

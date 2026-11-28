@@ -418,7 +418,7 @@ describe("keepCandidateHintTrack", () => {
     ).toBe("completed");
   });
 
-  it("completes a strike step made whole, as the mark-all control makes it", () => {
+  it("completes a strike step made whole, as the mark-all control makes it, and shrinks it by a part", () => {
     const marks = [
       { x: 0, y: 0, n: 1 },
       { x: 1, y: 0, n: 2 },
@@ -432,10 +432,22 @@ describe("keepCandidateHintTrack", () => {
         2,
       ),
     ).toBe("completed");
-    // A whole strike that names other notes is a different move.
+    // A strike of part of the step's notes (a letter's half on a board of
+    // features) shrinks it to the rest.
+    const part = step({ type: "pencilStrike", marks: [...marks] });
     expect(
       keepCandidateHintTrack(
         { type: "pencilStrike", marks: [marks[0]] },
+        part,
+        pencil,
+        2,
+      ),
+    ).toBe("onTrack");
+    expect(part.move).toEqual({ type: "pencilStrike", marks: [marks[1]] });
+    // A strike that names another note is a different move.
+    expect(
+      keepCandidateHintTrack(
+        { type: "pencilStrike", marks: [marks[0], { x: 1, y: 1, n: 3 }] },
         step({ type: "pencilStrike", marks: [...marks] }),
         pencil,
         2,

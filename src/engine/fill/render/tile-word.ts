@@ -120,6 +120,10 @@ export const CORNER_CURSOR_SHIFT = 20;
 /** On a board of features, one more than the slot the cursor rests on, 0
  * where it is on none of the tile's (`features.ts`). */
 export const FEATURE_CURSOR_SHIFT = 24;
+/** On a board of features, the slots Check & Save found decided against the
+ * answer, a bit a slot: four, which is why such a board has at most four
+ * features (`checkFeatures`). */
+export const FEATURE_WRONG_SHIFT = 28;
 
 /** A cell's walls and fill, its inset partition's walls (`-1` where the
  * board has none) and the diagonals through it: what a board never

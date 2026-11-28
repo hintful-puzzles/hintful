@@ -909,7 +909,14 @@ right button or Space the other way, by striking or giving back the half
 of the notes that lack or hold the feature; the arrows walk the slots of
 every square as one grid. Nothing is typed, so the board has no keypad, no
 pencil mode and no note preferences, and a slot's move that both strikes
-and gives back writes the square's notes whole (an edit's `notes`).
+and gives back writes the square's notes whole (an edit's `notes`). Check &
+Save draws red the slots a square decides against the answer (a mistake's
+`slots`), outlining it only where none is, and Clear gives a wrong square
+its whole domain back. A hint's strike is shown as slot presses, each a
+half of the notes the step strikes, which the candidate track takes as a
+part of its step; a strike no letters' halves make throws, so a game
+needs a way to strike one set (the band of every value) before it ships.
+At most four features: the tile's edge word holds four slots' mistakes.
 
 A board whose every piece the player places points (`glyphs.ts`'s
 `waysOf`) is played by each piece's way, as upstream Rome is, with nothing
