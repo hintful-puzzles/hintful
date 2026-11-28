@@ -328,7 +328,13 @@ so a range of commits would count theirs.
 | Solo | 3,780 | +1,310 | 609 | 515 |
 | ABCD | 2,334 | +716 | 272 | 206 |
 | Salad | 3,545 | +1,009 | 284 | 241 |
-| So far | 9,659 | +3,035 | 1,165 | 962 |
+| Group | 2,516 | +1,095 | 451 | 350 |
+| All four | 12,175 | +4,130 | 1,616 | 1,312 |
+
+Group's engine net is +1,654 for its capabilities less the 559 lines of
+the Latin solver's driver and the row/column preset it was the last caller
+of; its description holds the 76 groups' generators (`groupdata.ts`, 279
+lines, was among the removed).
 
 3.2 lines go for each one the engine gains, past the bar of two.
 
@@ -352,9 +358,12 @@ boards a menu board of at most 100 squares; baseline / working tree):
 | Solo | 53.84 / 42.48 G, −21.1% | 53.26 / 205.15 G, +285% | 5498 / 5064 |
 | ABCD | 7.72 / 8.95 G, +15.9% | 3.23 / 6.78 G, +110% | 2392 / 2392 |
 | Salad | 9.36 / 11.82 G, +26.3% | 16.61 / 31.08 G, +87.1% | 4080 / 4591 |
+| Group | 2.93 / 9.62 G, +228.5% | 29.29 / 9.04 G, −69.1% | 933 / 924 |
 
 Each spread is under 1%. Both trees leave the same boards unsolved by the
-hint (Solo 8, ABCD 16).
+hint (Solo 8, ABCD 16, Group 4, each an 8x8 Unreasonable left to a search).
+Group's row was taken 2026-11-28 against the same baseline, at
+`191ab6a07`.
 
 The deals in ms (`--quick --times 12`: each menu board twelve seeds, each
 seed's least of three runs, bundled; baseline / working median):
@@ -380,6 +389,10 @@ seed's least of three runs, bundled; baseline / working median):
   game's was.
 - **ABCD and Salad stay under it**: ABCD's largest median 17 ms (6x8 Hard),
   Salad's 159 on 5n4Bdx, which the baseline passed at 128.
+- **Group passes the bar on one menu board** where the baseline did not:
+  8x8 Tricky 74 / 127 (slowest 581 / 492, 5 / 8 of 12 seeds over 100).
+  Every other menu board is at most 11 ms in both trees. To be fixed in
+  the engine (3.1c), as Solo's was.
 
 No walk comes near 100 ms on a menu board.
 

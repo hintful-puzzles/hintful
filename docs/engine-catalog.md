@@ -1170,7 +1170,12 @@ the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
 `play.ts` is the input the description's `play:` declares, and the engine's
 `FillUi`; on a board of numbers, `glyphs.ts` is how a board's values are
-drawn, typed, said and written in its ID, by its ruleset. `render.ts` draws the board from the painters `play:` names: a
+drawn, typed, said and written in its ID, by its ruleset. A control
+`play:` turns on beside the one cell's entry is a module of its own:
+`select.ts` a selection a drag makes in a shape (`play.select`),
+`dividers.ts` a player's divider between two lines (`play.dividers`) and
+`order.ts` a square board's lines in the order the player gives them
+(`play.order`), which the board is drawn and played in. `render.ts` draws the board from the painters `play:` names: a
 cell layer is a module of `render/layers/`, which `render/tile.ts`'s
 `drawTile` calls in its paint order, and what is drawn after the tiles is a
 site, a module of `render/sites/` and a line of `render.ts`'s `SITES`.

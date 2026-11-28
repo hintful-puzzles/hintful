@@ -1594,11 +1594,14 @@ for a repeated symbol.
   [`latin.description.yaml`](../src/engine/solve/latin.description.yaml) say how
   the library's techniques then read its multiplicity. A game with exactly
   one such symbol per line needs no declaration.
-- **Two deal shapes.** Derive every clue from the full square, then hide
+- **Three deal shapes.** Derive every clue from the full square, then hide
   each while the board still finishes (Towers, Unequal: `deal.hide`).
   Partition structurally over a generated square, then gate on exactly the
   target tier (Keen's `deal.divide`,
-  [`engine/fill/divide.ts`](../src/engine/fill/divide.ts)).
+  [`engine/fill/divide.ts`](../src/engine/fill/divide.ts)). Or draw the
+  square from data the description ships, where no random Latin square is
+  an answer, and hide from it (Group's tables, `sample.group`,
+  [`engine/fill/group-table.ts`](../src/engine/fill/group-table.ts)).
 - **A cage or region game takes its minimal elements from the shared
   `Dsf`, and grows no min-tracking dsf of its own**: a map precomputed once
   after all merges, in a single ascending pass, which is exact whichever

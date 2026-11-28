@@ -1,10 +1,11 @@
 ## Next
 
-3.1, the family's figures with Group's row: `compare-cost --base` the gap
-list's baseline (design.md § "The figures (3.1)", its `--baseline`
-worktree), and Group's deal timed bundled on its menu boards against the
-100 ms bar (the quick run had it 2.6 times the hand-written game's
-instructions). Then 3.2 and 3.3.
+3.1c, Group's 8x8 Tricky deal past the bar: profile the bundled deal
+(`compare-cost --baseline <a worktree of 0b0727c9d carrying this tree's
+lockfile> --quick --times 12 group`) and find where it goes, as 3.1a did
+for Solo; a rare tier's deal retries whole boards, so look first at what
+each draw repeats. Then tick 3.1 (Group's row is in), finish 3.2 (the
+`fill/` controls and the third deal shape are in), and 3.3.
 
 ## 1. Design
 
@@ -87,6 +88,9 @@ changed for a player" gets its line. In the order task 1.1 set.
 - [x] 3.1b Solo's 434 fewer steps and Salad's 511 more explained, and
       Salad's fixed if each hint does less (design.md § "The figures
       (3.1)", "The steps by rung"): the commit that ticks 3.1b.
+- [ ] 3.1c Group's 8x8 Tricky deal back under 100 ms (median 127 against
+      the hand-written 74; design.md § "The figures (3.1)"), in the
+      engine: the commit that ticks 3.1c.
 - [ ] 3.1 The figures of `docs/descriptions.md` § "Judging a family moved
       onto its description", per game, with `npm run compare-cost --
       --base <this change's baseline>`, recorded in design.md; each deal
