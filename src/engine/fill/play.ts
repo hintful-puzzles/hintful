@@ -255,6 +255,9 @@ export interface FillUi {
   /** On a board whose values are features (`numbers.features`), the slot of
    * the cursor's square the cursor is on (`features.ts`). */
   slot?: number;
+  /** On a board with a band of every value (`band.ts`), the value whose
+   * squares are spotlit, 0 where none is. */
+  spotlit?: number;
   /** On a board whose pieces all point (`glyphs.ts`'s `waysOf`), what Enter
    * or Space armed the selection to take from the next arrow key: a value,
    * or a note; `null` where nothing is armed. */

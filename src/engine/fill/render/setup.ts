@@ -7,6 +7,7 @@
 import type { Painter } from "../../render/pieces/index.ts";
 import type { Partition } from "../../solve/describe-runtime.ts";
 import { rulesOf } from "../answer.ts";
+import { bandText, bandValues } from "../band.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
 import { countedOf } from "../counts.ts";
@@ -15,7 +16,7 @@ import { gapKindsOf } from "../gaps.ts";
 import { boardGlyphs } from "../glyphs.ts";
 import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
-import { listedOf } from "../record-list.ts";
+import { LIST_HEIGHT, listedOf, listPixels } from "../record-list.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
 import { type MarginSides, marginSidesOf } from "../value-margin.ts";
@@ -199,6 +200,30 @@ export function fillSetup<C extends Clues<C>>(
     throw new Error(
       "play: a band and a list, a tally or a row of counts beneath the board",
     );
+  /** Board `b`'s band at tile size `ts`, its margins `depth` deep: its
+   * values, each one's text, and where each lies, which the site draws and
+   * a press reads. */
+  const bandOf = (b: FillBoard<C>, ts: number, depth: number) => {
+    const values = bandValues(module, b);
+    const glyph = glyphOf(b);
+    const texts = values.map((v) => bandText(v, glyph, features));
+    const across = metrics.spanTiles(b.w);
+    const at = metrics.beneathAt(ts, depth, b.h);
+    // A frame reaches past a value's text, the first column's into the
+    // board's left margin, so the area cleared does too.
+    const reach = Math.floor(ts / 4);
+    return {
+      values,
+      texts,
+      area: {
+        x: at.x - reach,
+        y: at.y,
+        w: Math.ceil(across * ts) + 2 * reach,
+        h: Math.ceil(LIST_HEIGHT * ts),
+      },
+      pixels: listPixels(texts, across, ts, at.x, at.y),
+    };
+  };
   /** What a board `w` wide draws beneath it but its tally: its row of counts,
    * its list, or its band, as wide as the board. */
   const untalliedBeneath = (w: number): Beneath | null =>
@@ -288,6 +313,7 @@ export function fillSetup<C extends Clues<C>>(
     counted,
     listed,
     banded,
+    bandOf,
     untalliedBeneath,
     beneathOf,
     numberAt,

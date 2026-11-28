@@ -8,6 +8,7 @@ import {
   BLACK,
   BLUE_BOLD,
   GRAY_WASH,
+  GREEN_WASH,
   ORANGE_BOLD,
   REGION_FILLS,
   WHITE,
@@ -283,6 +284,10 @@ export function fillPalette(
     (play.highlights ?? []).forEach(({ paint }, k) => {
       out[COL_HIGHLIGHT_PAINT + k] = paint === "goal" ? GOAL_WASH : ERROR_WASH;
     });
+    // The band's spotlight, one past the highlights, in a hue none of them
+    // or the selection's wash takes.
+    if (play.band === true)
+      out[COL_HIGHLIGHT_PAINT + (play.highlights?.length ?? 0)] = GREEN_WASH;
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;

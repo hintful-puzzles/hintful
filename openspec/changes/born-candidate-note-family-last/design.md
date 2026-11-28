@@ -480,6 +480,17 @@ is, because a line through `__` reads as `=`, and the band's strike is
 list or a row of counts, which are drawn where it is, and on a board not of
 numbers, whose values have no glyph.
 
+### 22. A spotlight is a highlight the band switches (2.5c2)
+
+A press on a value of the band spotlights the squares that can still hold
+it, its own square among them, and frames the value; a second press puts
+it out, a press on another moves it. The spotlight is the last of the
+board's highlights (`play.highlights`' lane and surface, one slot past
+them, `GREEN_WASH` as the hand-written spotlight's green), so it needs no
+layer of its own, and it covers a highlight beneath it, being what the
+player asked to see last. A slot press keeps it, as the hand-written game
+kept its spotlight: the player works the squares it shows.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

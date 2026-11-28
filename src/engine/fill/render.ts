@@ -188,6 +188,9 @@ export interface FillRender<C> {
   recordPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
   /** The middle of record `k` of the list, where a press on it lands. */
   recordPoint(board: FillBoard<C>, ds: FillDrawState, k: number): Point;
+  /** The value of the band beneath the board a press at `p` lands on, `null`
+   * where it lands on none or the board has no band. */
+  bandPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
   /** Where cell `c`'s feature slots are drawn, where the values are features
    * (`play.numbers.features`), a slot a feature. */
   featureSlots(board: FillBoard<C>, ds: FillDrawState, c: number): readonly Rect[];
@@ -384,6 +387,13 @@ export function fillRender<C extends Clues<C>>(
       const at = listPixelsOf(b, ds);
       if (at === null) throw new Error("play list: the board has no list");
       return recordMiddle(at, k);
+    },
+    bandPressed: (b, ds, p) => {
+      if (!cx.banded) return null;
+      const depth = metrics.depthOf(b, cx.marginValues(b));
+      const { values, pixels } = cx.bandOf(b, ds.tileSize, depth);
+      const k = recordAtPixel(pixels, p);
+      return k < 0 ? null : values[k];
     },
     featureSlots: (b, ds, c) => {
       if (cx.features === null) throw new Error("play numbers: no features");

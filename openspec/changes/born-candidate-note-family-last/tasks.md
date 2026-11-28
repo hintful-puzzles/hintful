@@ -3,9 +3,9 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), so 2.5 Subsets goes
-on meanwhile: 2.5a to 2.5c1 are in, 2.5c2 is next (design.md §
-"Decisions" 16, 20 and 21; the band's press is a site's, as Crossing's
-list's is, `render.ts`'s `recordPressed`). For 2.2f: the
+on meanwhile: 2.5a to 2.5c2 are in, 2.5c3 is next (design.md §
+"Decisions" 16, 20 to 22; the badge is the hand-written
+`subsets/index.ts`'s `iconHit`, above a square's top left). For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -135,8 +135,8 @@ order.
     - [x] 2.5c1 The band drawn (`play.band`, `band.ts`), laid as a list:
           a set as its letters, `_` for each it lacks, gray where placed
           and red twice (design.md § "Decisions" 21).
-    - [ ] 2.5c2 A press on a value spotlights the squares it can still go
-          in; again, or a press on the board, clears it.
+    - [x] 2.5c2 A press on a value spotlights the squares it can still go
+          in, again puts it out (design.md § "Decisions" 22).
     - [ ] 2.5c3 A square in focus by its badge: the band strikes in the
           player's ink what its notes rule out, and a press strikes a value
           from it or gives it back.

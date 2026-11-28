@@ -6,7 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 import * as holding from "../../generated/engine/testing/fixtures/holding/holding.compiled.ts";
-import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
+import { GREEN_WASH } from "../color/colors.ts";
+import { COL_CURSOR, COL_ERROR, COL_HINT_OUTLINE } from "../color/roles.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
   BACKSPACE,
@@ -22,7 +23,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
-import type { DrawOp } from "../testing/recording-drawing.ts";
+import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { renderScenario } from "../testing/render-scenario.ts";
 import { paramSpaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
@@ -249,6 +250,63 @@ describe("the band of every set", () => {
       "_B done",
       "AB red",
     ]);
+  });
+});
+
+describe("a press on the band", () => {
+  const id = idOf(ANSWER, [0]);
+  /** Where set `text` is written in the band: a point on its text. */
+  const pointOf = (text: string): { x: number; y: number } => {
+    const o = drawn(id).find(
+      (o): o is Extract<DrawOp, { op: "text" }> => o.op === "text" && o.text === text,
+    );
+    if (o === undefined) throw new Error(`no ${text} in the band`);
+    return { x: o.x + 2, y: o.y - 2 };
+  };
+  /** The squares washed green after pressing `presses` sets of the band,
+   * each by the top left of its largest wash, and whether a set is framed. */
+  const spotlit = (...presses: string[]) => {
+    const { midend, palette } = renderScenario({ game, id });
+    for (const text of presses) {
+      const at = pointOf(text);
+      midend.processInput(at.x, at.y, LEFT_BUTTON);
+      midend.processInput(at.x, at.y, LEFT_RELEASE);
+    }
+    const recording = new RecordingDrawing(palette);
+    midend.forceRedraw(recording);
+    const green = (c: number) => palette[c].every((x, i) => x === GREEN_WASH[i]);
+    const squares = new Set(
+      recording.ops.flatMap((o) =>
+        o.op === "rect" && green(o.color) && o.w > 8 ? [`${o.x},${o.y}`] : [],
+      ),
+    );
+    return {
+      squares: squares.size,
+      framed: recording.ops.some(
+        (o) => o.op === "rect" && o.color === COL_HINT_OUTLINE,
+      ),
+    };
+  };
+
+  it("spotlights the squares a set can still go in, the one holding it among them", () => {
+    // {A, B}: given in square 3, and among square 0's notes.
+    expect(spotlit("AB")).toEqual({ squares: 2, framed: true });
+    // {A}: square 0's notes alone.
+    expect(spotlit("A_")).toEqual({ squares: 1, framed: true });
+  });
+
+  it("is put out by a second press on the set, and moved by a press on another", () => {
+    expect(spotlit("AB", "AB")).toEqual({ squares: 0, framed: false });
+    expect(spotlit("AB", "A_")).toEqual({ squares: 1, framed: true });
+  });
+
+  it("changes the Ui alone", () => {
+    const b = game.newState(PARAMS, descOf(ANSWER, [0]));
+    const ui = game.newUi(b);
+    const ds = game.newDrawState(b, 32);
+    const at = pointOf("A_");
+    expect(game.interpretMove(b, ui, ds, at, LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(ui.spotlit).toBe(2);
   });
 });
 
