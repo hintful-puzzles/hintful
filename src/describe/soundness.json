@@ -65,6 +65,7 @@
   "src/engine/testing/fixtures/listing/listing.description.yaml#onlyLine": "3a39b1756cc07c69",
   "src/engine/testing/fixtures/listing/listing.description.yaml#single": "2cdff175b6c34bdf",
   "src/engine/testing/fixtures/mapping/mapping.description.yaml#lone": "f0f037ed159af92b",
+  "src/engine/testing/fixtures/mapping/mapping.description.yaml#pair": "04e1d0e73847214b",
   "src/engine/testing/fixtures/mapping/mapping.description.yaml#placed": "2cce85da96f4f9fc",
   "src/engine/testing/fixtures/merging/merging.description.yaml#cull": "2427a5ccbef2973c",
   "src/engine/testing/fixtures/merging/merging.description.yaml#lone": "b81c0d956a2b31bb",

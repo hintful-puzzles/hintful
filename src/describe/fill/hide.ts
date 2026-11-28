@@ -37,6 +37,7 @@ export interface HiddenKindOut {
   };
   when?: string;
   after?: string;
+  last?: true;
 }
 
 /** What a kind's entry in `deal.hide` may say. */
@@ -67,7 +68,10 @@ export function hideOf(
     if (c === undefined) throw new CompileError(`deal hide: no clue kind ${kind}`);
     if (c.complete)
       throw new CompileError(`deal hide: ${kind} is complete, so none of it is hidden`);
-    const { first, from, whole, when, after } = props;
+    const { first, from, whole, when, after, last } = props;
+    // A record at the board has fields, not one value to keep a clue of.
+    if (last === true && c.fields.size > 0)
+      throw new CompileError(`deal hide: ${kind} last, a clue at the board's fields`);
     if (after !== undefined) {
       const by = entries.find(([k]) => k === after && k !== kind);
       if (by === undefined)
@@ -92,6 +96,7 @@ export function hideOf(
         ? {}
         : { when: dealFlag(settings, when, `deal hide: ${kind}'s when`) }),
       ...(after === undefined ? {} : { after }),
+      ...(last === true ? { last: true as const } : {}),
     };
   });
   const firsts = out.filter((h) => h.first === true).length;

@@ -1,16 +1,10 @@
-ok  mapping n=4 placed                         3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=4 placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  mapping n=5 placed                         3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=6 placed                         3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=7 placed                         3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=8 placed                         3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=9 placed                         3  sound    (want sound   )     9 queries    0.0s
-ok  src/engine/testing/fixtures/mapping/mapping.description.yaml#placed: recorded sound, proved whole on all 6 boards
-ok  mapping n=4 lone                           3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=4 lone (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  mapping n=5 lone                           3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=6 lone                           3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=7 lone                           3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=8 lone                           3  sound    (want sound   )     9 queries    0.0s
-ok  mapping n=9 lone                           3  sound    (want sound   )     9 queries    0.0s
-ok  src/engine/testing/fixtures/mapping/mapping.description.yaml#lone: recorded sound, proved whole on all 6 boards
+ok  mapping    placed                         current: recorded src/engine/testing/fixtures/mapping/mapping.description.yaml#placed 2cce85da96f4f9fc
+ok  mapping    lone                           current: recorded src/engine/testing/fixtures/mapping/mapping.description.yaml#lone f0f037ed159af92b
+ok  mapping n=4 pair                           3  sound    (want sound   )     8 queries    0.3s
+ok  mapping n=4 pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  mapping n=5 pair                           3  sound    (want sound   )     8 queries    0.2s
+ok  mapping n=6 pair                           3  sound    (want sound   )     8 queries    0.2s
+ok  mapping n=7 pair                           3  sound    (want sound   )     8 queries    0.2s
+ok  mapping n=8 pair                           3  sound    (want sound   )     8 queries    0.2s
+ok  mapping n=9 pair                           3  sound    (want sound   )     8 queries    0.2s
+ok  src/engine/testing/fixtures/mapping/mapping.description.yaml#pair: recorded sound, proved whole on all 6 boards

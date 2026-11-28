@@ -37,6 +37,9 @@ export interface Hide<C> {
   unitsOf(clues: C, shown: readonly number[]): number[][];
   /** `units`, shuffled, in the order the deal hides them. */
   hideOrder(clues: C, units: number[][]): number[][];
+  /** Whether a board may show only `shown` of the hidden kinds: each kind
+   * hidden `last` shows a clue of every value it deals. */
+  holds(clues: C, shown: readonly number[]): boolean;
   /** The clues with each of the hidden kinds' that may go hidden; `null`
    * where the lowest tier does not finish the board with every clue. */
   hideUpTo(clues: C, tier: number, forSearch?: boolean): C | null;
@@ -66,6 +69,26 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     }
     return out;
   };
+  /** Each kind hidden `last`, by its index among `kinds`. */
+  const lasts = kinds.flatMap((k, n) =>
+    deal.hide?.find((h) => h.kind === k)?.last === true ? [n] : [],
+  );
+  const holds = (clues: C, shown: readonly number[]): boolean => {
+    if (lasts.length === 0) return true;
+    const offsets = offsetsOf(clues, kinds);
+    return lasts.every((n) => {
+      const list = clues[kinds[n] as keyof C] as ClueList;
+      const unseen = new Set(list.v);
+      for (const i of shown)
+        if (i >= offsets[n] && i < offsets[n + 1])
+          unseen.delete(list.v[i - offsets[n]]);
+      return unseen.size === 0;
+    });
+  };
+  /** Whether a board showing only `shown` of the hidden kinds holds and
+   * tier `t` finishes it. */
+  const finishesWith = (clues: C, shown: readonly number[], t: number): boolean =>
+    holds(clues, shown) && finishes(keeping(clues, shown), t);
   /** What the hide's formulas read: the clues, and the board's sizes. */
   const withSizes = (clues: C): C => ({ ...clues, ...cx.sizes });
   /** The indices of the clues the hide never takes (a hidden kind's
@@ -206,10 +229,7 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
       if (
-        finishes(
-          keeping(clues, withKept(clues, units.slice(units.length - mid).flat())),
-          t,
-        )
+        finishesWith(clues, withKept(clues, units.slice(units.length - mid).flat()), t)
       )
         hi = mid;
       else lo = mid + 1;
@@ -275,7 +295,7 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
         .filter((u) => u.some((i) => read.has(i) || later(i)))
         .flat(),
     );
-    if (finishes(keeping(clues, pruned), from)) shown = pruned;
+    if (finishesWith(clues, pruned, from)) shown = pruned;
     const lead = leaderOf(clues);
     const atFrom = (units: number[][]): number[][] =>
       units.filter((u) => !u.some(later));
@@ -302,10 +322,10 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
         // A clue hidden `after` another stays while that one is shown.
         if (follows && shown.includes(lead(unit[0]))) continue;
         const without = shown.filter((j) => !unit.includes(j));
-        if (finishes(keeping(clues, without), t)) shown = without;
+        if (finishesWith(clues, without, t)) shown = without;
       }
     }
     return keeping(clues, shown);
   };
-  return { keeping, allShown, orbitClues, unitsOf, hideOrder, hideUpTo };
+  return { keeping, allShown, orbitClues, unitsOf, hideOrder, holds, hideUpTo };
 }

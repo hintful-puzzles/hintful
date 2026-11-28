@@ -783,3 +783,52 @@ describe("a board of parts drawn over its squares", () => {
     ]);
   });
 });
+
+describe("a map's deal, as upstream map.c's", () => {
+  /** The params `id` names, refused or not, as a full ID or a brief one. */
+  const refusal = (id: string, full = true): string | null =>
+    game.validateParams?.(game.decodeParams(id), full) ?? null;
+
+  it("keeps a given of every color the answer holds", () => {
+    // Without the keep, 12 of these 16 boards lack a color among their
+    // givens (2026-11-28).
+    let boards = 0;
+    for (const size of ["4x4n6", "6x6n9", "8x8n9dn", "6x5n9dn"]) {
+      const p = game.decodeParams(size);
+      for (const seed of ["a", "b", "c", "d"]) {
+        const b = game.newState(p, game.newDesc(p, randomNew(`${size}${seed}`)).desc);
+        const solved = solveBoard(mapping, b, p.diff);
+        expect(solved.verdict).toBe("solved");
+        const given = new Set<number>();
+        for (let c = 0; c < b.w; c++) if (b.fixed[c] === 1) given.add(b.values[c]);
+        expect(given).toEqual(new Set(Array.from(solved.values).slice(0, b.w)));
+        boards++;
+      }
+    }
+    expect(boards).toBe(16);
+  });
+
+  it("reads a count of regions left out as one in eight squares", () => {
+    expect(game.decodeParams("8x8").sizes?.["n"]).toBe(8);
+    expect(game.decodeParams("6x7").sizes?.["n"]).toBe(5);
+    // 3x3 is one region, fewer than any map holds.
+    expect(refusal("3x3", false)).toBe("Regions must be between 4 and 9.");
+  });
+
+  it("refuses more regions than squares", () => {
+    expect(refusal("2x3n6", false)).toBeNull();
+    expect(refusal("2x2n5", false)).toBe(
+      "Regions must be at most the number of squares, 4.",
+    );
+  });
+
+  it("has no Normal map of few regions, or of a region a square", () => {
+    // Upstream's generator finds no 5x5 Normal map of 8 regions either.
+    expect(refusal("5x5n9dn")).toBeNull();
+    expect(refusal("5x5n8dn")).toBe("No 5x5 puzzle with 8 regions is Normal.");
+    expect(refusal("3x3n9dn")).toBe("No 3x3 puzzle with 9 regions is Normal.");
+    // A tier's bounds hold where a full ID names it, and at no other tier.
+    expect(refusal("5x5n8dn", false)).toBeNull();
+    expect(refusal("3x3n9de")).toBeNull();
+  });
+});

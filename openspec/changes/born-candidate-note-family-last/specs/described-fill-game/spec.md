@@ -1099,3 +1099,39 @@ press and a drag are another input's.
 
 - **WHEN** the player presses an open region and lets go on it
 - **THEN** the region is selected, and nothing is placed
+
+### Requirement: A born deal may keep a value's last clue
+
+Where a hidden kind is hidden `last`, the deal SHALL hide one of its clues
+only while another of the same value stays shown, in every set of clues
+the hide or a search tier's strip accepts, so each value the answer gives
+the kind keeps a clue.
+
+#### Scenario: Every color of the answer is given
+
+- **WHEN** a `mapping` board is dealt at either tier
+- **THEN** each color its answer uses is the color of a given region
+
+### Requirement: A born count may follow the board's squares and bound its tiers
+
+A number setting SHALL be refused past the board's squares where it says
+`atMost: area`; read, where an ID leaves it out, as the squares divided by
+its `onePer`, rounded down; and, in a full ID naming a tier its `tiers`
+bound, refused below that tier's least or, under `under: area`, at the
+board's squares, with the sentence that the tier has no such puzzle.
+
+#### Scenario: A map of more regions than squares is refused
+
+- **WHEN** the `mapping` params `2x2n5` are checked
+- **THEN** they are refused: regions must be at most the number of squares
+
+#### Scenario: A count left out is one in eight squares
+
+- **WHEN** the `mapping` params `8x8` are read
+- **THEN** the board has 8 regions
+
+#### Scenario: A Normal map of too few regions is refused
+
+- **WHEN** a full ID asks for a `mapping` board `5x5n8dn`, or `3x3n9dn`
+- **THEN** it is refused as no such Normal puzzle, while `5x5n9dn`, and
+  `5x5n8` in a brief ID, are accepted

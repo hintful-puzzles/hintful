@@ -2180,6 +2180,30 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/deal hide: given's keep is not a truth/);
   });
 
+  it("refuses a count's bounds by tier at the lowest or past its range, and a last of records", () => {
+    const mapping = "src/engine/testing/fixtures/mapping/mapping.description.yaml";
+    type Json = { settings: { n: { tiers: Record<string, { min?: number }> } } };
+    const tiers = (t: Record<string, { min?: number }>) => () =>
+      compileEdited(mapping, (j: Json) => {
+        j.settings.n.tiers = t;
+        return j;
+      });
+    expect(tiers({ Normal: { min: 9 } })()).toContain('"tiers":[{"tier":1,"min":9}]');
+    expect(tiers({ Easy: { min: 5 } })).toThrow(
+      /settings n: bounds at the lowest tier, the range's/,
+    );
+    expect(tiers({ Normal: { min: 10 } })).toThrow(
+      /settings n: Normal's least is past its range/,
+    );
+    const listing = "src/engine/testing/fixtures/listing/listing.description.yaml";
+    expect(() =>
+      compileEdited(listing, (j: { deal: Record<string, unknown> }) => {
+        j.deal["hide"] = { numbers: { last: true } };
+        return j;
+      }),
+    ).toThrow(/deal hide: numbers last, a clue at the board's fields/);
+  });
+
   it("refuses a breach label of no statement, off a square, or of a text no number", () => {
     const grouping = "src/engine/testing/fixtures/grouping/grouping.description.yaml";
     type Label = { at: string; says: string; place: string };

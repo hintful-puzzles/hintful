@@ -2585,6 +2585,10 @@
                             "type": "string",
                             "description": "Another hidden kind at the same places whose clue goes first: this kind's clue at a place is tried straight after that one's goes, and kept while that one is shown, so a clue is weakened before it is taken off (Salad's number given to the bare ball that says only its square is not empty, then the ball, as upstream salad.c's)."
                           },
+                          "last": {
+                            "const": true,
+                            "description": "Its last clue of a value is never hidden: a clue goes only while another of its value stays shown, as the board stands, so every value the answer gives it keeps a clue (upstream map.c's colors, a region of each left for the player to drag from)."
+                          },
                           "whole": {
                             "type": "object",
                             "additionalProperties": false,
@@ -3684,6 +3688,33 @@
             "under": {
               "enum": ["w", "h"],
               "description": "The side of the grid it must be less than (Salad's symbols, fewer than a line's squares)."
+            },
+            "atMost": {
+              "const": "area",
+              "description": "Never more than the board's squares (Map's regions)."
+            },
+            "onePer": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Where an ID leaves it out, one for every this many squares, rounded down, in place of `default` (upstream map.c's regions, one in 8)."
+            },
+            "tiers": {
+              "type": "object",
+              "description": "By a tier's name, above the lowest, the least it may be on a board of that tier (`min`), and `under: area` where it must there be fewer than the board's squares: a board past them is refused as having no such tier (Map's maps of few regions, or a region a square, above Easy).",
+              "additionalProperties": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "min": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "under": {
+                    "const": "area"
+                  }
+                }
+              }
             }
           }
         },

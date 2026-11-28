@@ -39,11 +39,11 @@ play:
 deal:
   map: regions grown from seeds scattered over the squares
   answer: a color a region, no two that border alike
-  value: every color, then each hidden while the board still finishes
-  tier: the one tier
+  value: every color, then each hidden while the board still finishes and another of it is shown
+  tier: one of the tiers
   divide: { partition: map, seeds: n }
   sample: { build: true }
-  hide: given
+  hide: { given: { last: true } }
 settings:
   n:
     kind: number
@@ -56,15 +56,20 @@ settings:
     max: 9
     default: 6
     words: "{n} regions"
+    atMost: area
+    onePer: 8
+    tiers:
+      Normal: { min: 9, under: area }
 id:
   - borders: map
   - digits: given
     from: 0
     before: ","
     always: true
-tiers: [Easy]
+tiers: [Easy, Normal]
 names:
   lone: "a region with one color left"
+  pair: "a pair of regions"
 techniques:
   - kind: peer.placed
     as: placed
@@ -74,6 +79,17 @@ techniques:
   - kind: one.cell
     as: lone
     tier: Easy
+  - kind: peer.pair
+    as: pair
+    tier: Normal
+    with:
+      pair: a in cells
+      partners: "{x in borders(a) where index(x, cells) > index(a, cells)}"
+      peers: "{k in borders(a) where k in borders(b) and not known(k)}"
+    says:
+      terms: { first: "min(x in cand(a) of x)", second: "max(x in cand(a) of x)" }
+      marks: { outline: "{a, b}" }
+      look: "{outline: Two touching regions} must take {first} and {second} between them"
 steps:
   clean:
     ring: cell

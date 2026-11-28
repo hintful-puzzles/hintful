@@ -119,6 +119,9 @@ export interface HiddenKind {
    * clue there is tried straight after that one goes, and kept while it is
    * shown (Salad's ball, left where its number was). */
   readonly after?: string;
+  /** A clue goes only while another of its value stays shown, so each value
+   * the kind deals keeps a clue (upstream map.c's colors). */
+  readonly last?: true;
 }
 
 /** What a compiled fill module says of its deal (`deal`). */

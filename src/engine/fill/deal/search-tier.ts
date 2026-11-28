@@ -68,7 +68,7 @@ export function dealStripped<C extends Clues<C>>(
   draw: Draw<C>,
 ): { desc: string; aux: string } {
   const { module, deal, p, thorough, finishes, board } = cx;
-  const { keeping, allShown, unitsOf, hideOrder, hideUpTo } = hide;
+  const { keeping, allShown, unitsOf, hideOrder, holds, hideUpTo } = hide;
   if (cx.hide.kind === null) throw new Error("deal: a search tier hides no clue");
   const top = p.diff - 1;
   let draws = 0;
@@ -106,10 +106,11 @@ export function dealStripped<C extends Clues<C>>(
       const show = (run: readonly number[]) => {
         b.shown = [...b.shown, ...run].sort((x, y) => x - y);
       };
+      const may = () => holds(b.all, b.shown);
       if (thorough) {
         for (const unit of order) {
           hide(unit);
-          if (!one()) show(unit);
+          if (!may() || !one()) show(unit);
         }
         return;
       }
@@ -120,12 +121,14 @@ export function dealStripped<C extends Clues<C>>(
       for (let from = 0; from < order.length; from += HIDING_RUN) {
         const run = order.slice(from, from + HIDING_RUN);
         hide(run.flat());
-        if (ladderFinishes()) continue;
+        if (may() && ladderFinishes()) continue;
         show(run.flat());
         for (const unit of run) {
           hide(unit);
-          if (ladderFinishes()) continue;
-          if (one()) return;
+          if (may()) {
+            if (ladderFinishes()) continue;
+            if (one()) return;
+          }
           show(unit);
         }
       }

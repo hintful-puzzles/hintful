@@ -6,8 +6,9 @@ Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), and Subsets is born
 (2.5e, design.md § "Decisions" 26, and 2.5f): Map's pieces are planned
 (design.md § "Decisions" 28), the space is in (2.6a) and drawn (2.6b,
 design.md § "Decisions" 30), aimed at (2.6c1, § "Decisions" 31),
-carried by a drag (2.6c2, § "Decisions" 32) and marked by a hint (2.6d,
-§ "Decisions" 33); 2.6e, the deal's rest, is next. What 2.2f needs besides the
+carried by a drag (2.6c2, § "Decisions" 32), marked by a hint (2.6d,
+§ "Decisions" 33) and dealt (2.6e, § "Decisions" 34); 2.6f, the display
+preferences, is next. What 2.2f needs besides the
 owner's answer is § "Decisions" 7's last paragraph.
 
 ## 1. Design
@@ -156,8 +157,9 @@ order.
   - [x] 2.6d A hint's ring, outline and strike on a part, and its gesture
         (design.md § "Decisions" 33). In the app at 2.6g: the ring, the
         dashes beside the selection's band, the strike over a dot.
-  - [ ] 2.6e The deal's rest: the hide keeping a value's last given, `n`
-        defaulting to `w·h/8` and at most `w·h`, and the tier refusals.
+  - [x] 2.6e The deal's rest: a value's last given kept, `n` at `w·h/8` and
+        at most `w·h`, the tier refusals (design.md § "Decisions" 34). At
+        2.6g: the strip's keep on Map's Unreasonable; the refusal's words.
   - [ ] 2.6f The display preferences, region numbers and stipple size.
   - [ ] 2.6g The flip.
 

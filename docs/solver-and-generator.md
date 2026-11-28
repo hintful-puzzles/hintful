@@ -849,7 +849,8 @@ refused, not silently downgraded"):
 size's.** Where the tier follows a count of islands or regions, the
 generator and the refusal call one function for that count. Exemplar:
 `islandTarget` in Bridges, whose sentence is "No puzzle of 4 islands is
-Tricky."
+Tricky." In a description the count is a number setting, and its bounds by
+tier are the setting's `tiers` (the `mapping` fixture's regions).
 
 **Rare is not absent: a rare cell is dealt, with nothing written for it**
 (`engine-difficulty`, "A rare tier is dealt under the deadline"). The
@@ -1432,6 +1433,14 @@ the boards a seed deals move").
   took 1 to 2 ms (2026-11-28). The steer is a sample's, stated by the
   concept it uses (sightlines through a kind's cells), for any game whose
   clues look along them.
+- **A clue the hide keeps for what the board shows is read as the board
+  stands**, not as dealt: upstream map.c leaves a region of every color for
+  the player to drag from, so a given goes only while another of its color
+  is shown (a hidden kind's `last`, the `mapping` fixture). Every set of
+  clues the hide accepts is held to it, the unread clues pruned at once,
+  each run the halving tries, each clue tried and each the search tier's
+  strip hides. It makes a small board's tier rarer: neither the born deal
+  nor the hand-written one finds a 5x5 Normal map of 8 regions.
 - **A tier graded by how often a rung fires is the rung's `most`.** On the
   solve path one firing is a whole pass over every binding, so a technique's
   firings are its passes: upstream Undead's Easy allows three passes over

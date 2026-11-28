@@ -808,6 +808,34 @@ naming the colors alone. The engine's `HintMarks` draws on a cell's band
 of a square and is not used: a part is no square, and its outline runs
 along a border of many squares.
 
+### 34. A color's last given is kept as the board stands, and the count bounds its tiers (2.6e)
+
+Read 2026-11-28: § 28 listed the tier refusals as met by `refuse`, which
+is Salad's board a part of the ladder finishes alone; nothing bounded a
+count by tier. Built:
+
+- **`last`, of a hidden kind**: a clue goes only while another of its
+  value is shown. Upstream map.c keeps a region of every color "so that
+  the user can drag from somewhere". `keep` reads the clues as dealt and
+  cannot say it, so the hide holds every set it accepts to it (`holds` in
+  `deal/hide.ts`): the unread clues pruned at once, each run the halving
+  tries, each clue tried, and each the search tier's strip hides. The
+  strip has no tier on `mapping` to deal, and is seen at 2.6g on Map's
+  Unreasonable. Without it, 12 of the test's 16 boards lacked a color.
+- **A number setting's `atMost: area`, `onePer` and `tiers`**: Map's
+  regions, at most the squares, `w·h/8` where the ID leaves them out
+  (upstream's `decode_params`), and by tier a least and `under: area`. The
+  hand-written refusals become Normal and above `under: area` with least 8,
+  Tricky and Unreasonable least 9, and `play.bounds.tiers` `shorter: { min:
+  3 }` above Easy. The sentence is the collection's: "No 5x5 puzzle with 7
+  regions is Normal." where the hand-written said "No map of 7 regions is
+  Normal.", for 2.6g's list.
+
+The `mapping` fixture gains Normal (Map's `pair`) to bound. With the keep,
+no 5x5 Normal map of 8 regions was dealt in 10,000 draws, and the
+hand-written generator gives up on it too, so the fixture's Normal takes
+9.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

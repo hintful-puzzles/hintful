@@ -363,6 +363,23 @@ function settingOut(
         throw new CompileError(
           `settings ${id}: under ${under}, not a side of the grid`,
         );
+      const { atMost, onePer } = s;
+      if (atMost !== undefined && atMost !== "area")
+        throw new CompileError(`settings ${id}: at most ${atMost}, not area`);
+      if (onePer !== undefined && (!Number.isInteger(onePer) || onePer < 1))
+        throw new CompileError(`settings ${id}: one per ${onePer} squares`);
+      // A tier's least is within the range, and only above the lowest tier
+      // is a tier's bound not the range's own.
+      const byTier = Object.entries(s.tiers ?? {}).map(([t, b]) => {
+        const tier = tierIndex(tiers, t, `settings ${id}`);
+        if (tier === 0)
+          throw new CompileError(
+            `settings ${id}: bounds at the lowest tier, the range's`,
+          );
+        if (b.min !== undefined && (b.min <= min || b.min > max))
+          throw new CompileError(`settings ${id}: ${t}'s least is past its range`);
+        return { tier, ...b };
+      });
       return {
         kind: "number",
         id,
@@ -376,6 +393,9 @@ function settingOut(
         ...(typeof s.words === "string" ? { words: s.words } : {}),
         ...(s.least === undefined ? {} : { least: s.least }),
         ...(under === undefined ? {} : { under }),
+        ...(atMost === undefined ? {} : { atMost }),
+        ...(onePer === undefined ? {} : { onePer }),
+        ...(byTier.length === 0 ? {} : { tiers: byTier }),
       };
     }
     case "choice":
