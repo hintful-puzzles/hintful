@@ -1,9 +1,9 @@
 ## Next
 
-1.1: read the predecessor's gap list (archive,
-`born-candidate-note-family-rest/design.md` § "The gap list (1.1)") for
-Undead, Rome, Magnets, Crossing and Map against this tree, mark each need
-met or new, and set the order in a design.md of this change.
+1.1: the five's gap list was read again at `fd9ed95f9`
+(`describe-the-whole-catalog/gaps.md` § "The last candidate-note games",
+with an order); check it against this tree, decide whether Subsets joins
+(its § "Placement"), and set the order in a design.md of this change.
 
 ## 1. Design
 
@@ -16,7 +16,8 @@ Each its own commit, as the predecessor's tasks 2 say (its tasks.md, in
 the archive): each capability on a fixture first, then the flip with its
 description, cases, spec deltas, `npm run flip`, `play-smoke`,
 `compare-cost --quick --times 12` (an unsettled board on 100 seeds) and
-`test:hint-sweeps`. In the order task 1.1 sets.
+`test:hint-sweeps`, and the guides updated for what it added (route
+design.md § "What every group does"). In the order task 1.1 sets.
 
 - [ ] 2.1 Undead born.
 - [ ] 2.2 Rome born.

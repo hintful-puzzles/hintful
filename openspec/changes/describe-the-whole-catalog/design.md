@@ -91,7 +91,10 @@ As `born-plain-cell-family` did, with what the review of 2026-11-23 added:
 
 - **A gap list first**, per game, against the engine at that commit;
   then an order inside the group that lets later games reuse what earlier
-  ones built.
+  ones built. It starts from `gaps.md`, every remaining group's list read
+  together (2026-11-28), whose § "Shared across groups" names what is
+  built once for several groups, and whose § "Placement" which games may
+  change group.
 - **Each game its own commit**, the hand-written game playing on until its
   flip, and each flip run in the app before it is done (deal, input,
   hints, live errors, dark mode, a solve to the end).
@@ -108,6 +111,15 @@ As `born-plain-cell-family` did, with what the review of 2026-11-23 added:
   costs, and, for a group whose games stand alone (Cube, Twiddle,
   Untangle), to give them family. A group that already moves many games
   may skip it and says so.
+- **A flip updates the guides for what it added**, in its own commit: each
+  capability it lists, against the guide a porter of a like game would
+  look it up in, saying what the source cannot (a decision, a trap, when
+  to reach for it). Left to the change's end, an audit of four flips found
+  twelve capabilities no guide named (2026-11-28).
+- **A deal timed near the bar is timed on 100 seeds**: a deal that retries
+  for a rare board has a median that twelve seeds do not settle
+  (`docs/descriptions.md` § "Judging a family moved onto its description",
+  4).
 - **A flip moves the game's tests to data** (`docs/doctrine.md`, the
   owner's decision of 2026-11-23), in the format
   `a-game-is-tested-by-its-data` builds; a capability the group adds is
