@@ -27,6 +27,7 @@ import {
   CURSOR_LEFT,
   CURSOR_SELECT2,
   CURSOR_UP,
+  type GridCursor,
   isCursorMove,
   isEraseKey,
   isMouseDrag,
@@ -34,7 +35,6 @@ import {
   LEFT_BUTTON,
   LEFT_RELEASE,
   MOD_SHFT,
-  moveCursor,
   newDrag,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
@@ -46,6 +46,7 @@ import {
   squareGrid,
   sweepOpen,
   sweepTo,
+  type TargetGeometry,
 } from "../input/target-verb.ts";
 import {
   highlightIsOn,
@@ -82,6 +83,7 @@ import type { FillParams } from "./game-id.ts";
 import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf, waysOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
 import { dragTo, labelAt, type ReorderMove, type Viewed } from "./order.ts";
+import type { PartsAim } from "./parts-aim.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import { pointingInput } from "./pointing.ts";
 import {
@@ -257,6 +259,19 @@ export interface NumberInput<C, D> {
  * down. */
 export type RecordPoint<C, D> = (board: FillBoard<C>, ds: D, k: number) => Point;
 
+/** What the renderer tells a board of numbers' input of where things are
+ * drawn, beyond its cells' squares, each where the board has it. */
+export interface NumberSites<C, D> {
+  readonly clues?: ClueSites<C>;
+  readonly recordPoint?: RecordPoint<C, D>;
+  readonly features?: FeatureSites<C, D>;
+  /** Where the cells are parts, how they are aimed at on their squares. */
+  readonly parts?: PartsAim<C, D>;
+  /** The palette slot a key placing value `v` is painted in, where its
+   * piece is a color alone (`Painter.swatch`); `null` for any other. */
+  readonly keySwatch?: (v: number) => number | null;
+}
+
 export function numberInput<
   C extends Clues<C>,
   D extends { readonly tileSize: number },
@@ -264,11 +279,20 @@ export function numberInput<
   module: LadderedFillModule<C>,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
-  clueSites: ClueSites<C> = {},
-  recordPoint: RecordPoint<C, D> | null = null,
-  featureSites: FeatureSites<C, D> | null = null,
+  sites: NumberSites<C, D> = {},
 ): NumberInput<C, D> {
-  const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
+  const clueSites = sites.clues ?? {};
+  const recordPoint = sites.recordPoint ?? null;
+  const featureSites = sites.features ?? null;
+  const parts = sites.parts ?? null;
+  // A board whose cells are parts is aimed at on its squares; any other's
+  // cells are its squares.
+  const geometry: TargetGeometry<
+    FillBoard<C>,
+    { cursor: GridCursor },
+    D,
+    Point
+  > = parts ?? squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const features = featureInput<C, D>(
     module,
     (b, ds, p, ui) => geometry.pointerTarget(b, ds, p, ui),
@@ -532,13 +556,14 @@ export function numberInput<
           canEnter: open,
           canMark: notes && open && b.values[c] === 0,
         });
+        if (pressed === "moved") parts?.pressed(b, ds, p, fillUi);
         if (along !== null && pressed === "moved") along.snap(b, fillUi, c);
         return UI_UPDATE;
       }
       if (isCursorMove(button)) {
         if (select !== undefined) fillUi.selected = [];
         ui.cursorFromKeyboard = true;
-        const moved = moveCursor(ui.cursor, button, b.w, b.h);
+        const moved = geometry.moveCursor(b, fillUi, button);
         if (along === null) return moved ? UI_UPDATE : null;
         // The arrow says the way the player works along.
         along.snap(b, fillUi, ui.cursor.y * b.w + ui.cursor.x, arrowWay(button));
@@ -621,9 +646,17 @@ export function numberInput<
       const dealt = (board?.dealt ?? p.sizes ?? {}) as C;
       const empty = emptyOf(module, sp, dealt);
       const glyphs = glyphsOf(module, dealt as Readonly<Record<string, unknown>>);
-      const keys = Array.from({ length: n }, (_, i) => i + 1)
+      const keys: KeyLabel[] = Array.from({ length: n }, (_, i) => i + 1)
         .filter((v) => v !== empty)
-        .map((v) => ({ button: glyphs.keyCode(v), label: glyphs.label(v) }));
+        .map((v) => {
+          const button = glyphs.keyCode(v);
+          const swatch = sites.keySwatch?.(v) ?? null;
+          // A color's key is painted in it, and labeled by the character it
+          // sends, as the contract asks of a swatch.
+          return swatch === null
+            ? { button, label: glyphs.label(v) }
+            : { button, label: String.fromCharCode(button), swatch };
+        });
       // Upstream Salad's: the symbols, then X, O and clear.
       if (empty !== null)
         keys.push(

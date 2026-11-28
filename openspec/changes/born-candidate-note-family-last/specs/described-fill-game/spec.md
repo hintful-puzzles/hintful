@@ -1033,3 +1033,28 @@ of the border they share.
   sixth are
 - **THEN** a diamond is drawn on each of the two borders the first shares
   with them, and nowhere else
+
+### Requirement: A born board of parts is played on its squares
+
+A press on a board of parts SHALL select the part of the square's triangle
+it lands in, and an arrow SHALL move the cursor a square and select the part
+of the triangle on the side the arrow points to; a value or note typed SHALL
+go to the selected part. The selection SHALL be drawn as a band inside the
+part's border, and while notes are typed as a corner in a square of it.
+
+#### Scenario: A split square's two parts
+
+- **WHEN** the player presses the bottom of the `mapping` board's square
+  split between its first and second regions, and types a color
+- **THEN** the first region is selected and takes the color
+
+### Requirement: A key that places a color is painted in it
+
+Where a born board's value is drawn as a picture that is a color alone, the
+keypad's key for it SHALL be painted in that color and labeled by the
+character it sends.
+
+#### Scenario: The four colors' keys
+
+- **WHEN** the `mapping` fixture's keypad is shown
+- **THEN** its keys 1 to 4 are painted pink, yellow, teal and violet

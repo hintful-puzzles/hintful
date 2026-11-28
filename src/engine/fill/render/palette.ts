@@ -63,6 +63,17 @@ export type Placed<P = Painter> = {
   readonly slot: readonly number[];
 };
 
+/** The slot of value `v`'s color, where its piece is that color alone
+ * (`Painter.swatch`), for the key placing it; `null` for any other. */
+export function swatchOf(
+  byValue: ReadonlyMap<number, Placed>,
+  v: number,
+): number | null {
+  const placed = byValue.get(v);
+  if (placed?.painter.swatch !== true || placed.painter.surface === null) return null;
+  return placed.slot[placed.painter.surface];
+}
+
 /**
  * The palette's slots past the board's own: each painter's colors, one slot
  * a named color however many painters draw in it; then the lifted surface

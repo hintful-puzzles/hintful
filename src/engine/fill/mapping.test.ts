@@ -9,8 +9,16 @@ import { describe, expect, it } from "vitest";
 import * as mapping from "../../generated/engine/testing/fixtures/mapping/mapping.compiled.ts";
 import { FOUR_FILL_MARKS, FOUR_FILLS } from "../color/colors.ts";
 import { cellSurface } from "../color/palette.ts";
-import { COL_ERROR } from "../color/roles.ts";
+import { COL_CURSOR, COL_ERROR } from "../color/roles.ts";
 import { validateDesc } from "../contract/desc-error.ts";
+import { UI_UPDATE } from "../contract/game.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_UP,
+  LEFT_BUTTON,
+} from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import type { Squares } from "../solve/describe-runtime.ts";
@@ -157,14 +165,14 @@ describe("a board of parts drawn over its squares", () => {
   });
 
   /** One frame of board `b`, and each square's ops, by the clip it draws in. */
-  function draw(b: Board, mistakes: readonly FillMistake[] = []) {
+  function draw(b: Board, mistakes: readonly FillMistake[] = [], ui = newFillUi()) {
     const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
     const ds = game.newDrawState(b, TS);
     game.redraw(dr, ds, {
       state: b,
       prev: null,
       dir: 1,
-      ui: newFillUi(),
+      ui,
       animTime: 0,
       flash: NO_FLASH,
       mistakes,
@@ -252,5 +260,154 @@ describe("a board of parts drawn over its squares", () => {
       squares[s].some((op) => op.op === "polygon" && op.fill === COL_ERROR),
     );
     expect(diamonds).toEqual([11, 12, 15, 20]);
+  });
+
+  // Played on its squares (2.6c): regions 1, 2, 4 and 5 are given, 0 and 3
+  // open.
+  const origin = (game.computeSize(p, TS).w - 5 * TS - 1) / 2;
+  /** A point in square `s`, a quarter tile from its middle toward triangle
+   * `t`. */
+  const pointIn = (s: number, t: number) => {
+    const d = TS / 4;
+    const [dx, dy] =
+      t === TOP ? [0, -d] : t === BOTTOM ? [0, d] : t === LEFT ? [-d, 0] : [d, 0];
+    return {
+      x: origin + (s % 5) * TS + TS / 2 + dx,
+      y: origin + Math.floor(s / 5) * TS + TS / 2 + dy,
+    };
+  };
+  const KEY = (k: string) => k.charCodeAt(0);
+
+  it("selects the region of the triangle a press lands in, and types into it", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    // Square 6's bottom and left are region 0's; square 7's bottom and
+    // right region 3's, its top and left region 1's, a given.
+    for (const [s, t, region] of [
+      [6, BOTTOM, 0],
+      [6, LEFT, 0],
+      [7, BOTTOM, 3],
+      [7, RIGHT, 3],
+      [12, TOP, 3],
+    ] as const) {
+      const ui = game.newUi(b);
+      expect(game.interpretMove(b, ui, ds, pointIn(s, t), LEFT_BUTTON)).toBe(UI_UPDATE);
+      expect(ui.cursor, `square ${s}`).toMatchObject({
+        x: region,
+        y: 0,
+        visible: true,
+      });
+      expect(game.interpretMove(b, ui, ds, pointIn(s, t), KEY("3"))).toMatchObject({
+        type: "set",
+        x: region,
+        y: 0,
+        n: 3,
+      });
+    }
+    // A given is not selected.
+    const ui = game.newUi(b);
+    game.interpretMove(b, ui, ds, pointIn(7, TOP), LEFT_BUTTON);
+    expect(ui.cursor.visible).toBe(false);
+  });
+
+  it("walks the cursor over the squares, selecting the triangle on the side it moved toward", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    const g = partsGeometry(b.dealt.map as Squares, DESC);
+    const ui = game.newUi(b);
+    // Pressed on square 6's bottom, region 0.
+    game.interpretMove(b, ui, ds, pointIn(6, BOTTOM), LEFT_BUTTON);
+    const walk = (button: number, s: number, t: number) => {
+      game.interpretMove(b, ui, ds, { x: 0, y: 0 }, button);
+      expect(ui.cursor, `to square ${s}`).toMatchObject({
+        x: g.quadrants[t * 25 + s],
+        y: 0,
+        visible: true,
+      });
+    };
+    // Right into square 7, its right triangle region 3's; up to square 2;
+    // left to square 1; down to square 6's bottom, region 0's; down to
+    // square 11, and up again to square 6's top, region 1's.
+    walk(CURSOR_RIGHT, 7, RIGHT);
+    expect(ui.cursor.x).toBe(3);
+    walk(CURSOR_UP, 2, TOP);
+    walk(CURSOR_LEFT, 1, LEFT);
+    walk(CURSOR_DOWN, 6, BOTTOM);
+    expect(ui.cursor.x).toBe(0);
+    walk(CURSOR_DOWN, 11, BOTTOM);
+    walk(CURSOR_UP, 6, TOP);
+    expect(ui.cursor.x).toBe(1);
+    // The selection moved by a hint's press keeps no square: the next arrow
+    // walks from the region's label.
+    ui.cursor.x = 4;
+    const label = g.labels[4];
+    const from = Math.floor(label.y / 2) * 5 + Math.floor(label.x / 2);
+    walk(CURSOR_RIGHT, from + 1, RIGHT);
+  });
+
+  it("aims a hint's press at a point the press reads as the region", () => {
+    const b = board();
+    const ds = game.newDrawState(b, TS);
+    const open = [0, 1, 2, 3, 4, 5].filter((r) => b.fixed[r] === 0);
+    expect(open).toEqual([0, 3]);
+    for (const region of open) {
+      const ui = game.newUi(b);
+      const gesture = game.hint.gesture;
+      if (gesture === undefined) throw new Error("mapping: no hint gesture");
+      const [press] = gesture(
+        b,
+        ui,
+        ds,
+        { type: "set", x: region, y: 0, n: 1, pencil: false, autoElim: false },
+        null as never,
+      );
+      if (press === undefined || !("at" in press)) throw new Error("no press");
+      game.interpretMove(b, ui, ds, press.at, LEFT_BUTTON);
+      expect(ui.cursor, `region ${region}`).toMatchObject({ x: region, visible: true });
+    }
+  });
+
+  it("paints the keypad's keys in the colors, each labeled by the key it sends", () => {
+    const colors = game.colors(DEFAULT_BACKGROUND);
+    const keys = game.requestKeys?.(p) ?? [];
+    expect(
+      keys.slice(0, 4).map((k) => [k.label, rgbLabel(colors[k.swatch ?? -1])]),
+    ).toEqual(FOUR_FILLS.map((c, k) => [String(k + 1), rgbLabel(c)]));
+  });
+
+  it("bands the selected region inside its border, and corners its first square for notes", () => {
+    const b = board();
+    const { of } = b.dealt.map;
+    const ui = game.newUi(b);
+    ui.cursor = { x: 3, y: 0, visible: true };
+    const cursor = rgbLabel(game.colors(DEFAULT_BACKGROUND)[COL_CURSOR]);
+    const banded = (squares: DrawOp[][]) =>
+      Array.from({ length: 25 }, (_, s) => s).filter((s) =>
+        squares[s].some((op) => op.op === "polygon" && op.fillRgb === cursor),
+      );
+    // Region 3's squares, square 7 by its bottom and square 8 by its
+    // bottom and left; not square 18, whose eight neighbors are all region
+    // 3's, so no border reaches it.
+    const region = Array.from({ length: 25 }, (_, s) => s).filter(
+      (s) => of[s] === 3 || s === 7 || s === 8,
+    );
+    expect(banded(draw(b, [], ui))).toEqual(region.filter((s) => s !== 18));
+    // A hidden cursor bands nothing.
+    expect(
+      banded(draw(b, [], { ...ui, cursor: { ...ui.cursor, visible: false } })),
+    ).toEqual([]);
+    // Typing notes, a corner triangle at the top left of the region's first
+    // square whose corner is the region's: square 12, since square 7's top
+    // left is region 1's.
+    const first = 12;
+    const x0 = origin + (first % 5) * TS;
+    const y0 = origin + Math.floor(first / 5) * TS;
+    const corner = draw(b, [], { ...ui, pencilMode: true })[first].filter(
+      (op) =>
+        op.op === "polygon" &&
+        op.fillRgb === cursor &&
+        op.points.every(([x, y]) => x <= x0 + TS / 2 && y <= y0 + TS / 2),
+    );
+    expect(corner.length).toBeGreaterThan(0);
   });
 });

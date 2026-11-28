@@ -464,7 +464,12 @@ description author acts on:
   the board's ID: its values are pictures whose piece is their surface
   (`play.numbers.pictures`, the four colors `pink`, `yellow`, `teal` and
   `violet`), and a note is its painter's `note` dotted in a fixed
-  formation, which has room for four values.
+  formation, which has room for four values. It is aimed at on the squares
+  (`engine/fill/parts-aim.ts`): a press selects the part of the triangle
+  it lands in, the cursor walks the squares and selects the part on the
+  side it last moved toward, and the selection is a band inside the part's
+  border. A key placing a picture that is a color alone (`Painter.swatch`)
+  is painted in the color, on any board.
 - **Two edges may be known alike or opposite** (a mark with `sort: edge`
   and `notation: alike or opposite`, Loopy's pairs): `pair(e, f)` is `{1}`
   alike, `{2}` opposite and `{1, 2}` unrelated, `related(e)` the edges

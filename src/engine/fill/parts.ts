@@ -8,7 +8,14 @@
  * reads off it (`sides`) is no second copy any deal or ID keeps.
  */
 
-import { describedSpace, type GridSpace } from "../solve/describe-runtime.ts";
+import {
+  describedSpace,
+  type GridSpace,
+  type Squares,
+} from "../solve/describe-runtime.ts";
+import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { encodeDesc } from "./desc.ts";
+import { type PartsGeometry, partsGeometry } from "./render/parts-geometry.ts";
 
 /** What the compiled deal says of a board of parts. */
 export interface PartsSpace {
@@ -30,4 +37,28 @@ export function partsStore(
   const n = sizes[parts.count];
   if (n === undefined) throw new Error(`parts: no size ${parts.count} on the board`);
   return { w: n, h: 1 };
+}
+
+/** Where a board of parts lies on its squares, which its drawing and its
+ * input both read: one board is drawn and pressed frame after frame, so a
+ * board's geometry is made once, from its clues. */
+export function geometryOfParts<C extends Clues<C>>(
+  module: FillModule<C>,
+  parts: PartsSpace,
+): (b: FillBoard<C>) => PartsGeometry {
+  const deal = module.deal;
+  if (deal === undefined) throw new Error("parts: a board of parts is dealt");
+  const made = new WeakMap<object, PartsGeometry>();
+  return (b) => {
+    const key = b.dealt as object;
+    let got = made.get(key);
+    if (got === undefined) {
+      const map = b.dealt[parts.of as keyof C] as unknown as Squares;
+      // Upstream seeds the smoothing with the ID, which the board's clues
+      // write again.
+      got = partsGeometry(map, encodeDesc(module, deal, spaceOf(module, b), b.dealt));
+      made.set(key, got);
+    }
+    return got;
+  };
 }

@@ -11,7 +11,7 @@
  * `born-candidate-note-family-last`).
  */
 
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../color/roles.ts";
+import { COL_CURSOR, COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../color/roles.ts";
 import type { GameDrawing } from "../contract/game.ts";
 import type { Rect } from "../contract/types.ts";
 import { HintMarks } from "../render/hint-mark.ts";
@@ -25,19 +25,22 @@ import {
 } from "../render/pencil-indicator.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepRanks, WIN_LEAD, WIN_NONE } from "../render/win-wave.ts";
-import type { Squares } from "../solve/describe-runtime.ts";
 import { rulesOf } from "./answer.ts";
-import { type Clues, type FillBoard, spaceOf } from "./board.ts";
-import { encodeDesc } from "./desc.ts";
+import type { Clues, FillBoard } from "./board.ts";
 import type { FillParams } from "./game-id.ts";
-import type { PartsSpace } from "./parts.ts";
-import { COL_CELL, COL_ERRTEXT, COL_INK, fillPalette } from "./render/palette.ts";
+import {
+  COL_CELL,
+  COL_ERRTEXT,
+  COL_INK,
+  fillPalette,
+  swatchOf,
+} from "./render/palette.ts";
+import { bandWidth, drawBands } from "./render/parts-bands.ts";
 import {
   BOTTOM,
   LEFT,
   type PartsGeometry,
   partAt,
-  partsGeometry,
   RIGHT,
   split,
   TOP,
@@ -58,32 +61,21 @@ const BOTTOM_NOTES = 12;
 const MISTAKE = 1 << 16;
 const TOP_LIT = 17;
 const BOTTOM_LIT = 19;
+// Whether the square's top and bottom triangles are the selected part's,
+// and whether it is the part's first square, which takes the note-taking
+// corner while notes are typed.
+const SELECTED_TOP = 1 << 21;
+const SELECTED_BOTTOM = 1 << 22;
+const NOTES_CORNER = 1 << 23;
 
 export function partsRender<C extends Clues<C>>(
   module: FillRenderModule<C>,
   look: FillLook<C>,
-  parts: PartsSpace,
+  geometryOf: (b: FillBoard<C>) => PartsGeometry,
 ): FillRender<C> {
   const { play } = look;
   const pal = fillPalette(play, false, false, false);
   const rules = rulesOf(module);
-  const deal = module.deal;
-  if (deal === undefined) throw new Error("parts: a board of parts is dealt");
-
-  // One board is drawn frame after frame, and its geometry is its clues'.
-  const geometries = new WeakMap<object, PartsGeometry>();
-  const geometryOf = (b: FillBoard<C>): PartsGeometry => {
-    const key = b.dealt as object;
-    let got = geometries.get(key);
-    if (got === undefined) {
-      const map = b.dealt[parts.of as keyof C] as unknown as Squares;
-      // Upstream seeds the smoothing with the ID, which the board's clues
-      // write again.
-      got = partsGeometry(map, encodeDesc(module, deal, spaceOf(module, b), b.dealt));
-      geometries.set(key, got);
-    }
-    return got;
-  };
 
   const origin = (ts: number): number => pencilIndicatorReach(ts);
   /** The canvas of a board of `p.w` by `p.h` squares. */
@@ -148,6 +140,26 @@ export function partsRender<C extends Clues<C>>(
         COL_INK,
       );
     }
+
+    // The selection's band inside the part's border, under the notes.
+    const band = [{ from: 0, to: bandWidth(ts), color: COL_CURSOR }];
+    const notesCorner = (key & NOTES_CORNER) !== 0;
+    drawBands(
+      dr,
+      g,
+      s,
+      px,
+      py,
+      ts,
+      key & SELECTED_TOP ? band : [],
+      key & SELECTED_BOTTOM ? band : [],
+      {
+        top: notesCorner && (key & SELECTED_TOP) !== 0,
+        bottom: notesCorner && (key & SELECTED_BOTTOM) !== 0,
+        color: COL_CURSOR,
+      },
+      COL_INK,
+    );
 
     // The notes, a value a row, each in its column of a 5 by 5 formation,
     // on the triangle it falls in; none on the diagonal of a split square.
@@ -296,6 +308,23 @@ export function partsRender<C extends Clues<C>>(
         const ranks = sweepRanks(g.labels);
         for (let p = 0; p < n; p++) lit[p] = flash.win(ranks[p]);
       }
+      // The selected part, hidden while the win flash plays, and while notes
+      // are typed the square that takes the note-taking corner: the part's
+      // first whose top left corner is the part's, where the corner shows
+      // whole, else its first.
+      const selected = ui.cursor.visible && !flash.winning ? ui.cursor.x : -1;
+      let notesSquare = -1;
+      if (selected >= 0 && ui.pencilMode === true) {
+        const squares = Array.from({ length: wh }, (_, s) => s);
+        notesSquare =
+          squares.find(
+            (s) => partAt(g, TOP, s) === selected && partAt(g, LEFT, s) === selected,
+          ) ??
+          squares.find(
+            (s) => partAt(g, TOP, s) === selected || partAt(g, BOTTOM, s) === selected,
+          ) ??
+          -1;
+      }
       const wrong = new Set((mistakes ?? []).map((m) => m.cell));
       const notesOf = (p: number): number =>
         b.values[p] !== 0 || b.pencil === null ? 0 : (b.pencil[p] >> 1) & 15;
@@ -311,7 +340,10 @@ export function partsRender<C extends Clues<C>>(
           (notesOf(u) << BOTTOM_NOTES) |
           (wrong.has(t) || wrong.has(u) ? MISTAKE : 0) |
           (lit[t] << TOP_LIT) |
-          (lit[u] << BOTTOM_LIT);
+          (lit[u] << BOTTOM_LIT) |
+          (t === selected ? SELECTED_TOP : 0) |
+          (u === selected ? SELECTED_BOTTOM : 0) |
+          (s === notesSquare ? NOTES_CORNER : 0);
       }
 
       // A diamond on each border the rules say is broken, on every square
@@ -347,6 +379,7 @@ export function partsRender<C extends Clues<C>>(
       );
     },
     numbersLeft: () => 0,
+    keySwatch: (v) => swatchOf(pal.byValue, v),
     partClueBox: () => null,
     countPressed: () => null,
     recordPressed: () => null,

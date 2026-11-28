@@ -54,6 +54,7 @@ import { addMistakes } from "./render/layers/mistakes.ts";
 import { numbersLeft } from "./render/layers/numbers.ts";
 import { partClueBox } from "./render/layers/part-clues.ts";
 import { partsOf } from "./render/layers/surface.ts";
+import { swatchOf } from "./render/palette.ts";
 import { type FillRenderModule, fillSetup } from "./render/setup.ts";
 import { badged, badgeOf, badges } from "./render/sites/badges.ts";
 import { band } from "./render/sites/band.ts";
@@ -177,6 +178,9 @@ export interface FillRender<C> {
   redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void;
   /** The numbers on cells not yet done, for the status bar. */
   numbersLeft(board: FillBoard<C>): number;
+  /** The palette slot of value `v`'s key (`swatchOf`), `null` where its
+   * piece is not a color alone. */
+  keySwatch(v: number): number | null;
   /** The clue of the part holding cell `c`, with the box it is drawn in at
    * its part's first cell at tile size `ts`; `null` where the part has none
    * or the board has no clues at parts. */
@@ -376,6 +380,7 @@ export function fillRender<C extends Clues<C>>(
     },
     redraw,
     numbersLeft: (b) => numbersLeft(cx, b),
+    keySwatch: (v) => swatchOf(cx.pal.byValue, v),
     partClueBox: (ts, b, c) =>
       partClueBox(
         cx,

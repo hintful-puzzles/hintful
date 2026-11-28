@@ -5,9 +5,9 @@ and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), and Subsets is born
 (2.5e, design.md § "Decisions" 26, and 2.5f): Map's pieces are planned
 (design.md § "Decisions" 28), the space is in (2.6a) and drawn (2.6b,
-design.md § "Decisions" 30), and 2.6c, its play on the squares, is next:
-the press, cursor and drag read the geometry `parts-render.ts` builds, and
-the selection is drawn there. What 2.2f needs
+design.md § "Decisions" 30), and aimed at (2.6c1, § "Decisions" 31);
+2.6c2, the drag that carries a part's value to another, is next. What 2.2f
+needs
 besides the owner's answer is § "Decisions" 7's last paragraph.
 
 ## 1. Design
@@ -146,15 +146,17 @@ order.
   - [x] 2.6b Drawn over its squares: values, borders, the diagonal
         smoothing, stipple notes, mistakes and live errors on a part
         (`parts-render.ts`, design.md § "Decisions" 30). In the app at 2.6g.
-  - [ ] 2.6c Played on its squares: a press and the cursor address a
-        part; the keypad; the drag of a part's value to another. Read
-        2026-11-28: `numberInput` aims through a `squareGrid` on the
-        stored row of parts, so a board of parts needs a pointer target
-        that reads a square's triangle and answers its part's stored cell
-        (`x` the part, `y` 0), and a cursor that walks the squares beside
-        the stored one, as the hand-written `regionFromUiCursor` and
-        `placeCursorAtCoords` do; the selection's band is drawn in
-        `parts-render.ts`.
+  - [ ] 2.6c Played on its squares, in steps, each on `mapping`.
+    - [x] 2.6c1 A press and the cursor address a part, its band, color
+          keys (design.md § "Decisions" 31). In the app at 2.6g: the band
+          on a split square, and the notes corner.
+    - [ ] 2.6c2 The drag: a press picks a part's value up (its notes where
+          it has none), a release on another part puts it there, a right
+          drag of a value onto an open part toggles that note, and a
+          release that carries nothing is the tap that selects (the
+          hand-written `pickUp` and `drop`, `games/map/index.ts`); the
+          carried value drawn under the pointer, as the hand-written
+          Map's blob. A play key of its own, so a square board may take it.
   - [ ] 2.6d A hint's ring and outline on a part, and its gesture.
   - [ ] 2.6e The deal's rest: the hide keeping a value's last given, `n`
         defaulting to `w·h/8` and at most `w·h`, and the tier refusals.

@@ -255,6 +255,11 @@ export interface FillUi {
   /** On a board whose values are features (`numbers.features`), the slot of
    * the cursor's square the cursor is on (`features.ts`). */
   slot?: number;
+  /** On a board whose cells are parts (`parts-aim.ts`), the square the
+   * cursor walks and the triangle of it on the side it last moved toward,
+   * which name the selected part; unset, or naming another part than the
+   * cursor's, until an arrow or a press sets it. */
+  square?: { x: number; y: number; toward: number };
   /** On a board with a band of every value (`band.ts`), the value whose
    * squares are spotlit, 0 where none is; and the square in focus, by its
    * badge, whose notes the band strikes from, -1 where none is. */

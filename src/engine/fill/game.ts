@@ -7,17 +7,11 @@
  */
 
 import { descValue } from "../contract/desc-error.ts";
-import type { Game, GamePref, HintStep, PresetBoards } from "../contract/game.ts";
+import type { Game, HintStep, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
 import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
 import { transposeDimensions } from "../game-id/params.ts";
-import {
-  autoPencilPref,
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../hint/pencil-prefs.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
 import { LEFT_BUTTON, newCursor, stripModifiers } from "../input/pointer.ts";
 import { verbClicks } from "../input/target-verb.ts";
@@ -51,7 +45,7 @@ import {
 import { type FillInput, fillInput } from "./buttons.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
-import { COUNT_STYLES, countedOf, countRecords, countStyleOf } from "./counts.ts";
+import { countedOf, countRecords } from "./counts.ts";
 import type { DealtFillModule } from "./deal/context.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, glyphsIn } from "./desc.ts";
@@ -98,8 +92,11 @@ import type { FillBounds } from "./params/bounds.ts";
 import { variationsOf } from "./params/flag.ts";
 import type { PresetSettings } from "./params/setting.ts";
 import { offKinds } from "./params/settings.ts";
+import { geometryOfParts } from "./parts.ts";
+import { partsAim } from "./parts-aim.ts";
 import { partsRender } from "./parts-render.ts";
 import { type FillPlay, type FillUi, newFillUi } from "./play.ts";
+import { fillPrefs } from "./prefs.ts";
 import { listedOf, listRecords } from "./record-list.ts";
 import { recordPanel } from "./record-panel.ts";
 import { PLACE_ANIM_TIME } from "./render/tile.ts";
@@ -241,121 +238,9 @@ export function fillGame<C extends Clues<C> & object>(
           ),
         }),
   };
-  /** A boolean preference on the Ui, by its field. */
-  const flag = (
-    { kw, name }: { readonly kw: string; readonly name: string },
-    field: "washedMarks" | "hiddenShown",
-  ): GamePref<FillUi> => ({
-    kw,
-    name,
-    type: "boolean",
-    get: (ui) => ui[field],
-    set: (ui, v) => {
-      ui[field] = v;
-    },
-  });
   const notes = play.notes === true;
   const ordered = play.order === true;
-  // A board that keeps notes has these fields on its Ui (`typedUi`).
-  const noted = <U>(pref: GamePref<U>): GamePref<FillUi> =>
-    pref as unknown as GamePref<FillUi>;
-  const prefs = [
-    ...(play.wash?.pref === undefined ? [] : [flag(play.wash.pref, "washedMarks")]),
-    ...(play.covers === undefined ? [] : [flag(play.covers.pref, "hiddenShown")]),
-    ...(play.highlights ?? []).map(
-      ({ pref, on }, k): GamePref<FillUi> => ({
-        ...pref,
-        type: "boolean",
-        get: (ui) => ui.highlights?.[k] ?? on,
-        set: (ui, v) => {
-          ui.highlights ??= (play.highlights ?? []).map((h) => h.on);
-          ui.highlights[k] = v;
-        },
-      }),
-    ),
-    // A board of features takes notes by its slots, and types nothing a
-    // placement or a mode could act on (`features.ts`).
-    ...(!notes || play.numbers?.features !== undefined
-      ? []
-      : [
-          // The candidate walk refuses any regions but rows and columns. A
-          // board where a placed value rules out none other (no unit, and no
-          // technique run as it is placed: Undead's) has nothing to remove.
-          ...(module.units.length === 0 && module.placing.length === 0
-            ? []
-            : [
-                noted(
-                  autoPencilPref(
-                    "When you place a number, remove it from pencil marks in its row and column",
-                  ),
-                ),
-              ]),
-          noted(stickyPencilPref()),
-          noted(pencilKeepHighlightPref()),
-          // Full notes leave no square unnoted for the hint to read.
-          ...(play.fullNotes === true ? [] : [noted(candidateReadingPref())]),
-        ]),
-    ...(play.numbers?.pictures?.pref === undefined
-      ? []
-      : [
-          {
-            ...play.numbers.pictures.pref,
-            type: "choices",
-            choices: [
-              "Pictures",
-              play.numbers.letters === undefined ? "Numbers" : "Letters",
-            ],
-            get: (ui: FillUi) => (ui.pictures === false ? 1 : 0),
-            set: (ui: FillUi, v: number) => {
-              ui.pictures = v === 0;
-            },
-          } satisfies GamePref<FillUi>,
-        ]),
-    ...(play.along === undefined
-      ? []
-      : (
-          [
-            [play.along.wash, "runWash"],
-            [play.along.advance, "advance"],
-          ] as const
-        ).map(
-          ([pref, field]): GamePref<FillUi> => ({
-            ...pref,
-            type: "boolean",
-            get: (ui) => ui[field] !== false,
-            set: (ui, v) => {
-              ui[field] = v;
-            },
-          }),
-        )),
-    ...(play.countStyle === undefined
-      ? []
-      : [
-          {
-            ...play.countStyle,
-            type: "choices",
-            choices: [...COUNT_STYLES],
-            get: (ui: FillUi) => countStyleOf(play, ui),
-            set: (ui: FillUi, v: number) => {
-              ui.countStyle = v;
-            },
-          } satisfies GamePref<FillUi>,
-        ]),
-    ...(play.numbers?.raised !== true
-      ? []
-      : [
-          {
-            kw: "appearance",
-            name: "Puzzle appearance",
-            type: "choices",
-            choices: ["2D", "3D"],
-            get: (ui: FillUi) => (ui.raised === false ? 0 : 1),
-            set: (ui: FillUi, v: number) => {
-              ui.raised = v === 1;
-            },
-          } satisfies GamePref<FillUi>,
-        ]),
-  ];
+  const prefs = fillPrefs(module, play);
   const numbered = module.numbers ?? [];
   const gapKinds = gapKindsOf<C>(play);
   const partKinds = partKindsOf(deal) as (keyof C & string)[];
@@ -481,35 +366,37 @@ export function fillGame<C extends Clues<C> & object>(
     ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
     ...(module.labels === undefined ? {} : { labels: module.labels }),
   };
-  // A board whose cells are parts is drawn over its squares.
+  // A board whose cells are parts is drawn and aimed at over its squares.
+  const partsOf = deal.parts === undefined ? null : geometryOfParts(module, deal.parts);
   const render: FillRender<C> =
-    deal.parts === undefined
+    partsOf === null
       ? fillRender(module, look, (b, ui) => (buttons ?? typed)?.previewed(b, ui) ?? b)
-      : partsRender(module, look, deal.parts);
+      : partsRender(module, look, partsOf);
   // A board of numbers is typed into; one of buttons is clicked and dragged.
   const typed =
     play.numbers === undefined
       ? null
-      : numberInput<C, FillDrawState>(
-          module,
-          render.origin,
-          render.gap,
-          {
+      : numberInput<C, FillDrawState>(module, render.origin, render.gap, {
+          clues: {
             partClue: render.partClueBox,
             slotKinds: module.slotClues ?? [],
             marginKinds: module.valueMargins ?? [],
           },
-          render.recordPoint,
-          play.numbers.features === undefined
-            ? null
+          recordPoint: render.recordPoint,
+          ...(play.numbers.features === undefined
+            ? {}
             : {
-                slotsOf: render.featureSlots,
-                lettersOf: render.featureLetters,
-                bandGrid: render.bandGrid,
-                bandPoint: render.bandPoint,
-                badgePoint: render.badgePoint,
-              },
-        );
+                features: {
+                  slotsOf: render.featureSlots,
+                  lettersOf: render.featureLetters,
+                  bandGrid: render.bandGrid,
+                  bandPoint: render.bandPoint,
+                  badgePoint: render.badgePoint,
+                },
+              }),
+          ...(partsOf === null ? {} : { parts: partsAim(partsOf, render.origin) }),
+          keySwatch: render.keySwatch,
+        });
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
   const inputs =

@@ -15,6 +15,7 @@ function four(k: number): Painter {
   return {
     colors: () => colors,
     surface: 0,
+    swatch: true,
     // The surface is the whole piece.
     paint() {},
     note(dr, box, slot) {

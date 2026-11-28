@@ -18,6 +18,9 @@ export interface Painter {
   /** The surface a cell holding the piece takes, as an index into
    * {@link colors}, or `null` for the board's surface of an undecided cell. */
   readonly surface: number | null;
+  /** Whether the piece is its {@link surface} alone, a color and nothing
+   * drawn on it, so the key placing it is painted in the color. */
+  readonly swatch?: boolean;
   /** The member of the two-state pair the piece is, which a hint names it
    * by (`PAIR_NAMES`), where it is one. */
   readonly pair?: PairIndex;

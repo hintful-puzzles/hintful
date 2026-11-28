@@ -734,6 +734,34 @@ room for four values, and the renderer refuses a board of notes with more.
 Selection, the hint's marks and the drag are 2.6c and 2.6d's; the region
 numbers and the large dots 2.6f's.
 
+### 31. A part is aimed at on its squares, and selected by a band (2.6c1)
+
+The input keeps the stored cells: a board of numbers aims through a
+`TargetGeometry`, the square grid's on any board and on a board of parts
+`partsAim` (`parts-aim.ts`), whose target is the part at `(part, 0)`. So
+the note-taking cell, the typing and a hint's gesture read a part as any
+board reads a cell, and nothing beside the aim knows the squares. The
+cursor's square, and the triangle it last moved toward, are the Ui's
+`square`, which a press sets where it lands; a selection moved by anything
+else (a hint's press) names a part the square may not, and the next arrow
+walks from the part's label square. `numberInput`'s trailing sites, which
+only `game.ts` passed, are one `NumberSites` now.
+
+The band is the hand-written Map's (`games/map/render.ts`, "the selected
+region"), in `render/parts-bands.ts`, with one difference: the note-taking
+corner goes in the part's first square whose top left corner is the part's.
+The hand-written puts it in the part's first square, where a split can give
+that corner to another part and the corner is not drawn at all (the
+fixture's region 3, whose first square is split so).
+
+A key placing a value drawn as a color alone (`Painter.swatch`, the four
+colors) is painted in it and labeled by the character it sends, as the
+hand-written Map's keypad is, on any board of pictures.
+
+A press selects, as on every typed board. The drag (2.6c2) makes it Map's
+select-or-drag gesture: the press picks the part's value up, and a release
+that carries nothing is the tap that selects.
+
 ## What each flip changed for a player
 
 Filled in by each flip.
