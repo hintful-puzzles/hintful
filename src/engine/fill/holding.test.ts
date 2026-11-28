@@ -310,6 +310,143 @@ describe("a press on the band", () => {
   });
 });
 
+describe("a square in focus", () => {
+  // Square 0 open, {A}; every other given.
+  const id = idOf(ANSWER, [0]);
+  // A horseshoe is two circles at one middle, its ring and its hole; a badge
+  // is a circle alone.
+  const badgesOf = (ops: readonly DrawOp[]) => {
+    const circles = ops.filter(
+      (o): o is Extract<DrawOp, { op: "circle" }> => o.op === "circle",
+    );
+    return circles.filter(
+      (o) => circles.filter((q) => q.cx === o.cx && q.cy === o.cy).length === 1,
+    );
+  };
+  const bandText = (ops: readonly DrawOp[], text: string) => {
+    const o = ops.find(
+      (o): o is Extract<DrawOp, { op: "text" }> => o.op === "text" && o.text === text,
+    );
+    if (o === undefined) throw new Error(`no ${text} in the band`);
+    return o;
+  };
+  /** The frame after pressing, in order, the badge (`badge`) or a set of
+   * the band (its text): its ops, the board and the Ui. */
+  const pressing = (...targets: string[]) => {
+    const { midend, palette, recording: first } = renderScenario({ game, id });
+    const [badge] = badgesOf(first.ops);
+    // The game's own hooks beside the midend's, for the board and the Ui
+    // the midend keeps to itself; the frame is drawn at its tile size.
+    let board = game.newState(PARAMS, descOf(ANSWER, [0]));
+    const ui = game.newUi(board);
+    const ds = game.newDrawState(board, game.preferredTileSize);
+    for (const t of targets) {
+      const at =
+        t === "badge"
+          ? { x: badge.cx, y: badge.cy }
+          : { x: bandText(first.ops, t).x + 2, y: bandText(first.ops, t).y - 2 };
+      midend.processInput(at.x, at.y, LEFT_BUTTON);
+      midend.processInput(at.x, at.y, LEFT_RELEASE);
+      const made = game.interpretMove(board, ui, ds, at, LEFT_BUTTON);
+      if (made !== null && made !== UI_UPDATE) board = game.executeMove(board, made);
+    }
+    const recording = new RecordingDrawing(palette);
+    midend.forceRedraw(recording);
+    return { ops: recording.ops, board, ui };
+  };
+  /** The sets of the band a line strikes. */
+  const struck = (ops: readonly DrawOp[]) =>
+    ["__", "A_", "_B", "AB"].filter((text) => {
+      const t = bandText(ops, text);
+      return ops.some(
+        (o) =>
+          o.op === "line" &&
+          o.y1 === o.y2 &&
+          o.x1 <= t.x &&
+          o.x2 >= t.x + 4 &&
+          o.y1 < t.y &&
+          o.y1 > t.y - 20,
+      );
+    });
+
+  it("is offered by a badge above each open square alone, filled while in focus", () => {
+    const { ops } = pressing();
+    const badges = badgesOf(ops);
+    expect(badges.length).toBe(1);
+    // Above square 0's letters.
+    const letters = ops.flatMap((o) =>
+      o.op === "text" && o.text.length === 1 ? [o] : [],
+    );
+    expect(badges[0].cy).toBeLessThan(Math.min(...letters.map((o) => o.y - 10)));
+    expect(badges[0].fill).not.toBe(badges[0].outline);
+    const [focused] = badgesOf(pressing("badge").ops);
+    expect(focused.fill).toBe(focused.outline);
+    expect(pressing("badge").ui.focus).toBe(0);
+    expect(pressing("badge", "badge").ui.focus).toBe(-1);
+  });
+
+  it("is where a press on the band strikes a set from, and gives it back", () => {
+    const after = pressing("badge", "AB");
+    expect(Array.from(after.board.pencil ?? [])[0]).toBe(0b01110);
+    expect(struck(after.ops)).toEqual(["AB"]);
+    // No spotlight: the press was the square's.
+    expect(after.ui.spotlit ?? 0).toBe(0);
+    const back = pressing("badge", "AB", "AB");
+    expect(Array.from(back.board.pencil ?? [])[0]).toBe(0b11110);
+    expect(struck(back.ops)).toEqual([]);
+  });
+
+  it("strikes nothing while out of focus, and places the last set left", () => {
+    expect(struck(pressing("AB").ops)).toEqual([]);
+    const placed = pressing("badge", "__", "_B", "AB");
+    expect(placed.board.values[0]).toBe(2);
+  });
+
+  it("keeps its badge drawn when the gap it sits in is drawn again", () => {
+    // Square 2 open: its badge is in the gap below square 0, whose horseshoe
+    // goes red once {A, B} is placed beneath it.
+    const {
+      midend,
+      palette,
+      recording: first,
+    } = renderScenario({
+      game,
+      id: idOf(ANSWER, [2]),
+    });
+    const [badge] = badgesOf(first.ops);
+    midend.playMoves([{ set: [2, 4] }]);
+    const recording = new RecordingDrawing(palette);
+    midend.redraw(recording);
+    const ops = recording.ops;
+    // The gap's background, drawn over the badge's middle.
+    const cleared = ops.findLastIndex(
+      (o) =>
+        o.op === "rect" &&
+        o.x <= badge.cx &&
+        o.x + o.w > badge.cx &&
+        o.y <= badge.cy &&
+        o.y + o.h > badge.cy &&
+        o.w > badge.r * 3,
+    );
+    expect(
+      ops.some(
+        (o) =>
+          (o.op === "circle" && o.fill === COL_ERROR) ||
+          ("color" in o && o.color === COL_ERROR),
+      ),
+    ).toBe(true);
+    expect(cleared).toBeGreaterThanOrEqual(0);
+    expect(badgesOf(ops.slice(cleared)).map((o) => [o.cx, o.cy])).toEqual([
+      [badge.cx, badge.cy],
+    ]);
+  });
+
+  it("puts out the spotlight, which a press with no square in focus lights again", () => {
+    expect(pressing("AB", "badge").ui.spotlit).toBe(0);
+    expect(pressing("badge", "badge", "AB").ui.spotlit).toBe(4);
+  });
+});
+
 describe("notes full from the deal", () => {
   // Every set, bits 1 to 4.
   const EVERY = 0b11110;

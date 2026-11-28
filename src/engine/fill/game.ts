@@ -42,7 +42,7 @@ import {
   status,
   textFormat,
 } from "./answer.ts";
-import { pressBand } from "./band.ts";
+import { pressBadge, pressBand } from "./band.ts";
 import {
   boardSizeOf,
   type Clues,
@@ -546,8 +546,10 @@ export function fillGame<C extends Clues<C> & object>(
   const takeRecord = along === null ? null : along.take;
   /** The input, a left press on a record of the row of counts typing its
    * value's key (`counts.ts`), one on a record of the list taking it where
-   * typing goes along the list's sites (`along.ts`), and one on a value of
-   * the band spotlighting its squares (`band.ts`); a right one is the right
+   * typing goes along the list's sites (`along.ts`), one on a value of the
+   * band striking it from the square in focus or spotlighting its squares,
+   * and one on a badge putting its square in focus (`band.ts`); a right one
+   * is the right
    * button's anywhere, which under the sticky preference switches notes on
    * and off. */
   const interpretMove =
@@ -556,7 +558,9 @@ export function fillGame<C extends Clues<C> & object>(
       : (b: FillBoard<C>, ui: FillUi, ds: FillDrawState, p: Point, button: number) => {
           const left = stripModifiers(button) === LEFT_BUTTON;
           const spot = left ? render.bandPressed(b, ds, p) : null;
-          if (spot !== null) return pressBand(ui, spot);
+          if (spot !== null) return pressBand(b, ui, spot);
+          const badge = left ? render.badgePressed(b, ds, p) : null;
+          if (badge !== null) return pressBadge(ui, badge);
           const k = left && takeRecord !== null ? render.recordPressed(b, ds, p) : null;
           if (k !== null && takeRecord !== null) return takeRecord(b, ui, k);
           const v = left ? render.countPressed(b, ds, p) : null;

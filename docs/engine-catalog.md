@@ -1268,7 +1268,10 @@ the list's `listPixels` across the board's width, gaps included
 geometry (the setup's `bandOf`, which the site draws and a press reads);
 its values are the board's domain, not a clue. Its spotlight is the last
 of the board's highlights (`render/layers/wash.ts`), so a player's wash
-over the squares is one lane whichever control asks for it.
+over the squares is one lane whichever control asks for it. A square is
+put in focus for the band by its badge, in the gap above it
+(`sites/badges.ts`), and a site drawn in a gap keys on what the gap shows
+(`ds.gaps.shown`), since the gaps site clears a gap whole.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

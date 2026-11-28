@@ -491,6 +491,25 @@ layer of its own, and it covers a highlight beneath it, being what the
 player asked to see last. A slot press keeps it, as the hand-written game
 kept its spotlight: the player works the squares it shows.
 
+### 23. A square is put in focus by its badge, and the band strikes from it (2.5c3)
+
+Each open square has a badge, a ring in the gap above its top left, left
+of the gap's clue, as the hand-written game's; a press puts the square in
+focus (the badge filled) and puts out the spotlight, a second press takes
+the focus away. With an open square in focus, the band strikes in the
+player's ink each value its notes rule out, and a press on a value strikes
+it from the square or gives it back: a note move, so undo, the walk and
+the mistake check read it as any other, and a square left one value holds
+it (Decision 17). The last value is not struck, as no note move strikes a
+square to nothing. A placed square in focus strikes nothing: a press then
+spotlights, and the focus goes, as the hand-written game's did.
+
+The badge needs room above a square, which only a board with gaps has: a
+board without them draws none, and its focus is 2.5c4's cursor's. The gap
+a badge sits in is cleared whenever its clue is drawn again, so what the
+gap shows is in the badge's key (`sites/badges.ts`), and the badges are
+drawn after the gaps.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

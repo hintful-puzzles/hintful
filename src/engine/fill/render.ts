@@ -53,6 +53,7 @@ import { numbersLeft } from "./render/layers/numbers.ts";
 import { partClueBox } from "./render/layers/part-clues.ts";
 import { partsOf } from "./render/layers/surface.ts";
 import { type FillRenderModule, fillSetup } from "./render/setup.ts";
+import { badged, badgeOf, badges } from "./render/sites/badges.ts";
 import { band } from "./render/sites/band.ts";
 import { corners } from "./render/sites/corners.ts";
 import { counts } from "./render/sites/counts.ts";
@@ -155,6 +156,8 @@ export interface FillDrawState {
   readonly recordList: { shown: string | null };
   /** What the band beneath the board shows, `null` before it is drawn. */
   readonly band: { shown: string | null };
+  /** Per square, its badge (`sites/badges.ts`), where the board has them. */
+  readonly badges: TileCache;
   /** Whether the pencil-mode indicator shows, on a board that keeps notes:
    * `null` before it is drawn. */
   pencilModeShown: boolean | null;
@@ -191,6 +194,9 @@ export interface FillRender<C> {
   /** The value of the band beneath the board a press at `p` lands on, `null`
    * where it lands on none or the board has no band. */
   bandPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
+  /** The square whose badge a press at `p` lands on, `null` where it lands
+   * on none or the board has no badges. */
+  badgePressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
   /** Where cell `c`'s feature slots are drawn, where the values are features
    * (`play.numbers.features`), a slot a feature. */
   featureSlots(board: FillBoard<C>, ds: FillDrawState, c: number): readonly Rect[];
@@ -217,11 +223,13 @@ function viewedFrame<C>(frame: FillFrame<C>, lines: Int32Array): FillFrame<C> {
  * What the board draws after its tiles, in paint order, which is behavior:
  * the pencil indicator and the slots after the raised values' margins, whose
  * repaint clears their caches; the corners after the tiles and the hint's
- * rings, whose words they read and over which their discs lie.
+ * rings, whose words they read and over which their discs lie; the badges
+ * after the gaps, which clear the gap a badge sits in.
  */
 const SITES: readonly FillSite[] = [
   pencil,
   gaps,
+  badges,
   slots,
   hintRings,
   corners,
@@ -351,6 +359,7 @@ export function fillRender<C extends Clues<C>>(
         counts: { shown: null },
         recordList: { shown: null },
         band: { shown: null },
+        badges: new TileCache(badged(cx) ? b.w * b.h : 0, { words: 2 }),
         pencilModeShown: null,
       };
     },
@@ -394,6 +403,17 @@ export function fillRender<C extends Clues<C>>(
       const { values, pixels } = cx.bandOf(b, ds.tileSize, depth);
       const k = recordAtPixel(pixels, p);
       return k < 0 ? null : values[k];
+    },
+    badgePressed: (b, ds, p) => {
+      if (!badged(cx)) return null;
+      const lay = layoutFor(b, false, 1);
+      for (let c = 0; c < b.w * b.h; c++) {
+        if (b.fixed[c]) continue;
+        const { hit } = badgeOf(lay, ds.tileSize, c % b.w, Math.floor(c / b.w), b.h);
+        if (p.x >= hit.x && p.x < hit.x + hit.w && p.y >= hit.y && p.y < hit.y + hit.h)
+          return c;
+      }
+      return null;
     },
     featureSlots: (b, ds, c) => {
       if (cx.features === null) throw new Error("play numbers: no features");

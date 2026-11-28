@@ -256,8 +256,10 @@ export interface FillUi {
    * the cursor's square the cursor is on (`features.ts`). */
   slot?: number;
   /** On a board with a band of every value (`band.ts`), the value whose
-   * squares are spotlit, 0 where none is. */
+   * squares are spotlit, 0 where none is; and the square in focus, by its
+   * badge, whose notes the band strikes from, -1 where none is. */
   spotlit?: number;
+  focus?: number;
   /** On a board whose pieces all point (`glyphs.ts`'s `waysOf`), what Enter
    * or Space armed the selection to take from the next arrow key: a value,
    * or a note; `null` where nothing is armed. */
