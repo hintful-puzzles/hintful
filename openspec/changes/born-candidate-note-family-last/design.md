@@ -629,6 +629,73 @@ before; an armed refusal shows no step and disarms too. Putting the step
 away on a badge press was refused: the band's own hint gesture presses a
 badge, and the player following the hint by hand would lose it.
 
+### 28. Map's gap list, read against `1d7f2073b`, and its space (2.6)
+
+Met: the four-color ladder and its `says`, given colors, notes with no
+region and the candidate walk (Rome's and Magnets'), `n` as a number
+setting, the search tier, a dealt partition drawn with walls (Rome's), the
+select-or-drag gesture (Rome's `pointing.ts`), color keys and the shared
+palette's pastels, the tier refusals as `refuse`. New, each a concept another
+game takes:
+
+- **A space whose cells are a partition's parts.** The cells the rules,
+  the notes, the walk and the mistakes read are the parts, numbered in
+  reading order of their first squares, as the compiled module already
+  plays them (a store of `n` cells in one row, `describedSpace(units, n,
+  1)`); the squares are where the board is drawn and pressed, each the cell
+  of the part it lies in. `borders(c)` is the parts sharing a side with
+  `c`, which the space reads off the partition: a relation the board deals
+  is no longer stated beside the partition that already says it. The
+  regions group's partition games are the next to read a part as a cell
+  (Dominosa's pairs, Filling's areas).
+- **Drawn over its squares**: each square painted its part's value, the
+  borders between parts drawn, and upstream map.c's diagonal smoothing,
+  seeded by the ID as upstream's is; notes as stipples over the part's
+  squares; a hint's ring at the part's label point and its outline round
+  the part; a mistake red on every square of the part; a live error at a
+  point of the border two clashing parts share.
+- **Played on its squares**: a press addresses the part under it, the
+  cursor walks the squares and selects the part under it, and Map's drag
+  carries a part's value (or notes) to the part it is let go on.
+- **Regions grown from seeds** (`deal.divide`'s `seeds`, the engine's
+  `growFromSeeds`), before the answer, which a build colors on the ladder.
+- **A hide that keeps a value's last given** as the board stands, where
+  `keep` reads the clues as dealt.
+- **The ID**: upstream's edge list (a run of sides, letters `a` to `y`
+  flipping, `z` 25 not), and the clue list in the shared run-length grammar
+  over the parts; `n` defaulting to `w·h/8` where the ID leaves it out.
+- **Its display preferences**, region numbers and stipple size, kept by
+  their keys.
+
+Each on a fixture of its own (`mapping`, a small grid divided into four to
+nine parts), in the order the tasks give.
+
+Upstream map.c splits some squares diagonally between two regions, but
+only in drawing: its ID's regions are whole squares joined across the
+sides its edge list leaves open, and the split is made from the ID when
+the board is laid out. So a region is a set of squares, and the split is
+2.6b's.
+
+### 29. A part's sides are its partition's, and the board stores its parts (2.6a)
+
+`space.parts` names the partition of the squares (`of`) and the size that
+counts its parts (`count`); the params' `w` and `h` are the squares'. The
+board stores the parts as one row of cells, as the compiled module already
+played Map, so the values, the notes, the walk, the edits and the mistakes
+need nothing new. The partition is a `Squares` (`describe-runtime`), which
+holds its grid's size and its parts' sides, computed once where the
+partition is made (the divide, the ID's `borders` segment); a relation
+`sides` compiles to a read of them (`cl.map.sides[c]`). Putting the sides
+on the clues beside the partition was tried first: every path that makes
+clues (a deal derives them in six places, the ID in one) would have had to
+add them, and the deal's first rules check met a board without them.
+
+The ID is upstream's from this step on, since a fixture deals through its
+ID: the `borders` segment is map.c's edge list, and the clue list is the
+shared run-letter stream with `from: 0`, a color written one less than its
+value, as map.c writes 0 to 3. Checked against an ID the hand-written
+generator dealt (`mapping.test.ts`).
+
 ## What each flip changed for a player
 
 Filled in by each flip.

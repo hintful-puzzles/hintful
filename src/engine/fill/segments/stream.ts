@@ -65,7 +65,13 @@ export type StreamSegment = {
   /** On slots, the sides in the order written (Salad's top, left, bottom,
    * right), each side's slots in the space's order. */
   readonly sides?: readonly Side[];
+  /** `digits`' number counted from 0, written one less than it is (upstream
+   * Map's colors). */
+  readonly from?: 0;
 };
+
+/** How much less than the segment's own number it is written as. */
+const shiftOf = (seg: StreamSegment): number => (seg.from === 0 ? 1 : 0);
 
 /** How the segment's own number is written and read: as the board's glyph
  * where it writes glyphs, else in decimal. */
@@ -77,7 +83,8 @@ interface NumberText {
 
 /** The segment's own number's text, the board's glyphs `glyphs`. */
 function numberTextOf(seg: StreamSegment, glyphs: ValueGlyphs | null): NumberText {
-  if (seg.glyphs !== true) return { write: String, read: null };
+  if (seg.glyphs !== true)
+    return { write: (v) => String(v - shiftOf(seg)), read: null };
   if (glyphs === null) throw new Error("id: glyphs, on a board that draws none");
   return {
     write: (v) => {
@@ -264,10 +271,11 @@ function readStream<C extends Clues<C>>(
     kind: string,
     e: number,
     max = maxOf(clueMax, kind as keyof C, sp, e, cl),
+    shift = 0,
   ) => {
     const least = deal.least?.[kind] ?? 0;
-    if (whole) return r.int(least, max);
-    const v = Number(r.char(isDigit));
+    if (whole) return r.int(Math.max(least - shift, 0), max - shift) + shift;
+    const v = Number(r.char(isDigit)) + shift;
     if (v < least || v > max) r.fail(DESC_OUT_OF_RANGE);
     return v;
   };
@@ -313,7 +321,7 @@ function readStream<C extends Clues<C>>(
     }
     if (afterClue && seg.apart !== undefined) r.expect(seg.apart);
     const ownMax = maxOf(clueMax, own, sp, e, cl);
-    const v = number(String(own), e, Math.max(ownMax, topNumberCode));
+    const v = number(String(own), e, Math.max(ownMax, topNumberCode), shiftOf(seg));
     pos++;
     afterClue = true;
     const stands = codes.numbers.get(v);

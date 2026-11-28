@@ -46,6 +46,7 @@ import {
   dealtPartitions,
   divideOn,
   growByOf,
+  partsSpaceOf,
 } from "./fill/partitions.ts";
 import { markWhileOf, playOf } from "./fill/play.ts";
 import { keepsOf, refuseOf, refusePlacesOf } from "./fill/refuse.ts";
@@ -196,6 +197,7 @@ function dealOf(
       throw new CompileError(`unusedLetters: the letter ${letter} is taken`);
   const deal = {
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
+    ...present("parts", partsSpaceOf(json)),
     ...(hexagon === null ? {} : { hexagon }),
     settings,
     sample: withBuildReads(dealtSample(json, sample, settings), d),

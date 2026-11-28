@@ -2814,6 +2814,23 @@ function runStartOf(fn: string, vs: readonly Val[], env: Env, out: Out): Val {
   };
 }
 
+/** `fn(c)` of a relation, a set of cells for each cell: one the board
+ * deals, or on a board of parts its partition's sides. */
+function cellRelationCall(
+  fn: string,
+  args: readonly Expr[],
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val {
+  if (args.length !== 1) throw new CompileError(`${fn} takes 1, given ${args.length}`);
+  const c = compileExpr(args[0], scope, env, out);
+  expectElem(c, "cell", fn);
+  env.readsClues.yes = true;
+  const read = env.sides.has(fn) ? `cl.${env.squares}.sides` : `cl.${fn}`;
+  return { code: `${read}[${c.code}]`, sort: setOf(elem("cell")) };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -2886,14 +2903,7 @@ function call(
     env.readsClues.yes = true;
     return { code: `cl.${fn}.of[${c.code}]`, sort: elem(`region ${fn}`) };
   }
-  if (env.relations.has(fn)) {
-    if (args.length !== 1)
-      throw new CompileError(`${fn} takes 1, given ${args.length}`);
-    const c = compileExpr(args[0], scope, env, out);
-    expectElem(c, "cell", fn);
-    env.readsClues.yes = true;
-    return { code: `cl.${fn}[${c.code}]`, sort: setOf(elem("cell")) };
-  }
+  if (env.relations.has(fn)) return cellRelationCall(fn, args, scope, env, out);
   const filling = scope.get(fn);
   if (filling?.sort.k === "fill") {
     if (args.length !== 1)

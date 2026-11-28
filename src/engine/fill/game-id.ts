@@ -31,6 +31,7 @@ import {
 } from "./params/settings.ts";
 import { piecesOf, tallyClue, tallyIn } from "./params/tally.ts";
 import { tierAliasSegment, tierFlagSegment } from "./params/tiers.ts";
+import type { PartsSpace } from "./parts.ts";
 import { type Sample, samplePieces } from "./sample.ts";
 
 /** The elements of the space a clue kind sits at. */
@@ -127,6 +128,10 @@ export interface FillDeal {
   /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
    * every cell outside it holds, which the desc does not write. */
   readonly hexagon?: { readonly outside: string };
+  /** Where the board's cells are a partition's parts (`parts.ts`): the
+   * partition of the params' squares, the size counting its parts, and the
+   * relations read off it, the parts sharing a side. */
+  readonly parts?: PartsSpace;
   /** The settings the params give, in their order (`params/settings.ts`). */
   readonly settings: readonly FillSetting[];
   readonly sample: Sample | null;
@@ -245,7 +250,8 @@ export type FillDivision =
       readonly sizes: readonly (readonly number[])[];
       readonly by?: { readonly size: string; readonly min: number };
     }
-  | { readonly equal: number | string };
+  | { readonly equal: number | string }
+  | { readonly seeds: string };
 
 /** The divides of `deal` a board with `variations` on is dealt. */
 export const dividesOn = (

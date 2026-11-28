@@ -453,6 +453,12 @@ description author acts on:
   unsound on a triangle the game never deals. An edge mark may sit on the angles
   (`marks.<name>.sort: angle`, Loopy's corners: how many of the two are
   lines), read and struck as Slant's edge mark is.
+- **A board's cells may be the parts of a partition of squares**
+  (`space.parts`, Map's regions): the rules read the parts, which have no
+  geometry, and the squares are where the deal divides, the ID writes and
+  the player presses. A relation `sides` is the parts sharing a side,
+  read off the partition (`Squares.sides`, `engine/fill/parts.ts`), so no
+  deal or ID writes it.
 - **Two edges may be known alike or opposite** (a mark with `sort: edge`
   and `notation: alike or opposite`, Loopy's pairs): `pair(e, f)` is `{1}`
   alike, `{2}` opposite and `{1, 2}` unrelated, `related(e)` the edges

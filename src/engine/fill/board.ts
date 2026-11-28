@@ -31,6 +31,7 @@ import {
 } from "../solve/ladder-runtime.ts";
 import { LATIN_LIBRARY } from "../solve/latin.ts";
 import type { FillDeal } from "./game-id.ts";
+import { partsStore } from "./parts.ts";
 import type { FillPlay } from "./play.ts";
 
 /** A board's clues by kind, a list kind's as lists (Pattern's runs), its
@@ -144,12 +145,16 @@ export interface FillModule<C> {
 }
 
 /** The stored grid of a board of `module`'s that the params `p` ask for:
- * the params' own size, or a hexagon's store. */
-export const boardSizeOf = <C>(
+ * the params' own size, a hexagon's store, or a board of parts' row of
+ * parts. */
+export function boardSizeOf<C>(
   module: FillModule<C>,
-  p: { w: number; h: number },
-): { w: number; h: number } =>
-  module.hexagon === undefined ? { w: p.w, h: p.h } : hexStore(p.w, p.h);
+  p: { w: number; h: number; sizes?: Readonly<Record<string, number>> },
+): { w: number; h: number } {
+  const parts = module.deal?.parts;
+  if (parts !== undefined) return partsStore(parts, p.sizes ?? {});
+  return module.hexagon === undefined ? { w: p.w, h: p.h } : hexStore(p.w, p.h);
+}
 
 /** The board's values with each open washed cell read as the secondary
  * value, as the rules and the live errors read them; the values themselves

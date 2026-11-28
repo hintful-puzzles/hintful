@@ -25,7 +25,23 @@ type SizeSettings = readonly { id: string; from: number; values: number }[];
 export const dealtPartitions = (env: Env): string[] => [
   ...(env.boxesDealt && env.boxes !== null ? [env.boxes] : []),
   ...env.regions,
+  ...(env.squares === null ? [] : [env.squares]),
 ];
+
+/** On a board whose cells are a partition's parts (`space.parts`): that
+ * partition of the squares, and the size that counts its parts; `null` on
+ * any other board. The params' `w` and `h` are the squares'. */
+export function partsSpaceOf(
+  json: DescriptionJson,
+): { of: string; count: string } | null {
+  const { parts } = json.space;
+  if (parts === undefined) return null;
+  if (parts.w !== "w" || parts.h !== "h")
+    throw new CompileError("space parts: a grid of squares w wide and h high");
+  if (json.sizes[parts.count] === undefined)
+    throw new CompileError(`space parts: ${parts.count} is no size`);
+  return { of: parts.of, count: parts.count };
+}
 
 /** Refuses a grow, a divide or a merge of no dealt partition, a merge beside
  * either of the others, and a dealt partition the deal neither grows,
@@ -87,6 +103,8 @@ function divideDeal(
       throw new CompileError(`deal divide: equal parts of ${equal}, which is no size`);
     return divide;
   }
+  if ("seeds" in divide && json.sizes[divide.seeds] === undefined)
+    throw new CompileError(`deal divide: seeds of ${divide.seeds}, which is no size`);
   if (!("sizes" in divide)) return divide;
   const { partition, sizes, by } = divide;
   if (by === undefined) {

@@ -503,8 +503,14 @@ export interface Env {
    * such definition's set, by name. `null` elsewhere. */
   prelude: Prelude | null;
   /** The relations the board deals, each a set of cells for each cell, read
-   * `name(c)`: a planning game's. */
+   * `name(c)`: a planning game's, or one a board of parts reads off its
+   * partition (`sides`). */
   relations: ReadonlySet<string>;
+  /** On a board whose cells are a partition's parts (`space.parts`), that
+   * partition of the squares, which the board deals; `null` elsewhere. */
+  squares: string | null;
+  /** Of `relations`, those read off `squares`' sides (`sides`). */
+  sides: ReadonlySet<string>;
   /** The name of the mark the description keeps on each edge, read
    * `name(e)` as the values it may still hold, or `null` where it keeps
    * none. */

@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a map of regions colored with four colors, no two
+# that share a side alike, for the fill engine's tests of a board whose
+# cells are a partition's parts (`space.parts`): the regions grown from
+# seeds scattered over the squares (`deal.divide`'s `seeds`), which border
+# which read off them (`relations: sides`), and the ID as upstream map.c
+# writes it, the edge list (`borders`) and the colors from 0.
+game: mapping
+produces: coloring
+sizes:
+  w: { min: 3, max: 8 }
+  h: { min: 3, max: 8 }
+  n: { min: 4, max: 9 }
+space:
+  parts: { w: "w", h: "h", of: map, count: "n" }
+  units: []
+  relations:
+    borders: sides
+answer:
+  value: { sort: cell, domain: "range(1, 4)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, 4)" }
+shape:
+  - "forall a in cells, b in borders(a): value(b) != value(a)"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  boards: [4x4n6, 5x5n8]
+  hintMarks:
+    ring: the region the step decides.
+    strike: the colors the step crosses out.
+deal:
+  map: regions grown from seeds scattered over the squares
+  answer: a color a region, no two that border alike
+  value: every color, then each hidden while the board still finishes
+  tier: the one tier
+  divide: { partition: map, seeds: n }
+  sample: { build: true }
+  hide: given
+settings:
+  n:
+    kind: number
+    gives: size
+    letter: n
+    kw: regions
+    name: Regions
+    doc: How many regions the map is divided into.
+    min: 4
+    max: 9
+    default: 6
+    words: "{n} regions"
+id:
+  - borders: map
+  - digits: given
+    from: 0
+    before: ","
+    always: true
+tiers: [Easy]
+names:
+  lone: "a region with one color left"
+techniques:
+  - kind: peer.placed
+    as: placed
+    tier: Easy
+    with:
+      peer: "p in borders(c) where not known(p)"
+  - kind: one.cell
+    as: lone
+    tier: Easy
+steps:
+  clean:
+    ring: cell
+    move: "the colors its neighbors already show"
+  note:
+    ring: cell
+    terms: { unruled: flag, vs: values }
+    wordings:
+      - when: unruled
+        look: "No neighbor of {ring} is colored yet"
+        move: "dot every color"
+      - look: "Only {vs} {vs: is | are} still free beside {ring}"
+        move: "dot {vs: it | them}"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Every other color is beside {ring}"
+    move: "it must be {n}"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "its neighbors"

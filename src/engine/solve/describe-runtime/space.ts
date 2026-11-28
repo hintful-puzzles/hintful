@@ -25,6 +25,35 @@ export function partition(cells: readonly (readonly number[])[], n: number): Par
   };
 }
 
+/** The partition of the squares of a `w` by `h` grid whose parts are a
+ * board's cells (a description's `space.parts`, Map's regions), and each
+ * part's neighbors across a side, increasing (a corner does not count),
+ * which a relation `sides` reads. */
+export interface Squares extends Partition {
+  readonly w: number;
+  readonly h: number;
+  readonly sides: readonly (readonly number[])[];
+}
+
+/** `p`, a partition of the squares of a `w` by `h` grid, with its parts'
+ * sides. */
+export function squares(p: Partition, w: number, h: number): Squares {
+  const { of } = p;
+  const near = Array.from({ length: p.cells.length }, () => new Set<number>());
+  const join = (a: number, b: number): void => {
+    if (of[a] === of[b]) return;
+    near[of[a]].add(of[b]);
+    near[of[b]].add(of[a]);
+  };
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const c = y * w + x;
+      if (x + 1 < w) join(c, c + 1);
+      if (y + 1 < h) join(c, c + w);
+    }
+  return { ...p, w, h, sides: near.map((s) => [...s].sort((a, b) => a - b)) };
+}
+
 /** A rectangular grid's elements and relations, numbered. */
 export interface GridSpace {
   readonly w: number;

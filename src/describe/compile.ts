@@ -86,7 +86,7 @@ function runtimeImport(
     "type Marks",
     "type Violation",
     "type BreachLabel",
-    ...(regions ? ["type Partition"] : []),
+    ...(regions ? ["type Partition", "type Squares"] : []),
     ...[...used].sort(),
   ].filter(named);
   const line = `import { ${names.join(", ")} } from "${runtime}";`;
@@ -141,6 +141,8 @@ export function compileLibrary(
     epoch: null,
     prelude: null,
     relations: new Set(),
+    squares: null,
+    sides: new Set(),
     edgeMark: null,
     edgeMarkSort: "edge",
     relation: null,
@@ -290,11 +292,24 @@ export function compileGame(
   const { space } = d.json;
   const grid = space.grid ?? null;
   const tiling = space.tiling !== undefined;
-  if ([grid !== null, space.cells !== undefined, tiling].filter(Boolean).length !== 1)
+  const squares = space.parts?.of ?? null;
+  if (
+    [grid !== null, space.cells !== undefined, tiling, squares !== null].filter(Boolean)
+      .length !== 1
+  )
     throw new CompileError(
-      `${json.game}: a space is a grid, cells or a tiling, one of them`,
+      `${json.game}: a space is a grid, cells, a tiling or parts, one of them`,
     );
   const relations = Object.keys(space.relations ?? {});
+  const sides = relations.filter((r) => space.relations?.[r] === "sides");
+  if (sides.length > 0 && squares === null)
+    throw new CompileError(
+      `relations ${sides.join(", ")}: sides, on a board of no parts`,
+    );
+  // The board deals what it does not read off its parts.
+  const dealtRelations = relations.filter((r) => !sides.includes(r));
+  if (squares !== null && space.regions?.[squares] !== undefined)
+    throw new CompileError(`space parts: ${squares} is the squares', not the cells'`);
   const edgeMark = edgeMarkOf(d.json);
   const parts = Object.keys(space.regions ?? {});
   const unitParts = parts.filter((name) => space.units.includes(name));
@@ -319,14 +334,20 @@ export function compileGame(
     boxesDealt: boxes !== null && space.regions?.[boxes] === "dealt",
     diagonals: space.diagonals === true,
     // A size the grid is not measured in: `order`, `w` and `h` are the
-    // space's own.
+    // space's own, and on a board of parts the squares'.
     sizes: {
       names: new Set(
-        Object.keys(d.json.sizes).filter(
-          (n) =>
-            grid === null ||
-            (n !== "order" && n !== "w" && n !== "h" && n !== grid.w && n !== grid.h),
-        ),
+        Object.keys(d.json.sizes).filter((n) => {
+          const measured = grid ?? space.parts ?? null;
+          return (
+            measured === null ||
+            (n !== "order" &&
+              n !== "w" &&
+              n !== "h" &&
+              n !== measured.w &&
+              n !== measured.h)
+          );
+        }),
       ),
       read: new Set(),
     },
@@ -352,6 +373,8 @@ export function compileGame(
     epoch: null,
     prelude: null,
     relations: new Set(relations),
+    squares,
+    sides: new Set(sides),
     edgeMark: edgeMark?.name ?? null,
     edgeMarkSort: edgeMark?.sort ?? "edge",
     relation: relationMarkOf(d.json),
@@ -416,9 +439,13 @@ export function compileGame(
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
   // A partition among the units the board deals is dealt as any other is.
-  const dealtParts = [...regions, ...(env.boxesDealt && boxes !== null ? [boxes] : [])];
+  const dealtParts = [
+    ...regions,
+    ...(env.boxesDealt && boxes !== null ? [boxes] : []),
+    ...(squares === null ? [] : [squares]),
+  ];
   const clueLines =
-    clues.size + dealtParts.length + relations.length + sizes.length === 0
+    clues.size + dealtParts.length + dealtRelations.length + sizes.length === 0
       ? []
       : [
           "/** What the board deals: its partitions by name, its relations, a set of",
@@ -430,9 +457,13 @@ export function compileGame(
           ...dealtParts.map((r) =>
             r === boxes && json.space.regions?.[r] !== "dealt"
               ? `  ${r}?: Partition;`
-              : `  ${r}: Partition;`,
+              : r === squares
+                ? `  ${r}: Squares;`
+                : `  ${r}: Partition;`,
           ),
-          ...relations.map((r) => `  readonly ${r}: readonly (readonly number[])[];`),
+          ...dealtRelations.map(
+            (r) => `  readonly ${r}: readonly (readonly number[])[];`,
+          ),
           ...[...clues].map(
             ([k, c]) =>
               `  ${k}: ${c.fields ? recordsType(c.fields) : c.list ? "ListClues" : "ClueList"};`,

@@ -36,7 +36,7 @@
     },
     "divide": {
       "type": "object",
-      "description": "One partition `deal.divide` divides: by `pairs` and `most`, by `sizes`, into `equal` parts, or into `dominoes`.",
+      "description": "One partition `deal.divide` divides: by `pairs` and `most`, by `sizes`, into `equal` parts, into `dominoes`, or grown from `seeds`.",
       "oneOf": [
         {
           "required": ["partition", "dominoes"],
@@ -89,6 +89,20 @@
                   "minimum": 1
                 }
               }
+            }
+          }
+        },
+        {
+          "required": ["partition", "seeds"],
+          "additionalProperties": false,
+          "properties": {
+            "partition": {
+              "type": "string"
+            },
+            "seeds": {
+              "type": "string",
+              "minLength": 1,
+              "description": "A size the params give: that many squares scattered at random, each a part, grown a neighboring square at a time in a random order until every square is in one (upstream map.c's `genmap`, `engine/generate/divide.ts`'s `growFromSeeds`)."
             }
           }
         },
@@ -805,10 +819,33 @@
         },
         "relations": {
           "type": "object",
-          "description": "A planning game's relations the board deals, each a set of cells for each cell, read `name(c)`.",
+          "description": "Relations each a set of cells for each cell, read `name(c)`: `dealt`, a planning game's the board deals; or on a board of `parts`, `sides`, the parts sharing a side with the cell's.",
           "additionalProperties": {
-            "const": "dealt"
+            "enum": ["dealt", "sides"]
           }
+        },
+        "parts": {
+          "type": "object",
+          "required": ["w", "h", "of", "count"],
+          "additionalProperties": false,
+          "properties": {
+            "w": {
+              "$ref": "#/$defs/formula"
+            },
+            "h": {
+              "$ref": "#/$defs/formula"
+            },
+            "of": {
+              "type": "string",
+              "description": "The partition of the squares the board deals, which the deal divides and the ID writes; numbered in reading order of the parts' first squares."
+            },
+            "count": {
+              "type": "string",
+              "minLength": 1,
+              "description": "How many parts: a size the params give."
+            }
+          },
+          "description": "The board's cells are the parts of a partition the board deals of a grid `w` squares wide and `h` high (Map's regions): the rules, the notes and the hint read the parts, numbered in reading order of their first squares, and the board is drawn and pressed on the squares. In place of `grid`: the parts have no geometry, so `x`, `y`, the rows and the neighbors by direction are refused."
         },
         "tiling": {
           "enum": [true, "square"],
@@ -1191,6 +1228,9 @@
                 },
                 {
                   "required": ["cells"]
+                },
+                {
+                  "required": ["parts"]
                 },
                 {
                   "required": ["tiling"]
@@ -2119,6 +2159,17 @@
               },
               {
                 "type": "object",
+                "required": ["borders"],
+                "additionalProperties": false,
+                "description": "The partition of a board of `parts` as upstream map.c's edge list: every side between two squares, those between the rows first, row by row, then those between the columns, column by column; from a notional side before the first that is no border, a letter `a` to `y` a run of 1 to 25 sides after which a border turns to none or none to a border, `z` a run of 25 that turns nothing.",
+                "properties": {
+                  "borders": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
                 "required": ["pairs"],
                 "additionalProperties": false,
                 "description": "A dealt partition the deal lays as `dominoes`, a letter a cell in reading order saying where its partner lies: `L` right of it, `R` left, `T` below, `B` above, `*` a square alone (upstream laydomino.c's, as Magnets writes its tiles). After `before` where given.",
@@ -2205,6 +2256,10 @@
                   "lastRun": {
                     "const": false,
                     "description": "The last run is left off, but for its whole 26s, and the stream comes last (upstream Boats')."
+                  },
+                  "from": {
+                    "const": 0,
+                    "description": "`digits`' number counted from 0, each written one less than it is (upstream Map's colors)."
                   },
                   "apart": {
                     "type": "string",

@@ -16,11 +16,13 @@
  *   divvy.c): Solo's jigsaw blocks.
  * - Into dominoes (`dominoLayout`, upstream laydomino.c), a square left
  *   alone where the area is odd: Magnets' tiles.
+ * - Grown from seeds (`growFromSeeds`, upstream map.c's `genmap`), as many
+ *   parts as a size says: Map's regions.
  */
 
 import { Dsf } from "../board/dsf.ts";
 import { shuffle } from "../board/shuffle.ts";
-import { growToSize } from "../generate/divide.ts";
+import { growFromSeeds, growToSize, scatterSeeds } from "../generate/divide.ts";
 import { divvyRectangle } from "../generate/divvy.ts";
 import { dominoLayout } from "../generate/laydomino.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
@@ -55,6 +57,13 @@ export function dividePartition(
       divvyRectangle(sp.w, sp.h, equalSize(divide, sp, sizes), rs),
       sp.cells,
     );
+  }
+  if ("seeds" in divide) {
+    if (n !== sp.w * sp.h) throw new Error("divide: seeds grown on a board with holes");
+    const count = sizes[divide.seeds];
+    if (count === undefined)
+      throw new Error(`divide: no size ${divide.seeds} on the board`);
+    return numbered(growFromSeeds(sp, scatterSeeds(sp, count, rs), rs), sp.cells);
   }
   if ("sizes" in divide) {
     // Grown over the whole grid: a board of every cell.

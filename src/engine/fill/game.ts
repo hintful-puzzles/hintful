@@ -453,6 +453,7 @@ export function fillGame<C extends Clues<C> & object>(
         perValuesOf(module, sp, given),
         sizes,
         glyphsIn(module, sp, given),
+        deal.parts === undefined ? null : { w: p.w, h: p.h },
       ),
     );
     const board = newBoard<C>(

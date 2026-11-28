@@ -528,6 +528,8 @@ export function compilePlanning(
     epoch: null,
     prelude: null,
     relations: new Set(relations),
+    squares: null,
+    sides: new Set(),
     supposed: [],
     kept: null,
   };

@@ -3,7 +3,9 @@
 2.2f waits on the owner's answer to design.md § "Decisions" 7, and 2.4e
 and the flip 2.4g on § "Decisions" 15 (the board kind its notes need);
 Magnets' engine pieces are in (2.4a to 2.4d, 2.4f), and Subsets is born
-(2.5e, design.md § "Decisions" 26, and 2.5f): 2.6 Map is next. For 2.2f: the
+(2.5e, design.md § "Decisions" 26, and 2.5f): Map's pieces are planned
+(design.md § "Decisions" 28), the space is in (2.6a), and 2.6b, its
+drawing, is next. For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -144,6 +146,20 @@ order.
         keeps the step and the Hint control's beat (design.md §
         "Decisions" 27). Seen in the app.
 - [ ] 2.6 Map born, with the space whose cells are a partition's parts.
+      Read against `1d7f2073b` (design.md § "Decisions" 28), each piece on
+      the `mapping` fixture.
+  - [x] 2.6a The space: cells a dealt partition's parts, `borders(c)` read
+        off it (design.md § "Decisions" 29), the partition grown from seeds
+        before the answer is built; the ID's edge list and colors from 0.
+  - [ ] 2.6b Drawn over its squares: values, borders, the diagonal
+        smoothing, stipple notes, mistakes and live errors on a part.
+  - [ ] 2.6c Played on its squares: a press and the cursor address a
+        part; the keypad; the drag of a part's value to another.
+  - [ ] 2.6d A hint's ring and outline on a part, and its gesture.
+  - [ ] 2.6e The deal's rest: the hide keeping a value's last given, `n`
+        defaulting to `w·h/8` and at most `w·h`, and the tier refusals.
+  - [ ] 2.6f The display preferences, region numbers and stipple size.
+  - [ ] 2.6g The flip.
 
 ## 3. Finish
 

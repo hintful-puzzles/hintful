@@ -261,6 +261,17 @@ const STREAM: SegmentRead<SegmentOf<"codes">> = {
 const SEGMENTS: { readonly [K in SegmentKey]: SegmentRead<SegmentOf<K>> } = {
   blocks: partition("blocks", (seg) => seg.blocks),
   walls: partition("walls", (seg) => seg.walls),
+  // The edge list writes the squares a board of parts is divided on, and
+  // no partition of its cells.
+  borders: {
+    names: (seg) => [seg.borders],
+    check(seg, { json }) {
+      if (json.space.parts?.of !== seg.borders)
+        throw new CompileError(
+          `id: borders of ${seg.borders}, which is no board of parts' squares`,
+        );
+    },
+  },
   // A letter a cell says where its partner lies, so only a partition the
   // deal lays as dominoes is written so.
   pairs: {

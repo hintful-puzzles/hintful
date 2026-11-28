@@ -21,6 +21,7 @@ import { boardGlyphs, type ValueGlyphs } from "./glyphs.ts";
 import type { GrowSizes } from "./grow.ts";
 import { offKinds } from "./params/settings.ts";
 import { blocks } from "./segments/blocks.ts";
+import { borders } from "./segments/borders.ts";
 import { cells } from "./segments/cells.ts";
 import { dots } from "./segments/dots.ts";
 import { lists } from "./segments/lists.ts";
@@ -40,6 +41,7 @@ import { walls } from "./segments/walls.ts";
  * a kind is read by the first of these keys its entry holds. */
 const SEGMENT_KINDS = {
   blocks,
+  borders,
   cells,
   dots,
   lists,
@@ -133,6 +135,8 @@ export function decodeDesc<C extends Clues<C>>(
   sizes: Readonly<Record<string, number>> = {},
   /** How the board draws its values, where it is a board of numbers. */
   glyphs: ValueGlyphs | null = null,
+  /** The grid of squares a board of parts is divided on (`parts.ts`). */
+  squares: { readonly w: number; readonly h: number } | null = null,
 ): DescParse<C> {
   const off = offKinds(deal, sizes);
   // A kind's most reads the board's sizes beside the clues read before it
@@ -160,6 +164,7 @@ export function decodeDesc<C extends Clues<C>>(
       values,
       off,
       glyphs,
+      squares,
     };
     for (const seg of segmentsOn(deal, off)) kindOf(seg).decode(seg, cx);
     // A kind the board is not dealt holds no clue.

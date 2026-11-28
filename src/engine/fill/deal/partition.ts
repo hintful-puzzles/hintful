@@ -5,11 +5,16 @@
 
 import { shuffle } from "../../board/shuffle.ts";
 import { drawRejected } from "../../contract/deal-census.ts";
-import type { GridSpace, Partition } from "../../solve/describe-runtime.ts";
+import {
+  type GridSpace,
+  type Partition,
+  squares as squaresOf,
+} from "../../solve/describe-runtime.ts";
 import { type Clues, solveBoard, spaceOf } from "../board.ts";
 import { dividePartition } from "../divide.ts";
 import { dividesOn, type FillDeal } from "../game-id.ts";
 import { growPartition } from "../grow.ts";
+import { squareSpace } from "../parts.ts";
 import { searchedPositions } from "../search.ts";
 import { partitionOf } from "../segments/segment.ts";
 import type { DealContext, Grown } from "./context.ts";
@@ -23,10 +28,15 @@ const MEND_SEARCH_BUDGET = 24;
  * divides any; `null` where this draw left a cell alone. */
 export function divided<C extends Clues<C>>(cx: DealContext<C>): Grown | null {
   const out: Record<string, Partition> = {};
+  const squares = cx.deal.parts?.of;
   for (const divide of dividesOn(cx.deal, cx.variations)) {
-    const parts = dividePartition(divide, cx.sp, cx.sizes, cx.rs);
+    // A board of parts divides its squares, not its cells, which the parts
+    // are.
+    const on = divide.partition === squares ? squareSpace(cx.p) : cx.sp;
+    const parts = dividePartition(divide, on, cx.sizes, cx.rs);
     if (parts === null) return drawRejected("fill: the division left a cell alone");
-    out[divide.partition] = partitionOf(parts);
+    const p = partitionOf(parts);
+    out[divide.partition] = divide.partition === squares ? squaresOf(p, on.w, on.h) : p;
   }
   return out;
 }

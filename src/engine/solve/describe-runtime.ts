@@ -170,6 +170,8 @@ export {
   opp,
   type Partition,
   partition,
+  type Squares,
+  squares,
   type Tiling,
   tilingSpace,
   within,

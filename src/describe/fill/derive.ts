@@ -364,7 +364,11 @@ export function derivedClues(
   const grown =
     growing === undefined ? dividesOf(json).map((x) => x.partition) : [growing];
   // A size the grid is not measured in is the params' (a `settings` choice that gives a size).
-  if (dealtPartitions(env).some((r) => !grown.includes(r)) || env.relations.size > 0)
+  // A board of parts reads its relations off the partition it divides.
+  const dealtRelations = Object.values(json.space.relations ?? {}).some(
+    (how) => how === "dealt",
+  );
+  if (dealtPartitions(env).some((r) => !grown.includes(r)) || dealtRelations)
     throw new CompileError(
       `${json.game}: a sampled deal derives clues and deals a partition, and this board deals more`,
     );
@@ -619,7 +623,13 @@ export function derivedClues(
     );
   }
   if (dealt.length > 0) env.used.add("clueList");
-  dealt.unshift(...grown.map((r) => `${r}: grown[${JSON.stringify(r)}]`));
+  // A board of parts' partition is divided as its squares (`parts.ts`).
+  dealt.unshift(
+    ...grown.map(
+      (r) =>
+        `${r}: grown[${JSON.stringify(r)}]${r === env.squares ? " as Squares" : ""}`,
+    ),
+  );
   // The sizes the techniques and the rules read, as `Dealt` holds them.
   const sizes = [...env.sizes.read].sort();
   for (const n of sizes) dealt.push(`${n}: sizes.${n}`);

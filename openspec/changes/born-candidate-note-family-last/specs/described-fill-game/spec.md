@@ -982,3 +982,26 @@ board there, in the words the description gives a part's hidden single.
 - **WHEN** only one Subsets square can still hold {A}
 - **THEN** the hint places {A} there, saying "None of the other squares can
   still be {A}, so this square must be {A}."
+
+### Requirement: A born board's cells may be the parts of a partition of squares
+
+A born game's cells MAY be the parts of a partition of squares the board
+deals (`space.parts`): its rules, notes and hint SHALL read the parts,
+numbered by their first squares, and a relation `sides` SHALL read the
+parts sharing a side with each. Its deal MAY grow the partition from
+scattered squares (`deal.divide`'s `seeds`), and its ID MAY write it as
+upstream map.c's edge list (`borders`).
+
+#### Scenario: An upstream Map ID read as a board of parts
+
+- **WHEN** the `mapping` fixture reads the 5x4 ID `bbebeacacfb,031a12` of 6
+  regions
+- **THEN** its regions are, reading the squares, `0 1 2 3 4 / 0 0 0 3 4 /
+  0 0 0 5 5 / 0 0 0 5 5`, the first borders the second, third, fourth and
+  sixth, and every region but the fourth holds its given color
+
+#### Scenario: A board grown from seeds
+
+- **WHEN** a board of 8 regions on 5x5 squares is dealt
+- **THEN** it has 8 cells, and its answer colors no two that share a side
+  alike

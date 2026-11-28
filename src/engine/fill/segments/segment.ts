@@ -59,6 +59,9 @@ export interface Decoding<C> {
   readonly off: ReadonlySet<string>;
   /** As {@link Encoding.glyphs}. */
   readonly glyphs: ValueGlyphs | null;
+  /** The grid of squares a board of parts is divided on; `null` on any
+   * other board. */
+  readonly squares: { readonly w: number; readonly h: number } | null;
 }
 
 /** The places kind `kind` is written at, in the order a segment writes them
