@@ -955,6 +955,10 @@ names the one it applies.
   else is drawn over the fill as over the plain surface. A mistake's wash
   and the win flash take its place. Exemplar: a fill game's parts
   ([`engine/fill/render/layers/surface.ts`](../src/engine/fill/render/layers/surface.ts)).
+  On a fill board, a partition listed among the units is the one walled
+  and filled; a second, dealt beside it (Killer's cages), is drawn inset
+  with its clues; a diagonal unit is stroked. A diagonal that is no unit
+  but frames the board (Group's identity line) is `play.leadingDiagonal`.
   - **A region's color is one value a scheme in every game** (the owner,
     2026-10-15: consistency first), so a yellow region in Map and in Star
     Battle is one yellow in both schemes.

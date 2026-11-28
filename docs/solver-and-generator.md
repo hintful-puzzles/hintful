@@ -1602,6 +1602,17 @@ for a repeated symbol.
   square from data the description ships, where no random Latin square is
   an answer, and hide from it (Group's tables, `sample.group`,
   [`engine/fill/group-table.ts`](../src/engine/fill/group-table.ts)).
+- **A clue that always stays shown is a `keep` truth on its kind, not a
+  kind of its own** (Group's identity row and column, read off the dealt
+  clues and the sizes): the hide passes over it, and the ID and the
+  renderer see one kind.
+- **A rare tier makes a slow deal, and a hide cannot make it common.** Of
+  Group's 8x8 boards hidden to Tricky, Normal finishes 99.5%, so a deal
+  draws some 200 boards. Hiding first at the tier below and then at the
+  asked tier drew more, not fewer: the asked tier takes nothing more from a
+  board the tier below has hidden. Time such a deal on many seeds
+  ([`descriptions.md`](./descriptions.md) § "Judging a family moved onto
+  its description", 4), and make each draw cheaper.
 - **A cage or region game takes its minimal elements from the shared
   `Dsf`, and grows no min-tracking dsf of its own**: a map precomputed once
   after all merges, in a single ascending pass, which is exact whichever

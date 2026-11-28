@@ -161,6 +161,9 @@ is one to weigh against a pointer.
 - `solver-and-generator.md` § "Marks are checked like entries", and
   `solver-and-generator.md` § "The Latin family" where the board is a Latin
   square.
+- `descriptions.md` § "The formula syntax", its paragraphs on a value that
+  repeats (a line holding one value more than once) and on a game that
+  grades on more than one scale.
 
 **Cells marked by state** adds:
 

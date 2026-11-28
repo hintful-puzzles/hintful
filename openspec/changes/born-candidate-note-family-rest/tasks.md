@@ -1,8 +1,7 @@
 ## Next
 
-Finish 3.2: the `fill/` controls and the third deal shape are in; check
-each capability the four flips list in its commit against the guide a
-porter would look it up in, and add what is missing. Then 3.3.
+3.3: push, archive, and mark the route's task 1.2 done or file the
+successor (Undead, Rome, Magnets, Crossing, Map; proposal.md).
 
 ## 1. Design
 
@@ -90,7 +89,8 @@ changed for a player" gets its line. In the order task 1.1 set.
       ticks 3.1c.
 - [x] 3.1 The figures, per game, recorded in design.md § "The figures
       (3.1)".
-- [ ] 3.2 Update the guides for what the family added.
+- [x] 3.2 Update the guides for what the family added: the commit that
+      ticks 3.2.
 - [ ] 3.3 Commit, push, archive; mark the route's task 1.2 done, or file
       the next part beneath it.
 - [x] 3.4 Retire the candidate plan's own setup (`setUp`, `OwnSetUp`, the
