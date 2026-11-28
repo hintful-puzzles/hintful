@@ -1,7 +1,6 @@
 ## Next
 
-3.3: push, archive, and mark the route's task 1.2 done or file the
-successor (Undead, Rome, Magnets, Crossing, Map; proposal.md).
+Done; archived. The successor is `born-candidate-note-family-last`.
 
 ## 1. Design
 
@@ -91,7 +90,7 @@ changed for a player" gets its line. In the order task 1.1 set.
       (3.1)".
 - [x] 3.2 Update the guides for what the family added: the commit that
       ticks 3.2.
-- [ ] 3.3 Commit, push, archive; mark the route's task 1.2 done, or file
-      the next part beneath it.
+- [x] 3.3 Commit, push, archive; the next part filed as
+      `born-candidate-note-family-last` (route 1.2.2).
 - [x] 3.4 Retire the candidate plan's own setup (`setUp`, `OwnSetUp`, the
       populate-only typing and its tests): the commit that ticks 3.4.

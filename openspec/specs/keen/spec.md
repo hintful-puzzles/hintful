@@ -199,7 +199,8 @@ first cell, in the order of those cells, since a clue is wider than a cell.
 The solver SHALL accept a completed grid only when every cage's digits satisfy
 its clue. Of the shared Latin-square deductions, Easy and Normal SHALL allow
 the simple ones, Tricky the set deductions, Hard the deeper set deductions and
-the wing, and Unreasonable forcing chains and recursion.
+the wing, and Unreasonable a search by trial and error over those deductions
+that proves the board has one answer.
 
 #### Scenario: Solver grades a known board
 

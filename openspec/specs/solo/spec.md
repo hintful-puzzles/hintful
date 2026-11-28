@@ -13,31 +13,41 @@ every candidate-elimination hint is in `engine-candidate-hints`.
 
 ### Requirement: Rules: Solo's four variants compose
 
-The game SHALL support four composable variants: **standard** (rectangular
-`c × r` sub-blocks), **jigsaw** (`r === 1`, irregular sub-blocks), **X**
-(`xtype`: the two main diagonals must also contain every digit), and **killer**
-(`killer`: a second cage partition with digit-sum clues). There SHALL be two
-difficulty axes: the standard solver difficulty and the killer-cage difficulty.
+Solo SHALL be played from its description alone (`described-fill-game`):
+its blocks a ruleset, **Standard** (rectangles cut by the board's two sizes)
+or **Jigsaw** (blocks one square wide, dealt as connected parts of equal
+size), and two modifiers of either, **X** (the two long diagonals are units
+too) and **Killer** (a second partition of cages, each with its total, that
+no number repeats in). There SHALL be two difficulty scales: the tiers, and
+the killer scale its cage readings grade on.
 
 #### Scenario: Variants are served from one registered game
 
-- **WHEN** a standard, jigsaw, X, or killer Solo puzzle is requested
-- **THEN** the same registered `solo` game produces a playable board for it
-- **AND** a jigsaw board (`r === 1`) has irregular sub-blocks while a standard
-  board has rectangular `c × r` sub-blocks
-- **AND** an X board additionally constrains the two main diagonals, and a killer
-  board additionally carries digit-sum cages
+- **WHEN** a Standard, Jigsaw, X or Killer Solo board is requested
+- **THEN** the same registered `solo` game deals a playable board for it
+- **AND** a Jigsaw board has irregular blocks while a Standard board has
+  rectangular ones
+- **AND** an X board also holds every number once on each long diagonal, and
+  a Killer board carries its cages and their totals
 
 ### Requirement: Rules: Solo is solved when every region holds every digit
 
 `status` SHALL report a board solved when every row, every column and every
-sub-block holds every digit, each main diagonal does too on an X board, and on
-a killer board no cage repeats a digit and every cage makes its sum.
+block holds every number, each long diagonal does too on an X board, and on a
+Killer board no cage repeats a number and every cage makes its total. The
+check SHALL read the board's own space: the blocks its sizes cut or its deal
+divided, and the diagonals only where X is on.
 
 #### Scenario: The last placement solves the board
 
 - **WHEN** a placement fills the grid with no rule broken
 - **THEN** `status` reports the board solved
+
+#### Scenario: A board without X has no diagonal rule
+
+- **WHEN** two equal numbers stand on a long diagonal of a Standard board,
+  in different rows, columns and blocks
+- **THEN** no rule is broken
 
 ### Requirement: Rules: Solo checks entries and notes against the answer its givens and cage sums fix
 
@@ -55,18 +65,19 @@ cage sums.
 
 ### Requirement: Params: Solo encodes and decodes its parameters
 
-`encodeParams` SHALL write a base of `"{c}x{r}"` when `r > 1` or `"{c}j"` when
-`r === 1` (jigsaw), then `"x"` if `xtype` and `"k"` if `killer`. In *full* mode
-it SHALL append the symmetry (`m8`, `m4`, `md4`, `m2`, `md2`, `r4` or `a`, with
-the default `r2` omitted) and the difficulty (`db`, `di`, `da`, `de` or `du`,
-with `dt`, the default `DIFF_BLOCK`, omitted).
+`encodeParams` SHALL write `"{c}x{r}"`, or `"{c}j"` for a Jigsaw, then `"x"`
+for X and `"k"` for Killer. In *full* form it SHALL append the symmetry
+(`a`, `r4`, `m2`, `md2`, `m4`, `md4` or `m8`, with the default 2-way
+rotation unwritten) and the tier (`dt`, `db`, `di`, `da`, `de` or `du`). The
+Easy tier's `dt` SHALL be written, where upstream leaves it out; upstream
+reads both.
 
 #### Scenario: Params round-trip across variants
 
-- **WHEN** standard, jigsaw, X, and killer params are encoded with `full = true`
-  and decoded
-- **THEN** each decodes back to the original params
-- **AND** the non-full encoding omits the symmetry and difficulty suffixes
+- **WHEN** Standard, Jigsaw, X and Killer params are encoded with
+  `full = true` and decoded
+- **THEN** each decodes back to the original params, `3x3` to `3x3dt`
+- **AND** the brief encoding omits the symmetry and the tier
 
 ### Requirement: Params: Solo reads the legacy jigsaw form and a single leading number
 
@@ -94,26 +105,24 @@ SHALL be refused.
 
 ### Requirement: Params: Solo refuses parameters outside its bounds
 
-`validateParams` SHALL refuse a grid of more than 31 digits, a killer grid
-whose dimensions are not below 10, and an X grid of fewer than 4 digits. In
-full form it SHALL also refuse, in the words of `noSuchTier`, a tier that no
-board of a tiny grid has. A single field's limit is its bound in the Custom
-dialog and the difficulty a choice among the declared tiers, and the engine
-refuses a value outside either (`engine-params`, "Params validity is the
-engine's check").
+When a board is to be dealt, Solo SHALL refuse a grid of more than 31
+numbers, blocks fewer than 2 wide that are not a Jigsaw, a Killer grid of more
+than 9 numbers or fewer than 3, and an X grid of fewer than 4, each in the
+sentence its bound's place gives. It SHALL refuse every tier above Easy on a
+grid of 4 numbers or fewer, in the collection's sentence for a size that has
+no board of the tier.
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` receives a killer grid of 10 digits or more, or an X
-  grid of 3
-- **THEN** it returns a non-null error string
+- **WHEN** `4x3k` or `6x6` is to be dealt
+- **THEN** it is refused: "Killer (digit sums): width and height must both
+  be at most 9." or "Width and height must both be at most 31."
 
 #### Scenario: A tiny grid has only its easy tiers
 
-- **WHEN** a 2x2 board, or a Jigsaw of 2 or 3, is asked for above Easy, or a
-  Jigsaw of 4 without cages above Tricky, or a Killer Jigsaw of 2 at any tier
-- **THEN** `validateParams` refuses the tier and names the size, and the same
-  params without their difficulty are accepted
+- **WHEN** a 2x2 board, a 4 Jigsaw or a 2x2 Killer is asked for at Normal
+- **THEN** it is refused: "No 4x4 puzzle is Normal."
+- **AND** the same params at Easy are dealt
 
 ### Requirement: Params: Solo's killer difficulty is in no params string
 
@@ -197,19 +206,16 @@ grid's last side, where no side is.
 
 ### Requirement: Description: Solo refuses blocks and cages of the wrong number or size
 
-A jigsaw's blocks SHALL number the grid's size, each of that many cells. A
-killer's cages SHALL number at least the grid's size and at most its cells,
-each of 2 cells up to the grid's size. `newState` SHALL refuse any other
-division with the game's own sentence, "This game ID divides its board into
-the wrong number or sizes of blocks or cages."
+A Jigsaw's blocks SHALL number the grid's size, each of that many cells. A
+Killer's cages SHALL each hold 2 cells or more. Any other division SHALL be
+refused as a game ID not laid out the way this puzzle's are.
 
 #### Scenario: A cage of one cell
 
-- **WHEN** the killer board whose cages section opens `___a__a` is loaded
+- **WHEN** the Killer board whose cages section opens `___a__a` is loaded
   with the first `a`, which joins the fourth and fifth cells of the top row,
   written `__`
-- **THEN** each of the two cells is a cage of its own, and the description is
-  refused with that sentence
+- **THEN** it is refused as not laid out the way this puzzle's game IDs are
 
 ### Requirement: Description: Solo refuses a description with a section too many or too few
 
@@ -248,115 +254,68 @@ no repeat, 45 on a 9 by 9 grid, and `newState` SHALL refuse one outside that.
 
 ### Requirement: Description: Solo refuses a killer cage with no sum or with two
 
-`newState` SHALL refuse a killer description whose sums section gives some
-cage no sum, or more than one, with a sentence that says each cage takes
-exactly one. No generator writes one: upstream's and this one write one sum a
-cage.
+A Killer description whose sums section gives some cage no sum, or more than
+one, SHALL be refused as not laid out the way this puzzle's game IDs are. A
+sum SHALL be read anywhere in its cage, as upstream reads it, and written at
+the cage's first cell in reading order.
 
 #### Scenario: Two sums in one cage
 
 - **WHEN** a `3x3ka` description's sums section opens `15_14_8_8_8_5`, the
   fifth cell being the second cell of the fourth's cage
-- **THEN** it is refused as not giving each cage exactly one sum
+- **THEN** it is refused
 
 #### Scenario: A cage with no sum
 
 - **WHEN** a `3x3ka` description's sums section opens `a14` where the first
   cell begins a cage
-- **THEN** it is refused with the same sentence
+- **THEN** it is refused
 
 ### Requirement: Generation: Solo builds a full grid under every active constraint
 
-`newDesc` SHALL generate a full solution grid satisfying all active
-constraints: Latin rows and columns, sub-blocks, X-diagonals when `xtype` and
-killer cages when `killer`, with jigsaw blocks produced by the engine's
-`divvy`.
+A board's answer SHALL be searched under its blocks and, on a Killer board,
+its cages, which the deal divides first: a Jigsaw's blocks into connected
+parts as large as a row, and the cages into dominoes and then parts of up to
+three cells. Every cage's total SHALL be its answer's sum.
 
 #### Scenario: A board with the diagonals and cages both
 
-- **WHEN** a board is generated with X and Killer both on
-- **THEN** the grid it was built from holds every digit once on each main
-  diagonal and repeats none in a cage, as well as in each row, column and
-  sub-block
+- **WHEN** a board is dealt with X and Killer both on
+- **THEN** its answer holds every number once on each long diagonal and
+  repeats none in a cage, as well as in each row, column and block
 
 ### Requirement: Generation: Givens are removed in symmetry orbits
 
-On a board without killer cages `newDesc` SHALL remove givens in symmetry
-orbits, per the `symm` mode, by re-running the graded solver, keeping a removal
-only while the board stays solvable within the requested difficulty. A killer
-board SHALL carry no givens, and SHALL be kept only when it lands on both the
-requested difficulty and the requested killer difficulty.
+A board without Killer SHALL start from every square's number given and hide
+each with the rest of its orbit under the symmetry asked for, keeping a hide
+only while the board's tier still finishes it. A Killer board SHALL show no
+given, and SHALL need its killer scale's top as well as the tier asked for.
 
 #### Scenario: The givens keep the symmetry asked for
 
-- **WHEN** a board is generated with 4-way rotation
+- **WHEN** a board is dealt with 4-way rotation
 - **THEN** its pattern of givens is unchanged by a quarter turn
-
-### Requirement: Solver: Solo solves with its bespoke graded solver
-
-Solo's solver SHALL be its own, not the shared Latin solver, built from a
-constraint-group list (rows, columns, sub-blocks and, when `xtype`, the two
-diagonals) so that X-type and jigsaw fall out of the shared technique loops.
-`solveSolo(...)` SHALL return the difficulty reached, or an impossible or
-ambiguous sentinel.
-
-#### Scenario: Solver grades a known board
-
-- **WHEN** `solveSolo` is run on a generated board at its difficulty
-- **THEN** it returns that difficulty and fills the grid with the unique solution
-
-#### Scenario: Solver detects an inconsistent board
-
-- **WHEN** `solveSolo` is run on a board with no solution
-- **THEN** it returns the impossible sentinel
-
-### Requirement: Solver: The techniques Solo's solver implements
-
-The solver SHALL implement, in difficulty order, the standard techniques
-(positional and numeric elimination, block/row/column intersection, set
-elimination, and, at the recursive level, forcing chains and bounded
-recursion) and the killer techniques (single-cell sums, min/max elimination,
-sum-combination enumeration, and cage/line intersection). A forcing chain is a
-supposition, so it SHALL NOT run below the recursive level.
-
-#### Scenario: A board that needs a guess is graded at recursion
-
-- **WHEN** `solveSolo` is run, with recursion allowed, on a uniquely solvable
-  board that no deduction technique finishes
-- **THEN** it returns the recursion difficulty and the unique solution
-
-#### Scenario: A board that needs a chain is graded at recursion
-
-- **WHEN** `solveSolo` is run on a board whose next deduction at Extreme
-  would be a forcing chain
-- **THEN** capped at Extreme it does not finish the board, and with recursion
-  allowed it returns the recursion difficulty
 
 ### Requirement: Solver: Each rung is graded on its own scale
 
-Each rung SHALL carry its tier on its own scale, sudoku or killer, as the
-description's `scales` place it; the ladder SHALL hold only the rungs both
-caps admit, and a rung that fires SHALL raise its own scale's grade.
+Each technique SHALL carry its tier on its own scale, the tiers or the killer
+scale, as the description's `scales` place it; a ladder SHALL hold only the
+techniques both caps admit, and a technique that fires SHALL raise its own
+scale's grade. Killer's techniques SHALL be in the ladder of a board with
+Killer on alone.
 
 #### Scenario: A rung over its cap is left out
 
-- **WHEN** a killer board is solved with the killer cap below the region rule's
-  tier
-- **THEN** the ladder holds no killer region rung and no reading of the
-  partial cages it works out, and the killer grade reported does not exceed
-  the cap
+- **WHEN** a Killer board is solved with the killer cap below the region
+  rule's tier
+- **THEN** the ladder holds no region rule and no reading of the partial
+  cages it works out, and the killer grade reported does not exceed the cap
 
-### Requirement: Solver: A census certifies that every rung fires
+#### Scenario: A board without Killer has no cage reading
 
-The boards of Solo's firing census SHALL be pinned ones covering every
-variant, walked at every pair of deduction caps and at search, and every rung
-SHALL fire on them.
-
-#### Scenario: A mis-tiered or reordered rung fails
-
-- **WHEN** a rung is declared at another tier, or moved past the rung after it
-- **THEN** the firing census fails, or the tier gate fails, or the hint-walk
-  snapshots move
+- **WHEN** a hint is asked on a Standard board
+- **THEN** no step reads a cage, and the walk runs on the techniques its
+  ladder holds
 
 ### Requirement: Solver: A killer region left nothing is a contradiction
 
@@ -383,39 +342,6 @@ strike one cell a firing.
   2 and 8, a cell of its column is down to 2 and 4, and a fourth cell sees all
   three
 - **THEN** capped at Extreme the solver strikes 2 from the fourth cell
-
-### Requirement: Solver: Solo's ladder is its description
-
-Solo's solver SHALL run the ladder of `solo.description.yaml`, compiled: its
-box single, its six killer readings, the intersection and the single-digit
-set, and the Latin library's hidden single, naked single, set and wing, each
-at the tier the description gives it, checked sound against the description's
-rules in each world its variations deal. The forcing chain and the search
-above them stay Solo's.
-
-#### Scenario: A killer reading a firing at a time
-
-- **WHEN** a cage's open cells leave no room for a value in one cell given
-  the least and greatest the others can take, and that strike would leave
-  another cell of the cage a value with no room either
-- **THEN** the hint's step strikes only the first, read against the notes as
-  the step shows them, and the second is a step of its own
-
-### Requirement: Solver: Solo's ladder runs a rung alone as the hint does
-
-Solo's solver SHALL run its techniques as a `runDeductionFixpoint` ladder of
-named rungs, in the order its description states them, then the forcing
-chain. A rung SHALL read nothing a rung before it left behind in the same
-pass, so that the hint, which runs each technique alone on marks built from
-the board's values and notes, finds what the ladder finds. No hand-written
-technique loop SHALL be kept beside it.
-
-#### Scenario: A rung run alone
-
-- **WHEN** the hint runs one of Solo's techniques alone on marks built from a
-  board's values and notes
-- **THEN** its firings are the ones it makes from the same marks inside the
-  ladder
 
 ### Requirement: Controls: Solo interprets digit, pencil, and mark-all input
 
@@ -468,167 +394,33 @@ so any list is true of some Solo boards and false of others.
 - **WHEN** the preferences dialog is opened on a plain, an X and a Killer board
 - **THEN** the auto-pencil label reads the same and is true of all three, naming no region the board has not got and omitting none it has
 
-### Requirement: Hint: Every killer sum Solo cites is worked out from the board in one step
-
-The killer region rule SHALL derive the sums it leaves
-afresh on every pass from the cages on the board, and SHALL NOT keep a derived
-part of a cage as a working cage of its own. Every sum a killer deduction rests
-on SHALL therefore be one of the three a killer sum's origin names, each worked
-out from the board as it stands.
-
-#### Scenario: A killer single's cage is filled wherever the hint says so
-
-- **WHEN** the hint places the last open cell of a killer cage because its other cells already make the rest of the clue
-- **THEN** every other cell of that cage is filled on the board the step is shown on
-- **AND** the sum the sentence gives is the sum of their digits
-
-### Requirement: Hint: A killer sum has one of three origins
-
-A killer sum SHALL be one of three: a cage's open cells make its clue less its
-placed digits; the open cells a row, column or block leaves, once its placed
-digits and the cages inside it are taken out, make the rest of its total; or,
-where those cells all lie in one cage, that cage's other open cells make its
-clue less that and its placed digits. A killer step's reason SHALL say which,
-built from what its technique says, and its `reads` SHALL name every filled
-cell the sum rests on.
-
-#### Scenario: A recorded killer sum follows from the board and its reads
-
-- **WHEN** the reason of a killer step the hint offers is checked against the
-  board it is offered on
-- **THEN** its cells are open, its sum is theirs in the solution, and the sum
-  follows from its origin using only filled cells its `reads` name
-
-### Requirement: Hint: A killer sum is narrated by what it came from
-
-The hint SHALL narrate each killer sum by what it came from, so that no
-sentence calls something a killer cage that the board does not show as one, and
-no sentence says a cage's other cells are filled while any is open.
-
-#### Scenario: A sum the region rule leaves is narrated from its region
-
-- **WHEN** a killer deduction rests on what a row, column or block leaves its open cells, or on the rest of the cage those cells lie in
-- **THEN** the sentence names the region and the sum it leaves, the step hatches the region, and it outlines the cells the sum is left to
-
 ### Requirement: Hint: Solo's hint is the candidate walk's, started on the implicit reading
 
-Solo's hint SHALL be a plan of the shared candidate walk, its marks its
-legend's (`hint.marks`), run on the player's notes (`engine-candidate-hints`,
-"A described technique is a rung read off the notes"): each technique a step
-can teach SHALL be a rung, its reason built from what it says, at the
-board's tiers on both scales. A value with one place left in a block SHALL
-be the walk's hidden single. Solo SHALL start on the implicit reading of a
-cell with no notes.
+Solo's hint SHALL be the candidate walk of its description
+(`engine-candidate-hints`): each technique a step can teach a rung, its words
+its `says`, at the board's tiers on both scales, on the implicit reading of a
+cell with no notes. A wording that names a unit SHALL name it by the board's
+unit holding the cells: row, column, block or diagonal.
 
 #### Scenario: Nothing is filled in under Solo's own reading
 
-- **WHEN** the player asks for a hint on a board with no pencil notes, without
-  having changed how hints pencil in
+- **WHEN** the player asks for a hint on a board with no pencil notes,
+  without having changed how hints pencil in
 - **THEN** no step of the plan is the fill-all move
 
 #### Scenario: A killer technique past the board's killer tier
 
-- **WHEN** a hint is asked on a killer board dealt at a killer tier below the
-  region rule
+- **WHEN** a hint is asked on a board whose killer cap is below the region
+  rule
 - **THEN** no step of the plan places or strikes by what a row, column or
   block leaves
 
-### Requirement: Hint: The eliminations Solo's hint teaches
+#### Scenario: A cell every other number is ruled out of
 
-A deductive elimination SHALL be one technique *firing*: a positional or
-numeric single, a block/line intersection, a naked or hidden subset or, on a
-killer board, a single-square cage, a cage min/max bound, a cage
-sum-combination, or a deduced extra-cage.
-
-#### Scenario: A killer-cage deduction is taught on a killer board
-
-- **WHEN** the player asks for a hint on a killer board where a cage's sum clue
-  rules a digit out of one of its cells
-- **THEN** the hint returns a `pencilStrike` step naming the cage by the total
-  it must make and concluding in the necessity voice
-
-### Requirement: Hint: A Solo step's indication is its firing region, or what the player looks at
-
-The indication of a step that fires on a region SHALL be that region, named
-by its kind (a killer cage with its clue or the sum the clue leaves), and its
-conclusion SHALL be that what an elimination strikes "must go", and "must be"
-or "can only be" the number a placement enters. The indication of a step with
-no firing region SHALL be what the player looks at: the cell for a single, the
-number just placed for the cull after it, and the notes for a step that sets
-them up.
-
-#### Scenario: A strike's sentence names its region and ends in necessity
-
-- **WHEN** the player asks for a hint on a fully-penciled board where a
-  deductive technique rules a digit out of a cell
-- **THEN** the narration names the firing region (row / column / block /
-  diagonal, or "this killer cage") and concludes in the necessity voice
-
-#### Scenario: What an elimination's conclusion names
-
-- **WHEN** a step strikes one number, or several, or numbers its reasoning has
-  just listed
-- **THEN** it concludes "the 5 must go", or "1 and 2 must go", naming the
-  numbers in every case
-
-#### Scenario: The cull after a placement names where the number cannot repeat
-
-- **WHEN** a step strikes the number just placed from the cells that share a
-  region with it
-- **THEN** its narration begins "The 5 just placed can't repeat in its" and
-  names every kind of region the cell lies in, not one firing region
-
-#### Scenario: A cage is named by what its open cells must make
-
-- **WHEN** a killer step strikes a number, reasoning from a cage some of whose
-  cells are filled
-- **THEN** it gives the sum the clue leaves and not the clue: "This killer
-  cage's open cells make 9"
-
-#### Scenario: A cage of one open cell and nothing filled
-
-- **WHEN** the next step fills the only cell of a cage
-- **THEN** it concludes "it must be its total," and the number
-
-#### Scenario: A single read off one cell's notes names the cell
-
-- **WHEN** the next step places the only number an empty cell's notes leave
-- **THEN** its narration begins "Every other number has been ruled out in" that
-  cell, names no region, and concludes "it can only be" that number
-
-### Requirement: Hint: Solo marks every board element its hint sentence points at
-
-A Solo hint step SHALL mark, as evidence or as its target, every cell its
-narration refers to deictically. A sentence saying "these cells", "their
-region" or "these lines" SHALL have those cells on the frame; where the firing
-is not over a region the step SHALL carry the cells themselves.
-
-#### Scenario: The deduced extra-cage shows the region it counted
-
-- **WHEN** a killer board's hint forces a placement because one row, column or
-  block has a single cell left outside the cages wholly inside it
-- **THEN** the step stripes that region's cells as evidence, with the open cell
-  as the placement target
-- **AND** the narration names the region by kind and states the arithmetic,
-  the region's total, less the cages and filled cells inside it, rather than
-  repeating the placed digit as a separate total
-
-### Requirement: Hint: The two rungs whose premise is not a region carry their cells
-
-The rule that a step carries the cells themselves SHALL cover the two rungs
-whose premise is not a region: the deduced extra-cage, which reasons over a
-row, column or block less the cages wholly inside it, and the row-versus-column
-elimination on a single digit, whose premise is a pattern of candidate
-positions across several lines.
-
-#### Scenario: The locked pattern shows its own cells
-
-- **WHEN** the hint strikes a candidate because a single digit is confined,
-  across several lines, to a pattern of cells that uses them up
-- **THEN** the step stripes every cell of the lines that confine the digit
-- **AND** it outlines the cells of those lines the digit can still take
-- **AND** the narration points at both marks, and says how many lines there
-  are each way
+- **WHEN** the next step places the only number a cell's row, column and
+  block leave it on a Standard board
+- **THEN** it says "Every other number is already in this cell's row, column
+  or block, so it can only be" that number
 
 ### Requirement: Hint: Solo's hint uses no technique above the board's tier
 
@@ -644,18 +436,18 @@ the player.
 
 ### Requirement: Look: Solo draws its cages, digits, pencil marks and live errors
 
-`redraw` SHALL draw the block boundaries from the block partition, so that
-rectangular and jigsaw-irregular blocks look alike; the killer cage outlines
-and cage-sum labels (at each cage's top-left-most cell) when `killer`; given
-digits distinct from player digits; an auto-sized grid of pencil marks per
-empty cell; and live rule-violation errors.
+The board SHALL be drawn from its description: the blocks walled and tinted
+with the region fills, alike for a Standard and a Jigsaw board; on a Killer
+board each cage dashed in ink inside its blocks, with its total at its first
+cell; given numbers on the lifted surface; pencil marks; and live errors. A
+board without Killer SHALL draw no cage.
 
 #### Scenario: Variant decorations are drawn
 
-- **WHEN** a jigsaw or killer board is rendered to a recording drawing
-- **THEN** a jigsaw board draws block boundaries along the irregular partition
-- **AND** a killer board draws the cage-sum label at each cage and the cage
-  outlines
+- **WHEN** a Standard, Jigsaw or Killer board is drawn
+- **THEN** a Jigsaw board's walls follow its irregular blocks
+- **AND** a Killer board draws each cage dashed and its total at its first
+  cell
 
 ### Requirement: Look: Solo draws its digits on a quiet surface, with a given's cell lifted
 

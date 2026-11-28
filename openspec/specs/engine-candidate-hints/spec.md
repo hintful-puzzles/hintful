@@ -298,25 +298,23 @@ region shaded as evidence.
 The engine SHALL provide the whole candidate-elimination hint plan walk
 (`runCandidatePlan`) for every pencil-notes game whose hint sets and strikes
 candidate notes and places a value when a cell's notes collapse to one. Such a
-game's `buildSteps` SHALL hand its plan to it, directly or through a preset over
-it, and SHALL NOT walk, build or apply steps itself. The walk is hint-plan
-plumbing only: the solvers and the generate and solve paths SHALL NOT change
-because of it.
+game's `buildSteps` SHALL hand its plan to it, and SHALL NOT walk, build or
+apply steps itself. The walk is hint-plan plumbing only: the solvers and the
+generate and solve paths SHALL NOT change because of it.
 
 #### Scenario: A game's steps are built by the walk
 
-- **WHEN** any game that walks its plan with the shared candidate-plan walk, by any
-  entry into it, emits a placement or a
-  strike
+- **WHEN** any game that walks its plan with the shared candidate-plan walk
+  emits a placement or a strike
 - **THEN** the step's move is the game's own placement or strike move, its `targets`
   are the cells that move acts on, each once, and its `marks` are the candidates it
   strikes
 
 ### Requirement: The walk owns the setup
 
-Unless the game supplies its own setup, the walk SHALL set the notes up: under
+The walk SHALL set the notes up, from the words the plan gives for it: under
 the populate reading a lazy populate and then the obvious-candidate clean, and
-under the implicit reading the clean alone.
+under the implicit reading the clean alone. A plan has no setup of its own.
 
 #### Scenario: Nothing is penciled in until it is needed
 
@@ -434,54 +432,6 @@ move SHALL be `off`.
   presses the mark-all control, whose strike is the same marks
 - **THEN** the verdict is `completed`, and a strike of only some of a step's
   marks in one move is `off`
-
-### Requirement: A row/column Latin square answers no question its regions already settle
-
-The engine SHALL provide a preset over the candidate plan walk
-(`runLatinCandidatePlan`) supplying every plan field whose answer is forced
-once a game's no-repeat regions are exactly a row and a column, so a plain
-Latin game supplies its techniques' rungs and its words alone; the library's
-set, fish and wing are rungs the engine builds (`latinStrikeRungs`). Every
-game SHALL remain free to call the general entry point, and one that does
-SHALL say why.
-
-#### Scenario: A plain Latin game declares no regions
-
-- **WHEN** a candidate-elimination game whose cells' no-repeat regions are exactly a row
-  and a column walks its hint plan
-- **THEN** it passes no region function, no single-reason function and no hidden-single
-  evidence area, and its hidden singles are still classified in, narrated by and shaded
-  along the correct line
-
-### Requirement: The fields the row/column preset supplies
-
-The preset SHALL supply the regions, the row and the column of the cell in
-narration-preference order; the reason a single narrates as, naked or hidden in
-the region the classifier found; and the setup sentences, the note sentence and the
-conclusions, built from the game's `notes` vocabulary (its value noun, its verb
-for a value already on the board), which does not hold the phrase naming the
-regions. It SHALL add no evidence to a placement: the words that name a hidden
-single's line stripe it.
-
-#### Scenario: The setup sentences name the regions without being told them
-
-- **WHEN** a game on the preset supplies only its value noun and its placement verb
-- **THEN** the populate and obvious-clean steps read in that game's words and name its
-  cells' row and column, and no game on the preset states that phrase itself
-
-### Requirement: A game reasoning over other regions cannot take the preset
-
-A game whose singles narrate over any other region SHALL be unable to take the
-preset: the preset's parameter type SHALL fail to type-check for a reason union
-that cannot hold the single reason the preset synthesizes, and SHALL NOT rely on
-a convention or a roster to keep such a game away.
-
-#### Scenario: A game reasoning over other regions cannot take the preset
-
-- **WHEN** a game whose hidden singles name a sub-block, a diagonal or a cage is written
-  against the preset
-- **THEN** it fails to type-check, and the game walks its plan through the general entry
-  point instead
 
 ### Requirement: A region's name is read off the region
 
@@ -631,8 +581,7 @@ as a premise (`Premise`): the clause saying why the struck values go, without a
 conclusion. The walk SHALL end every strike's sentence with the plan's
 `conclude` words for the move its step makes: a strike ("so 2 and 4 must go"),
 a placement ("so this cell must be 3") or a note of the values left ("so this
-cell can only be 1 or 5"). A game off the row/column preset SHALL supply its
-own `conclude`.
+cell can only be 1 or 5"). Every plan SHALL supply its own `conclude`.
 
 #### Scenario: A game writes no strike conclusion
 
@@ -919,46 +868,24 @@ which, so that a step's rung and its sentence name the same deduction.
   the one the walk found, as a one-cell area's are a singleton's
 - **THEN** the step carries that reason's rung, not the one the walk found
 
-### Requirement: A rung list holds only the rungs of the readings its plan walks
-
-A game's list SHALL hold only the rungs of the readings its plan walks. A plan
-that gives a setup of its own walks the populate reading alone, and cannot
-speak two of the walk's rungs: the implicit reading's note step, and the single
-read off a cell with no notes. Such a plan's step type SHALL lack both, so its
-game's list lacks them and its tests excuse neither.
-
-#### Scenario: A plan on the populate reading alone
-
-- **WHEN** a game's plan gives a setup of its own
-- **THEN** its rung list holds neither the note step nor the single of a cell
-  with no notes, and its tests pin a board for every rung left
-
-### Requirement: A plan's setup declares the reading it walks
-
-The setup is the declaration of the reading, since the walk already runs it. A
-plan typed on the populate reading alone SHALL NOT compile without a setup, a
-plan typed on both readings SHALL NOT compile with one, and the walk SHALL
-throw, and not read a single off a cell with no notes, on a plan that gave a
-setup.
-
-#### Scenario: The walk would read a single off a cell with no notes
-
-- **WHEN** a plan that gave a setup of its own reaches a single the walk would
-  read off a cell with no notes
-- **THEN** the walk throws, naming the plan, where it would have stamped the
-  step with a rung the list lacks
-
 ### Requirement: A strike's conclusion names the struck values, even after its premise
 
 The conclusion SHALL refer to the struck notes the way the premise says: by
 `where` for a strike that reaches beyond the cell it is about, and by `struck`
 where a word names the notes better than a list of their values. Otherwise it
-SHALL name their values, even where the premise has just named them.
+SHALL name their values, even where the premise has just named them, a value
+struck from several cells and the only one struck in its plural, but a
+lower-case letter, which has no plural that reads as the letter.
 
 #### Scenario: A premise that names the values is followed by them
 
 - **WHEN** a strike's premise says "puts 2 in this cell"
 - **THEN** its conclusion reads "so the 2 must go", and not "so it must go"
+
+#### Scenario: One value struck from a whole line
+
+- **WHEN** a strike takes A from every cell of a row that shows it
+- **THEN** its conclusion reads "so the As must go"
 
 ### Requirement: A game whose generic wording diverges narrates its own arms
 

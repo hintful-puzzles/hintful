@@ -1,6 +1,6 @@
 ## Next
 
-1.2.1, `born-candidate-note-family-rest`; § 0 is done. Open: none.
+1.2.2, `born-candidate-note-family-last`; § 0 is done. Open: none.
 
 ## 0. The refactor first
 
@@ -39,8 +39,10 @@ is archived, with its figures recorded in its own design.md.
 - [x] 1.2 Latin squares and candidate notes: `born-candidate-note-family`
       (filed 2026-11-23), archived with its figures in its design.md
       § "The figures (3.1)".
-  - [ ] 1.2.1 The rest of the family: `born-candidate-note-family-rest`
-        (filed 2026-11-23).
+  - [x] 1.2.1 Solo, ABCD, Salad, Group: `born-candidate-note-family-rest`,
+        archived with its figures in its design.md.
+  - [ ] 1.2.2 Undead, Rome, Magnets, Crossing, Map:
+        `born-candidate-note-family-last` (filed 2026-11-28).
 - [ ] 1.3 Regions and partitions.
 - [ ] 1.4 Lines and loops.
 - [ ] 1.5 Moving pieces: re-plan `one-model-for-moving-pieces` against
