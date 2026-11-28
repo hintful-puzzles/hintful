@@ -15,7 +15,7 @@ import {
   perElement,
   perPlace,
 } from "../../solve/describe-runtime.ts";
-import type { Clues } from "../board.ts";
+import type { Clues, FieldClue } from "../board.ts";
 import type { ClueMax, FillDeal, Universe } from "../game-id.ts";
 import type { ValueGlyphs } from "../glyphs.ts";
 import type { GrowSizes } from "../grow.ts";
@@ -41,7 +41,7 @@ export interface Decoding<C> {
   readonly deal: FillDeal;
   readonly sp: GridSpace;
   readonly clueMax: ClueMax<C>;
-  readonly out: Partial<Record<keyof C, ClueList | ListClues | Partition>>;
+  readonly out: Partial<Record<keyof C, ClueList | ListClues | Partition | FieldClue>>;
   /** What the grown partition's parts hold on this board, where the deal
    * grows one. */
   readonly grown: GrowSizes | null;
@@ -134,6 +134,7 @@ export function universeOf(deal: FillDeal, kind: string): Universe {
   const u = deal.universes[kind];
   if (u === undefined) throw new Error(`id: no clue kind ${kind}`);
   if (u === "parts") throw new Error(`id: ${kind} sits at parts`);
+  if (u === "board") throw new Error(`id: ${kind} sits at the board`);
   return u;
 }
 

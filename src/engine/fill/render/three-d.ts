@@ -131,7 +131,10 @@ export function repaintMargins<C extends Clues<C>>(
   const ts = ds.tileSize;
   const { w, h } = b;
   const pencil = cx.notes
-    ? pencilIndicatorBox(cx.metrics.canvasOf(b, cx.marginValues(b), null, ts), ts)
+    ? pencilIndicatorBox(
+        cx.metrics.canvasOf(b, cx.marginValues(b), cx.beneathOf(b), ts),
+        ts,
+      )
     : null;
   const margin = [
     ...Array.from({ length: w + 1 }, (_, x) => [x, -1] as const),

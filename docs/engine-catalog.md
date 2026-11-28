@@ -1184,6 +1184,10 @@ on the wrong squares once a line is moved.
 cell layer is a module of `render/layers/`, which `render/tile.ts`'s
 `drawTile` calls in its paint order, and what is drawn after the tiles is a
 site, a module of `render/sites/` and a line of `render.ts`'s `SITES`.
+What a board draws beneath it, the tally or a row of counts (`counts.ts`,
+`play.counts`), is one `Beneath` the canvas makes room for: a board has
+one of them, and a site placing anything there takes its top left from
+`metrics.beneathAt`, so the drawing, the press and the canvas agree.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

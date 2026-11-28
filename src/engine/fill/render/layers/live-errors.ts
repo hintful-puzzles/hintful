@@ -139,8 +139,14 @@ export function errorWords<C extends Clues<C>>(
   const marginErrors = new Set<number>();
   // A broken number is drawn as a badge (`numberStates`), not on the piece;
   // a part's clue red at its part's first cell.
+  // A record of the row of counts red by its index.
+  const countErrors = new Set<number>();
   for (const [kind, broken] of errors.clues)
     for (const q of broken) {
+      if (kind === setup.counted?.kind) {
+        countErrors.add(q);
+        continue;
+      }
       const at = listOf(state.dealt, kind as keyof C).at[q];
       if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
         lineErrors.add(at);
@@ -162,6 +168,7 @@ export function errorWords<C extends Clues<C>>(
     slotErrors,
     cornerErrors,
     marginErrors,
+    countErrors,
   };
 }
 

@@ -12,7 +12,7 @@
  */
 
 import type { Frame, GameDrawing } from "../contract/game.ts";
-import type { Color, Rect, Size } from "../contract/types.ts";
+import type { Color, Point, Rect, Size } from "../contract/types.ts";
 import { HintMarks } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
 import { OverlaySidecar } from "../render/overlay-sidecar.ts";
@@ -27,14 +27,15 @@ import {
   spaceOf,
   topValue,
 } from "./board.ts";
-import { type FillParams, givenOf } from "./game-id.ts";
+import { countPressed, countRecords } from "./counts.ts";
+import { type FillParams, givenOf, recordsOf } from "./game-id.ts";
 import type { FillMove } from "./notes.ts";
 import { orderOf, viewedErrors, viewedMistakes, viewedStep, viewOf } from "./order.ts";
 import { tallyIn, tallyOf } from "./params/tally.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
-import { layoutOf } from "./render/geometry.ts";
+import { countsBeneath, layoutOf, tallyBeneath } from "./render/geometry.ts";
 import { hintPass } from "./render/hint.ts";
 import { breachesOf } from "./render/layers/breaches.ts";
 import { edgeWordsOf } from "./render/layers/edge-values.ts";
@@ -46,6 +47,7 @@ import { partClueBox } from "./render/layers/part-clues.ts";
 import { partsOf } from "./render/layers/surface.ts";
 import { type FillRenderModule, fillSetup } from "./render/setup.ts";
 import { corners } from "./render/sites/corners.ts";
+import { counts } from "./render/sites/counts.ts";
 import { edgeRings } from "./render/sites/edge-rings.ts";
 import { gaps } from "./render/sites/gaps.ts";
 import { hintRings } from "./render/sites/hint-rings.ts";
@@ -134,6 +136,9 @@ export interface FillDrawState {
   /** What the tally beneath the board shows found, `null` before it is
    * drawn. */
   readonly tally: { shown: string | null };
+  /** What the row of counts beneath the board shows, `null` before it is
+   * drawn. */
+  readonly counts: { shown: string | null };
   /** Whether the pencil-mode indicator shows, on a board that keeps notes:
    * `null` before it is drawn. */
   pencilModeShown: boolean | null;
@@ -159,6 +164,9 @@ export interface FillRender<C> {
     board: FillBoard<C>,
     c: number,
   ): { readonly box: Rect; readonly kind: string; readonly k: number } | null;
+  /** The value of the record of the row of counts a press at `p` lands on,
+   * or `null` where it lands on none or the board has no row. */
+  countPressed(board: FillBoard<C>, ds: FillDrawState, p: Point): number | null;
 }
 
 const PREFERRED_TILE_SIZE = 32;
@@ -193,6 +201,7 @@ const SITES: readonly FillSite[] = [
   linkRings,
   edgeRings,
   tally,
+  counts,
   lists,
   valueMargins,
   lineClues,
@@ -277,10 +286,19 @@ export function fillRender<C extends Clues<C>>(
         cx.margined && module.deal !== undefined
           ? perValuesOf(module, paramSpaceOf(module, p), givenOf(module.deal, p) as C)
           : 0;
+      // A row of counts holds every record the deal may deal.
+      const records =
+        cx.counted === null || module.deal === undefined
+          ? null
+          : recordsOf(module.deal, cx.counted.kind).keys.length;
       return metrics.canvasOf(
         p,
         values,
-        t === null ? null : tallyOf(t, p),
+        t !== null
+          ? tallyBeneath(tallyOf(t, p), p.w)
+          : records === null
+            ? null
+            : countsBeneath(records),
         metrics.tileOf(size),
       );
     },
@@ -302,6 +320,7 @@ export function fillRender<C extends Clues<C>>(
         corners: new TileCache(cx.cornered ? spaceOf(module, b).corners.length : 0),
         marks: new HintMarks(),
         tally: { shown: null },
+        counts: { shown: null },
         pencilModeShown: null,
       };
     },
@@ -316,5 +335,17 @@ export function fillRender<C extends Clues<C>>(
         c,
         (first) => partsOf(cx, b)?.walls[first] ?? null,
       ),
+    countPressed: (b, ds, p) => {
+      if (cx.counted === null) return null;
+      const ts = ds.tileSize;
+      const { x, y } = metrics.beneathAt(
+        ts,
+        metrics.depthOf(b, cx.marginValues(b)),
+        b.h,
+      );
+      const records = countRecords(b, cx.counted);
+      const i = countPressed(x, y, records.length, ts, p.x, p.y);
+      return i < 0 ? null : records[i].value;
+    },
   };
 }

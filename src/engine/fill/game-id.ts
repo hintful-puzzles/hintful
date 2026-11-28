@@ -36,9 +36,9 @@ import { type Sample, samplePieces } from "./sample.ts";
 /** The elements of the space a clue kind sits at. */
 export type Universe = "cells" | "lines" | "edges" | "slots" | "corners";
 
-/** The elements a clue kind sits at: the space's, or the parts of the deal's
- * one partition. */
-export type ClueUniverse = Universe | "parts";
+/** The elements a clue kind sits at: the space's, the parts of the deal's
+ * one partition, or a clue at the board's records. */
+export type ClueUniverse = Universe | "parts" | "board";
 
 /** The clue kinds at the dealt partition's parts. */
 export const partKindsOf = (deal?: FillDeal): string[] =>
@@ -55,6 +55,7 @@ export function elementCount<C extends Clues<C>>(
 ): number {
   const u = deal.universes[kind];
   if (u === undefined) throw new Error(`deal: no clue kind ${kind}`);
+  if (u === "board") return recordsOf(deal, kind).keys.length;
   if (u !== "parts")
     // A kind one a value sits at an element and a value.
     return deal.perValue?.includes(kind) === true
@@ -66,6 +67,14 @@ export function elementCount<C extends Clues<C>>(
     (clues[partitionOfKind(deal, kind) as keyof C] as Partition | undefined)?.parts
       .length ?? 0
   );
+}
+
+/** The records a clue at the board the deal derives may hold. */
+export function recordsOf(deal: FillDeal, kind: string): FillRecords {
+  const r = deal.records?.[kind];
+  if (r === undefined)
+    throw new Error(`deal: ${kind} is no clue at the board it derives`);
+  return r;
 }
 
 /** The partition kind `kind` sits at the parts of. */
@@ -170,6 +179,9 @@ export interface FillDeal {
   readonly perValue?: readonly string[];
   /** The partition each kind at parts sits at, by kind. */
   readonly partsOf?: Readonly<Record<string, string>>;
+  /** The records each clue at the board the deal derives may hold, by kind
+   * (Undead's totals). */
+  readonly records?: Readonly<Record<string, FillRecords>>;
   /** The dealt partitions, by name: Norinori's regions. */
   readonly partitions?: readonly string[];
   readonly tierLetters: string;
@@ -181,6 +193,14 @@ export interface FillDeal {
       { readonly min: number; readonly max?: number; readonly step?: number }
     >
   >;
+}
+
+/** A clue at the board the deal derives: its fields in order, and each record
+ * it may hold as the values of every field but the last, which the answer
+ * gives and the ID writes. */
+export interface FillRecords {
+  readonly fields: readonly string[];
+  readonly keys: readonly (readonly number[])[];
 }
 
 /** A dealt partition divided at random apart from the answer

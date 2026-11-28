@@ -9,6 +9,7 @@ import type { Partition } from "../../solve/describe-runtime.ts";
 import { rulesOf } from "../answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "../board.ts";
 import { cornerKindsOf } from "../corners.ts";
+import { countedOf, countRecords } from "../counts.ts";
 import { type ClueMax, partKindsOf } from "../game-id.ts";
 import { gapKindsOf } from "../gaps.ts";
 import { boardGlyphs } from "../glyphs.ts";
@@ -17,7 +18,13 @@ import type { FillPlay, FillUi } from "../play.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
 import { marginValuesOf } from "../value-margin.ts";
-import { type FillMetrics, fillMetrics } from "./geometry.ts";
+import {
+  type Beneath,
+  countsBeneath,
+  type FillMetrics,
+  fillMetrics,
+  tallyBeneath,
+} from "./geometry.ts";
 import { type FillPalette, fillPalette } from "./palette.ts";
 
 /** What a fill board is drawn from, beside its look. */
@@ -157,6 +164,18 @@ export function fillSetup<C extends Clues<C>>(
   ): readonly number[] =>
     (b.dealt[kind] as unknown as Readonly<Record<string, readonly number[]>>)[count];
 
+  /** The clue at the board drawn as a row of counts beneath it, or `null`. */
+  const counted = countedOf(play);
+  if (counted !== null && tallied !== null)
+    throw new Error("play: a tally and a row of counts both beneath the board");
+  /** What board `b` draws beneath it: its tally, or its row of counts. */
+  const beneathOf = (b: FillBoard<C>): Beneath | null =>
+    tallied !== null
+      ? tallyBeneath(tallyCounts(b, tallied.kind, tallied.count), b.w)
+      : counted !== null
+        ? countsBeneath(countRecords(b, counted).length)
+        : null;
+
   /** The number on cell `c`, its kind and its index in the kind's list, or
    * `null`. */
   const numberAt = (
@@ -222,6 +241,8 @@ export function fillSetup<C extends Clues<C>>(
     metrics,
     tallied,
     tallyCounts,
+    counted,
+    beneathOf,
     numberAt,
     marginValues,
     labelParts,

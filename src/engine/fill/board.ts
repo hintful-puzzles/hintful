@@ -45,6 +45,10 @@ export interface FieldClue {
   readonly [field: string]: number | readonly number[];
 }
 
+/** Whether a kind's clues are a clue at the board's records, not a list. */
+export const isFieldClue = (x: ClueList | FieldClue): x is FieldClue =>
+  !(x.at instanceof Int32Array);
+
 /** The clues of kind `kind`, which the caller knows is a clue kind and not a
  * partition. */
 export const listOf = <C>(dealt: C, kind: keyof C): ClueList => dealt[kind] as ClueList;

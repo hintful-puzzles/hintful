@@ -37,7 +37,7 @@ import {
   segmentNames,
 } from "./fill/id-checks.ts";
 import { Letters } from "./fill/letters.ts";
-import { partsOfKinds, universesOf } from "./fill/locations.ts";
+import { partsOfKinds, recordsOfKinds, universesOf } from "./fill/locations.ts";
 import { numbersOf } from "./fill/numbers.ts";
 import { tierAliasesOf } from "./fill/params.ts";
 import {
@@ -132,6 +132,7 @@ function dealOf(
   const universes = universesOf(json, d, env);
   const perValue = kinds.filter((k) => env.clues.get(k)?.per === true);
   const partsOf = partsOfKinds(d, universes);
+  const records = recordsOfKinds(d, universes, measured);
   const sample = sampleOf(json);
   const grow = growOf(json);
   const divides = dividesOf(json);
@@ -206,6 +207,7 @@ function dealOf(
     universes,
     ...present("perValue", perValue.length === 0 ? null : perValue),
     ...partsOf,
+    ...records,
     ...(partitions.length === 0 ? {} : { partitions }),
     tierLetters,
     sizes: json.sizes,
@@ -243,7 +245,10 @@ function clueMaxOf(
     // A value that is one of the board's elements (a sign's greater end) is
     // written by where it lies, never as a number.
     if (sorts.v.k === "elem") continue;
-    const range = c.value === null ? null : measured(c.value);
+    // A clue at the board's records are written as their last field.
+    const value =
+      c.at === "board" ? ([...c.fields].at(-1)?.[1].value ?? null) : c.value;
+    const range = value === null ? null : measured(value);
     if (
       range === null ||
       range.k !== "call" ||

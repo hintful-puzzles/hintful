@@ -1357,6 +1357,13 @@ the boards a seed deals move").
   its number) is tried straight after the stronger goes, and kept while it
   is shown: hidden in one random order with the rest, it went first, unread
   beside its number, and the number then went with nothing left behind.
+- **A clue at the board the answer derives is absent while the answer is
+  built.** A build (`sample.build`) reads no clue the answer derives, and a
+  clue at the board reads as no records then (Undead's totals, the
+  `totaling` fixture). A technique that reads a record's count as 0 where
+  there is none fills the board with the other value: state what it needs
+  dealt (`counted(d)`, a record of `d` exists) beside what it reads. The
+  records are distinct too, or the soundness check finds a board with two.
 
 ### Recover emergent parameters from upstream's boards
 

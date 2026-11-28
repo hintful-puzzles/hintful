@@ -6,12 +6,13 @@
  * reads geometry another frame left behind.
  */
 
-import type { Size } from "../../contract/types.ts";
+import type { Point, Size } from "../../contract/types.ts";
 import { glyphFont } from "../../render/draw.ts";
 import type { MarkBand } from "../../render/hint-mark.ts";
 import { pencilIndicatorReach } from "../../render/pencil-indicator.ts";
 import { walledBoxes } from "../../render/region-walls.ts";
 import { hexShift, inHexagon } from "../../solve/describe-runtime.ts";
+import { COUNTS_HEIGHT, countsAcross } from "../counts.ts";
 import { tallyAcross, tallyHeight } from "../tally-display.ts";
 
 /** What of a board's look its geometry follows. */
@@ -101,28 +102,35 @@ export function fillMetrics(shape: FillShape) {
    * by exactly half a tile. */
   const tileOf = (ts: number): number => (hexagon ? ts & ~1 : ts);
   /** The canvas a board `w` by `h` whose margin heads `values` values takes
-   * at tile size `ts`, with the tally of `counts` beneath it where it has
-   * one, its pieces as long as they are. */
+   * at tile size `ts`, with what is drawn `beneath` it where anything is:
+   * the tally, its pieces as long as they are, or a row of counts. */
   const canvasOf = (
     { w, h }: { readonly w: number; readonly h: number },
     values: number,
-    counts: readonly number[] | null,
+    beneath: Beneath | null,
     ts: number,
   ): Size => {
     const from = startAt(ts, depthOf({ w, h }, values));
-    // The cells, and the gaps between them.
-    const across = (n: number): number => pitch(ts) * n - gapOf(ts);
     return {
       w: Math.max(
-        from + end(ts) + across(w) + (hexagon ? ts >> 1 : 0),
-        counts === null ? 0 : from + Math.ceil(tallyAcross(counts, w) * ts),
+        from + end(ts) + spanOf(w, ts) + (hexagon ? ts >> 1 : 0),
+        beneath === null ? 0 : from + Math.ceil(beneath.across * ts),
       ),
       h:
         from +
         end(ts) +
-        across(h) +
-        (counts === null ? 0 : Math.ceil(tallyHeight(counts, w) * ts)),
+        spanOf(h, ts) +
+        (beneath === null ? 0 : Math.ceil(beneath.height * ts)),
     };
+  };
+  /** From the first of `n` cells' near side to the last's far side: the
+   * cells, and the gaps between them. */
+  const spanOf = (n: number, ts: number): number => pitch(ts) * n - gapOf(ts);
+  /** The top left of what a board `h` high whose margins are `depth` deep
+   * draws beneath it, past its bottom margin. */
+  const beneathAt = (ts: number, depth: number, h: number): Point => {
+    const x = startAt(ts, depth);
+    return { x, y: x + spanOf(h, ts) + end(ts) };
   };
   return {
     hexagon,
@@ -137,8 +145,28 @@ export function fillMetrics(shape: FillShape) {
     sides,
     tileOf,
     canvasOf,
+    beneathAt,
   };
 }
+
+/** What a board draws beneath it, in tiles: how far across, from the board's
+ * left, and how far down, below the board's margin. */
+export interface Beneath {
+  readonly across: number;
+  readonly height: number;
+}
+
+/** The tally of `counts` beneath a board `w` wide. */
+export const tallyBeneath = (counts: readonly number[], w: number): Beneath => ({
+  across: tallyAcross(counts, w),
+  height: tallyHeight(counts, w),
+});
+
+/** A row of `n` counts beneath a board. */
+export const countsBeneath = (n: number): Beneath => ({
+  across: countsAcross(n),
+  height: COUNTS_HEIGHT,
+});
 
 /** What a frame decides of the geometry: the board's list depth and width,
  * and where it draws its values raised (`play.numbers.raised`), whether this

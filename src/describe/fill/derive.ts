@@ -198,6 +198,141 @@ function listDerived(
   ];
 }
 
+/** `e` with each `f(k)` of a field `f` in `fields` read as the name `rename(f)`. */
+function fieldsAsNames(
+  e: Expr,
+  fields: ReadonlySet<string>,
+  rename: (f: string) => string,
+): Expr {
+  const go = (x: Expr): Expr => fieldsAsNames(x, fields, rename);
+  const goB = (b: Binder): Binder => ({
+    ...b,
+    of: go(b.of),
+    where: b.where === null ? null : go(b.where),
+  });
+  switch (e.k) {
+    case "num":
+    case "name":
+      return e;
+    case "call": {
+      const [a] = e.args;
+      if (fields.has(e.fn) && e.args.length === 1 && a.k === "name" && a.name === "k")
+        return { k: "name", name: rename(e.fn) };
+      return { ...e, args: e.args.map(go) };
+    }
+    case "set":
+      return { ...e, elems: e.elems.map(go) };
+    case "size":
+    case "not":
+    case "neg":
+      return { ...e, of: go(e.of) };
+    case "bin":
+      return { ...e, a: go(e.a), b: go(e.b) };
+    case "quant":
+      return { ...e, binders: e.binders.map(goB), body: go(e.body) };
+    case "agg":
+      return {
+        ...e,
+        binders: e.binders.map(goB),
+        where: e.where === null ? null : go(e.where),
+        term: e.term === null ? null : go(e.term),
+      };
+    case "with":
+      return { ...e, cell: go(e.cell), value: go(e.value), body: go(e.body) };
+  }
+}
+
+/**
+ * The records a clue at the board deals (Undead's totals): one for each
+ * value of every field but the last, in their values' order, the last read
+ * off the answer by the meaning `E = f(k)` (either way round), `f` the last
+ * field and `E` reading the others' `g(k)` alone of the record.
+ * `record_<kind>(g, sp, …)` is `E`; the lines build `<kind>_<field>` for each
+ * field, and the result is the `Dealt` entry. A meaning of any other shape is
+ * refused.
+ */
+function recordsDerived(
+  kind: string,
+  c: Description["clueKinds"] extends ReadonlyMap<string, infer K> ? K : never,
+  env: Env,
+  measured: (e: Expr) => Expr,
+  holds: string[],
+  derive: Out,
+): string {
+  const fields = [...c.fields];
+  const refuse = (why: string): never => {
+    throw new CompileError(
+      `clue ${kind}: a sampled deal derives a clue at the board ${why}`,
+    );
+  };
+  if (fields.length < 2) refuse("of two fields or more");
+  if (fields.some(([, f]) => f.list || f.at !== null))
+    refuse("whose fields are numbers");
+  const keys = fields.slice(0, -1).map(([n]) => n);
+  const last = (fields.at(-1) as (typeof fields)[number])[0];
+  const isLast = (e: Expr): boolean =>
+    e.k === "call" &&
+    e.fn === last &&
+    e.args.length === 1 &&
+    e.args[0].k === "name" &&
+    e.args[0].name === "k";
+  const m = c.means;
+  const term =
+    m.k !== "bin" || m.op !== "=" ? null : isLast(m.b) ? m.a : isLast(m.a) ? m.b : null;
+  if (term === null) refuse(`whose meaning is E = ${last}(k)`);
+  const named = (f: string): string => `_r_${f}`;
+  const read = fieldsAsNames(term as Expr, new Set(keys), named);
+  const free = new Set<string>();
+  freeNames(read, free, new Set());
+  if (free.has("k")) refuse(`whose meaning reads ${last}(k) of the other fields alone`);
+  const readsClues = { yes: false };
+  const scratch: string[] = [];
+  const out = new Out(1);
+  const v = compileExpr(
+    measured(read),
+    new Map<string, Val>(
+      keys.map((f) => [named(f), { code: named(f), sort: { k: "num" } }]),
+    ),
+    answerEnv(env, readsClues, scratch),
+    out,
+  );
+  if (readsClues.yes) refuse("whose meaning reads no clue");
+  const body = [
+    ...scratch.map((s) => `  ${s}`),
+    ...out.text(),
+    `  return Number(${v.code});`,
+  ];
+  holds.push(
+    "",
+    `/** The ${last} of the ${kind} record of ${keys.join(", ")} the whole board \`g\` deals. */`,
+    `export function record_${kind}(${[
+      "g: ArrayLike<number>",
+      param("sp", "GridSpace", body),
+      ...keys.map((f) => param(named(f), "number", body)),
+    ].join(", ")}): number {`,
+    ...body,
+    "}",
+  );
+  for (const [f] of fields) derive.emit(`const ${kind}_${f}: number[] = [];`);
+  bindingLoops(
+    fields.slice(0, -1).map(([f, x]) => ({
+      name: named(f),
+      kind: "in" as const,
+      of: measured(x.value),
+      where: null,
+    })),
+    new Map(),
+    { ...answerEnv(env, { yes: false }, []), readsClues: { yes: false } },
+    derive,
+    (sc) => {
+      const at = keys.map((f) => (sc.get(named(f)) as Val).code);
+      for (const [i, f] of keys.entries()) derive.emit(`${kind}_${f}.push(${at[i]});`);
+      derive.emit(`${kind}_${last}.push(record_${kind}(g, sp, ${at.join(", ")}));`);
+    },
+  );
+  return `${kind}: { n: ${kind}_${last}.length, ${fields.map(([f]) => `${f}: ${kind}_${f}`).join(", ")} }`;
+}
+
 /**
  * For a description whose deal samples an answer: `clueHolds_<kind>(g, sp,
  * at, v)`, whether a clue of each kind at `at` valued `v` holds of the whole
@@ -285,6 +420,11 @@ export function derivedClues(
     // A kind only an ID carries is dealt none.
     if (never.includes(kind)) {
       dealt.push(`${kind}: clueList([], [], sp.cells.length)`);
+      continue;
+    }
+    // A clue at the board deals its records.
+    if (c.at === "board") {
+      dealt.push(recordsDerived(kind, c, env, measured, holds, derive));
       continue;
     }
     const sorts = env.clues.get(kind) as ClueKind;

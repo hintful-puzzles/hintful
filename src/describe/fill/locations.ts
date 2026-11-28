@@ -15,6 +15,7 @@ import {
   type PlayJson,
   tallyKindOf,
 } from "../description.ts";
+import type { Expr } from "../expr.ts";
 import { isElement, valuesOf } from "./values.ts";
 
 /** The elements a clue may sit at, as the description names them. */
@@ -28,8 +29,9 @@ export const UNIVERSE: Readonly<Partial<Record<string, string>>> = {
 
 /** The elements each kind the deal deals sits at, by kind: a clue a fill
  * game deals sits at a cell, a line, a slot beyond a line's end, an edge, a
- * corner or a dealt partition's part; the tally, the params' clue at the
- * board, is none it deals. */
+ * corner or a dealt partition's part, or is a clue at the board of records
+ * the answer derives; the tally, the params' clue at the board, is none it
+ * deals. */
 export function universesOf(
   json: DescriptionJson,
   d: Description,
@@ -39,7 +41,11 @@ export function universesOf(
     [...d.clueKinds]
       .filter(([k]) => k !== tallyKindOf(json))
       .map(([k, c]) => {
-        const u = env.regions.has(c.at) ? "parts" : UNIVERSE[c.at];
+        const u = env.regions.has(c.at)
+          ? "parts"
+          : c.at === "board"
+            ? "board"
+            : UNIVERSE[c.at];
         if (u === undefined)
           throw new CompileError(
             `clue ${k}: a fill game's clue sits at a cell, a line, a slot, an edge, a corner or a part`,
@@ -47,6 +53,35 @@ export function universesOf(
         return [k, u];
       }),
   );
+}
+
+/** The deal's `records`, the records each clue at the board the deal derives
+ * may hold: every value of every field but the last, the first field's
+ * slowest, each field's values a `range` of numbers. */
+export function recordsOfKinds(
+  d: Description,
+  universes: Record<string, string>,
+  measured: (e: Expr) => Expr,
+): { records?: Record<string, { fields: string[]; keys: number[][] }> } {
+  const out: Record<string, { fields: string[]; keys: number[][] }> = {};
+  for (const [k, c] of d.clueKinds) {
+    if (universes[k] !== "board") continue;
+    const fields = [...c.fields];
+    let keys: number[][] = [[]];
+    for (const [f, x] of fields.slice(0, -1)) {
+      const r = measured(x.value);
+      const [lo, hi] = r.k === "call" && r.fn === "range" ? r.args : [];
+      if (lo?.k !== "num" || hi?.k !== "num")
+        throw new CompileError(
+          `clue ${k} ${f}: a clue at the board the deal derives keys its records by a range of numbers`,
+        );
+      keys = keys.flatMap((t) =>
+        Array.from({ length: hi.v - lo.v + 1 }, (_, i) => [...t, lo.v + i]),
+      );
+    }
+    out[k] = { fields: fields.map(([f]) => f), keys };
+  }
+  return Object.keys(out).length === 0 ? {} : { records: out };
 }
 
 /** The deal's `partsOf`, the partition each kind at parts sits at, where

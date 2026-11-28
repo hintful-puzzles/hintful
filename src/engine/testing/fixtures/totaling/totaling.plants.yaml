@@ -1,0 +1,13 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A square at a block's corner read as beside it.
+  beside:
+    for: "c in cells where known(c) and value(c) = 1, x in adj8(c) where not known(x)"
+  # A count one short of used up read as used up.
+  used:
+    for: "d in range(1, 2), O = open where |O| > 0 and counted(d) and left(d) <= 1"
+  # A count read as having room only in the open squares with one to spare.
+  room:
+    for: "d in range(1, 2), O = open where |O| > 0 and counted(d) and left(d) + 1 >= |O|"

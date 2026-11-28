@@ -1320,6 +1320,13 @@
                 "type": "string"
               }
             },
+            "counts": {
+              "type": "object",
+              "description": "Clues at the board the deal derives, each drawn as a row of counts beneath the board (`engine/fill/counts.ts`), by kind the field whose value is a value the player places: each record that value's piece and its last field's number, red where the rules break it. A press on a record's piece or number places its value in the selected square, as its key does.",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
             "done": {
               "type": "object",
               "description": "The clue kinds the player may mark done, each with what one is called (\"sign\"), which the help page's sentence on the mark says (`engine/fill/done.ts`): a press on such a clue, with either button, grays it, a drag on grays those that looked the same, and Shift or Ctrl with an arrow marks the one beside the selected square. Each is a kind drawn in a gap (`gaps`), at a part (a press on its drawn text), or at a slot (a press in its margin square), on a board of `numbers`: with an arrow, Shift or Ctrl marks the gap's clue that way, on a board of parts the next part's that way, and on a board of slots the clue at that end of the cursor's line.",

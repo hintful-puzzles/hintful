@@ -160,6 +160,10 @@ export interface FillPlay {
   /** The clue kinds the player may mark done, each with what one is called
    * (`done.ts`): a press on such a clue grays it, and another restores it. */
   readonly done?: Readonly<Record<string, string>>;
+  /** The clues at the board drawn as a row of counts beneath it, by kind the
+   * field whose value a record's piece shows and a press on it places
+   * (`counts.ts`). */
+  readonly counts?: Readonly<Record<string, string>>;
   /** The sign drawn after the number of each clue kind at a dealt
    * partition's part or at a corner, by kind: a part's clue is drawn at its
    * part's first cell, and a corner's on a disc there. A list is a word a

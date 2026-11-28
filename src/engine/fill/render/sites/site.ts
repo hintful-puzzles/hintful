@@ -31,6 +31,8 @@ export interface SiteFrame<C extends Clues<C>> {
     readonly cornerErrors: ReadonlySet<number>;
     /** By place (`perPlace`), the clues one a value at lines. */
     readonly marginErrors: ReadonlySet<number>;
+    /** By record, the row of counts beneath the board. */
+    readonly countErrors: ReadonlySet<number>;
   };
   readonly hint: HintPass;
   /** The tiles' words this frame. */

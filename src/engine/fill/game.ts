@@ -25,7 +25,7 @@ import {
   stickyPencilPref,
 } from "../hint/pencil-prefs.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
-import { newCursor } from "../input/pointer.ts";
+import { isMouseDown, newCursor } from "../input/pointer.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import { searchTiers } from "../solve/answer-search.ts";
@@ -55,6 +55,7 @@ import {
 } from "./board.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
+import { countedOf } from "./counts.ts";
 import type { DealtFillModule } from "./deal/context.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, glyphsIn } from "./desc.ts";
@@ -450,6 +451,23 @@ export function fillGame<C extends Clues<C> & object>(
           requestKeys: (p: FillParams, board?: FillBoard<C>) =>
             (typed as NumberInput<C, FillDrawState>).requestKeys(p, board),
         };
+  /** The key that places value `v` on board `b`: a button board's own key
+   * for it, a typed board's glyph's. */
+  const keyOf = (b: FillBoard<C>, v: number): number => {
+    const key = play.values?.[v]?.key;
+    if (key !== undefined)
+      return (typeof key === "string" ? key : key[0]).charCodeAt(0);
+    return boardGlyphs(module, spaceOf(module, b), b.dealt).keyCode(v);
+  };
+  /** The input, a press on a record of the row of counts typing its value's
+   * key (`counts.ts`). */
+  const interpretMove =
+    countedOf(play) === null
+      ? inputs.interpretMove
+      : (b: FillBoard<C>, ui: FillUi, ds: FillDrawState, p: Point, button: number) => {
+          const v = isMouseDown(button) ? render.countPressed(b, ds, p) : null;
+          return inputs.interpretMove(b, ui, ds, p, v === null ? button : keyOf(b, v));
+        };
   const newUi = (b: FillBoard<C>): FillUi => {
     const ui = typed === null ? newFillUi() : typedUi(newFillUi(), play);
     // On the edges the cursor is on the half grid (`edge-target.ts`), and
@@ -495,6 +513,7 @@ export function fillGame<C extends Clues<C> & object>(
     newUi,
 
     ...inputs,
+    interpretMove,
     ...(typed === null || typed.done === null ? {} : { doneClues: typed.done.verbs }),
     executeMove: (b, m) => applyMove(module, b, fillMoveOf(m, `${id}: executeMove`)),
     ...(!notes ? {} : { markAll: (b: FillBoard<C>) => markAll(module, b) }),

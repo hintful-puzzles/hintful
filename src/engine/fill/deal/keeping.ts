@@ -9,10 +9,14 @@ import {
   clueList,
   type GridSpace,
 } from "../../solve/describe-runtime.ts";
-import type { Clues } from "../board.ts";
+import { type Clues, type FieldClue, isFieldClue } from "../board.ts";
 import { elementCount, type FillDeal } from "../game-id.ts";
 
 export const byIndex = (a: number, b: number): number => a - b;
+
+/** How many clues a kind holds: a list's, or a clue at the board's records. */
+const countOf = (x: ClueList | FieldClue): number =>
+  isFieldClue(x) ? x.n : x.at.length;
 
 /** The indices of a list's clues. */
 export const shownOf = (list: ClueList): number[] => Array.from(list.at.keys());
@@ -25,7 +29,9 @@ export function offsetsOf<C extends Clues<C>>(
 ): number[] {
   const out = [0];
   for (const k of kinds)
-    out.push(out[out.length - 1] + (clues[k as keyof C] as ClueList).at.length);
+    out.push(
+      out[out.length - 1] + countOf(clues[k as keyof C] as ClueList | FieldClue),
+    );
   return out;
 }
 
@@ -60,7 +66,18 @@ export function keepingOf<C extends Clues<C>>(
   shown: readonly number[],
   elements: number,
 ): C {
-  const all = clues[kind] as ClueList;
+  const all = clues[kind] as ClueList | FieldClue;
+  // A clue at the board keeps its records shown, each field's entry.
+  if (isFieldClue(all))
+    return {
+      ...clues,
+      [kind]: Object.fromEntries([
+        ["n", shown.length],
+        ...Object.entries(all)
+          .filter(([f]) => f !== "n")
+          .map(([f, xs]) => [f, shown.map((i) => (xs as readonly number[])[i])]),
+      ]),
+    };
   return {
     ...clues,
     [kind]: clueList(
@@ -79,6 +96,7 @@ export function hidesAny<C extends Clues<C>>(
   kind: string,
 ): boolean {
   return (
-    (clues[kind as keyof C] as ClueList).at.length < elementCount(deal, sp, clues, kind)
+    countOf(clues[kind as keyof C] as ClueList | FieldClue) <
+    elementCount(deal, sp, clues, kind)
   );
 }

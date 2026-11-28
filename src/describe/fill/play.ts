@@ -18,7 +18,12 @@ import {
   Out,
   type Val,
 } from "../compile-sorts.ts";
-import type { Description, DescriptionJson, PlayJson } from "../description.ts";
+import {
+  type Description,
+  type DescriptionJson,
+  type PlayJson,
+  tallyKindOf,
+} from "../description.ts";
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
 import { answerEnv, param } from "./emit.ts";
@@ -102,6 +107,41 @@ const fixesItsValue = (e: Expr): boolean =>
  * `play:`. A button whose value the player cannot place, or a link that is
  * not the cell mark naming a clue, is refused.
  */
+/** Refuses `play.counts` that name no clue at the board the deal derives,
+ * or whose records are not keyed by a field alone, before their count, of
+ * values the player places. */
+function checkCounts(
+  json: DescriptionJson,
+  d: Description,
+  measured: (e: Expr) => Expr,
+): void {
+  const p = json.play as PlayJson;
+  for (const [k, field] of Object.entries(p.counts ?? {})) {
+    const c = d.clueKinds.get(k);
+    const fields = [...(c?.fields.keys() ?? [])];
+    if (c?.at !== "board" || k === tallyKindOf(json))
+      throw new CompileError(
+        `play counts: ${k} is no clue at the board the deal derives`,
+      );
+    if (fields.length !== 2 || fields[0] !== field)
+      throw new CompileError(
+        `play counts: ${k}'s records are keyed by ${field} alone, before their count`,
+      );
+    const range = measured((c.fields.get(field) as { value: Expr }).value);
+    const [lo, hi] = range.k === "call" && range.fn === "range" ? range.args : [];
+    const placed = (n: number): boolean =>
+      p.numbers !== undefined || p.values?.[String(n)] !== undefined;
+    if (
+      lo?.k !== "num" ||
+      hi?.k !== "num" ||
+      !Array.from({ length: hi.v - lo.v + 1 }, (_, i) => lo.v + i).every(placed)
+    )
+      throw new CompileError(
+        `play counts: ${k}'s ${field} is a range of values the player places`,
+      );
+  }
+}
+
 export function playOf(
   json: DescriptionJson,
   d: Description,
@@ -256,6 +296,7 @@ export function playOf(
         `play done: ${k} is marked done on a board of numbers alone, and play has no \`numbers\``,
       );
   }
+  checkCounts(json, d, measured);
   // A selection is the typed board's: a board of buttons drags a sweep.
   if (p.select !== undefined && p.numbers === undefined)
     throw new CompileError(

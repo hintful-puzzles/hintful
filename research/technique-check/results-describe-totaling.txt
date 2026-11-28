@@ -1,0 +1,9 @@
+ok  totaling   beside                         3  sound    (want sound   )     9 queries    0.0s
+ok  totaling   beside (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/totaling/totaling.description.yaml#beside: recorded sound, proved whole on all 1 boards
+ok  totaling   used                           3  sound    (want sound   )     2 queries    0.1s
+ok  totaling   used (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  src/engine/testing/fixtures/totaling/totaling.description.yaml#used: recorded sound, proved whole on all 1 boards
+ok  totaling   room                           3  sound    (want sound   )     2 queries    1.9s
+ok  totaling   room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at 1
+ok  src/engine/testing/fixtures/totaling/totaling.description.yaml#room: recorded sound, proved whole on all 1 boards

@@ -1,0 +1,94 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: blocks and discs, no two blocks side by side, some
+# squares given, and a count at the board of how many of each the board
+# holds; for the fill engine's tests of a clue at the board derived from the
+# sampled answer, written in the ID, drawn as a row of counts above the board
+# and pressed to place its value, on a description that names no game.
+game: totaling
+produces: shading
+sizes:
+  w: { min: 2, max: 6 }
+  h: { min: 2, max: 6 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a block, 2 a disc.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # Whether the board says how many of value d it holds, which a board built
+  # before its count is dealt does not; how many; and how many more it has
+  # room for.
+  counted(d): "exists k in clues(total): item(k) = d"
+  holds(d): "sum(k in clues(total) where item(k) = d of many(k))"
+  left(d): "holds(d) - count(c in cells where known(c) and value(c) = d)"
+  open: "{c in cells where not known(c)}"
+given: [value]
+shape:
+  - "forall c in cells where value(c) = 1: forall p in adj4(c): value(p) != 1"
+  - "forall k in clues(total), j in clues(total) where j != k: item(j) != item(k)"
+clues:
+  # How many squares of each value the board holds.
+  total:
+    at: board
+    fields:
+      item: { value: "range(1, 2)" }
+      many: { value: "range(0, |cells|)" }
+    means: "count(c in cells where value(c) = item(k)) = many(k)"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a block in it, key: B, glyph: " 1 ", paint: block }
+    2: { does: put a disc in it, key: D, glyph: " 0 ", paint: disc }
+  primary: 1
+  secondary: 2
+  counts: { total: item }
+  boards: [4x4]
+  hintMarks:
+    ring: the squares the step decides.
+    outline: the block the step reasons from.
+deal:
+  answer: >-
+    built a square at a time: a random value on a random empty square, then
+    every square the ladder decides from them
+  given: every square's value, then each hidden while the board still finishes
+  total: every count
+  tier: the one tier
+  sample: { build: true }
+  hide: given
+id:
+  - numbers: total
+  - { digits: given, before: "," }
+tiers: [Easy]
+names:
+  beside: "a block's neighbors"
+  used: "a count used up"
+  room: "a count with just enough room"
+techniques:
+  - id: beside
+    tier: Easy
+    for: "c in cells where known(c) and value(c) = 1, x in adj4(c) where not known(x)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "no two blocks stand side by side"
+      move: "{ring: this square}, beside {outline: the outlined block}, must hold a disc"
+  - id: used
+    tier: Easy
+    for: "d in range(1, 2), O = open where |O| > 0 and counted(d) and left(d) = 0"
+    conclude: "forall c in O: place(c, 3 - d)"
+    says:
+      terms: { d: d }
+      marks: {}
+      look: "every {d} the board holds is placed"
+      move: "{ring: the open square | the open squares} must hold the other"
+  - id: room
+    tier: Easy
+    for: "d in range(1, 2), O = open where |O| > 0 and counted(d) and left(d) = |O|"
+    conclude: "forall c in O: place(c, d)"
+    says:
+      terms: { d: d }
+      marks: {}
+      look: "the board has room for every {d} left only in its open squares"
+      move: "{ring: the open square | the open squares} must each hold a {d}"

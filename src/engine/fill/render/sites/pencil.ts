@@ -11,14 +11,14 @@ export const pencil: FillSite = {
   on: (cx) => cx.notes,
   paint({ dr, ds, cx, state: b, ui }) {
     const ts = ds.tileSize;
-    const { tallied } = cx;
-    const counts =
-      tallied === null ? null : cx.tallyCounts(b, tallied.kind, tallied.count);
     repaintPencilIndicator(
       dr,
       ds,
       ui.pencilMode === true,
-      pencilIndicatorBox(cx.metrics.canvasOf(b, cx.marginValues(b), counts, ts), ts),
+      pencilIndicatorBox(
+        cx.metrics.canvasOf(b, cx.marginValues(b), cx.beneathOf(b), ts),
+        ts,
+      ),
       cx.pal.PENCIL_STYLE,
     );
   },
