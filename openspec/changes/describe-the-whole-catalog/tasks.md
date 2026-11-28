@@ -1,6 +1,7 @@
 ## Next
 
-1.2.2, `born-candidate-note-family-last`; § 0 is done. Open: none.
+1.2.2, `born-candidate-note-family-last`; and 1.1.2, a measurement any
+session may take between flips. § 0 is done. Open: none.
 
 ## 0. The refactor first
 
