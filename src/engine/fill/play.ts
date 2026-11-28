@@ -172,6 +172,9 @@ export interface FillPlay {
    * field whose value a record's piece shows and a press on it places
    * (`counts.ts`). */
   readonly counts?: Readonly<Record<string, string>>;
+  /** The clue at the board whose records are lists, drawn as a list beneath
+   * it (`record-list.ts`). */
+  readonly list?: string;
   /** The player's preference for how the row of counts reads (`counts.ts`'s
    * `COUNT_STYLES`), by its key and name; absent, each count is its total. */
   readonly countStyle?: { readonly kw: string; readonly name: string };

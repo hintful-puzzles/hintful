@@ -15,6 +15,7 @@ import { gapKindsOf } from "../gaps.ts";
 import { boardGlyphs } from "../glyphs.ts";
 import { tallyIn } from "../params/tally.ts";
 import type { FillPlay, FillUi } from "../play.ts";
+import { listedOf } from "../record-list.ts";
 import type { FillLook } from "../render.ts";
 import type { SearchedFillModule } from "../search.ts";
 import { marginValuesOf } from "../value-margin.ts";
@@ -23,6 +24,7 @@ import {
   countsBeneath,
   type FillMetrics,
   fillMetrics,
+  listBeneath,
   tallyBeneath,
 } from "./geometry.ts";
 import { type FillPalette, fillPalette } from "./palette.ts";
@@ -172,13 +174,20 @@ export function fillSetup<C extends Clues<C>>(
   const counted = countedOf(play);
   if (counted !== null && tallied !== null)
     throw new Error("play: a tally and a row of counts both beneath the board");
-  /** What board `b` draws beneath it: its tally, or its row of counts. */
+  /** The clue at the board drawn as a list beneath it, or `null`. */
+  const listed = listedOf(play);
+  if (listed !== null && (counted !== null || tallied !== null))
+    throw new Error("play: a list and a tally or a row of counts beneath the board");
+  /** What a board `w` wide draws beneath it but its tally: its row of counts,
+   * or its list. */
+  const untalliedBeneath = (w: number): Beneath | null =>
+    counted !== null ? countsBeneath(w) : listed !== null ? listBeneath(w) : null;
+  /** What board `b` draws beneath it: its tally, its row of counts, or its
+   * list. */
   const beneathOf = (b: FillBoard<C>): Beneath | null =>
     tallied !== null
       ? tallyBeneath(tallyCounts(b, tallied.kind, tallied.count), b.w)
-      : counted !== null
-        ? countsBeneath(b.w)
-        : null;
+      : untalliedBeneath(b.w);
 
   /** The number on cell `c`, its kind and its index in the kind's list, or
    * `null`. */
@@ -247,6 +256,8 @@ export function fillSetup<C extends Clues<C>>(
     tallied,
     tallyCounts,
     counted,
+    listed,
+    untalliedBeneath,
     beneathOf,
     numberAt,
     marginValues,

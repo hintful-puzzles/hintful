@@ -115,6 +115,9 @@ export interface FillModule<C> {
   /** Whether cell `c` is washed on the values `g` (`play.wash`): an open one
    * then reads as the secondary value, which a piece there would break. */
   washed?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;
+  /** Whether record `k` of the list beneath the board (`play.list`) holds of
+   * the values `g` as placed, which strikes it. */
+  recordHolds?(g: ArrayLike<number>, sp: GridSpace, cl: C, k: number): boolean;
   /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
    * every cell of the store outside it holds. */
   readonly hexagon?: { readonly outside: string };

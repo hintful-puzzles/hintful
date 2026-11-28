@@ -1,13 +1,10 @@
 ## Next
 
-2.2b on `listing`, read 2026-11-28 at `b946f87e6`: `play.list: <kind>`; a
-compiled `recordHolds(g, sp, cl, k)` off the kind's `means`, two-valued,
-for the strike; upstream's `draw_numbers` layout (Crossing `render.ts`'s
-`layoutNumbers`) as a `Beneath` of fixed height beside `countsBeneath`;
-errors as `countErrors` gathers them, for either kind. A hint marks a
-record where it is drawn: `candidates.ts`'s `clueSquare` gives a board
-kind a point beneath the grid, off every slot, and `hint.ts` keeps rings
-off the grid out of its tiles. Then 2.2c to 2.2f.
+2.2c, Crossing's walls dealt apart from the answer, then 2.2d to 2.2f. For
+2.2f: Crossing's draft techniques were checked sound with two records,
+which no board answers (`docs/solver-and-generator.md`, the records
+bullet); check them again, now a record a line. The list's press (pick up,
+place whole) is 2.2d's: `record-list.ts` lays out the slots it hits.
 
 ## 1. Design
 
@@ -49,9 +46,9 @@ order.
   - [x] 2.2a A list at the board read a binding (`deal.records`), written
         whole by `numbers`; `sample.uniform`, from 2.2c. On `listing`. For
         2.2c: see the records' segment refused anywhere but last.
-  - [ ] 2.2b The list drawn beneath the board, each record struck where
+  - [x] 2.2b The list drawn beneath the board, each record struck where
         the answer holds it and red where the rules break it; a hint's
-        ring and outline on a record.
+        ring and outline on a record. In the app at 2.2f.
   - [ ] 2.2c Walls dealt apart from the answer: first cells opened at
         random, symmetric as asked, until no two by two block is open and
         the open cells are joined, on `sample.uniform`; the

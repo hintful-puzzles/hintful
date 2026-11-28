@@ -1357,6 +1357,10 @@ the boards a seed deals move").
   there is none fills the board with the other value: state what it needs
   dealt (`counted(d)`, a record of `d` exists) beside what it reads. The
   records are distinct too, or the soundness check finds a board with two.
+  The check deals two records a kind, and a list kind one a line: where
+  every line must read a record, two leave no board with an answer, and
+  "proved whole on all 0 boards" is a check of nothing. Read the board
+  count in its line before trusting a verdict.
 - **A list at the board the answer derives cannot steer a build**: a build
   reads none of its records, and every list technique then strikes every
   value, so the answer is drawn by `sample.uniform` instead, a value a

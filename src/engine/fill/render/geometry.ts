@@ -13,6 +13,7 @@ import { pencilIndicatorReach } from "../../render/pencil-indicator.ts";
 import { walledBoxes } from "../../render/region-walls.ts";
 import { hexShift, inHexagon } from "../../solve/describe-runtime.ts";
 import { COUNTS_HEIGHT, countsAcross } from "../counts.ts";
+import { LIST_HEIGHT } from "../record-list.ts";
 import { tallyAcross, tallyHeight } from "../tally-display.ts";
 
 /** What of a board's look its geometry follows. */
@@ -167,6 +168,9 @@ export const countsBeneath = (w: number): Beneath => ({
   across: countsAcross(w),
   height: COUNTS_HEIGHT,
 });
+
+/** A list beneath a board `w` wide, as wide as it. */
+export const listBeneath = (w: number): Beneath => ({ across: w, height: LIST_HEIGHT });
 
 /** What a frame decides of the geometry: the board's list depth and width,
  * and where it draws its values raised (`play.numbers.raised`), whether this

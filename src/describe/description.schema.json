@@ -1457,6 +1457,10 @@
                 "type": "string"
               }
             },
+            "list": {
+              "type": "string",
+              "description": "A clue at the board whose records are lists, drawn as a list beneath the board (`engine/fill/record-list.ts`, upstream crossing.c's `draw_numbers`): each record its members' digits, in columns as many rows deep as fit the board's width, struck where its meaning holds of the board as placed and red where the rules break it. A hint's ring and outline go round a record where it is drawn."
+            },
             "countStyle": {
               "type": "object",
               "description": "The player's preference for how each count of the row of `counts` reads, by its key and name (upstream Undead's `count-style`): the total, how many are placed past it (negative while some are left), placed over total, or left to place over total, the default. Absent, a count is its total.",

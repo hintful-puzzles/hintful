@@ -53,6 +53,7 @@
   "src/engine/testing/fixtures/linking/linking.description.yaml#noAnchor": "33f8fb9fe8e6b74d",
   "src/engine/testing/fixtures/linking/linking.description.yaml#pieceLink": "4348e993c92d30c3",
   "src/engine/testing/fixtures/listing/listing.description.yaml#narrow": "3da1abd9ba690ad5",
+  "src/engine/testing/fixtures/listing/listing.description.yaml#onlyLine": "3a39b1756cc07c69",
   "src/engine/testing/fixtures/listing/listing.description.yaml#single": "2cdff175b6c34bdf",
   "src/engine/testing/fixtures/mirroring/mirroring.description.yaml#beside": "e75b1cb53424e873",
   "src/engine/testing/fixtures/mirroring/mirroring.description.yaml#met": "b399366f408cb88b",

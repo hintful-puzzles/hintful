@@ -253,7 +253,10 @@ interface ClueSym {
 type ClueField = Nx | readonly Nx[] | Extract<V, { k: "list" }>;
 
 /** The clues at the board each kind of them is checked with, each present
- * or not: two, so a technique comparing two is checked as one reading one. */
+ * or not: two, so a technique comparing two is checked as one reading one. A
+ * kind whose records are lists, each a line's reading (Crossing's numbers),
+ * is checked with one a line, or a board whose every line reads one has no
+ * answer. */
 const BOARD_CLUES = 2;
 
 /** A partition the board may be dealt: every connected region it could have
@@ -2886,7 +2889,9 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
  * element of the field's sort. */
 function boardClues(kind: string, fields: ClueKind["fields"], ctx: Ctx): ClueSym[] {
   const { board } = ctx;
-  return Array.from({ length: BOARD_CLUES }, (_, k): ClueSym => {
+  const listed = [...fields.values()].some((f) => f.list);
+  const length = listed ? Math.max(BOARD_CLUES, board.sp.lines.length) : BOARD_CLUES;
+  return Array.from({ length }, (_, k): ClueSym => {
     const values = new Map<string, Nx | readonly Nx[] | Extract<V, { k: "list" }>>();
     for (const [name, f] of fields) {
       if (f.value.k !== "call" || f.value.fn !== "range")

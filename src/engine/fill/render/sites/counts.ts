@@ -21,7 +21,7 @@ export const counts: FillSite = {
     const counted = cx.counted;
     if (counted === null) return;
     const records = countRecords(b, counted);
-    const { countErrors } = errors;
+    const { recordErrors: countErrors } = errors;
     // A board of numbers draws a record's piece where its values are drawn
     // as pictures, and its glyph otherwise.
     const pieces = !cx.typed || cx.pictured(ui);

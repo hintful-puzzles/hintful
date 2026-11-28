@@ -1,4 +1,9 @@
---  listing: no board of order 3 has an answer, so nothing is checked there
---  listing: no board of order 4 has an answer, so nothing is checked there
-ok  listing    single                         current: recorded src/engine/testing/fixtures/listing/listing.description.yaml#single 2cdff175b6c34bdf
-ok  src/engine/testing/fixtures/listing/listing.description.yaml#narrow: recorded sound, proved whole on all 0 boards
+ok  listing    single                         3  sound    (want sound   )     9 queries    0.2s
+ok  listing    single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/listing/listing.description.yaml#single: recorded sound, proved whole on all 1 boards
+ok  listing    onlyLine                       3  sound    (want sound   )     6 queries    0.4s
+ok  listing    onlyLine (planted)             3  unsound  (want unsound )     1 queries    0.0s   at clue numbers 0
+ok  src/engine/testing/fixtures/listing/listing.description.yaml#onlyLine: recorded sound, proved whole on all 1 boards
+ok  listing    narrow                         3  sound    (want sound   )     6 queries    0.6s
+ok  listing    narrow (planted)               3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/listing/listing.description.yaml#narrow: recorded sound, proved whole on all 1 boards

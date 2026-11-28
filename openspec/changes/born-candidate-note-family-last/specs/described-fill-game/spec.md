@@ -271,3 +271,33 @@ whose values it lays on no other cell.
 
 - **WHEN** a `listing` board is dealt, whose list no build can read
 - **THEN** a board is dealt, and the ladder finishes it
+
+### Requirement: A born game's clue at the board may be drawn as a list
+
+`play.list` SHALL draw a clue at the board whose records are lists beneath
+the board, each record its members' glyphs, laid out as upstream crossing.c's
+`draw_numbers` lays its numbers: in columns, as many rows deep as fit the
+board's width, the slack spread between them. A record SHALL be struck and
+gray where its meaning holds of the board as placed, and in the error color
+where the rules break it. The text format SHALL print the list beneath the
+grid, a line a length.
+
+#### Scenario: A number read once, and one read twice
+
+- **WHEN** a `listing` board's first row reads 1123, and then its second
+  row reads 1123 too
+- **THEN** 1123 is struck and gray, and then in the error color and not
+  struck
+
+### Requirement: A hint marks a record of a list where the list draws it
+
+A hint's ring and outline on a record of a clue at the board SHALL go round
+it where the list draws it, and no tile SHALL draw them. The compiler SHALL
+refuse a list naming no clue at the board the deal derives, or one whose
+records are not one list each.
+
+#### Scenario: A step reading a number
+
+- **WHEN** a step of a `listing` board rings the number only one line fits
+- **THEN** the ring goes round that number in the list, and none is drawn
+  on the grid for it

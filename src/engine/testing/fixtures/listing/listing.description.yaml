@@ -35,6 +35,8 @@ clues:
 freedom: { kind: fill }
 play:
   numbers: {}
+  # The list beneath the board, each number struck once a line reads it.
+  list: numbers
   # A square board is never the one board its list reads: its mirror on the
   # leading diagonal reads the same list.
   boards: [4x3]
@@ -58,6 +60,7 @@ tiers: [Easy]
 names:
   single: "the only digit left in a square"
   narrow: "the digits a line's numbers allow"
+  onlyLine: "a number only one line fits"
 techniques:
   - kind: one.cell
     as: single
@@ -65,6 +68,17 @@ techniques:
     with:
       square: "true"
       move: "(known(c) or place(c, first(U)))"
+  # A number that fits one line alone is read there.
+  - id: onlyLine
+    tier: Easy
+    for: >-
+      k in clues(numbers) where count(M in lines where fits(k, M)) = 1,
+      L in lines where fits(k, L) and (exists x in cells(L): not known(x))
+    conclude: "forall x in cells(L) where not known(x): place(x, digit(k, x, L))"
+    says:
+      terms: { k: k }
+      marks: { stripes: "cells(L)" }
+      look: "{ring k: this number} fits only {stripes: this line}"
   - id: narrow
     tier: Easy
     for: >-
@@ -72,8 +86,9 @@ techniques:
       x in cells(L) where not known(x)
     conclude: "forall d in cand(x) where not (exists k in K: digit(k, x, L) = d): strike(x, d)"
     says:
+      terms: { K: K }
       marks: { stripes: "cells(L)" }
-      look: "no number that still fits {stripes: this line} puts {struckOr} in {ring}"
+      look: "{outline K: no number} that still fits {stripes: this line} puts {struckOr} in {ring}"
 steps:
   clean:
     ring: cell

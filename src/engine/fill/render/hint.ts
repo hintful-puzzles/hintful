@@ -146,10 +146,11 @@ export function hintPass<C extends Clues<C>>(
     );
   const byReading = (cells: readonly MarkCell[]): MarkCell[] =>
     [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
-  const targets = byReading(marks.of("ring", CELL));
-  // A clue at a slot is outlined in its margin, and lies on no tile.
+  // A clue at a slot is outlined in its margin, and a record of a clue at the
+  // board ringed or outlined where the list draws it: neither lies on a tile.
   const onGrid = (c: { x: number; y: number }): boolean =>
     c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
+  const targets = byReading(marks.of("ring", CELL).filter(onGrid));
   // An outlined number is the number the step reasons from: it is circled,
   // and its block outlined whole, apart from the rest of the area. A plain
   // number has no block, and outlined is a square of the area like any

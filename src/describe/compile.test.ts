@@ -1300,6 +1300,19 @@ describe("what the fill board reads of a description", () => {
         ),
       ).toThrow(/one list field of digits, a range within 0 to 9/);
     });
+
+    it("strikes a listed record where its meaning holds, and refuses a list of no such clue", () => {
+      expect(compileEdited(fixture, (j) => j)).toContain(
+        "export function recordHolds(g: ArrayLike<number>, sp: GridSpace, cl: Dealt, k: number): boolean {",
+      );
+      const listed = (kind: string) =>
+        edit((j) => {
+          (j as unknown as { play: { list: string } }).play.list = kind;
+        });
+      expect(() => compileEdited(fixture, listed("nothing"))).toThrow(
+        /play list: nothing is no clue at the board the deal derives/,
+      );
+    });
   });
 
   describe("values only the deal places, on a board of numbers", () => {

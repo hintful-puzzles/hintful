@@ -103,6 +103,7 @@ import {
   fillInput,
   newFillUi,
 } from "./play.ts";
+import { listedOf, listRecords } from "./record-list.ts";
 import { PLACE_ANIM_TIME } from "./render/tile.ts";
 import {
   type FillDrawState,
@@ -335,6 +336,7 @@ export function fillGame<C extends Clues<C> & object>(
     ),
   );
   const counted = countedOf(play);
+  const listed = listedOf(play);
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
@@ -360,6 +362,7 @@ export function fillGame<C extends Clues<C> & object>(
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
     ...(counted === null ? {} : { counts: (b) => countRecords(b, counted) }),
+    ...(listed === null ? {} : { list: (b) => listRecords(b, listed) }),
     off: (b) => offKinds(deal, b.dealt as Readonly<Record<string, number>>),
     ...(module.valueMargins === undefined
       ? {}

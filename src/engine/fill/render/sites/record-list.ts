@@ -1,0 +1,114 @@
+/** The list beneath the board (`play.list`): each record its members'
+ * glyphs, struck and gray once it holds of the board as placed, red where
+ * the rules break it, and outlined or ringed where a step marks it. */
+
+import { COL_BACKGROUND, COL_ERROR, COL_HINT_OUTLINE } from "../../../color/roles.ts";
+import { CELL } from "../../../contract/hint-words.ts";
+import type { DrawTextOptions } from "../../../contract/types.ts";
+import { drawMarkSides, MARK_ALL } from "../../../render/hint-mark.ts";
+import { textBox } from "../../../render/ring.ts";
+import { spaceOf } from "../../board.ts";
+import { LIST_HEIGHT, listLayout, listRecords, recordAt } from "../../record-list.ts";
+import { COL_INK } from "../palette.ts";
+import type { FillSite } from "./site.ts";
+
+/** A record's state: struck, red, outlined, ringed. */
+const STRUCK = 1;
+const BROKEN = 2;
+const OUTLINED = 4;
+const RINGED = 8;
+
+export const recordList: FillSite = {
+  on: (cx) => cx.listed !== null,
+  paint({ dr, ds, cx, lay, state: b, errors, hint }) {
+    const kind = cx.listed;
+    if (kind === null) return;
+    const holds = cx.module.recordHolds;
+    if (holds === undefined)
+      throw new Error("play list: the module has no recordHolds");
+    const records = listRecords(b, kind);
+    const sp = spaceOf(cx.module, b);
+    const marked = (role: "outline" | "ring"): ReadonlySet<number> =>
+      new Set(hint.marks.of(role, CELL).map((p) => recordAt(b.h, p)));
+    const outlined = marked("outline");
+    const ringed = marked("ring");
+    const states = records.map(
+      (_, k) =>
+        (errors.recordErrors.has(k)
+          ? BROKEN
+          : holds(b.values, sp, b.dealt, k)
+            ? STRUCK
+            : 0) |
+        (outlined.has(k) ? OUTLINED : 0) |
+        (ringed.has(k) ? RINGED : 0),
+    );
+    const key = states.join(",");
+    if (ds.recordList.shown === key) return;
+    ds.recordList.shown = key;
+    const ts = ds.tileSize;
+    const glyph = cx.glyphOf(b);
+    const texts = records.map((r) => Array.from(r, glyph).join(""));
+    const { x, y } = cx.metrics.beneathAt(ts, lay.f.depth, b.h);
+    // A mark reaches past a record's text, the first column's into the
+    // board's left margin.
+    const reach = Math.floor(ts / 4);
+    const area = {
+      x: x - reach,
+      y,
+      w: b.w * ts + 2 * reach,
+      h: Math.ceil(LIST_HEIGHT * ts),
+    };
+    dr.drawRect(area, COL_BACKGROUND);
+    const list = listLayout(
+      texts.map((t) => t.length),
+      b.w,
+    );
+    const font = Math.max(1, Math.trunc(list.font * ts));
+    const opts: DrawTextOptions = {
+      align: "left",
+      baseline: "alphabetic",
+      fontType: "fixed",
+      size: font,
+    };
+    const pad = Math.max(2, Math.round(font * 0.15));
+    const thick = Math.max(2, Math.round(font / 8));
+    const origins = list.slots.map((s) => ({
+      x: x + Math.trunc(s.x * ts),
+      y: y + Math.trunc(s.y * ts),
+      w: Math.max(1, Math.ceil(s.w * ts)),
+    }));
+    // The ink of each record's state.
+    const done = cx.typed ? cx.pal.COL_DONE : COL_INK;
+    for (const [k, o] of origins.entries()) {
+      const s = states[k];
+      const box = {
+        x: o.x - pad,
+        y: Math.round(o.y - font * 0.85),
+        w: o.w + 2 * pad,
+        h: Math.round(font * 1.1),
+      };
+      if (s & OUTLINED)
+        drawMarkSides(dr, { box, outer: thick, inner: 0 }, MARK_ALL, COL_HINT_OUTLINE);
+      else if (s & RINGED) {
+        const avoid = origins.flatMap((q, j) =>
+          j === k ? [] : [textBox(q, opts, texts[j])],
+        );
+        dr.drawRing(box, { enclose: [textBox(o, opts, texts[k])], avoid }, thick, {
+          room: area,
+        });
+      }
+      const ink = s & BROKEN ? COL_ERROR : s & STRUCK ? done : COL_INK;
+      dr.drawText(o, opts, ink, texts[k]);
+      if (s & STRUCK) {
+        const at = Math.round(o.y - font * 0.3);
+        dr.drawLine(
+          { x: o.x, y: at },
+          { x: o.x + o.w, y: at },
+          ink,
+          Math.max(1, Math.round(font / 12)),
+        );
+      }
+    }
+    dr.drawUpdate(area);
+  },
+};

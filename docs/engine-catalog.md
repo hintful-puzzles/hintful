@@ -1208,6 +1208,11 @@ one of them, and a site placing anything there takes its top left from
 `metrics.beneathAt`, so the drawing, the press and the canvas agree. A row
 of counts is laid out once for the widest of its styles (`countsLayout`),
 so switching the player's style (`play.countStyle`) never moves a record.
+A list (`record-list.ts`, `play.list`) is struck by the compiled
+`recordHolds`, its clue's meaning read two-valued of the board as placed. A
+hint marks a record of a clue at the board at `recordPoint`, a point beneath
+the grid off every slot: `render/hint.ts` keeps rings off the grid out of
+its tiles, so the site drawing the records draws the marks round them.
 `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws: it runs the
 phases of a draw, each a module of `deal/` (a sampler a line of

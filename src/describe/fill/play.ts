@@ -180,6 +180,53 @@ function checkCounts(
   }
 }
 
+/**
+ * `recordHolds(g, sp, cl, k)`: whether record `k` of the clue at the board
+ * `play.list` draws holds of the values `g`, its meaning read of the board
+ * as placed, for the list's strike. Nothing where there is no list; one
+ * naming no clue at the board the deal derives, or whose records hold no
+ * list, is refused.
+ */
+function recordHoldsOf(
+  json: DescriptionJson,
+  d: Description,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  const kind = json.play?.list;
+  if (kind === undefined) return [];
+  const c = d.clueKinds.get(kind);
+  if (c?.at !== "board" || kind === tallyKindOf(json))
+    throw new CompileError(
+      `play list: ${kind} is no clue at the board the deal derives`,
+    );
+  const fields = [...c.fields.values()];
+  if (fields.length !== 1 || !fields[0].list || fields[0].at !== null)
+    throw new CompileError(`play list: ${kind}'s records are one list of numbers each`);
+  const scratch: string[] = [];
+  const out = new Out(1);
+  const v = compileExpr(
+    measured(c.means),
+    new Map<string, Val>([["k", { code: "k", sort: elem(`clue ${kind}`) }]]),
+    answerEnv(env, { yes: false }, scratch),
+    out,
+  );
+  expect(v, "bool", `play list ${kind}`);
+  const body = [...scratch.map((s) => `  ${s}`), ...out.text(), `  return ${v.code};`];
+  return [
+    "",
+    `/** Whether ${kind} record \`k\` holds of the values \`g\`, as placed (\`play.list\`). */`,
+    `export function recordHolds(${[
+      "g: ArrayLike<number>",
+      param("sp", "GridSpace", body),
+      param("cl", "Dealt", body),
+      "k: number",
+    ].join(", ")}): boolean {`,
+    ...body,
+    "}",
+  ];
+}
+
 export function playOf(
   json: DescriptionJson,
   d: Description,
@@ -451,6 +498,7 @@ export function playOf(
     ...boardDomainOf(d, env, measured),
     ...repeatOf(d, env, measured),
     ...washedOf(wash?.when ?? null, env, measured),
+    ...recordHoldsOf(json, d, env, measured),
     "",
     "/** How the player fills the board: the engine's `FillPlay`. */",
     `export const play = ${JSON.stringify(play)} as const;`,

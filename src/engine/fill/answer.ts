@@ -78,6 +78,9 @@ export interface AnswerReading<C> {
    * printed beneath the grid as the board draws them, each its value's
    * glyph and its count. */
   readonly counts?: (board: FillBoard<C>) => readonly CountRecord[];
+  /** The records of the clue at the board drawn as a list (`play.list`),
+   * printed beneath the grid a line a length, each its members' glyphs. */
+  readonly list?: (board: FillBoard<C>) => readonly ArrayLike<number>[];
   /** The clue kinds `board`'s ruleset does not deal, which print no rim
    * (Salad's border on a Numbers board). */
   readonly off?: (board: FillBoard<C>) => ReadonlySet<string>;
@@ -344,7 +347,7 @@ export function textFormat<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
 ): string {
-  const grid = withCounts(
+  const grid = withBeneath(
     reading,
     board,
     withValueMargins(
@@ -392,20 +395,39 @@ export function textFormat<C extends Clues<C>>(
   return [...above.map((l) => ` ${l}`), ...lines].join("\n");
 }
 
-/** `grid` with the row of counts beneath it, each record its value's glyph,
- * a colon and its count (upstream undead.c's `G: 4 V: 2 Z: 3`). */
-function withCounts<C extends Clues<C>>(
+/** `grid` with what it draws beneath it: the row of counts, each record its
+ * value's glyph, a colon and its count (upstream undead.c's `G: 4 V: 2
+ * Z: 3`), or the list. */
+function withBeneath<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
   grid: string,
 ): string {
   const records = reading.counts?.(board) ?? [];
-  if (records.length === 0) return grid;
   const glyphs = reading.glyphs(board);
-  const row = records
-    .map((r) => `${(glyphs[r.value] ?? String(r.value)).trim()}: ${r.count}`)
-    .join(" ");
-  return `${grid.replace(/\n$/, "")}\n\n${row}\n`;
+  const glyph = (v: number): string => (glyphs[v] ?? String(v)).trim();
+  const listed = (reading.list?.(board) ?? []).map((r) =>
+    Array.from(r, glyph).join(""),
+  );
+  if (records.length === 0 && listed.length === 0) return grid;
+  const lines =
+    records.length > 0
+      ? [records.map((r) => `${glyph(r.value)}: ${r.count}`).join(" ")]
+      : listLines(listed);
+  return `${grid.replace(/\n$/, "")}\n\n${lines.join("\n")}\n`;
+}
+
+/** The list's records, `texts`, a line for each length, upstream
+ * crossing.c's `3: 123,456,`: a list is held sorted by length. */
+function listLines(texts: readonly string[]): string[] {
+  const lines: string[] = [];
+  let length = -1;
+  for (const t of texts) {
+    if (t.length !== length) lines.push(`${t.length}: `);
+    length = t.length;
+    lines[lines.length - 1] += `${t},`;
+  }
+  return lines;
 }
 
 /** `grid` with the clues one a value at its lines before them, as the board

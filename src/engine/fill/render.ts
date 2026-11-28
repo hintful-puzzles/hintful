@@ -35,7 +35,7 @@ import { tallyIn, tallyOf } from "./params/tally.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
-import { countsBeneath, layoutOf, tallyBeneath } from "./render/geometry.ts";
+import { layoutOf, tallyBeneath } from "./render/geometry.ts";
 import { hintPass } from "./render/hint.ts";
 import { breachesOf } from "./render/layers/breaches.ts";
 import { edgeWordsOf } from "./render/layers/edge-values.ts";
@@ -56,6 +56,7 @@ import { lineClues } from "./render/sites/line-clues.ts";
 import { linkRings } from "./render/sites/link-rings.ts";
 import { lists } from "./render/sites/lists.ts";
 import { pencil } from "./render/sites/pencil.ts";
+import { recordList } from "./render/sites/record-list.ts";
 import type { FillSite } from "./render/sites/site.ts";
 import { slots } from "./render/sites/slots.ts";
 import { tally } from "./render/sites/tally.ts";
@@ -139,6 +140,8 @@ export interface FillDrawState {
   /** What the row of counts beneath the board shows, `null` before it is
    * drawn. */
   readonly counts: { shown: string | null };
+  /** What the list beneath the board shows, `null` before it is drawn. */
+  readonly recordList: { shown: string | null };
   /** Whether the pencil-mode indicator shows, on a board that keeps notes:
    * `null` before it is drawn. */
   pencilModeShown: boolean | null;
@@ -202,6 +205,7 @@ const SITES: readonly FillSite[] = [
   edgeRings,
   tally,
   counts,
+  recordList,
   lists,
   valueMargins,
   lineClues,
@@ -289,11 +293,7 @@ export function fillRender<C extends Clues<C>>(
       return metrics.canvasOf(
         p,
         values,
-        t !== null
-          ? tallyBeneath(tallyOf(t, p), p.w)
-          : cx.counted === null
-            ? null
-            : countsBeneath(p.w),
+        t !== null ? tallyBeneath(tallyOf(t, p), p.w) : cx.untalliedBeneath(p.w),
         metrics.tileOf(size),
       );
     },
@@ -316,6 +316,7 @@ export function fillRender<C extends Clues<C>>(
         marks: new HintMarks(),
         tally: { shown: null },
         counts: { shown: null },
+        recordList: { shown: null },
         pencilModeShown: null,
       };
     },
