@@ -34,7 +34,11 @@ type MarkKind = Footprint["reads"][number]["kind"];
 export interface FootprintEnv {
   readonly defs: ReadonlyMap<string, Definition>;
   /** Only a tiling's geometry is followed yet; elsewhere every technique is
-   * whole. */
+   * whole. A rectangle's lines (`lineCells`, `unitsOf`, `peers`) were
+   * followed and measured (2026-11-28): a Latin technique runs about once a
+   * solve, at its stall, so its first visit is the whole board, and the
+   * bookkeeping cost Solo's and Keen's walks and deals 3% and Kakurasu's deal
+   * 12%, where Unruly's deal fell 21%. */
   readonly tiling: boolean;
   readonly answerSort: "cell" | "edge";
   readonly edgeMark: string | null;

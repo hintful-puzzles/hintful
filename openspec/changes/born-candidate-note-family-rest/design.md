@@ -389,10 +389,25 @@ seed's least of three runs, bundled; baseline / working median):
   game's was.
 - **ABCD and Salad stay under it**: ABCD's largest median 17 ms (6x8 Hard),
   Salad's 159 on 5n4Bdx, which the baseline passed at 128.
-- **Group passes the bar on one menu board** where the baseline did not:
-  8x8 Tricky 74 / 127 (slowest 581 / 492, 5 / 8 of 12 seeds over 100).
-  Every other menu board is at most 11 ms in both trees. To be fixed in
-  the engine (3.1c), as Solo's was.
+- **Group seemed to pass the bar on one menu board**, 8x8 Tricky 74 / 127
+  (slowest 581 / 492, 5 / 8 of 12 seeds over 100). Every other menu board
+  is at most 11 ms in both trees.
+- **It does not (3.1c).** Timed on 100 seeds, one tree after the other,
+  the medians are 154 / 104 (means 230 / 158, 65 / 51 seeds over 100): the
+  hand-written deal passed the bar too, and the born one is a third
+  cheaper. An 8x8 Tricky board is rare: of the boards hidden to Tricky,
+  Normal finishes 99.5%, so a deal hides some 200 and a seed's time is a
+  geometric count of them, whose twelve-seed median's 95% interval was 79
+  to 234 ms. `compare-cost --times` now prints that interval and marks a
+  board unsettled where it crosses the bar (`docs/descriptions.md` §
+  "Judging a family moved onto its description", 4). Read on the same 36
+  deals, both trees spend nearly all of the time in the Tricky solves of
+  the hide; with upstream's one pass in place of the halving the born deal
+  draws exactly the hand-written's boards, so the halving is what makes it
+  cheaper. Hiding first at Normal and then at Tricky drew more boards, not
+  fewer (Tricky takes nothing more from a board Normal has hidden), and
+  revisiting only the lines a fact reached saved Group nothing, since
+  `latin.set` runs about once a solve (`footprint.ts`).
 
 No walk comes near 100 ms on a menu board.
 

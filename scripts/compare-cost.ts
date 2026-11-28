@@ -60,10 +60,12 @@
  * **`--times <seeds>`** also deals each menu board's params on that many
  * seeds in each tree, each seed three times and its least CPU time kept, with
  * Node as the app runs it (no `--predictable`), and prints each board's
- * median, slowest and how many seeds pass 100 ms, marking a board whose
- * median passes it where the baseline's does not: the bar of
- * `docs/descriptions.md` § "Judging a family moved onto its description", 4.
- * It needs no rounds, so `--quick --times 12` is the usual call.
+ * median with its 95% interval, slowest and how many seeds pass 100 ms,
+ * marking a board whose median passes it where the baseline's does not: the
+ * bar of `docs/descriptions.md` § "Judging a family moved onto its
+ * description", 4. Past the bar where the intervals settle it, unsettled
+ * where they overlap the bar, for a run on more seeds to settle. It needs no
+ * rounds, so `--quick --times 12` is the usual call.
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
@@ -289,9 +291,34 @@ async function timed(bundle: string, env: Record<string, string>): Promise<CostR
  * family moved onto its description", 4). */
 const NOTICED_MS = 100;
 
-/** A line for each menu board's deal, both trees' median and slowest ms and
- * how many seeds pass {@link NOTICED_MS}; marked where the working tree's
- * median passes it and the baseline's does not. */
+/**
+ * The 95% interval of the median of the distribution `xs` was drawn from:
+ * the order statistics either side that the median falls between in at least
+ * 95% of samples of their size, whatever the distribution. A deal that
+ * retries until a rare board turns up takes a geometric number of draws, and
+ * twelve seeds' median of Group's 8x8 Tricky read 74 ms and 127 in two
+ * trees whose medians over 100 seeds were 154 and 104 (2026-11-28).
+ */
+function medianInterval(xs: readonly number[]): [number, number] {
+  const s = [...xs].sort((a, b) => a - b);
+  const n = s.length;
+  // The largest k with P(Binomial(n, 1/2) < k) at most 2.5%.
+  let k = 0;
+  let below = 0;
+  let term = 0.5 ** n;
+  for (let j = 0; j < n; j++) {
+    if (below + term > 0.025) break;
+    below += term;
+    term = (term * (n - j)) / (j + 1);
+    k = j + 1;
+  }
+  return k === 0 ? [s[0], s[n - 1]] : [s[k - 1], s[n - k]];
+}
+
+/** A line for each menu board's deal, both trees' median with its interval,
+ * slowest ms and how many seeds pass {@link NOTICED_MS}; marked past the bar
+ * where the working tree's median passes it and the baseline's does not, and
+ * the intervals say so, or as unsettled where only the medians do. */
 function timeLines(
   base: Record<string, number[]>,
   work: Record<string, number[]>,
@@ -301,12 +328,19 @@ function timeLines(
     const b = base[params];
     const w = work[params] ?? [];
     const over = (xs: readonly number[]) => xs.filter((x) => x > NOTICED_MS).length;
-    const passes =
-      median(w) > NOTICED_MS && median(b) <= NOTICED_MS ? "  ← past the bar" : "";
+    const [bLow, bHigh] = medianInterval(b);
+    const [wLow, wHigh] = medianInterval(w);
+    const verdict =
+      median(w) <= NOTICED_MS || median(b) > NOTICED_MS
+        ? ""
+        : wLow > NOTICED_MS && bHigh <= NOTICED_MS
+          ? "  ← past the bar"
+          : "  ← unsettled: time it on more seeds";
     return (
-      `  deal ms ${params}: median ${ms(median(b))} / ${ms(median(w))}, ` +
+      `  deal ms ${params}: median ${ms(median(b))} / ${ms(median(w))} ` +
+      `(95% ${ms(bLow)}–${ms(bHigh)} / ${ms(wLow)}–${ms(wHigh)}), ` +
       `slowest ${ms(Math.max(...b))} / ${ms(Math.max(...w))}, ` +
-      `over ${NOTICED_MS} ${over(b)} / ${over(w)} of ${b.length}${passes}`
+      `over ${NOTICED_MS} ${over(b)} / ${over(w)} of ${b.length}${verdict}`
     );
   });
 }

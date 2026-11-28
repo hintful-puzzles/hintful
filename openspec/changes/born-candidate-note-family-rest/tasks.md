@@ -1,11 +1,8 @@
 ## Next
 
-3.1c, Group's 8x8 Tricky deal past the bar: profile the bundled deal
-(`compare-cost --baseline <a worktree of 0b0727c9d carrying this tree's
-lockfile> --quick --times 12 group`) and find where it goes, as 3.1a did
-for Solo; a rare tier's deal retries whole boards, so look first at what
-each draw repeats. Then tick 3.1 (Group's row is in), finish 3.2 (the
-`fill/` controls and the third deal shape are in), and 3.3.
+Finish 3.2: the `fill/` controls and the third deal shape are in; check
+each capability the four flips list in its commit against the guide a
+porter would look it up in, and add what is missing. Then 3.3.
 
 ## 1. Design
 
@@ -88,13 +85,11 @@ changed for a player" gets its line. In the order task 1.1 set.
 - [x] 3.1b Solo's 434 fewer steps and Salad's 511 more explained, and
       Salad's fixed if each hint does less (design.md § "The figures
       (3.1)", "The steps by rung"): the commit that ticks 3.1b.
-- [ ] 3.1c Group's 8x8 Tricky deal back under 100 ms (median 127 against
-      the hand-written 74; design.md § "The figures (3.1)"), in the
-      engine: the commit that ticks 3.1c.
-- [ ] 3.1 The figures of `docs/descriptions.md` § "Judging a family moved
-      onto its description", per game, with `npm run compare-cost --
-      --base <this change's baseline>`, recorded in design.md; each deal
-      measured bundled, never under vitest.
+- [x] 3.1c Group's 8x8 Tricky deal: not past the bar on 100 seeds (104
+      against 154; design.md § "The figures (3.1)"): the commit that
+      ticks 3.1c.
+- [x] 3.1 The figures, per game, recorded in design.md § "The figures
+      (3.1)".
 - [ ] 3.2 Update the guides for what the family added.
 - [ ] 3.3 Commit, push, archive; mark the route's task 1.2 done, or file
       the next part beneath it.
