@@ -757,6 +757,33 @@
       },
       "description": "Statements the rules imply, by name, said so a breach shows on a board still being filled: read by the live error check alone."
     },
+    "breaches": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["at", "says", "place"],
+          "additionalProperties": false,
+          "properties": {
+            "at": {
+              "$ref": "#/$defs/formula",
+              "description": "The square the label is drawn on, read in the binding of the statement's leading `forall`s that breaks it."
+            },
+            "says": {
+              "type": "string",
+              "description": "The label's text: each `{term}` a number of that binding, drawn as the board draws that value, the rest as written (Group's `({a}{b}){c}`)."
+            },
+            "place": {
+              "enum": ["above", "below"],
+              "description": "Where on its square the label is drawn; a square shows the first label of each place."
+            }
+          }
+        }
+      },
+      "description": "A rule's or an implied statement's breach labeled at its squares, by the statement's name: each binding that breaks it is drawn as its labels, in red, in place of its squares in error (Group's `(ab)c` and `a(bc)`)."
+    },
     "clues": {
       "type": "object",
       "description": "Clue kinds: where one sits, its values, and what it means, reading `at` and `v`.",
@@ -1159,6 +1186,9 @@
         },
         "implied": {
           "$ref": "#/$defs/implied"
+        },
+        "breaches": {
+          "$ref": "#/$defs/breaches"
         },
         "clues": {
           "$ref": "#/$defs/clues"

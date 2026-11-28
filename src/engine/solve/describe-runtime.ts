@@ -177,6 +177,7 @@ export {
 export {
   apart,
   apartThrough,
+  type BreachLabel,
   cycleDiagonals,
   cycleEdges,
   decidedAll,

@@ -1270,6 +1270,15 @@ says how each form is read; what a description's author acts on:
   soundness is.
 - **The rule's name is the violation's** (`shape.<i>` for a shape entry),
   as the answer check reports it.
+- **A breach whose place is a binding of values, not squares, is labeled**
+  under `breaches:`, by the statement's name: each label a square formula
+  and a text read in the binding that breaks it, its `{term}`s numbers
+  written as the board writes those values (Group's `({a}{b}){c}` over
+  `mul(value(mul(a, b)), c)`). The violation then carries them, and is
+  drawn as them alone (`docs/rendering.md` § "Live errors are the
+  rules'"). A label that reads a square still open drops the violation's
+  labels, which is then drawn at what it read; a statement read as a cycle
+  names no binding, and its labels are refused.
 
 The guard is `src/guards/rule-violations.test.ts`: every game that declares
 `rules` (`docs/rendering.md` § "Live errors are the rules'") undecides its

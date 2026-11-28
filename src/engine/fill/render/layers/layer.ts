@@ -9,6 +9,7 @@ import type { Rect } from "../../../contract/types.ts";
 import type { CellLayout } from "../cell-text.ts";
 import type { Placed } from "../palette.ts";
 import type { CellPart } from "../tile-word.ts";
+import type { Breach } from "./breaches.ts";
 
 export interface TileFrame {
   readonly dr: GameDrawing;
@@ -37,6 +38,8 @@ export interface TileFrame {
   /** The clue of the part this is the first cell of, as written; `null`
    * where it is none's first. */
   readonly label: string | null;
+  /** The labels of a breach on the cell (`breaches.ts`), or `null`. */
+  readonly breach: Breach | null;
   /** The value's piece as drawn: none on an open cell, or where the wash
    * leaves it out. */
   readonly piece: Placed | null;

@@ -694,6 +694,29 @@ dragged; a divider whose two lines an order parts SHALL be taken away.
 - **WHEN** the player presses between two labels and lets go there
 - **THEN** the divider there is toggled on the release
 
+### Requirement: A born board may label a rule's breach at its squares
+
+Where the description's `breaches` labels a rule, each binding of the
+rule's leading `forall`s that a board breaks SHALL be drawn as its labels,
+each written small in red above or below the square its formula names, its
+numbers as the board writes those values, and its squares SHALL NOT be
+drawn in error for it. A square SHALL show the first label of each place.
+Where a label reads a square still open, the breach SHALL be drawn at its
+squares. A label the compiler cannot place SHALL be refused.
+
+#### Scenario: A failed product labeled
+
+- **WHEN** a group's table holds a·b = c and b·c = a, and c·c reads c while
+  a·a reads b
+- **THEN** `(ab)c` is written over the c of c·c and `a(bc)` under the b of
+  a·a, in red, and no letter is red
+
+#### Scenario: A label refused
+
+- **WHEN** a label names no statement, its formula is no square, or a term
+  of its text is no number
+- **THEN** the description is refused
+
 ## MODIFIED Requirements
 
 ### Requirement: A born game's answer may be searched under a partition dealt first

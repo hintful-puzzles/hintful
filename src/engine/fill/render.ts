@@ -36,6 +36,7 @@ import { cellLayoutOf } from "./render/cell-text.ts";
 import { drawFrame } from "./render/frame.ts";
 import { layoutOf } from "./render/geometry.ts";
 import { hintPass } from "./render/hint.ts";
+import { breachesOf } from "./render/layers/breaches.ts";
 import { edgeWordsOf } from "./render/layers/edge-values.ts";
 import { addLinks } from "./render/layers/links.ts";
 import { errorWords } from "./render/layers/live-errors.ts";
@@ -104,6 +105,9 @@ export interface FillDrawState {
   } | null;
   /** Per cell, what it shows and the hint's marks on it. */
   readonly tiles: TileCache;
+  /** Per cell, the breach labels it shows (`breachKey`), a lane the tiles'
+   * key has no room for. */
+  readonly breaches: (string | null)[];
   /** The notes the hint's step strikes, a lane the tiles' key has no room
    * for: packed on a board that keeps notes alone. */
   readonly struck: OverlaySidecar;
@@ -237,11 +241,9 @@ export function fillRender<C extends Clues<C>>(
 
     if (ds.tiles.firstFrame()) drawFrame(cx, lay, dr, ds, state);
 
-    const { word, lineWord, edgeErrors, ...errors } = errorWords(
-      cx,
-      state,
-      lines === null ? live : viewedErrors(state.w, lines, live),
-    );
+    const viewed = lines === null ? live : viewedErrors(state.w, lines, live);
+    const { word, lineWord, edgeErrors, ...errors } = errorWords(cx, state, viewed);
+    const breaches = breachesOf(viewed.labels, cx.glyphOf(state));
     if (!cx.onEdges) addMistakes(word, mistakes ?? []);
     addLinks(cx, word, shown, mistakes ?? []);
     const edgeWord = edgeWordsOf(cx, shown, edgeErrors, mistakes ?? []);
@@ -252,6 +254,7 @@ export function fillRender<C extends Clues<C>>(
       lineWord,
       edgeWord,
       hintWord: hint.hintWord,
+      breaches,
     });
     const raisedInto = raisedIntoOf(lay, state, ts, tiles);
     paintTiles(cx, lay, dr, ds, state, tiles, raisedInto);
@@ -288,6 +291,7 @@ export function fillRender<C extends Clues<C>>(
         tileSize: metrics.tileOf(tileSize),
         parts: partsOf(cx, b),
         tiles: new TileCache(b.w * b.h, { words: 5, overlays: [struck] }),
+        breaches: new Array<string | null>(b.w * b.h).fill(null),
         struck,
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),

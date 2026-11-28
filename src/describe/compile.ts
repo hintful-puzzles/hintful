@@ -85,6 +85,7 @@ function runtimeImport(
     "type GridSpace",
     "type Marks",
     "type Violation",
+    "type BreachLabel",
     ...(regions ? ["type Partition"] : []),
     ...[...used].sort(),
   ].filter(named);
@@ -913,6 +914,14 @@ function impliedList(json: DescriptionJson): { src: string; name: string; on: nu
   }));
 }
 
+/** A breach label's text, its `{term}`s parsed and the rest as written. */
+function labelText(says: string): (string | Expr)[] {
+  return says
+    .split(/(\{[^{}]*\})/)
+    .filter((p) => p !== "")
+    .map((p) => (p.startsWith("{") ? parse(p.slice(1, -1)) : p));
+}
+
 /** The violation check (`compile-violations.ts`) over the same statements
  * as {@link answerCheck}, and those they imply. */
 function violationsOf(json: DescriptionJson, d: Description, env: Env): string[] {
@@ -942,11 +951,20 @@ function violationsOf(json: DescriptionJson, d: Description, env: Env): string[]
       sorts: env.clues.get(kind) as ClueKind,
       readsV: reads(c.means, "v"),
     }));
+  const statements = [...ruleList(json), ...impliedList(json)];
+  for (const name of Object.keys(json.breaches ?? {}))
+    if (!statements.some((s) => s.name === name))
+      throw new CompileError(`breaches: ${name} names no rule or implied statement`);
   return violationCheck(
-    [...ruleList(json), ...impliedList(json)].map((r) => ({
+    statements.map((r) => ({
       name: r.name,
       expr: parse(r.src),
       on: r.on,
+      labels: (json.breaches?.[r.name] ?? []).map((l) => ({
+        at: parse(l.at),
+        place: l.place,
+        says: labelText(l.says),
+      })),
     })),
     clueMeanings,
     domain,

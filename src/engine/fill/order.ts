@@ -308,6 +308,7 @@ export function viewedErrors(w: number, lines: Int32Array, e: LiveErrors): LiveE
     byRule: new Map(
       [...e.byRule].map(([rule, list]) => [rule, list.map((els) => els.map(viewCell))]),
     ),
+    labels: e.labels.map((l) => ({ ...l, at: viewCell(l.at) })),
   };
 }
 

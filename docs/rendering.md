@@ -598,6 +598,12 @@ grid while a gesture is live, and paints only what they say:
   error, which a pair piece shows as a `!` badge (Unruly's run of three,
   its two lines alike, an over-full line's pieces). A shape, never a rule's
   name, so no game names its rules to the renderer.
+- **A violation the description labels (`breaches`) is its labels
+  alone**, in `LiveErrors.labels` and in neither `at` nor `byRule`: a fill
+  board writes each small in red over or under its square
+  ([`layers/breaches.ts`](../src/engine/fill/render/layers/breaches.ts)),
+  where a failed product's four squares in red would say nothing of which
+  product failed (Group's `(ab)c` and `a(bc)`).
 - **A game that draws one rule's breach its own way reads `byRule`**, the
   rule named by a constant typed as its module's `RuleName`, so renaming or
   moving the rule fails the typecheck.

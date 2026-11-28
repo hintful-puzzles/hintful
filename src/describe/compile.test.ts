@@ -1627,6 +1627,34 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/deal hide: given's keep is not a truth/);
   });
 
+  it("refuses a breach label of no statement, off a square, or of a text no number", () => {
+    const grouping = "src/engine/testing/fixtures/grouping/grouping.description.yaml";
+    type Label = { at: string; says: string; place: string };
+    type Json = { breaches: { associative: Label[] } };
+    const label = (edit: (l: Label) => void) =>
+      compileEdited(grouping, (j: Json) => {
+        edit(j.breaches.associative[0]);
+        return j;
+      });
+    expect(label(() => {})).toContain('says: ["(", v_a, v_b, ")", v_c]');
+    expect(() =>
+      compileEdited(grouping, (j: Json) => ({
+        ...j,
+        breaches: { associativ: j.breaches.associative },
+      })),
+    ).toThrow(/breaches: associativ names no rule or implied statement/);
+    expect(() =>
+      label((l) => {
+        l.at = "a";
+      }),
+    ).toThrow(/breaches: associative's label: expected a cell/);
+    expect(() =>
+      label((l) => {
+        l.says = "{mul(a, b)}";
+      }),
+    ).toThrow(/breaches: associative's label text: expected num/);
+  });
+
   it("prints a value on a cell by its glyph, and one on an edge by its edge painter", () => {
     type Values = {
       play: { values: Record<string, { glyph?: string; paint: string }> };

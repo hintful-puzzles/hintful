@@ -5,6 +5,7 @@
  */
 
 import type { Rect } from "../../contract/types.ts";
+import type { Breach } from "./layers/breaches.ts";
 
 // --- the tile's word: the value in the low byte, the layers above ----------
 /** The cell was dealt its value: an undecided cell's surface is lifted under
@@ -125,6 +126,9 @@ export type TileWords = {
   readonly n: number;
   readonly part: CellPart | null;
   readonly label: string | null;
+  /** A breach's labels on the cell, which no word has room for: a change to
+   * them repaints the tile (`FillDrawState.breaches`). */
+  readonly breach: Breach | null;
   readonly anim: { readonly from: number; readonly frac: number } | null;
   readonly changed: boolean;
 };

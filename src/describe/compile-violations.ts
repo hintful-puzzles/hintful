@@ -22,6 +22,7 @@ import {
   type Env,
   elem,
   expect,
+  expectElem,
   Out,
   once,
   type Scope,
@@ -82,6 +83,17 @@ export interface Statement {
   expr: Expr;
   /** The variation that adds it, or `null`. */
   on: string | null;
+  /** The labels its breach is drawn as (`breaches`), none where it is drawn
+   * at its squares. */
+  labels: readonly LabelSource[];
+}
+
+/** A label of a breach, read in the binding that breaks the statement: the
+ * square, and the text, each piece as written or a number. */
+export interface LabelSource {
+  at: Expr;
+  place: "above" | "below";
+  says: readonly (string | Expr)[];
 }
 
 /**
@@ -176,7 +188,7 @@ export function violationCheck(
     const from = out.entries.length;
     const hoisted = scratch.length;
     if (s.on !== null) out.open(`if (variations.includes(${JSON.stringify(s.on)})) {`);
-    c.statement(s.name, "-1", s.expr, base);
+    c.statement(s.name, "-1", s.expr, base, s.labels);
     if (s.on !== null) out.close();
     // A statement whose code reads nothing of the board `g` is the same of
     // every board the deal makes: it says whether the board was dealt
@@ -371,10 +383,66 @@ class Check {
     this.mark = mark;
   }
 
+  /** The labels of the statement being read, its breach drawn as them. */
+  private labels: readonly LabelSource[] = [];
+
   /** Each violation of `e`, a statement named `rule` (of clue `clue`, or
-   * `-1`), at the bindings of its leading `forall`s and conjunctions. */
-  statement(rule: string, clue: string, e: Expr, scope: Scope): void {
+   * `-1`), at the bindings of its leading `forall`s and conjunctions, each
+   * drawn as `labels` where there are any. */
+  statement(
+    rule: string,
+    clue: string,
+    e: Expr,
+    scope: Scope,
+    labels: readonly LabelSource[] = [],
+  ): void {
+    this.labels = labels;
     this.where(rule, clue, this.measured(e), scope, [], SURE);
+    this.labels = [];
+  }
+
+  /** A cycle's or a diagonal's violation names no binding to label. */
+  private unlabeled(rule: string, form: string): void {
+    if (this.labels.length > 0)
+      throw new CompileError(
+        `breaches: ${rule} is read as ${form}, which labels nothing`,
+      );
+  }
+
+  /** Push the violation at `at`, with its labels read in `scope`; a label
+   * that reads a square still open drops them all, the breach then drawn at
+   * its squares. */
+  private push(rule: string, clue: string, at: string, scope: Scope): void {
+    const { out, env } = this;
+    const head = `rule: ${JSON.stringify(rule)}, clue: ${clue}`;
+    if (this.labels.length === 0) {
+      out.emit(`_out.push({ ${head}, at: ${at} });`);
+      return;
+    }
+    // The place first: a label's reads join the ones it was read from.
+    const where = Out.fresh("_bat");
+    const labels = Out.fresh("_lb");
+    out.emit(`const ${where} = ${at};`);
+    out.emit(`let ${labels}: BreachLabel[] | null = null;`);
+    out.open("try {");
+    const made = this.labels.map((l) => {
+      const square = compileExpr(this.measured(l.at), scope, env, out);
+      expectElem(square, "cell", `breaches: ${rule}'s label`);
+      const says = l.says.map((p) => {
+        if (typeof p === "string") return JSON.stringify(p);
+        const v = compileExpr(this.measured(p), scope, env, out);
+        expect(v, "num", `breaches: ${rule}'s label text`);
+        return v.code;
+      });
+      return `{ at: ${square.code}, place: "${l.place}", says: [${says.join(", ")}] }`;
+    });
+    out.emit(`${labels} = [${made.join(", ")}];`);
+    out.close("} catch (e) {");
+    out.emit("  undecided(e);");
+    out.emit("}");
+    out.emit(
+      `_out.push(${labels} === null ? { ${head}, at: ${where} } : { ${head}, at: ${where}, labels: ${labels} });`,
+    );
   }
 
   private where(
@@ -408,6 +476,7 @@ class Check {
         ? cycleOf(e, scope, this.env)
         : null;
     if (cycle !== null) {
+      this.unlabeled(rule, "a cycle");
       // Read as one: the sure edges, and each of them on a cycle of the
       // others, found together rather than by a walk from each.
       const sure = Out.fresh("_se");
@@ -439,6 +508,7 @@ class Check {
         ? pointCycleOf(e, scope, this.env)
         : null;
     if (diagonals !== null) {
+      this.unlabeled(rule, "a cycle of diagonals");
       // The same over the points: each drawn diagonal, by its square and
       // the two points it joins, and those on a cycle of the others.
       const lines = Out.fresh("_dl");
@@ -492,7 +562,7 @@ class Check {
     if (bound.length === 0) this.readsWitness = true;
     const at =
       bound.length > 0 ? `[${bound.join(", ")}]` : `(${WITNESS} ?? ${READ}).slice()`;
-    out.emit(`_out.push({ rule: ${JSON.stringify(rule)}, clue: ${clue}, at: ${at} });`);
+    this.push(rule, clue, at, scope);
     out.close();
   }
 

@@ -1,8 +1,7 @@
 ## Next
 
-2.4g, a rule's breach labeled at its squares (Group's `(ab)c`, `a(bc)`:
-`games/group/render.ts` § "live errors"), on a fixture before the flip.
-For the flip: the deal is the `grouping` fixture's, with `groupdata.ts`'s
+2.4h, Group's flip. Its `breaches` are the `grouping` fixture's; its
+render's `failedTriple` and the hand-drawn annotations go. The deal is the `grouping` fixture's, with `groupdata.ts`'s
 77 groups as generator rows (machine-extracted), `hidden: In order`, the
 `keep` on the identity's lines. The tiers: `i` (least 4) takes
 `[Normal, Tricky, Hard, Unreasonable]`, its own menu section, `8x8i` at
@@ -78,11 +77,12 @@ changed for a player" gets its line. In the order task 1.1 set.
   - [x] 2.4f The deal from shipped data: `deal.sample.group`, a hidden
         kind's `keep`, the hide from the ruleset's lowest tier, on the
         `grouping` fixture; the commit that ticks 2.4f.
-  - [ ] 2.4g A rule's breach labeled at its squares, as Group's
-        associativity draws `(ab)c` and `a(bc)`.
+  - [x] 2.4g A rule's breach labeled at its squares (`breaches`), as
+        Group's associativity draws `(ab)c` and `a(bc)`, on the `grouping`
+        fixture: the commit that ticks 2.4g.
   - [ ] 2.4h The flip: its words, tests in `cases.yaml`, specs, the help.
-        The selection's and the dividers' look are checked in the browser
-        here, the fixtures having no page.
+        The selection's, the dividers' and a breach's labels' look are
+        checked in the browser here, the fixtures having no page.
 
 ## 3. Finish
 

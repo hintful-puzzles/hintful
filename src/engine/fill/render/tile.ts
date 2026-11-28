@@ -17,6 +17,7 @@ import { draggedCells } from "../order.ts";
 import type { FillDrawState, FillFrame } from "../render.ts";
 import { typedCells } from "../select.ts";
 import type { CellLayout } from "./cell-text.ts";
+import { type Breach, breachKey, paintBreach } from "./layers/breaches.ts";
 import { paintDot } from "./layers/dots.ts";
 import {
   edgeCursorBits,
@@ -80,6 +81,7 @@ export function tileWordsOf<C extends Clues<C>>(
     readonly lineWord: Int32Array;
     readonly edgeWord: Int32Array;
     readonly hintWord: (x: number, y: number) => number;
+    readonly breaches: ReadonlyMap<number, Breach>;
   },
 ): (TileWords | null)[] {
   const { w, h } = state;
@@ -145,6 +147,12 @@ export function tileWordsOf<C extends Clues<C>>(
       // A growing piece is no key's: its tile is drawn every frame.
       const grows = before !== null && before[i] !== v;
       if (grows) ds.tiles.forget(i);
+      const breach = words.breaches.get(i) ?? null;
+      const shows = breachKey(breach);
+      if (ds.breaches[i] !== shows) {
+        ds.breaches[i] = shows;
+        ds.tiles.forget(i);
+      }
       tiles[i] = {
         k,
         hk,
@@ -154,6 +162,7 @@ export function tileWordsOf<C extends Clues<C>>(
         n,
         part,
         label: label?.text ?? null,
+        breach,
         anim: grows ? { from: before[i], frac } : null,
         changed: grows || ds.tiles.changed(i, k, hk, lk, nk, ek),
       };
@@ -200,6 +209,7 @@ function drawTile<C extends Clues<C>>(
     part,
     struck,
     label: t.label,
+    breach: t.breach,
     piece: v === 0 || lineWord & WASH_HIDES ? null : (pal.byValue.get(v) ?? null),
     lay,
   };
@@ -215,6 +225,7 @@ function drawTile<C extends Clues<C>>(
   paintEmpty(pal.COL_ENTRY, empty, frame);
   // The empty square's note is its glyph, an X (upstream Salad's).
   paintNotes(pal.COL_PENCIL, glyph, frame);
+  paintBreach(frame);
   if (play.dotted === true) paintDot(pal, frame);
   paintBars(frame);
   paintLinkHalves(frame);

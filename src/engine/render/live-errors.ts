@@ -5,7 +5,7 @@
  */
 
 import type { RulesOf } from "../contract/rules.ts";
-import type { Violation } from "../solve/describe-runtime.ts";
+import type { BreachLabel, Violation } from "../solve/describe-runtime.ts";
 
 export interface LiveErrors {
   /** Per element of the answer, cell or edge: 1 where a violation other
@@ -20,10 +20,14 @@ export interface LiveErrors {
    * index: for a game that marks a clue toward a square (Mathrax's quarter
    * of a corner clue). Empty where its violations name none. */
   readonly clueAt: ReadonlyMap<string, ReadonlyMap<number, readonly number[]>>;
-  /** The elements of each violation other than a clue's, by the statement
-   * it breaks: for a game that draws a rule's breach its own way (Unruly's
-   * bar along a run of three), named by its module's `RuleName`. */
+  /** The elements of each violation other than a clue's or a labeled one's,
+   * by the statement it breaks: for a game that draws a rule's breach its
+   * own way (Unruly's bar along a run of three), named by its module's
+   * `RuleName`. */
   readonly byRule: ReadonlyMap<string, readonly (readonly number[])[]>;
+  /** The labels of each violation the description labels (`breaches`),
+   * drawn in place of its elements in error. */
+  readonly labels: readonly BreachLabel[];
 }
 
 /** The marks of `violations` over `n` elements. */
@@ -33,7 +37,12 @@ function liveErrorsOf(violations: readonly Violation[], n: number): LiveErrors {
   const clues = new Map<string, Set<number>>();
   const clueAt = new Map<string, Map<number, number[]>>();
   const byRule = new Map<string, (readonly number[])[]>();
+  const labels: BreachLabel[] = [];
   for (const v of violations) {
+    if (v.labels !== undefined) {
+      labels.push(...v.labels);
+      continue;
+    }
     if (v.clue < 0) {
       const list = byRule.get(v.rule) ?? [];
       byRule.set(v.rule, list);
@@ -54,7 +63,7 @@ function liveErrorsOf(violations: readonly Violation[], n: number): LiveErrors {
     if (v.at.length === 2) pairs.push([v.at[0], v.at[1]]);
     else for (const x of v.at) at[x] = 1;
   }
-  return { at, pairs, clues, clueAt, byRule };
+  return { at, pairs, clues, clueAt, byRule, labels };
 }
 
 /** The live errors of `state` as `g` holds its values: the state's own, or a

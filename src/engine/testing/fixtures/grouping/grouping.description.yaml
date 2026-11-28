@@ -31,6 +31,11 @@ rules:
   associative: >-
     forall a in domain, b in domain, c in domain:
     value(mul(value(mul(a, b)), c)) = value(mul(a, value(mul(b, c))))
+# A failed product drawn as its triple on its two sides, as upstream's Group.
+breaches:
+  associative:
+    - { at: "mul(value(mul(a, b)), c)", says: "({a}{b}){c}", place: above }
+    - { at: "mul(a, value(mul(b, c)))", says: "{a}({b}{c})", place: below }
 freedom: { kind: fill }
 play:
   numbers: {}

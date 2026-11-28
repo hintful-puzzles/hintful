@@ -10,8 +10,13 @@
 
 import { describe, expect, it } from "vitest";
 import * as grouping from "../../generated/engine/testing/fixtures/grouping/grouping.compiled.ts";
+import { COL_ERROR } from "../color/roles.ts";
 import { newDealCensus, takingCensus } from "../contract/deal-census.ts";
 import { randomNew } from "../random/index.ts";
+import { liveErrors } from "../render/live-errors.ts";
+import { NO_FLASH } from "../render/win-wave.ts";
+import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { groupTable } from "./group-table.ts";
@@ -19,6 +24,7 @@ import { groupTable } from "./group-table.ts";
 type Board = FillBoard<grouping.Dealt>;
 
 const game = fillGame("grouping", grouping);
+const TS = 48;
 
 function dealt(id: string, seed: string): { b: Board; answer: Uint8Array } {
   const p = game.decodeParams(id);
@@ -133,6 +139,64 @@ describe("an answer drawn as a group's table", () => {
     expect(census.rejected.get("fill: the lowest tier stops short of every clue")).toBe(
       undefined,
     );
+  });
+
+  it("labels a failed product with its triple on its two sides, its squares not in error", () => {
+    // A board with no given: (a·b)·c and a·(b·c), a = 2, b = 3, c = 4, each
+    // placed and differing, with no letter twice in a line.
+    const p = game.decodeParams("4dn");
+    const blank = game.newState(p, "p");
+    const values = blank.values.slice();
+    const [ab, bc, left, right] = [1 * 4 + 2, 2 * 4 + 3, 3 * 4 + 3, 1 * 4 + 1];
+    values[ab] = 4;
+    values[bc] = 2;
+    values[left] = 4;
+    values[right] = 3;
+    const b: Board = { ...blank, values };
+    if (game.rules === undefined) throw new Error("grouping states no rules");
+    const live = liveErrors(game.rules, b);
+    expect(live.byRule.get("associative")).toBeUndefined();
+    expect(Array.from(live.at)).not.toContain(1);
+    // The letters drawn E first: 1 e, 2 a, 3 b, 4 c.
+    expect(live.labels).toEqual([
+      { at: left, place: "above", says: ["(", 2, 3, ")", 4] },
+      { at: right, place: "below", says: [2, "(", 3, 4, ")"] },
+    ]);
+    // Drawn on a frame after one without the fourth letter, so the labels
+    // repaint tiles whose words are the same.
+    const ds = game.newDrawState(b, TS);
+    const frame = (state: Board): DrawOp[] => {
+      const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+      game.redraw(dr, ds, {
+        state,
+        prev: null,
+        dir: 1,
+        ui: game.newUi(state),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
+      return dr.ops;
+    };
+    const short = values.slice();
+    short[right] = 0;
+    frame({ ...blank, values: short });
+    const texts = frame(b).flatMap((o) => (o.op === "text" ? [o] : []));
+    const red = texts.filter((o) => o.color === COL_ERROR);
+    expect(red.map((o) => o.text).sort()).toEqual(["(ab)c", "a(bc)"]);
+    // Each over or under its square's letter, in the same tile.
+    const by = (text: string) => red.find((o) => o.text === text) ?? null;
+    const near = (label: DrawOp | null, letter: string, dy: number) =>
+      label !== null &&
+      label.op === "text" &&
+      texts.some(
+        (o) =>
+          o.text === letter &&
+          o.x === label.x &&
+          (o.y - label.y) * dy > 0 &&
+          Math.abs(o.y - label.y) < TS / 2,
+      );
+    expect(near(by("(ab)c"), "c", 1)).toBe(true);
+    expect(near(by("a(bc)"), "b", -1)).toBe(true);
   });
 
   it("deals a board of the asked tier, not one the tier below finishes", () => {

@@ -14,9 +14,9 @@ import {
   type SampleJson,
   sampleOf,
 } from "../description.ts";
-import { underOf } from "./hide.ts";
 import type { SettingOut } from "./settings.ts";
 import { sizeSettings } from "./sizes.ts";
+import { underOf } from "./under.ts";
 
 /** The value a sample lays, 0 where it lays no one value: it builds the
  * answer, draws a Latin square, or searches one. */

@@ -24,6 +24,18 @@ export interface Violation {
    * of a row with too many); where that names none, those it read. A
    * clue's may be empty, the clue itself being where it is. */
   readonly at: readonly number[];
+  /** Where the description labels the statement's breach (`breaches`), its
+   * labels in this binding; absent where it labels none, or where a label
+   * read a square still open. */
+  readonly labels?: readonly BreachLabel[];
+}
+
+/** A label a breach is drawn as: on square `at`, at `place`, its text each
+ * string as written and each number as the board draws that value. */
+export interface BreachLabel {
+  readonly at: number;
+  readonly place: "above" | "below";
+  readonly says: readonly (string | number)[];
 }
 
 /** Thrown by a read of an undecided element; caught by the term it stops. */
