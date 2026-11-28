@@ -1,0 +1,12 @@
+ok  tiling     pair                           3  sound    (want sound   )     9 queries    0.2s
+ok  tiling     pair (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/tiling/tiling.description.yaml#pair: recorded sound, proved whole on all 1 boards
+ok  tiling     single                         3  sound    (want sound   )     9 queries    0.1s
+ok  tiling     single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/tiling/tiling.description.yaml#single: recorded sound, proved whole on all 1 boards
+ok  tiling     full                           3  sound    (want sound   )     6 queries    0.1s
+ok  tiling     full (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/engine/testing/fixtures/tiling/tiling.description.yaml#full: recorded sound, proved whole on all 1 boards
+ok  tiling     room                           3  sound    (want sound   )     6 queries    0.2s
+ok  tiling     room (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at line 0
+ok  src/engine/testing/fixtures/tiling/tiling.description.yaml#room: recorded sound, proved whole on all 1 boards

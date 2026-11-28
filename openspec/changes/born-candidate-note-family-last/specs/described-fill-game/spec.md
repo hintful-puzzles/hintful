@@ -630,3 +630,24 @@ refuse a `hiddenSingle` step that marks anything but the part's stripes.
   three-square area on the left edge can still point
 - **THEN** its sentence says the area's three squares can point only three
   ways between them, and the area is striped
+
+### Requirement: A born game's partition may be dealt as dominoes
+
+Where `deal.divide` names a dealt partition with `dominoes`, the board
+SHALL be tiled at random by parts of two neighboring cells, one cell alone
+where its area is odd, before the answer is drawn, and an answer the deal
+builds SHALL be built on it. The ID's `pairs` segment SHALL write it as a
+letter a cell, where its partner lies or `*` alone, and SHALL refuse two
+cells that do not name each other or a partner across the board's edge.
+
+#### Scenario: An odd board
+
+- **WHEN** a 5x3 `tiling` board is dealt
+- **THEN** every part is two neighboring cells but one, which is alone,
+  and its answer holds a 1 and a 2 in each domino
+
+#### Scenario: A pair round a row's end
+
+- **WHEN** a `tiling` ID names the last cell of the top row and the first
+  of the next as each other's partner
+- **THEN** the ID is refused

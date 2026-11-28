@@ -1157,7 +1157,9 @@ Rules for any of them:
 
 **A generator that divides its grid into regions takes the division from
 `src/engine/` and supplies only its rule.** Regions of one size come from
-`divvyRectangle`. Regions of unequal size come from
+`divvyRectangle`, and dominoes from `dominoLayout` (`laydomino.ts`), which a
+described deal builds its answer on (`deal.divide`'s `dominoes` with
+`sample.build`). Regions of unequal size come from
 [`divide.ts`](../src/engine/generate/divide.ts), which has a walk for each way a game
 states what it wants:
 

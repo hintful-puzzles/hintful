@@ -94,7 +94,11 @@ const SAMPLERS: {
       return drawRejected("fill: the search found no answer under the partition");
     return { g: found[0], grown };
   },
+  // A partition divided apart from the answer is divided first, and the
+  // answer built on it (Magnets' tiles).
   build(sample, cx) {
+    const grown = cx.deal.divide === undefined ? {} : divided(cx);
+    if (grown === null) return null;
     const g = buildAnswer(
       cx.module,
       cx.deal,
@@ -104,10 +108,11 @@ const SAMPLERS: {
       cx.rs,
       cx.layouts++,
       cx.buildTier,
+      grown,
     );
-    return answer(
-      g === DEAD_END ? climbBuild(cx, "fill: the build met a dead end") : g,
-    );
+    if (g === DEAD_END) return climbBuild(cx, "fill: the build met a dead end");
+    if (g === null) return drawRejected("fill: the sample drew no answer");
+    return { g, grown: cx.deal.divide === undefined ? null : grown };
   },
   dominoes: (sample, cx) => answer(sampleDominoes(sample, cx.sp, cx.rs)),
   group(sample, cx) {

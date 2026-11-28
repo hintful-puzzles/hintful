@@ -1,0 +1,18 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # The other end of a domino read as holding the same number.
+  pair:
+    conclude: "place(p, value(c))"
+  # A line one short of its 1s read as holding them all.
+  full:
+    for: "L in lines, v = clue(ones, L) where v >= 0 and ones(L) + 1 >= v"
+    conclude: "forall c in cells(L) where not known(c): strike(c, 1)"
+  # A line with one square more than it needs read as having just enough.
+  room:
+    for: >-
+      L in lines, v = clue(ones, L) where v > ones(L),
+      O = {c in cells(L) where not known(c) and 1 in cand(c)}
+      where |O| = v - ones(L) + 1

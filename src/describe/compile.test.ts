@@ -2159,6 +2159,22 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/deal sample walls: the answer is not on the edges/);
   });
 
+  it("writes a partition as each cell's partner only where the deal lays it as dominoes", () => {
+    const tiling = "src/engine/testing/fixtures/tiling/tiling.description.yaml";
+    type Tiling = { deal: { divide: unknown } };
+    const edited = (edit: (j: Tiling) => void) =>
+      compileEdited(tiling, (j: Tiling) => {
+        edit(j);
+        return j;
+      });
+    expect(edited(() => {})).toContain('"dominoes":true');
+    expect(() =>
+      edited((j) => {
+        j.deal.divide = { partition: "tile", pairs: 0.5, most: 2 };
+      }),
+    ).toThrow(/id: pairs of tile, which the deal does not lay as dominoes/);
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

@@ -13,7 +13,7 @@ import { type FillDeal, type FillParams, givenOf, sizesOf } from "../game-id.ts"
 import { variationsOf } from "../params/flag.ts";
 import type { BuiltSample } from "../sample.ts";
 import { withLatin } from "./clue-steps.ts";
-import type { DealContext, DealtFillModule } from "./context.ts";
+import type { DealContext, DealtFillModule, Grown } from "./context.ts";
 import { firstLaid } from "./first-laid.ts";
 import { hiddenKinds } from "./hide-settings.ts";
 import { keepingAll } from "./keeping.ts";
@@ -51,7 +51,8 @@ export function climbBuild<C extends Clues<C>>(
  * (Light Up's walls, upstream's lightup.c `set_blacks`). With `fallback`, a
  * cell left no value takes the fallback and the build goes on, the draw
  * refused past its most (Rome's goals). A partition the deal merges on the
- * answer is a cell a part throughout.
+ * answer is a cell a part throughout, and one divided apart from it is
+ * `divided`'s.
  */
 export function buildAnswer<C extends Clues<C>>(
   module: DealtFillModule<C>,
@@ -62,13 +63,19 @@ export function buildAnswer<C extends Clues<C>>(
   rs: RandomState,
   draw: number,
   tier: number,
+  divided: Grown,
 ): Uint8Array | typeof DEAD_END | null {
   const { first } = sample;
   const start =
     first === undefined
       ? new Uint8Array(sp.cells.length)
       : firstLaid(first, deal, p, rs, draw);
-  const derived = module.deriveClues(start, sp, unmerged(deal, sp), givenOf(deal, p));
+  const derived = module.deriveClues(
+    start,
+    sp,
+    { ...unmerged(deal, sp), ...divided },
+    givenOf(deal, p),
+  );
   // A Latin kind is a Latin square's on the cells built round, so the ladder
   // reads numbers none of which repeats (upstream singles.c's new_game_desc).
   const numbered = withLatin(derived, deal, sp, start, rs);

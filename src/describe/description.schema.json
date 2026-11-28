@@ -36,8 +36,20 @@
     },
     "divide": {
       "type": "object",
-      "description": "One partition `deal.divide` divides: by `pairs` and `most`, by `sizes`, or into `equal` parts.",
+      "description": "One partition `deal.divide` divides: by `pairs` and `most`, by `sizes`, into `equal` parts, or into `dominoes`.",
       "oneOf": [
+        {
+          "required": ["partition", "dominoes"],
+          "additionalProperties": false,
+          "properties": {
+            "partition": {
+              "type": "string"
+            },
+            "dominoes": {
+              "const": true
+            }
+          }
+        },
         {
           "required": ["partition", "pairs", "most"],
           "additionalProperties": false,
@@ -2020,6 +2032,21 @@
               },
               {
                 "type": "object",
+                "required": ["pairs"],
+                "additionalProperties": false,
+                "description": "A dealt partition the deal lays as `dominoes`, a letter a cell in reading order saying where its partner lies: `L` right of it, `R` left, `T` below, `B` above, `*` a square alone (upstream laydomino.c's, as Magnets writes its tiles). After `before` where given.",
+                "properties": {
+                  "pairs": {
+                    "type": "string"
+                  },
+                  "before": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "type": "object",
                 "required": ["lists"],
                 "additionalProperties": false,
                 "description": "A list kind at lines, each line's list in turn, its numbers between `.` and the lines between `/`, an empty list written as nothing (upstream's Pattern). With `order: columns`, the columns come first.",
@@ -2449,7 +2476,7 @@
               }
             },
             "divide": {
-              "description": "A dealt partition divided at random, apart from the answer, or a list of them divided in turn. With `pairs` and `most`, into small parts (upstream keen.c): each square in a random order joined, at odds `pairs`, to its first neighbor in that order still alone; then each square left alone joined to its first neighboring part of fewer than `most` squares, the draw thrown away where one is left alone still. With `sizes`, one part at a time grown to a size drawn from a list (`engine/generate/divide.ts`'s `growToSize`), a part with no room left ending short: the first list, or with `by` a size the params give, one list a value of it from its least. With `equal`, the board tiled by connected parts of that many squares each (upstream divvy.c, Solo's jigsaw blocks): a number, a size the params give, or `w`, the board's width.",
+              "description": "A dealt partition divided at random, apart from the answer, or a list of them divided in turn. With `pairs` and `most`, into small parts (upstream keen.c): each square in a random order joined, at odds `pairs`, to its first neighbor in that order still alone; then each square left alone joined to its first neighboring part of fewer than `most` squares, the draw thrown away where one is left alone still. With `sizes`, one part at a time grown to a size drawn from a list (`engine/generate/divide.ts`'s `growToSize`), a part with no room left ending short: the first list, or with `by` a size the params give, one list a value of it from its least. With `equal`, the board tiled by connected parts of that many squares each (upstream divvy.c, Solo's jigsaw blocks): a number, a size the params give, or `w`, the board's width. With `dominoes`, the board tiled by pairs of neighboring squares at random, one square left alone where its area is odd (upstream laydomino.c).",
               "oneOf": [
                 {
                   "$ref": "#/$defs/divide"

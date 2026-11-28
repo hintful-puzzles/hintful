@@ -14,12 +14,15 @@
  *   (`growToSize`): Seismic's areas, dealt before any number is.
  * - Into parts of one size that tile the board (`divvyRectangle`, upstream
  *   divvy.c): Solo's jigsaw blocks.
+ * - Into dominoes (`dominoLayout`, upstream laydomino.c), a square left
+ *   alone where the area is odd: Magnets' tiles.
  */
 
 import { Dsf } from "../board/dsf.ts";
 import { shuffle } from "../board/shuffle.ts";
 import { growToSize } from "../generate/divide.ts";
 import { divvyRectangle } from "../generate/divvy.ts";
+import { dominoLayout } from "../generate/laydomino.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import type { FillDivision } from "./game-id.ts";
@@ -38,6 +41,14 @@ export function dividePartition(
   rs: RandomState,
 ): Int32Array | null {
   const n = sp.cells.length;
+  if ("dominoes" in divide) {
+    if (n !== sp.w * sp.h)
+      throw new Error("divide: dominoes laid on a board with holes");
+    const partner = dominoLayout(sp.w, sp.h, rs);
+    const dsf = new Dsf(n);
+    for (const c of sp.cells) dsf.merge(c, partner[c]);
+    return numbered(dsf, sp.cells);
+  }
   if ("equal" in divide) {
     if (n !== sp.w * sp.h) throw new Error("divide: a board with holes tiled");
     return numbered(

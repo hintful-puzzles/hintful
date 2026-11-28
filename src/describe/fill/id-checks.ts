@@ -11,7 +11,7 @@
 import type { IdSegment, SegmentKey, SegmentOf } from "../../engine/fill/desc.ts";
 import { codeSaid, isNumberCode } from "../../engine/fill/segments/code-said.ts";
 import { CompileError, type Env } from "../compile-sorts.ts";
-import type { Description, DescriptionJson } from "../description.ts";
+import { type Description, type DescriptionJson, dividesOf } from "../description.ts";
 import { dealtPartitions } from "./partitions.ts";
 import {
   flagKind,
@@ -41,14 +41,17 @@ interface SegmentRead<S> {
   check(seg: S, cx: IdCheck): void;
 }
 
-/** A segment that writes a dealt partition's walls. */
-function partition<S>(name: (seg: S) => string): SegmentRead<S> {
+/** A segment of kind `key` that writes a dealt partition. */
+function partition<S>(
+  key: "blocks" | "walls" | "pairs",
+  name: (seg: S) => string,
+): SegmentRead<S> {
   return {
     names: (seg) => [name(seg)],
     check(seg, { env }) {
       const kind = name(seg);
       if (!dealtPartitions(env).includes(kind))
-        throw new CompileError(`id: walls of ${kind}, which is no dealt partition`);
+        throw new CompileError(`id: ${key} of ${kind}, which is no dealt partition`);
     },
   };
 }
@@ -58,7 +61,10 @@ const writtenBefore = (id: readonly IdSegment[], i: number, name: string): boole
   id
     .slice(0, i)
     .some(
-      (s) => ("blocks" in s && s.blocks === name) || ("walls" in s && s.walls === name),
+      (s) =>
+        ("blocks" in s && s.blocks === name) ||
+        ("walls" in s && s.walls === name) ||
+        ("pairs" in s && s.pairs === name),
     );
 
 /** The clue kind `kind`, refused where there is none. */
@@ -252,8 +258,20 @@ const STREAM: SegmentRead<SegmentOf<"codes">> = {
 };
 
 const SEGMENTS: { readonly [K in SegmentKey]: SegmentRead<SegmentOf<K>> } = {
-  blocks: partition((seg) => seg.blocks),
-  walls: partition((seg) => seg.walls),
+  blocks: partition("blocks", (seg) => seg.blocks),
+  walls: partition("walls", (seg) => seg.walls),
+  // A letter a cell says where its partner lies, so only a partition the
+  // deal lays as dominoes is written so.
+  pairs: {
+    names: (seg) => [seg.pairs],
+    check(seg, cx) {
+      partition("pairs", (s: typeof seg) => s.pairs).check(seg, cx);
+      if (!dividesOf(cx.json).some((x) => x.partition === seg.pairs && "dominoes" in x))
+        throw new CompileError(
+          `id: pairs of ${seg.pairs}, which the deal does not lay as dominoes`,
+        );
+    },
+  },
   parts: {
     // A part's one clue is named by its code; the partition is the
     // `blocks` or `walls` segment's.

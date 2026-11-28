@@ -25,6 +25,7 @@ import { cells } from "./segments/cells.ts";
 import { dots } from "./segments/dots.ts";
 import { lists } from "./segments/lists.ts";
 import { numbers } from "./segments/numbers.ts";
+import { pairs } from "./segments/pairs.ts";
 import { parts } from "./segments/parts.ts";
 import { records } from "./segments/records.ts";
 import { runs } from "./segments/runs.ts";
@@ -43,6 +44,7 @@ const SEGMENT_KINDS = {
   dots,
   lists,
   numbers,
+  pairs,
   parts,
   records,
   runs,

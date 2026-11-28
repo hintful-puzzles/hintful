@@ -1347,7 +1347,10 @@ it.
 ### `laydomino.ts` — random domino tiling
 
 `dominoLayout(w, h, rs)` is a random tiling by 2×1 dominoes. Its order
-deals the boards. Exemplar: `dominosa/generator.ts`.
+deals the boards. A described game deals it as `deal.divide`'s `dominoes`
+(`fill/divide.ts`) and writes it with the `pairs` ID segment
+(`fill/segments/pairs.ts`); exemplar fixture `tiling`. Hand-written:
+`dominosa/generator.ts`.
 
 ### `symmetric-blacks.ts` — symmetric black-square placement
 

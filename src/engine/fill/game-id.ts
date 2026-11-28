@@ -223,9 +223,11 @@ export type FillDivide = FillDivision & {
  * joined at odds `pairs` to a neighbor alone, then each left alone to a
  * neighboring part under `most` cells; a part at a time grown to a size
  * drawn from one of `sizes`, the first, or with `by` the one at the
- * setting's value less its least; or the board tiled by parts of `equal`
- * cells, a number, a size the params give, or `w`, the board's width. */
+ * setting's value less its least; the board tiled by parts of `equal`
+ * cells, a number, a size the params give, or `w`, the board's width; or
+ * tiled by `dominoes`, a square left alone where the area is odd. */
 export type FillDivision =
+  | { readonly dominoes: true }
   | { readonly pairs: number; readonly most: number }
   | {
       readonly sizes: readonly (readonly number[])[];

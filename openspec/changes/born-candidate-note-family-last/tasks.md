@@ -87,9 +87,8 @@ order.
         13; § "What each flip changed for a player", Rome).
 - [ ] 2.4 Magnets born. Read against `7379eafb8` (design.md § "Decisions"
       14); its notes are the owner's (§ "Decisions" 15).
-  - [ ] 2.4a A domino tiling as a divide, a leftover square where the
-        area is odd, and the ID's tiling segment (`L R T B *`). On a
-        fixture of its own.
+  - [x] 2.4a A domino tiling as a divide, a leftover square where the
+        area is odd, and the ID's `pairs` segment, on `tiling`.
   - [ ] 2.4b A count a value split across a line's two ends, a derived
         value's neither drawn nor written, done marks on both; the ID's
         segment of one character a line.

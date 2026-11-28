@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a board laid at random with dominoes, a square
+# left alone where its area is odd, each domino holding a 1 at one end and a
+# 2 at the other, with a number beside each row and column saying how many
+# 1s it holds. For the fill engine's tests of a partition dealt as
+# dominoes, and written as each cell's partner, on a description that names
+# no game.
+game: tiling
+produces: numbers
+sizes:
+  w: { min: 2, max: 8 }
+  h: { min: 2, max: 8 }
+space:
+  grid: { w: "w", h: "h" }
+  regions: { tile: dealt }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, 2)" }
+define:
+  others(c): "{p in cells(tile(c)) where p != c}"
+  ones(L): "count(c in cells(L) where value(c) = 1)"
+shape:
+  - "forall c in cells: |cells(tile(c))| <= 2"
+  - "forall c in cells, p in others(c): value(p) != value(c)"
+clues:
+  # How many 1s a row or column holds.
+  ones:
+    at: line
+    value: "range(0, |cells(at)|)"
+    means: "ones(at) = v"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  boards: [4x4, 5x3]
+  hintMarks:
+    ring: the square the step fills in.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the row or column the step is about.
+deal:
+  tiles: a random tiling, a square left alone where the area is odd
+  answer: a 1 or 2 a square, a domino's ends apart, built at random
+  ones: every number
+  tier: the one tier
+  divide: { partition: tile, dominoes: true }
+  sample: { build: true }
+id:
+  - pairs: tile
+  - numbers: ones
+    before: ","
+tiers: [Easy]
+names:
+  single: "the only number left in a square"
+  pair: "the other end of a domino"
+  full: "a line with all its 1s"
+  room: "a line with just enough room for its 1s"
+steps:
+  clean:
+    ring: cell
+    move: "any number its domino's other end already holds"
+  note:
+    ring: cell
+    terms: { vs: values, unruled: flag }
+    wordings:
+      - when: unruled
+        look: "Nothing rules out a number in {ring} yet"
+        move: "pencil in every one"
+      - look: "Only {vs} {vs: isn't | aren't} ruled out of {ring}"
+        move: "pencil {vs: it | them} in"
+  cull:
+    ring: cell
+    terms: { n: number }
+    move: "domino's other end"
+  regionsFull:
+    ring: cell
+    terms: { n: number }
+    look: "Its domino's other end already rules out the other number in {ring}"
+    move: "it can only be {n}"
+techniques:
+  # The other end of a placed domino holds the other number.
+  - id: pair
+    on: place
+    tier: Easy
+    for: "c in cells where known(c), p in others(c) where not known(p)"
+    conclude: "place(p, 3 - value(c))"
+    says:
+      terms: { n: "value(c)" }
+      marks: { outline: "{c}" }
+      look: "{outline: The other end} of {ring}'s domino holds {n}"
+  - kind: one.cell
+    as: single
+    tier: Easy
+  # A line holding all its 1s has room for no more.
+  - id: full
+    tier: Easy
+    for: "L in lines, v = clue(ones, L) where v >= 0 and ones(L) >= v"
+    conclude: "ones(L) = v and (forall c in cells(L) where not known(c): strike(c, 1))"
+    says:
+      terms: { v: v }
+      marks: { stripes: "cells(L)" }
+      look: "{stripes: this {unit}} already holds all {numeral v} of its 1s"
+  # A line with just as many squares left for a 1 as it still needs.
+  - id: room
+    tier: Easy
+    for: >-
+      L in lines, v = clue(ones, L) where v > ones(L),
+      O = {c in cells(L) where not known(c) and 1 in cand(c)}
+      where |O| = v - ones(L)
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      marks: { stripes: "cells(L)" }
+      look: "{stripes: this {unit}} has just enough squares left for its 1s"
+      move: "{ring} must be 1"
