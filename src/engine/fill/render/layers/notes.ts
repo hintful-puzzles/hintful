@@ -21,14 +21,15 @@ export const notesIn = (noteWord: number): number[] => {
 };
 
 /** Cell `i`'s note word: its notes, and `NOTES_MODE` where the selection,
- * on it (`selected`), takes notes. */
+ * on it (`selected`), takes notes, or is armed for one. */
 export const noteKey = <C>(
   b: FillBoard<C>,
   i: number,
   selected: boolean,
   ui: FillUi,
 ): number =>
-  (b.pencil?.[i] ?? 0) | (selected && ui.pencilMode === true ? NOTES_MODE : 0);
+  (b.pencil?.[i] ?? 0) |
+  (selected && (ui.pencilMode === true || ui.armed === "note") ? NOTES_MODE : 0);
 
 /** A cell's notes, each its glyph; or where `pieceOf` is given, the board
  * drawn as pictures, each its value's piece. */

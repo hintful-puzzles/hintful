@@ -6,7 +6,8 @@
  * board keeps notes (`play.notes`), a right press selects a cell for notes,
  * the Marks key switches typing to notes, and a value typed may strike
  * itself from the notes it rules out (auto-pencil). A typed entry and a note
- * are the note-taking cell's moves (`notes.ts`).
+ * are the note-taking cell's moves (`notes.ts`). Where every piece points,
+ * a drag or an armed arrow key chooses a value by its way (`pointing.ts`).
  */
 
 import { fromCoord } from "../board/geometry.ts";
@@ -32,6 +33,7 @@ import {
   LEFT_RELEASE,
   MOD_SHFT,
   moveCursor,
+  newDrag,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
@@ -74,10 +76,11 @@ import {
 import { type ClueSites, type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import type { Edit } from "./edit.ts";
 import type { FillParams } from "./game-id.ts";
-import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf } from "./glyphs.ts";
+import { BALL_GLYPH, boardGlyphs, emptyOf, glyphsOf, waysOf } from "./glyphs.ts";
 import { type FillMove, isCandidateMove, markAll, type SetCellsMove } from "./notes.ts";
 import { dragTo, labelAt, type ReorderMove, type Viewed } from "./order.ts";
 import type { FillPlay, FillUi } from "./play.ts";
+import { pointingInput } from "./pointing.ts";
 import {
   type SelectShape,
   selectedCells,
@@ -118,9 +121,15 @@ function keypadTop<C>(
 /** `ui` as a board of numbers keeps it, which `newUi` gives it: the
  * note-taking cell's fields, and where the board keeps notes its mode and
  * preferences, as every game with notes starts them, the hint's reading the
- * one `play` declares; and no drag of buttons. */
-export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi {
+ * one `play` declares; and no drag of buttons, but where every piece points
+ * the drag that chooses one by its way, and what a key armed. */
+export function typedUi({ drag, ...rest }: FillUi, play: FillPlay): FillUi {
+  const ui: FillUi = rest;
   ui.cursorFromKeyboard ??= false;
+  if (waysOf({ play }) !== null) {
+    ui.drag = drag ?? newDrag();
+    ui.armed ??= null;
+  }
   if (play.notes === true) {
     ui.pencilMode ??= false;
     ui.pencilSticky ??= true;
@@ -198,6 +207,9 @@ function ballMove(
 /** A board of numbers' input: `interpretMove`, the keypad, and the taps and
  * keys that make a move, which a hint's gesture shows. */
 export interface NumberInput<C, D> {
+  /** The board as the live drag would leave it, for the renderer: where
+   * every piece points, the value or note its way chooses. */
+  previewed(board: FillBoard<C>, ui: FillUi): FillBoard<C>;
   /** Where the board has clues the player marks done, that mark's input. */
   readonly done: DoneInput<C, D> | null;
   interpretMove(
@@ -248,6 +260,13 @@ export function numberInput<
       : alongInput(module, listed);
   // Pictures the player may switch for the glyphs.
   const switched = module.play?.numbers?.pictures?.pref !== undefined;
+  const pointing = pointingInput<C, D>(
+    module,
+    (b, ds, p, ui) => geometry.pointerTarget(b, ds, p, ui),
+    noteTaking,
+    origin,
+    gap,
+  );
   const select = module.play?.select;
   const dividers = module.play?.dividers === true;
   const ordered = module.play?.order === true;
@@ -396,9 +415,13 @@ export function numberInput<
   const input: NumberInput<C, D> = {
     done,
     along,
+    previewed: (b, ui) => pointing?.previewed(b, ui) ?? b,
     interpretMove(b, fillUi, ds, p, raw) {
       const ui = noteTaking(fillUi);
       const button = stripModifiers(raw);
+      const pointed =
+        pointing === null ? PASS : pointing.interpret(b, fillUi, ds, p, button);
+      if (pointed !== PASS) return pointed;
       // A press on a raised value's top is its cell's, wherever it is drawn:
       // over a neighbor's square or a clue beside the grid.
       const raisedAt =

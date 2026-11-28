@@ -9,6 +9,19 @@
 import { describe, expect, it } from "vitest";
 import * as pointing from "../../generated/engine/testing/fixtures/pointing/pointing.compiled.ts";
 import { INK, pencilColor, playerEntryColor } from "../color/palette.ts";
+import { UI_UPDATE } from "../contract/game.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  RIGHT_BUTTON,
+  RIGHT_DRAG,
+  RIGHT_RELEASE,
+} from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
@@ -83,14 +96,15 @@ const origin = (() => {
   };
 })();
 
-/** The move a key makes with the cursor on the open square. */
-function press(key: string, ui: FillUi = at(open)) {
+/** The move a key makes with the cursor on the open square: `key`'s
+ * character, or the button `code` where given, on board `s`. */
+function press(key: string, ui: FillUi = at(open), code?: number, s: Board = b) {
   return game.interpretMove(
-    b,
+    s,
     ui,
-    game.newDrawState(b, TS),
+    game.newDrawState(s, TS),
     { x: 0, y: 0 },
-    key.charCodeAt(0),
+    code ?? key.charCodeAt(0),
   );
 }
 
@@ -117,9 +131,9 @@ describe("a board of numbers drawn as arrows", () => {
 
   it("draws a given's arrow in ink, and the player's in the entry color", () => {
     expect(linesIn(draw(b), fixedAt, ink)).toHaveLength(3);
-    const move = press("1");
+    const move = press("8");
     if (move === null || typeof move !== "object" || !("type" in move))
-      throw new Error("1 typed nothing");
+      throw new Error("8 typed nothing");
     const placed = game.executeMove(b, move);
     const lines = linesIn(draw(placed), open, entry);
     expect(lines).toHaveLength(3);
@@ -171,13 +185,154 @@ describe("a board of numbers drawn as arrows", () => {
     expect(ui.pictures).toBe(true);
   });
 
-  it("labels each value's key by its name", () => {
-    expect(game.requestKeys?.(p, b).map((k) => k.label)).toEqual([
-      "Up",
-      "Down",
-      "Left",
-      "Right",
-      "Clear",
+  it("labels each value's key by its arrow, the number pad digit of its way", () => {
+    const keys = game.requestKeys?.(p, b) ?? [];
+    expect(keys.map((k) => k.label)).toEqual(["↑", "↓", "←", "→", "Clear"]);
+    expect(keys.slice(0, 4).map((k) => String.fromCharCode(k.button))).toEqual([
+      "8",
+      "2",
+      "4",
+      "6",
     ]);
+    expect(press("8")).toMatchObject({ type: "set", n: 1, pencil: false });
+    expect(press("6")).toMatchObject({ type: "set", n: 4, pencil: false });
+    // A digit no way has types nothing.
+    expect(press("1")).toBeNull();
+  });
+});
+
+/** The middle of cell `c`'s square, `[dx, dy]` squares on. */
+const middleOf = (c: number, dx = 0, dy = 0) => ({
+  x: origin.x + (c % b.w) * TS + TS / 2 + dx * TS,
+  y: origin.y + Math.floor(c / b.w) * TS + TS / 2 + dy * TS,
+});
+
+/** Each pointer event of a drag on board `s` from cell `c` by `[dx, dy]`
+ * squares, the input's answers in turn. */
+function dragFrom(
+  s: Board,
+  ui: FillUi,
+  c: number,
+  [dx, dy]: readonly [number, number],
+  button = LEFT_BUTTON,
+) {
+  const ds = game.newDrawState(s, TS);
+  const [drag, release] =
+    button === LEFT_BUTTON ? [LEFT_DRAG, LEFT_RELEASE] : [RIGHT_DRAG, RIGHT_RELEASE];
+  const pressed = game.interpretMove(s, ui, ds, middleOf(c), button);
+  const moved = game.interpretMove(s, ui, ds, middleOf(c, dx, dy), drag);
+  const shown = draw(s, ui);
+  const released = game.interpretMove(s, ui, ds, middleOf(c, dx, dy), release);
+  return { pressed, moved, shown, released };
+}
+
+describe("a board whose every piece points, played by its way", () => {
+  /** The move `made` is, failing where it is none. */
+  const moveOf = (made: unknown) => {
+    if (made === null || typeof made !== "object" || !("type" in made))
+      throw new Error(`no move: ${JSON.stringify(made)}`);
+    return made as Parameters<typeof game.executeMove>[1];
+  };
+
+  it("places the value whose arrow points the way a drag goes, a press committing nothing", () => {
+    const ui = game.newUi(b);
+    const { pressed, released } = dragFrom(b, ui, open, [0.3, -1.2]);
+    // The press leaves the selection alone: it may be a drag.
+    expect(pressed).toBe(UI_UPDATE);
+    expect(ui.cursor.visible).toBe(false);
+    expect(released).toMatchObject({ type: "set", n: 1, pencil: false });
+    // Across wins a tie; and a drag off the board still reads its way.
+    expect(dragFrom(b, game.newUi(b), open, [-1, 1]).released).toMatchObject({ n: 3 });
+    expect(dragFrom(b, game.newUi(b), open, [5, 0]).released).toMatchObject({ n: 4 });
+  });
+
+  it("previews the dragged arrow, as the board would be left", () => {
+    const { shown } = dragFrom(b, game.newUi(b), open, [0, 1]);
+    const entry = slotsOf(playerEntryColor(DEFAULT_BACKGROUND));
+    const lines = linesIn(shown, open, entry);
+    expect(lines).toHaveLength(3);
+    // Value 2 points down: its tip is its lowest point.
+    expect(Math.max(...lines.flatMap((l) => [l.y1, l.y2]))).toBe(tipOf(lines).y);
+  });
+
+  it("clears a square dragged back onto, and a tap selects one", () => {
+    const placed = game.executeMove(
+      b,
+      moveOf(dragFrom(b, game.newUi(b), open, [0, -1]).released),
+    );
+    expect(dragFrom(placed, game.newUi(placed), open, [0, 0]).released).toMatchObject({
+      type: "set",
+      n: 0,
+    });
+    const ui = game.newUi(b);
+    expect(dragFrom(b, ui, open, [0, 0]).released).toBe(UI_UPDATE);
+    expect(ui.cursor).toMatchObject({
+      x: open % b.w,
+      y: Math.floor(open / b.w),
+      visible: true,
+    });
+  });
+
+  it("notes the way with the right button, or with Marks on; a press on a given is nothing", () => {
+    expect(
+      dragFrom(b, game.newUi(b), open, [1, 0], RIGHT_BUTTON).released,
+    ).toMatchObject({
+      type: "set",
+      n: 4,
+      pencil: true,
+    });
+    const ui = game.newUi(b);
+    ui.pencilMode = true;
+    expect(dragFrom(b, ui, open, [0, 1]).released).toMatchObject({
+      n: 2,
+      pencil: true,
+    });
+    expect(dragFrom(b, game.newUi(b), fixedAt, [0, 1]).pressed).toBeNull();
+  });
+
+  it("arms the selection with Enter for an arrow key, drawn as a `?`, and Space clears it", () => {
+    const ui = at(open);
+    expect(press("\r", ui, CURSOR_SELECT)).toBe(UI_UPDATE);
+    expect(ui.armed).toBe("value");
+    // Enter arms; it does not switch notes.
+    expect(ui.pencilMode).toBe(false);
+    const shown = draw(b, ui).filter((op) => op.op === "text" && op.text === "?");
+    expect(shown).toHaveLength(1);
+    expect(press("", ui, CURSOR_LEFT)).toMatchObject({
+      type: "set",
+      n: 3,
+      pencil: false,
+    });
+    expect(ui.armed).toBeNull();
+    // The cursor did not move: the arrow was the value's.
+    expect(ui.cursor).toMatchObject({ x: open % b.w, y: Math.floor(open / b.w) });
+    const placed = game.executeMove(b, moveOf(press("4")));
+    const again = at(open);
+    press("\r", again, CURSOR_SELECT);
+    expect(press(" ", again, CURSOR_SELECT2, placed)).toMatchObject({
+      type: "set",
+      n: 0,
+    });
+  });
+
+  it("arms a note with Space on an empty square, drawn as a `?` in pencil", () => {
+    const ui = at(open);
+    expect(press(" ", ui, CURSOR_SELECT2)).toBe(UI_UPDATE);
+    expect(ui.armed).toBe("note");
+    const pencil = slotsOf(pencilColor(DEFAULT_BACKGROUND));
+    const shown = draw(b, ui).filter(
+      (op) => op.op === "text" && op.text === "?" && pencil.includes(op.color),
+    );
+    expect(shown).toHaveLength(1);
+    expect(press("", ui, CURSOR_DOWN)).toMatchObject({
+      type: "set",
+      n: 2,
+      pencil: true,
+    });
+    // Unarmed, an arrow key moves the cursor.
+    const moved = at(open);
+    moved.cursor.y = 0;
+    press("", moved, CURSOR_DOWN);
+    expect(moved.cursor.y).toBe(1);
   });
 });

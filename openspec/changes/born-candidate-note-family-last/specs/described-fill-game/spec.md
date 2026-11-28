@@ -102,6 +102,50 @@ glyphs, and `A` SHALL switch nothing.
 - **WHEN** a `pointing` board's preferences are asked for, and `A` is typed
 - **THEN** none chooses pictures or glyphs, and the board is still pictures
 
+### Requirement: A board whose every piece points is dragged by its way
+
+Where every value the player places is drawn by a painter that points, a
+press on an open square SHALL commit nothing; a drag from it SHALL choose
+the value pointing along its dominant axis, across on a tie, previewed,
+a way the square's domain lacks being none; the release SHALL place it,
+or with the right button or in notes mode toggle its note on an empty
+square. A release back on the square SHALL clear it, and one that commits
+nothing SHALL be a tap.
+
+#### Scenario: A drag places an arrow
+
+- **WHEN** a `pointing` board's open square is pressed and dragged a
+  square up and a little right, and released
+- **THEN** the press makes no move and selects nothing, and the release
+  places the up arrow there
+
+#### Scenario: A drag back clears
+
+- **WHEN** a square holding an arrow is pressed and released on itself
+- **THEN** its arrow is cleared
+
+### Requirement: A board whose every piece points is keyed by its way
+
+On such a board each value SHALL be typed by the number pad digit of its
+way (8 up, 2 down, 4 left, 6 right), its key labeled by an arrow. Enter
+SHALL arm the selection for an arrow key, which places the value pointing
+its way, and SHALL NOT switch notes; Space SHALL arm a note on an empty
+square, or clear where a value is armed. An armed selection SHALL show a
+`?`, in the entry color for a value and in pencil for a note.
+
+#### Scenario: Keys by their ways
+
+- **WHEN** the keypad of a `pointing` board is asked for, and 8 is typed
+- **THEN** its keys are labeled ↑ ↓ ← → and send 8, 2, 4 and 6, and 8
+  places the up arrow
+
+#### Scenario: Enter arms an arrow key
+
+- **WHEN** Enter is pressed on a selected open square, and then the left
+  arrow key
+- **THEN** a `?` shows in the entry color, then the left arrow is placed
+  there and the selection does not move
+
 ### Requirement: A picture's name is how a player is told its value
 
 Each picture SHALL have a name, which the hint says its value by, with its

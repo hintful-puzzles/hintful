@@ -38,7 +38,7 @@ import {
   paintNumberHint,
   shownNumber,
 } from "./layers/numbers.ts";
-import { paintNumeral } from "./layers/numerals.ts";
+import { paintArmed, paintNumeral } from "./layers/numerals.ts";
 import { labelsOf, paintPartClue } from "./layers/part-clues.ts";
 import { joinsOf, paintPiece } from "./layers/piece.ts";
 import {
@@ -129,7 +129,7 @@ export function tileWordsOf<C extends Clues<C>>(
       // On the edges the cursor is on the half grid, a square's middle its
       // own point.
       if (cx.onEdges ? cx0 === 2 * x + 1 && cy0 === 2 * y + 1 : selected.has(i))
-        k |= CURSOR | (ui.linkArmed ? ARMED : 0);
+        k |= CURSOR | (ui.linkArmed || (ui.armed ?? null) !== null ? ARMED : 0);
       k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
       const hk = words.hintWord(x, y);
       let lk =
@@ -280,7 +280,9 @@ function drawTile<C extends Clues<C>>(
   paintNumberHint(pal, frame);
   if (word & MISTAKE && !raised) drawMistake(dr, ts, tx, ty);
   // A board of buttons draws the cursor's corners; a board of numbers shows
-  // it as the surface's highlight.
+  // it as the surface's highlight, and a `?` where a key armed it.
+  if (word & CURSOR && word & ARMED && typed)
+    paintArmed(noteWord & NOTES_MODE ? pal.COL_PENCIL : pal.COL_ENTRY, frame);
   if (word & CURSOR && !typed)
     drawRectCorners(
       dr,

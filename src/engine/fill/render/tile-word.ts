@@ -18,7 +18,8 @@ export const ERR_AT = 1 << 9;
 export const DIAMOND_SHIFT = 10;
 export const MISTAKE = 1 << 18;
 export const CURSOR = 1 << 19;
-/** `L` has armed a link from the cursor's cell. */
+/** `L` has armed a link from the cursor's cell; or on a board whose pieces
+ * point, Enter or Space armed it for an arrow key (`FillUi.armed`). */
 export const ARMED = 1 << 20;
 export const TONE_SHIFT = 21;
 /** The links from this cell, a bit a direction (up, right, down, left). */

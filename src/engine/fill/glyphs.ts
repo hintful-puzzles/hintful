@@ -3,11 +3,13 @@
  * game ID: as numerals, or as letters from A or in an alphabet's order
  * (`play.numbers.letters`), or by its ruleset (a choice's `letters`, Salad's
  * Letters, Group's two alphabets); and the empty square,
- * where the answer has one (`play.numbers.empty`), as an X.
+ * where the answer has one (`play.numbers.empty`), as an X. A board whose
+ * pieces all point is typed by their ways (`waysOf`).
  */
 
 import { digitKeyCode } from "../input/key-labels.ts";
 import { digitOf, stripModifiers } from "../input/pointer.ts";
+import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import type { FillModule } from "./board.ts";
 import type { FillDeal } from "./game-id.ts";
@@ -139,7 +141,7 @@ export function glyphsOf(
   const names = module.play?.numbers?.pictures?.names;
   if (names === undefined) return glyphs;
   const name = (v: number): string => names[v] ?? glyphs.draw(v);
-  return {
+  const named: ValueGlyphs = {
     ...glyphs,
     say: name,
     label: (v) => {
@@ -147,6 +149,55 @@ export function glyphsOf(
       return n.charAt(0).toUpperCase() + n.slice(1);
     },
   };
+  const ways = waysOf(module);
+  if (ways === null) return named;
+  // A board whose pieces point is typed by each way's number pad digit, its
+  // key labeled by an arrow (upstream Rome's).
+  const digitOfWay = (v: number): number => {
+    const way = ways.get(v);
+    if (way === undefined) throw new Error(`no way for the value ${v}`);
+    return WAY_DIGITS[(way[1] + 1) * 3 + way[0] + 1];
+  };
+  const byDigit = new Map([...ways.keys()].map((v) => [digitOfWay(v), v]));
+  return {
+    ...named,
+    label: (v) => WAY_ARROWS[digitOfWay(v)] ?? named.label(v),
+    keyCode: (v) => digitKeyCode(digitOfWay(v)),
+    typed: (button) => {
+      const d = digitOf(button);
+      if (d === null || d === 0) return d;
+      return byDigit.get(d) ?? null;
+    },
+  };
+}
+
+/** The number pad digit of each way a step across the grid, read in rows
+ * from up and left: 8 up, 4 left, 6 right, 2 down. */
+const WAY_DIGITS = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+const WAY_ARROWS: Readonly<Record<number, string>> = {
+  8: "↑",
+  2: "↓",
+  4: "←",
+  6: "→",
+};
+
+/** On a board of numbers whose every piece the player places points
+ * (`Painter.points`), the way each points, by value; `null` on any other
+ * board. A value only the deal places (Rome's goal) is no player's. */
+export function waysOf(
+  module: Pick<FillModule<unknown>, "play">,
+): ReadonlyMap<number, readonly [number, number]> | null {
+  const paint = module.play?.numbers?.pictures?.paint;
+  if (paint === undefined) return null;
+  const given = module.play?.given ?? {};
+  const ways = new Map<number, readonly [number, number]>();
+  for (const [v, name] of Object.entries(paint)) {
+    if (given[Number(v)] !== undefined) continue;
+    const points = name in PAINTERS ? PAINTERS[name as PainterName].points : undefined;
+    if (points === undefined) return null;
+    ways.set(Number(v), points);
+  }
+  return ways.size === 0 ? null : ways;
 }
 
 function unnamedGlyphsOf(

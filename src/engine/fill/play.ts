@@ -311,6 +311,10 @@ export interface FillUi {
   /** On a board whose values are drawn as pictures (`numbers.pictures`), the
    * player's preference: pictures, or the glyphs. */
   pictures?: boolean;
+  /** On a board whose pieces all point (`glyphs.ts`'s `waysOf`), what Enter
+   * or Space armed the selection to take from the next arrow key: a value,
+   * or a note; `null` where nothing is armed. */
+  armed?: "value" | "note" | null;
   /** On a board whose counts' style is a preference (`FillPlay.countStyle`),
    * the player's choice, by its index in `COUNT_STYLES`. */
   countStyle?: number;

@@ -21,3 +21,13 @@ export function paintNumeral(
   const { origin, options } = lay.valueText(ts, at, part?.walls ?? null, tx, ty);
   dr.drawText(origin, options, numeralInk(word, COL_ENTRY), glyph(v));
 }
+
+/** The `?` a selection armed for an arrow key shows (upstream Rome's), in
+ * the ink of the value or the note that key will make. */
+export function paintArmed(
+  color: number,
+  { dr, ts, at, tx, ty, part, lay }: TileFrame,
+): void {
+  const { origin, options } = lay.valueText(ts, at, part?.walls ?? null, tx, ty);
+  dr.drawText(origin, options, color, "?");
+}

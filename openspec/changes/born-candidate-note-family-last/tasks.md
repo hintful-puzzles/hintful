@@ -2,10 +2,8 @@
 
 2.2f waits on the owner's answer to design.md § "Decisions" 7, so 2.3
 (Rome) goes on meanwhile: it needs nothing of Crossing's. Rome's next is
-2.3b, planned in design.md § "Decisions" 10. For the flip: Rome's hint
-says a value with a verb ("it must point up", "the up marks in it"), the
-hand-written vocabulary's `be` and `note`, which a born game's `words:`
-does not yet carry. For 2.2f: the
+2.3c; what the flip weighs is design.md § "Decisions" 10's "Left to the
+flip". For 2.2f: the
 draft's `play.along` gains `panel: { record: number, site: run }` and its
 `words:` `value: digit`, which the panel's headings read, and
 `src/games/crossing/numbers.ts` goes with the game. Also for 2.2f:
@@ -78,11 +76,8 @@ order.
   - [x] 2.3a Arrows and goals drawn as pictures, an arrow's note on the
         side it points (`Painter.points`, `Painter.note`), and a board
         always pictured where `pictures` names no preference. On `pointing`.
-  - [ ] 2.3b A value chosen by its way: a drag from a square onto the
-        neighbor a value's piece points at, back onto it clearing; Enter
-        (Space for a note) arming the selection for an arrow key; the
-        numpad digits 8, 2, 4 and 6; keys labeled by the arrows. On
-        `pointing`.
+  - [x] 2.3b A value chosen by its way, dragged or keyed (design.md §
+        "Decisions" 10), on `pointing`. In the app at 2.3e.
   - [ ] 2.3c Washes over placed cells, each behind a preference (Rome's
         squares leading home, on by default, and its loops, off).
   - [ ] 2.3d The build's fallback value where a cell has none left, and a

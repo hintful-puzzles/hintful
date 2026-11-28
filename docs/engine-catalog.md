@@ -897,6 +897,18 @@ whatever the preference: it sits above every value the player places, so
 the keypad, the givens and the notes stop below it, and the domain may
 differ from cell to cell where its clue narrows it.
 
+A board whose every piece the player places points (`glyphs.ts`'s
+`waysOf`) is played by each piece's way, as upstream Rome is, with nothing
+to declare (`pointing.ts`). Its press is the select-or-drag gesture's
+(`note-taking-cell.ts`): it commits nothing, and the drag (`ui.drag`, the
+one a board of numbers keeps) chooses the value pointing along its
+dominant axis, which the release places or notes, or which back on the
+square clears; a release that commits nothing is the tap's. The renderer
+previews it through the input's `previewed`, as a board of buttons'. Its
+keys are each way's number pad digit, labeled by an arrow, and Enter or
+Space arms the selection (`ui.armed`, the tile's `ARMED`, a `?`) for the
+arrow key that says a way, so Enter switches no notes there.
+
 ### `raised.ts` — a value drawn as a block that leans into its neighbors
 
 Reach for it where a value is drawn standing up out of its square, its top

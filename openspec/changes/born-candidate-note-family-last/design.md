@@ -234,6 +234,16 @@ hand-written game's controls, so no control changes for a player:
   toggle notes mode, which the Marks key (P) does, as in the hand-written
   game.
 
+Built so in `pointing.ts` (2.3b). Left to the flip (2.3e), weighed against
+the hand-written game: a drag toward a way the square's domain lacks (off
+the board's edge) reads as none, which the `pointing` fixture's Latin
+domain cannot show, so Rome's cases check it; the hint's gesture is a tap
+and the way's digit key, where the hand-written one dragged; its ring does
+not keep clear of an armed `?`, as the hand-written one's did
+(`squareText`); and Rome's hint says a value with a verb ("it must point
+up", "the up marks in it"), the hand-written vocabulary's `be` and `note`,
+which a born game's `words:` does not yet carry.
+
 ## What each flip changed for a player
 
 Filled in by each flip.

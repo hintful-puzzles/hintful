@@ -468,7 +468,7 @@ export function fillGame<C extends Clues<C> & object>(
       ...(module.glyphClues === undefined ? {} : { glyphClues: module.glyphClues }),
       ...(module.labels === undefined ? {} : { labels: module.labels }),
     },
-    (b, ui) => buttons?.previewed(b, ui) ?? b,
+    (b, ui) => (buttons ?? typed)?.previewed(b, ui) ?? b,
   );
   // A board of numbers is typed into; one of buttons is clicked and dragged.
   const typed =
